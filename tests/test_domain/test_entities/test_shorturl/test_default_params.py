@@ -1,8 +1,8 @@
 from datetime import datetime, timezone
 
-from pytest import fixture
-
 from shortener.domain.shorturl import ShortURL
+
+from pytest import fixture
 
 
 @fixture
@@ -13,27 +13,27 @@ def shorturl():
     )
 
 
-def test_attr_slug(shorturl):
+def test_slug(shorturl):
     assert shorturl.slug == "my-url"
 
 
-def test_attr_original_url(shorturl):
+def test_original_url(shorturl):
     assert shorturl.original_url == "youtube.com"
 
 
-def test_attr_owner_id(shorturl):
+def test_owner_id(shorturl):
     assert shorturl.owner_id == None
 
 
-def test_attr_is_active(shorturl):
+def test_is_active(shorturl):
     assert shorturl.is_active == True
 
 
-def test_attr_visit_count(shorturl):
+def test_visit_count(shorturl):
     assert shorturl.visit_count == 0
 
 
-def test_attr_created_at(shorturl):
+def test_created_at(shorturl):
     created_at = shorturl.created_at
     now = datetime.now(tz=timezone.utc)
 
@@ -44,9 +44,9 @@ def test_attr_created_at(shorturl):
     assert created_at.hour == now.hour
 
 
-def test_attr_expires_at(shorturl):
+def test_expires_at(shorturl):
     assert shorturl.expires_at == None
 
 
-def test_attr_last_accessed_at(shorturl):
-    assert shorturl.expires_at == None
+def test_last_accessed_at(shorturl):
+    assert shorturl.last_accessed_at == None
