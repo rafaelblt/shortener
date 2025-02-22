@@ -20,5 +20,5 @@ class GeneralShortURLValidator(ShortURLValidator):
         if self.repository.exists_by_slug(slug):
             raise SlugAlreadyExistsException()
 
-        if not is_slug_forbidden(slug):
+        if is_slug_forbidden(slug):
             raise InvalidSlugException()
