@@ -12,8 +12,7 @@ class GeneralShortURLValidator(ShortURLValidator):
     def __init__(self, repository: ShortURLRepository):
         self.repository = repository
 
-    def validate(self, shorturl: ShortURL):
-
+    def validate(self, shorturl: ShortURL) -> None:
         self._validate_slug(shorturl.slug)
 
     def _validate_slug(self, slug: str) -> None:
