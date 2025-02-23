@@ -6,7 +6,7 @@ from shortener.domain.shorturl.exceptions import (
     SlugAlreadyExistsException, InvalidSlugException
 )
 
-from .base import ShortURLValidator
+from .base_validator import ShortURLValidator
 
 
 class GeneralShortURLValidator(ShortURLValidator):

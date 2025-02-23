@@ -1,2 +1,2 @@
-from .base import ShortURLValidator
+from .base_validator import ShortURLValidator
 from .general_validator import GeneralShortURLValidator
