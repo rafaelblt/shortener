@@ -25,7 +25,7 @@ class GeneralValidator(ShortURLValidator):
 
     def _validate_slug(self, slug: str) -> None:
         if self.repository.exists_by_slug(slug):
-            raise SlugAlreadyExistsException()
+            raise SlugAlreadyExistsException("The provided slug already exists.")
 
         if is_slug_forbidden(slug):
-            raise InvalidSlugException()
+            raise InvalidSlugException("The provided slug is forbidden.")
