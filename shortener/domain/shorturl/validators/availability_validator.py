@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 from shortener.domain.shorturl import ShortURL
+from shortener.domain.shorturl.exceptions import InactiveShortURL, ShortURLExpired
 
 from .base_validator import ShortURLValidator
 
@@ -9,15 +10,16 @@ class AvailabilityValidator(ShortURLValidator):
     def __init__(self):
         pass
 
-    def validate(self, shorturl: ShortURL):
+    def validate(self, shorturl: ShortURL) -> None:
         """
-        
+        Raises:
+            InactiveShortURL:
+            ShortURLExpired:
         """
         if not shorturl.is_active:
-            raise Exception()
+            raise InactiveShortURL("The ShortURL is not active")
         
         expiration = shorturl.expires_at
-        now = datetime.now(tz=timezone.utc)
         
-        if expiration and now > expiration:
-            raise Exception("The short URL has expired.")
+        if expiration and datetime.now(tz=timezone.utc) > expiration:
+            raise ShortURLExpired("The ShortURL has expired.")
