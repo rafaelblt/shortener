@@ -1,2 +1,3 @@
 from .base_validator import ShortURLValidator
-from .general_validator import GeneralShortURLValidator
+from .general_validator import GeneralValidator
+from .availability_validator import AvailabilityValidator

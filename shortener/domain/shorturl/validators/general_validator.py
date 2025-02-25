@@ -9,7 +9,7 @@ from shortener.domain.shorturl.exceptions import (
 from .base_validator import ShortURLValidator
 
 
-class GeneralShortURLValidator(ShortURLValidator):
+class GeneralValidator(ShortURLValidator):
     """Validator class for ShortURLs. It validate all entity fields."""
     
     def __init__(self, repository: ShortURLRepository):

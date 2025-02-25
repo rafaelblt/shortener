@@ -5,7 +5,7 @@ from shortener.domain.shorturl import ShortURL
 from .base_validator import ShortURLValidator
 
 
-class AvailabilitShortURLyValidator(ShortURLValidator):
+class AvailabilityValidator(ShortURLValidator):
     def __init__(self):
         pass
 
