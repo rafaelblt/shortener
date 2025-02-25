@@ -2,6 +2,9 @@ import random
 import string
 
 from shortener.domain.shorturl import ShortURLRepository
+from shortener.domain.shorturl.rules.slug_length import (
+    DEFAULT_RANDOM_SLUG_LENGTH as RANDOM_LENGTH
+)
 
 
 class SlugGenerator:
@@ -10,11 +13,11 @@ class SlugGenerator:
     def __init__(self):
         self.chars = string.ascii_letters + string.digits
 
-    def generate_random_slug(self, length: int = 6) -> str:
+    def generate_random_slug(self, length: int = RANDOM_LENGTH) -> str:
         """
         Generate a random slug of a specified length.
         Args:
-            length (int): The length of the slug to generate. Default is 6.
+            length (int): The length of the slug to generate.
         Returns:
             str: A randomly generated slug.
         """
@@ -23,7 +26,7 @@ class SlugGenerator:
     def generate_unique_slug(
             self, 
             repository: ShortURLRepository, 
-            length: int = 6,
+            length: int = RANDOM_LENGTH,
             max_attempts: int = 100
         ) -> str:
         """
@@ -37,7 +40,6 @@ class SlugGenerator:
             repository (ShortURLRepository): The repository to check for 
                 existing slugs.
             length (int, optional): The length of the slug to generate. 
-                Default is 6.
             max_attempts (int, optional): The maximum number of attempts 
                 to generate a unique slug. Default is 100.
 
