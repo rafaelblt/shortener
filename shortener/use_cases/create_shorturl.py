@@ -50,9 +50,6 @@ class CreateShortURLUseCase:
 
         Returns:
             ShortURL: The ShortURL object.
-
-        Raises:
-            SlugAlreadyExistsException: If the custom_slug is already in use.
         """
         slug = custom_slug or self.slug_generator.generate_unique_slug(
             repository=self.repository
