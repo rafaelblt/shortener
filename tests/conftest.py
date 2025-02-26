@@ -1,36 +1,21 @@
 from pytest import fixture
 
+from .mocks import MockShortURLRepository
+
 from shortener.domain.shorturl import ShortURL, SlugGenerator
-from shortener.domain.shorturl.repository import ShortURLRepository
+from shortener.domain.shorturl.validators import (
+    AvailabilityValidator as ShortURLAvailabilityValidator,
+    GeneralValidator as ShortURLGeneralValidator
+)
 
 
 @fixture
 def mock_shorturl_repository():
-    class MockRepository(ShortURLRepository):
-        data: list[ShortURL]
-
-        def __init__(self):
-            self.data = []
-
-        def save(self, short_url: ShortURL) -> None:
-            self.data.append(short_url)
-
-        def exists_by_slug(self, slug: str) -> bool:
-            if self.get_by_slug(slug):
-                return True
-            return False
-
-        def get_by_slug(self, slug: str) -> ShortURL | None:
-            for shorturl in self.data:
-                if shorturl.slug == slug:
-                    return shorturl
-            return None
-        
-    return MockRepository()
+    return MockShortURLRepository()
 
 
 @fixture
-def slug_generator():
+def shorturl_slug_generator():
     return SlugGenerator()
 
 
@@ -40,3 +25,8 @@ def normal_shorturl():
         slug="lorem-ipsum-website",
         original_url="lorem.makeyoursite.com"
     )
+
+
+@fixture
+def shorturl_availability_validator():
+    return ShortURLAvailabilityValidator()
