@@ -5,7 +5,7 @@ from datetime import datetime
 from shortener.use_cases import CreateShortURLUseCase
 from shortener.domain.shorturl import ShortURL
 from shortener.domain.shorturl.validators import GeneralValidator
-from shortener.domain.shorturl.exceptions import SlugAlreadyExistsException
+from shortener.domain.shorturl.exceptions import ShortURLSlugAlreadyExistsError
 from shortener.domain.shorturl.rules.slug_length import DEFAULT_RANDOM_SLUG_LENGTH
 
 
@@ -53,7 +53,7 @@ def test_validation_raises_slug_already_exists(use_case):
     use_case.execute(original_url="github.com", custom_slug="git")
 
     with raises(
-        SlugAlreadyExistsException, match="The provided slug already exists."
+        ShortURLSlugAlreadyExistsError, match="The provided slug already exists."
     ):
         use_case.execute(original_url="gitlab.com", custom_slug="git")
 
