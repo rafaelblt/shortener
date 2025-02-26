@@ -9,6 +9,8 @@ from .base_validator import ShortURLValidator
 
 
 class AvailabilityValidator(ShortURLValidator):
+    """ShortURL Validator class to validate if entity is available."""
+
     def __init__(self):
         pass
 
