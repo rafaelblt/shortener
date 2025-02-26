@@ -3,8 +3,10 @@ from datetime import datetime, timezone
 from pytest import fixture, raises
 
 from shortener.domain.shorturl import ShortURL
-from shortener.domain.shorturl.exceptions import InactiveShortURL, ShortURLExpired
 from shortener.domain.shorturl.validators import AvailabilityValidator
+from shortener.domain.shorturl.exceptions import (
+    ShortURLInactiveError, ShortURLExpiredError
+)
 
 
 @fixture
@@ -20,7 +22,7 @@ def test_validate_with_is_active_false(validator):
     shorturl = ShortURL(
         slug="example", original_url="test.com", is_active=False
     )
-    with raises(InactiveShortURL, match="The ShortURL is not active"):
+    with raises(ShortURLInactiveError, match="The ShortURL is not active"):
         validator.validate(shorturl)
 
 
@@ -39,5 +41,5 @@ def test_validate_with_invalid_expires_at(validator):
         original_url="test.com", 
         expires_at=datetime(year=2020, month=1, day=1, tzinfo=timezone.utc)
     )
-    with raises(ShortURLExpired, match="The ShortURL has expired."):
+    with raises(ShortURLExpiredError, match="The ShortURL has expired."):
         validator.validate(shorturl)
