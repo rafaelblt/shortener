@@ -2,11 +2,12 @@ from pytest import fixture, raises
 
 from datetime import datetime
 
-from shortener.use_cases import CreateShortURLUseCase
 from shortener.domain.shorturl import ShortURL
 from shortener.domain.shorturl.validators import GeneralValidator
 from shortener.domain.shorturl.exceptions import ShortURLSlugAlreadyExistsError
 from shortener.domain.shorturl.rules.slug_length import DEFAULT_RANDOM_SLUG_LENGTH
+
+from shortener.use_cases import CreateShortURLUseCase
 
 
 @fixture
@@ -15,11 +16,11 @@ def validator(mock_shorturl_repository):
 
 
 @fixture
-def use_case(mock_shorturl_repository, validator, slug_generator):
+def use_case(mock_shorturl_repository, validator, shorturl_slug_generator):
     return CreateShortURLUseCase(
         repository=mock_shorturl_repository,
         validator=validator,
-        slug_generator=slug_generator
+        slug_generator=shorturl_slug_generator
     )
 
 
