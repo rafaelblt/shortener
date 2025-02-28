@@ -14,8 +14,8 @@ from shortener.domain.shorturl.exceptions import (
 
 
 @fixture
-def validator(mock_shorturl_repository):
-    return GeneralValidator(repository=mock_shorturl_repository)
+def validator(shorturl_general_validator):
+    return shorturl_general_validator
 
 
 def test_validate_valid_slug(validator):

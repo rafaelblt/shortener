@@ -30,3 +30,10 @@ def normal_shorturl():
 @fixture
 def shorturl_availability_validator():
     return ShortURLAvailabilityValidator()
+
+
+@fixture
+def shorturl_general_validator(mock_shorturl_repository):
+    return ShortURLGeneralValidator(
+        repository=mock_shorturl_repository
+    )
