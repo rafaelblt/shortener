@@ -8,6 +8,7 @@ from pytest import fixture
 @fixture
 def shorturl():
     return ShortURL(
+        id=1,
         slug="i-am-url",
         original_url="google.com",
         owner_id=1,
@@ -17,6 +18,14 @@ def shorturl():
         expires_at=datetime(year=2006, month=6, day=6),
         last_accessed_at=datetime(year=2004, month=4, day=4)
     )
+
+
+def test_instance(shorturl):
+    assert isinstance(shorturl, ShortURL)
+
+
+def test_id(shorturl):
+    assert shorturl.id == 1
 
 
 def test_slug(shorturl):

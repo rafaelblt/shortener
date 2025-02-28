@@ -8,6 +8,7 @@ class ShortURL:
         self,
         slug: str,
         original_url: str,
+        id: Optional[int] = None, 
         owner_id: Optional[int] = None,
         is_active: bool = True,
         visit_count: int = 0,
@@ -15,6 +16,7 @@ class ShortURL:
         expires_at: Optional[datetime] = None,
         last_accessed_at: Optional[datetime] = None,
     ):
+        self.id = id
         self.slug = slug
         self.original_url = original_url
         self.owner_id = owner_id

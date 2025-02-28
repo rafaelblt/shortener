@@ -59,23 +59,23 @@ def test_validate_slug_with_exactly_min_length(validator):
     validator._validate_slug(slug)
 
 
-def test_validate_already_exists_slug(validator):
-    validator.repository.save(ShortURL(slug="example", original_url="test.com"))
+def test_validate_already_exists_slug(validator, normal_shorturl):
+    validator.repository.save(normal_shorturl)
 
     with raises(
         ShortURLSlugAlreadyExistsError, match="The provided slug already exists."
     ):
-        validator._validate_slug("example")
+        validator._validate_slug(normal_shorturl.slug)
 
 
 def test_validate_valid_shorturl(validator, normal_shorturl):
     assert validator.validate(normal_shorturl) == None
 
 
-def test_validate_invalid_shorturl(validator):
-    invalid_shorturl = ShortURL(slug="config", original_url="example.com")
+def test_validate_invalid_shorturl(validator, normal_shorturl):
+    normal_shorturl.slug = "config"
 
     with raises(
         ShortURLForbiddenSlugError, match="The provided slug is forbidden."
     ):
-        validator.validate(invalid_shorturl)
+        validator.validate(normal_shorturl)
