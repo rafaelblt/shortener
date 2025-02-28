@@ -1,4 +1,4 @@
-from pytest import raises
+from pytest import fixture, raises
 
 from shortener.domain.shorturl import ShortURL
 from shortener.domain.shorturl.repository import ShortURLRepository
@@ -17,45 +17,54 @@ class ExistOnlyTrueRepo(ShortURLRepository):
         return None
 
 
-def test_raises_type_error_when_repository_is_missing(shorturl_slug_generator):
+@fixture
+def generator(shorturl_slug_generator):
+    return shorturl_slug_generator
+
+
+@fixture
+def repository(mock_shorturl_repository):
+    return mock_shorturl_repository
+
+
+def test_raises_type_error_when_repository_is_missing(generator):
     with raises(TypeError):
-        shorturl_slug_generator.generate_unique_slug()
+        generator.generate_unique_slug()
 
 
-def test_return_type(shorturl_slug_generator, mock_repository):
-    slug = shorturl_slug_generator.generate_unique_slug(repository=mock_repository)
+def test_return_type(generator, repository):
+    slug = generator.generate_unique_slug(repository=repository)
     assert isinstance(slug, str)
 
 
-def test_default_length(shorturl_slug_generator, mock_repository):
-    slug = shorturl_slug_generator.generate_unique_slug(repository=mock_repository)
+def test_default_length(generator, repository):
+    slug = generator.generate_unique_slug(repository=repository)
     assert len(slug) == 6
 
 
-def test_custom_length(shorturl_slug_generator, mock_repository):
-    slug = shorturl_slug_generator.generate_unique_slug(
-        repository=mock_repository, length=10
-    )
+def test_custom_length(generator, repository):
+    repository = repository
+    slug = generator.generate_unique_slug(repository=repository, length=10)
     assert len(slug) == 10
 
 
-def test_raises_runtime_error_when_max_attempts_reached(shorturl_slug_generator):
+def test_raises_runtime_error_when_max_attempts_reached(generator):
     repository = ExistOnlyTrueRepo()
     max_attempts = 100
 
     with raises(RuntimeError) as exception:
-        shorturl_slug_generator.generate_unique_slug(repository=repository)
+        generator.generate_unique_slug(repository=repository)
     
     assert str(exception.value) == ("Could not generate a unique slug after "
                                     f"{max_attempts} attempts.")
 
 
-def test_raises_runtime_error_with_custom_max_attempts(shorturl_slug_generator):
+def test_raises_runtime_error_with_custom_max_attempts(generator):
     repository = ExistOnlyTrueRepo()
     max_attempts = 1
 
     with raises(RuntimeError) as exception:
-        shorturl_slug_generator.generate_unique_slug(
+        generator.generate_unique_slug(
             repository=repository, max_attempts=max_attempts
         )
     
