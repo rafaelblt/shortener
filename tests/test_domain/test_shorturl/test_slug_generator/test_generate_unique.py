@@ -1,20 +1,11 @@
 from pytest import fixture, raises
 
-from shortener.domain.shorturl import ShortURL
-from shortener.domain.shorturl.repository import ShortURLRepository
+from tests.mocks import MockShortURLRepository
 
 
-class ExistOnlyTrueRepo(ShortURLRepository):
-    def save(self, short_url: ShortURL) -> None:
-        return None
-
-    
+class ExistOnlyTrueRepo(MockShortURLRepository):    
     def exists_by_slug(self, slug: str) -> bool:
         return True
-
-    
-    def get_by_slug(self, slug: str) -> ShortURL:
-        return None
 
 
 @fixture
