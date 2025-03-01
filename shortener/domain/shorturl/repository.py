@@ -15,3 +15,7 @@ class ShortURLRepository(ABC):
     @abstractmethod
     def get_by_slug(self, slug: str) -> ShortURL | None:
         pass
+
+    @abstractmethod
+    def get_by_id(self, id: int) -> ShortURL | None:
+        pass
