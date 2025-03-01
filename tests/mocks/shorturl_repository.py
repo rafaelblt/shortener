@@ -20,3 +20,9 @@ class MockShortURLRepository(ShortURLRepository):
             if shorturl.slug == slug:
                 return shorturl
         return None
+    
+    def get_by_id(self, id: int) -> ShortURL | None:
+        for shorturl in self.data:
+            if shorturl.id == id:
+                return shorturl
+        return None
