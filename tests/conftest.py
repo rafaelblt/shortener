@@ -8,8 +8,8 @@ from shortener.domain.shorturl.validators import (
     GeneralValidator as ShortURLGeneralValidator
 )
 
-from shortener.infrastructure.db.models import Base
-from shortener.infrastructure.db.repositories import SQLAlchemyShortURLRepository
+from shortener.infra.db.models import Base
+from shortener.infra.db.repositories import SQLAlchemyShortURLRepository
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker

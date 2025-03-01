@@ -3,7 +3,7 @@ from sqlalchemy.exc import NoResultFound
 
 from shortener.domain.shorturl import ShortURL, ShortURLRepository
 
-from shortener.infrastructure.db.models import ShortURLModel
+from shortener.infra.db.models import ShortURLModel
 
 
 class SQLAlchemyShortURLRepository(ShortURLRepository):

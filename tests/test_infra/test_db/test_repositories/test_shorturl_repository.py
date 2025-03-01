@@ -1,6 +1,6 @@
 from pytest import fixture
 
-from shortener.infrastructure.db.models import ShortURLModel
+from shortener.infra.db.models import ShortURLModel
 
 
 @fixture

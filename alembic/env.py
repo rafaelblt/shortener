@@ -7,8 +7,8 @@ from sqlalchemy import pool
 
 from alembic import context
 
-from shortener.infrastructure.settings import DATABASE_URL
-from shortener.infrastructure.db.models import *
+from shortener.infra.settings import DATABASE_URL
+from shortener.infra.db.models import *
 
 
 # this is the Alembic Config object, which provides

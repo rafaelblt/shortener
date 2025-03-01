@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 
-from shortener.infrastructure.db import get_db
-from shortener.infrastructure.settings import DATABASE_URL
+from shortener.infra.db import get_db
+from shortener.infra.settings import DATABASE_URL
 
 
 def test_get_db():
