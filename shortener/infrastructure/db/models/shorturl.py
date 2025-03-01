@@ -23,6 +23,6 @@ class ShortURLModel(Base):
 
     def __repr__(self):
         return (
-            f"<ShortURL(id={self.id}, slug='{self.slug}', "
+            f"<ShortURLModel(id={self.id}, slug='{self.slug}', "
             f"original_url='{self.original_url}', is_active={self.is_active})>"
         )
