@@ -5,7 +5,7 @@ from shortener.domain.shorturl import ShortURL
 class ShortURLRepository(ABC):
 
     @abstractmethod
-    def save(self, short_url: ShortURL) -> None:
+    def save(self, shorturl: ShortURL) -> None:
         pass
 
     @abstractmethod
