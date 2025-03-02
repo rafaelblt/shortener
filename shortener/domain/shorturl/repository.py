@@ -19,3 +19,7 @@ class ShortURLRepository(ABC):
     @abstractmethod
     def get_by_id(self, id: int) -> ShortURL | None:
         pass
+
+    @abstractmethod
+    def delete(self, shorturl: ShortURL) -> ShortURL:
+        pass
