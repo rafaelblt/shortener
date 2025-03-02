@@ -1,4 +1,5 @@
 from shortener.domain.shorturl import ShortURL, ShortURLRepository
+from shortener.domain.shorturl.exceptions import ShortURLDeletionNotFoundError
 
 
 class MockShortURLRepository(ShortURLRepository):
@@ -26,3 +27,9 @@ class MockShortURLRepository(ShortURLRepository):
             if shorturl.id == id:
                 return shorturl
         return None
+    
+    def delete_by_id(self, id: int) -> ShortURL:
+        for i, entity in enumerate(self.data):
+            if entity.id == id:
+                return self.data.pop(i)
+        raise ShortURLDeletionNotFoundError()
