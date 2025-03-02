@@ -21,5 +21,5 @@ class ShortURLRepository(ABC):
         pass
 
     @abstractmethod
-    def delete(self, shorturl: ShortURL) -> ShortURL:
+    def delete_by_id(self, id: int) -> ShortURL:
         pass
