@@ -17,7 +17,7 @@ from sqlalchemy.orm import sessionmaker
 
 TEST_DATABASE_URL = "sqlite:///:memory:"
 test_database_engine = create_engine(TEST_DATABASE_URL)
-test_session = sessionmaker(bind=test_database_engine)
+TestSession = sessionmaker(bind=test_database_engine)
 
 
 @fixture
@@ -51,7 +51,7 @@ def shorturl_general_validator(mock_shorturl_repository):
 @fixture
 def db_session():
     Base.metadata.create_all(test_database_engine)
-    with test_session() as db:
+    with TestSession() as db:
         db.begin()
         yield db
         db.rollback()
