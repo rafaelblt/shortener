@@ -26,10 +26,28 @@ class SQLAlchemyShortURLRepository(ShortURLRepository):
             slug (str): The ShortURL slug.
 
         Returns:
-            Optional[ShortURL]: The ShortURL domain object, or None if not found.
+            ShortURL: The ShortURL domain object.
+            None: If no ShortURL with the given slug is found.
         """
         try:
             model = self.session.query(ShortURLModel).filter_by(slug=slug).one()
+            return self._to_domain(model)
+        except NoResultFound:
+            return None
+        
+    def get_by_id(self, id: int) -> ShortURL | None:
+        """
+        Retrieves a ShortURL by its id.
+
+        Args:
+            id (int): The ShortURL id.
+
+        Returns:
+            ShortURL: The ShortURL domain object.
+            None: If no ShortURL with the given id is found
+        """
+        try:
+            model = self.session.query(ShortURLModel).filter_by(id=id).one()
             return self._to_domain(model)
         except NoResultFound:
             return None
