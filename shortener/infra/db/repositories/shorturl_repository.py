@@ -1,5 +1,5 @@
+from sqlalchemy import select
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import NoResultFound
 
 from shortener.domain.shorturl import ShortURL, ShortURLRepository
 
@@ -14,7 +14,7 @@ class SQLAlchemyShortURLRepository(ShortURLRepository):
     def __init__(self, session: Session):
         """
         Args:
-            session (Session): SQLAlchemy session instance.
+            session (Session): SQLAlchemy Session instance.
         """
         self.session = session
 
@@ -29,11 +29,10 @@ class SQLAlchemyShortURLRepository(ShortURLRepository):
             ShortURL: The ShortURL domain object.
             None: If no ShortURL with the given slug is found.
         """
-        try:
-            model = self.session.query(ShortURLModel).filter_by(slug=slug).one()
-            return self._to_domain(model)
-        except NoResultFound:
-            return None
+        model = self.session.scalar(
+            select(ShortURLModel).where(ShortURLModel.slug == slug)
+        )
+        return self._to_domain(model) if model else None
         
     def get_by_id(self, id: int) -> ShortURL | None:
         """
@@ -46,11 +45,8 @@ class SQLAlchemyShortURLRepository(ShortURLRepository):
             ShortURL: The ShortURL domain object.
             None: If no ShortURL with the given id is found
         """
-        try:
-            model = self.session.query(ShortURLModel).filter_by(id=id).one()
-            return self._to_domain(model)
-        except NoResultFound:
-            return None
+        model = self.session.get(ShortURLModel, id)
+        return self._to_domain(model) if model else None
         
     def exists_by_slug(self, slug: str) -> bool:
         """
