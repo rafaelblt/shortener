@@ -10,9 +10,7 @@ from shortener.domain.shorturl import (
 
 
 class CreateShortURLUseCase:
-    """
-    Use case to create a new ShortURL object
-    """
+    """Use case to create a new ShortURL object"""
 
     def __init__(
             self, 

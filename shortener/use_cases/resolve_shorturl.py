@@ -10,6 +10,8 @@ class ResolveShortURLUseCase:
             validator: ShortURLValidator
         ):
         """
+        Initializes the use case with a repository and validator.
+
         Args:
             repository (ShortURLRepository): The repository to get the ShortURL.
             validator (ShortURLValidator): The validator to validate the object.
