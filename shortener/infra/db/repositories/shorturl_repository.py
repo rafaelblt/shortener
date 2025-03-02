@@ -69,6 +69,21 @@ class SQLAlchemyShortURLRepository(ShortURLRepository):
         self.session.add(shorturl_model)
         self.session.commit()
 
+    def delete_by_id(self, id: int) -> ShortURL:
+        """
+        Deletes a ShortURL object from the database.
+
+        Args:
+            id (int): The ShortURL id.
+
+        Returns:
+            ShortURL: The ShortURL domain object that was deleted.
+        """
+        shorturl_model = self._get_model_by_id(id)
+        self.session.delete(shorturl_model)
+        self.session.commit()
+        return self._to_domain(shorturl_model)
+
     def _get_model_by_id(self, id: int) -> ShortURLModel | None:
         """
         Retrieves a ShortURLModel by its id.
