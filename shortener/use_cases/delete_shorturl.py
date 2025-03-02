@@ -31,8 +31,10 @@ class DeleteShortURLUseCase:
         """
         shorturl = self.repository.get_by_id(id)
 
+        # TODO: future validations for deletion
+
         if shorturl:
-            self.repository.delete(shorturl)
+            self.repository.delete_by_id(id)
             return shorturl
         
         raise ShortURLDeletionNotFoundError(
