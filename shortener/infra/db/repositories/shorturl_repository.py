@@ -18,22 +18,6 @@ class SQLAlchemyShortURLRepository(ShortURLRepository):
         """
         self.session = session
 
-    def get_by_slug(self, slug: str) -> ShortURL | None:
-        """
-        Retrieves a ShortURL by its slug.
-
-        Args:
-            slug (str): The ShortURL slug.
-
-        Returns:
-            ShortURL: The ShortURL domain object.
-            None: If no ShortURL with the given slug is found.
-        """
-        model = self.session.scalar(
-            select(ShortURLModel).where(ShortURLModel.slug == slug)
-        )
-        return self._to_domain(model) if model else None
-        
     def get_by_id(self, id: int) -> ShortURL | None:
         """
         Retrieves a ShortURL by its id.
@@ -45,7 +29,21 @@ class SQLAlchemyShortURLRepository(ShortURLRepository):
             ShortURL: The ShortURL domain object.
             None: If no ShortURL with the given id is found
         """
-        model = self.session.get(ShortURLModel, id)
+        model = self._get_model_by_id(id)
+        return self._to_domain(model) if model else None
+
+    def get_by_slug(self, slug: str) -> ShortURL | None:
+        """
+        Retrieves a ShortURL by its slug.
+
+        Args:
+            slug (str): The ShortURL slug.
+
+        Returns:
+            ShortURL: The ShortURL domain object.
+            None: If no ShortURL with the given slug is found.
+        """
+        model = self._get_model_by_slug(slug)
         return self._to_domain(model) if model else None
         
     def exists_by_slug(self, slug: str) -> bool:
@@ -58,7 +56,7 @@ class SQLAlchemyShortURLRepository(ShortURLRepository):
         Returns:
             bool: True if a ShortURL with the given slug exists, False otherwise.
         """    
-        return self.get_by_slug(slug) is not None
+        return self._get_model_by_slug(slug) is not None
 
     def save(self, shorturl: ShortURL) -> None:
         """
@@ -70,6 +68,36 @@ class SQLAlchemyShortURLRepository(ShortURLRepository):
         shorturl_model = self._to_model(shorturl)
         self.session.add(shorturl_model)
         self.session.commit()
+
+    def _get_model_by_id(self, id: int) -> ShortURLModel | None:
+        """
+        Retrieves a ShortURLModel by its id.
+
+        Args:
+            id (int): The ShortURLModel id.
+
+        Returns:
+            ShortURLModel: The ShortURLModel object.
+            None: If no ShortURL with the given id is found.
+        """
+        model = self.session.get(ShortURLModel, id)
+        return model or None
+
+    def _get_model_by_slug(self, slug: str) -> ShortURLModel | None:
+        """
+        Retrieves a ShortURLModel by its slug.
+
+        Args:
+            slug (str): The ShortURLModel slug.
+
+        Returns:
+            ShortURLModel: The ShortURLModel object.
+            None: If no ShortURL with the given slug is found.
+        """
+        model = self.session.scalar(
+            select(ShortURLModel).where(ShortURLModel.slug == slug)
+        )
+        return model
 
     def _to_domain(self, model: ShortURLModel) -> ShortURL:
         """
