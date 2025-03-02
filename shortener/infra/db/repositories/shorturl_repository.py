@@ -7,12 +7,12 @@ from shortener.infra.db.models import ShortURLModel
 
 
 class SQLAlchemyShortURLRepository(ShortURLRepository):
-    """
-    SQLAlchemy implementation of ShortURLRepository.
-    """
+    """SQLAlchemy implementation of ShortURLRepository."""
 
     def __init__(self, session: Session):
         """
+        Initializes the repository with a SQLAlchemy Session instance.
+
         Args:
             session (Session): SQLAlchemy Session instance.
         """
