@@ -26,8 +26,7 @@ class SQLAlchemyShortURLRepository(ShortURLRepository):
             id (int): The ShortURL id.
 
         Returns:
-            ShortURL: The ShortURL domain object.
-            None: If no ShortURL with the given id is found
+            Optional[ShortURL]: The ShortURL domain object or None if not found.
         """
         model = self._get_model_by_id(id)
         return self._to_domain(model) if model else None
@@ -40,8 +39,7 @@ class SQLAlchemyShortURLRepository(ShortURLRepository):
             slug (str): The ShortURL slug.
 
         Returns:
-            ShortURL: The ShortURL domain object.
-            None: If no ShortURL with the given slug is found.
+            Optional[ShortURL]: The ShortURL domain object or None if not found.
         """
         model = self._get_model_by_slug(slug)
         return self._to_domain(model) if model else None
@@ -96,8 +94,7 @@ class SQLAlchemyShortURLRepository(ShortURLRepository):
             id (int): The ShortURLModel id.
 
         Returns:
-            ShortURLModel: The ShortURLModel object.
-            None: If no ShortURL with the given id is found.
+            Optional[ShortURLModel]: The ShortURLModel object or None if not found.
         """
         model = self.session.get(ShortURLModel, id)
         return model or None
@@ -110,8 +107,7 @@ class SQLAlchemyShortURLRepository(ShortURLRepository):
             slug (str): The ShortURLModel slug.
 
         Returns:
-            ShortURLModel: The ShortURLModel object.
-            None: If no ShortURL with the given slug is found.
+            Optional[ShortURLModel]: The ShortURLModel object or None if not found.
         """
         model = self.session.scalar(
             select(ShortURLModel).where(ShortURLModel.slug == slug)
