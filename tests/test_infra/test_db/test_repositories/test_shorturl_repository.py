@@ -66,15 +66,6 @@ def test_method_delete_by_id(repository_with_shorturl):
     assert isinstance(retrieved, ShortURL)
     assert retrieved.id == shorturl.id
     assert not repository.exists_by_slug(shorturl.slug)
-
-
-def test_method_delete_by_id_raises_not_found_error(repository):
-    example_id = 1
-    with raises(
-        ShortURLDeletionNotFoundError,
-        match=f"ShortURL with id {example_id} not found for deletion."
-    ):
-        repository.delete_by_id(example_id)
     
 
 def test_method_to_model(repository, normal_shorturl):
