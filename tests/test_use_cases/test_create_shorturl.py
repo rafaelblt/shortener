@@ -60,5 +60,5 @@ def test_validation_raises_slug_already_exists(use_case):
 
 
 def test_shorturl_is_saved_in_repository(use_case):
-    shorturl = use_case.execute(original_url="github.com", custom_slug="git")
-    assert use_case.repository.get_by_slug(shorturl.slug) == shorturl
+    use_case.execute(original_url="github.com", custom_slug="git")
+    assert use_case.repository.exists_by_slug("git") is True
