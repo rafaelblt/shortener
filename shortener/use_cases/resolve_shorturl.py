@@ -2,7 +2,10 @@ from shortener.domain.shorturl import ShortURLRepository, ShortURLValidator
 
 
 class ResolveShortURLUseCase:
-    """Use case to resolve a ShortURL object"""
+    """
+    Use case to resolve a ShortURL object. It returns the original_url after 
+    validating the ShortURL from the repository.
+    """
 
     def __init__(
             self, 
@@ -27,8 +30,7 @@ class ResolveShortURLUseCase:
             slug (str): The ShortURL slug to be resolved.
 
         Returns:
-            str: The original_url of ShortURL.
-            None: If the ShortURL is not found.
+            Optional[str]: The original_url of ShortURL or None if not found.
         """
         shorturl = self.repository.get_by_slug(slug)
     
