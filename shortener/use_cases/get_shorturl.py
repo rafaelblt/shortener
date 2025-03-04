@@ -22,8 +22,7 @@ class GetShortURLUseCase:
             id (int): The ID of the ShortURL.
 
         Returns:
-            ShortURL: The ShortURL object.
-            None: The ShortURL was not found.
+            Optional[ShortURL]: The ShortURL object or None if not found.
         """
         return self.repository.get_by_id(id)
     
@@ -35,7 +34,6 @@ class GetShortURLUseCase:
             slug (str): The slug of the ShortURL.
 
         Returns:
-            ShortURL: The ShortURL object.
-            None: The ShortURL was not found.
+            Optional[ShortURL]: The ShortURL object or None if not found.
         """
         return self.repository.get_by_slug(slug)
