@@ -62,6 +62,4 @@ class CreateShortURLUseCase:
 
         self.validator.validate(shorturl)
         
-        self.repository.save(shorturl)
-
-        return shorturl
+        return self.repository.save(shorturl)
