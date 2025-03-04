@@ -58,16 +58,20 @@ class SQLAlchemyShortURLRepository(ShortURLRepository):
         """    
         return self._get_model_by_slug(slug) is not None
 
-    def save(self, shorturl: ShortURL) -> None:
+    def save(self, shorturl: ShortURL) -> ShortURL:
         """
-        Saves a ShortURL object to the database.
+        Saves a ShortURL object to the database and return the updated object.
 
         Args:
             shorturl (ShortURL): The ShortURL domain object.
+
+        Returns:
+            ShortURL: Return the domain object with id attr updated.
         """
         shorturl_model = self._to_model(shorturl)
         self.session.add(shorturl_model)
         self.session.commit()
+        return self._to_domain(shorturl_model)
 
     def delete_by_id(self, id: int) -> ShortURL:
         """
