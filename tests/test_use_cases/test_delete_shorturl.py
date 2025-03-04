@@ -7,12 +7,12 @@ from shortener.use_cases import DeleteShortURLUseCase
 
 @fixture
 def use_case(mock_shorturl_repository, normal_shorturl):
-    normal_shorturl.id = 1
     mock_shorturl_repository.save(normal_shorturl)
     return DeleteShortURLUseCase(repository=mock_shorturl_repository)
 
 
 def test_delete_by_id(use_case, normal_shorturl):
+    normal_shorturl.id = 1
     retrieved = use_case.delete_by_id(normal_shorturl.id)
     assert retrieved.id == normal_shorturl.id
     assert retrieved.slug == normal_shorturl.slug
