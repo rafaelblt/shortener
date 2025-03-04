@@ -57,12 +57,18 @@ def db_session():
     TestSession = sessionmaker(bind=test_database_engine)
 
     Base.metadata.create_all(test_database_engine)
-    with TestSession() as db:
-        db.begin()
-        yield db
-        db.rollback()
+
+    connection = test_database_engine.connect()
+    transaction = connection.begin()
+    session =  TestSession(bind=connection)
+
+    yield session
+
+    session.close()
+    transaction.rollback()
+    connection.close()
     Base.metadata.drop_all(test_database_engine)
-    
+
 
 @fixture
 def sqlalchemy_shorturl_repository(db_session):
