@@ -3,7 +3,7 @@ from shortener.domain.shorturl.exceptions import ShortURLDeletionNotFoundError
 
 
 class DeleteShortURLUseCase:
-    """Use case to delete a ShortURL object"""
+    """Use case to delete a ShortURL object from repository."""
 
     def __init__(self, repository: ShortURLRepository):
         """
