@@ -26,4 +26,4 @@ pytest-cov = "^6.0.0"
 
 [tool.taskipy.tasks]
 run = 'fastapi dev shortener/main.py'
-test = 'pytest -s -x --cov=shortener -vv'
+test = 'pytest --cov=shortener -v'
