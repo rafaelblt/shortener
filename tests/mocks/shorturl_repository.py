@@ -7,7 +7,7 @@ class MockShortURLRepository(ShortURLRepository):
     def __init__(self):
         self.data = {}
 
-    def save(self, shorturl: ShortURL) -> None:
+    def save(self, shorturl: ShortURL) -> ShortURL:
         shorturl_dict = self._to_dict(shorturl)
 
         if shorturl_dict["id"] is None:
@@ -17,6 +17,8 @@ class MockShortURLRepository(ShortURLRepository):
             shorturl_dict["id"] = id_counter
 
         self.data[shorturl_dict["id"]] = shorturl_dict
+        
+        return self._to_domain(shorturl_dict)
 
     def get_by_id(self, id: int) -> ShortURL | None:
         for id_key in self.data:
