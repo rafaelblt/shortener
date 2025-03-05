@@ -1,4 +1,4 @@
 import os
 
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///default.db")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///default.db")
