@@ -27,10 +27,10 @@ class GeneralValidator(ShortURLValidator):
         """
         self.repository = repository
 
-    def validate(self, shorturl: ShortURL) -> None:
-        self._validate_slug(shorturl.slug)
+    async def validate(self, shorturl: ShortURL) -> None:
+        await self._validate_slug(shorturl.slug)
 
-    def _validate_slug(self, slug: str) -> None:
+    async def _validate_slug(self, slug: str) -> None:
         """
         Args: 
             slug (str): The slug to be validated.
@@ -59,7 +59,7 @@ class GeneralValidator(ShortURLValidator):
                 "The provided slug is shorter than min length"
             )
         
-        if self.repository.exists_by_slug(slug):
+        if await self.repository.exists_by_slug(slug):
             raise ShortURLSlugAlreadyExistsError(
                 "The provided slug already exists."
             )
