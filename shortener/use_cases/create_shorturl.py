@@ -14,7 +14,7 @@ class CreateShortURLUseCase:
 
     def __init__(
             self, 
-            repository: ShortURLRepository, 
+            repository: ShortURLRepository,
             validator: ShortURLValidator,
             slug_generator: SlugGenerator,
         ):
@@ -30,7 +30,7 @@ class CreateShortURLUseCase:
         self.validator = validator
         self.slug_generator = slug_generator
 
-    def execute(
+    async def execute(
             self, 
             original_url: str, 
             owner_id: Optional[int] = None, 
@@ -49,7 +49,7 @@ class CreateShortURLUseCase:
         Returns:
             ShortURL: The ShortURL object.
         """
-        slug = custom_slug or self.slug_generator.generate_unique_slug(
+        slug = custom_slug or await self.slug_generator.generate_unique_slug(
             repository=self.repository
         )
 
@@ -60,6 +60,6 @@ class CreateShortURLUseCase:
             expires_at=expires_at
         )
 
-        self.validator.validate(shorturl)
+        await self.validator.validate(shorturl)
         
-        return self.repository.save(shorturl)
+        return await self.repository.save(shorturl)
