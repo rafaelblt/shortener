@@ -1,4 +1,5 @@
-from pytest import fixture, raises
+import pytest
+import pytest_asyncio
 
 from sqlalchemy.orm.exc import UnmappedInstanceError
 
@@ -8,12 +9,14 @@ from shortener.infra.db.models import ShortURLModel
 from shortener.infra.db.repositories import SQLAlchemyShortURLRepository
 
 
-@fixture
-def repository(sqlalchemy_shorturl_repository) -> SQLAlchemyShortURLRepository:
+@pytest_asyncio.fixture
+async def repository(sqlalchemy_shorturl_repository):
     return sqlalchemy_shorturl_repository
 
 
-def test_to_model(repository, normal_shorturl):
+def test_to_model(
+    repository: SQLAlchemyShortURLRepository, normal_shorturl: ShortURL
+):
     model = repository._to_model(normal_shorturl)
 
     assert isinstance(model, ShortURLModel)
@@ -28,7 +31,9 @@ def test_to_model(repository, normal_shorturl):
     # TODO: assert owner attr when user entity and model are created
 
 
-def test_to_domain(repository, normal_shorturl):
+def test_to_domain(
+    repository: SQLAlchemyShortURLRepository, normal_shorturl: ShortURL
+):
     model = repository._to_model(normal_shorturl)
     domain = repository._to_domain(model)
 
@@ -44,58 +49,78 @@ def test_to_domain(repository, normal_shorturl):
     # TODO: assert owner attr when user entity and model are created
 
 
-def test_save(repository, normal_shorturl):
-    retrieved = repository.save(normal_shorturl)
+@pytest.mark.asyncio
+async def test_save(
+    repository: SQLAlchemyShortURLRepository, normal_shorturl: ShortURL
+):
+    retrieved = await repository.save(normal_shorturl)
 
     assert isinstance(retrieved, ShortURL)
     assert retrieved.id == 1
     assert retrieved.slug == normal_shorturl.slug
 
-    saved_model = repository.session.get(ShortURLModel, 1)
-    
+    saved_model = await repository.session.get(ShortURLModel, 1)
     assert saved_model.slug == normal_shorturl.slug
 
 
-def test_get_by_id(repository, normal_shorturl):
-    repository.save(normal_shorturl)
+@pytest.mark.asyncio
+async def test_get_by_id(
+    repository: SQLAlchemyShortURLRepository, normal_shorturl: ShortURL
+):
+    await repository.save(normal_shorturl)
 
-    retrieved = repository.get_by_id(1)
+    retrieved = await repository.get_by_id(1)
 
     assert isinstance(retrieved, ShortURL)
     assert retrieved.id == 1
     assert retrieved.slug == normal_shorturl.slug
 
 
-def test_get_by_slug(repository, normal_shorturl):
-    repository.save(normal_shorturl)
+@pytest.mark.asyncio
+async def test_get_by_slug(
+    repository: SQLAlchemyShortURLRepository, normal_shorturl: ShortURL
+):
+    await repository.save(normal_shorturl)
 
-    retrieved = repository.get_by_slug(normal_shorturl.slug)
+    retrieved = await repository.get_by_slug(normal_shorturl.slug)
 
     assert isinstance(retrieved, ShortURL)
     assert retrieved.id == 1
     assert retrieved.original_url == normal_shorturl.original_url
 
 
-def test_exists_by_slug(repository, normal_shorturl):
-    repository.save(normal_shorturl)
-    assert repository.exists_by_slug(normal_shorturl.slug) is True
+@pytest.mark.asyncio
+async def test_exists_by_slug(
+    repository: SQLAlchemyShortURLRepository, normal_shorturl: ShortURL
+):
+    await repository.save(normal_shorturl)
+    assert await repository.exists_by_slug(normal_shorturl.slug) is True
 
 
-def test_exists_by_slug_false(repository, normal_shorturl):
-    assert repository.exists_by_slug(normal_shorturl.slug) is False
+@pytest.mark.asyncio
+async def test_exists_by_slug_false(
+    repository: SQLAlchemyShortURLRepository, normal_shorturl: ShortURL
+):
+    assert await repository.exists_by_slug(normal_shorturl.slug) is False
 
 
-def test_delete_by_id(repository, normal_shorturl):
-    repository.save(normal_shorturl)
+@pytest.mark.asyncio
+async def test_delete_by_id(
+    repository: SQLAlchemyShortURLRepository, normal_shorturl: ShortURL
+):
+    await repository.save(normal_shorturl)
 
-    retrieved = repository.delete_by_id(1)
+    retrieved = await repository.delete_by_id(1)
 
     assert isinstance(retrieved, ShortURL)
     assert retrieved.id == 1
     assert retrieved.slug == normal_shorturl.slug
-    assert repository.exists_by_slug(normal_shorturl.slug) is False
+    assert await repository.exists_by_slug(normal_shorturl.slug) is False
 
 
-def test_delete_by_id_non_existent_shorturl(repository):
-    with raises(UnmappedInstanceError):
-        repository.delete_by_id(1)
+@pytest.mark.asyncio
+async def test_delete_by_id_non_existent_shorturl(
+    repository: SQLAlchemyShortURLRepository
+):
+    with pytest.raises(UnmappedInstanceError):
+        await repository.delete_by_id(1)
