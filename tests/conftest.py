@@ -1,9 +1,10 @@
-from pytest import fixture
+import pytest
+import pytest_asyncio
 
 from fastapi.testclient import TestClient
 
-from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 
 from .mocks import MockShortURLRepository
 
@@ -20,7 +21,7 @@ from shortener.infra.db.repositories import SQLAlchemyShortURLRepository
 from shortener.adapters.api import app
 
 
-@fixture
+@pytest.fixture
 def normal_shorturl():
     return ShortURL(
         slug="lorem-ipsum-website",
@@ -28,54 +29,52 @@ def normal_shorturl():
     )
 
 
-@fixture
+@pytest.fixture
 def mock_shorturl_repository():
     return MockShortURLRepository()
 
 
-@fixture
+@pytest.fixture
 def shorturl_slug_generator():
     return SlugGenerator()
 
 
-@fixture
+@pytest.fixture
 def shorturl_availability_validator():
     return ShortURLAvailabilityValidator()
 
 
-@fixture
+@pytest.fixture
 def shorturl_general_validator(mock_shorturl_repository):
     return ShortURLGeneralValidator(repository=mock_shorturl_repository)
 
 
-@fixture
-def db_session():
-    TEST_DATABASE_URL = "sqlite:///:memory:"
-    test_database_engine = create_engine(
+@pytest_asyncio.fixture
+async def db_session():
+    TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
+    test_database_engine = create_async_engine(
         TEST_DATABASE_URL, connect_args={"check_same_thread": False}
     )
-    TestSession = sessionmaker(bind=test_database_engine)
+    TestSession = sessionmaker(bind=test_database_engine, class_=AsyncSession)
 
-    Base.metadata.create_all(test_database_engine)
+    async with test_database_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
-    connection = test_database_engine.connect()
-    transaction = connection.begin()
-    session =  TestSession(bind=connection)
+    async with TestSession() as session:
+        yield session
+    
+    async with test_database_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
 
-    yield session
-
-    session.close()
-    transaction.rollback()
-    connection.close()
-    Base.metadata.drop_all(test_database_engine)
+    await test_database_engine.dispose()
 
 
-@fixture
-def sqlalchemy_shorturl_repository(db_session):
+@pytest_asyncio.fixture
+async def sqlalchemy_shorturl_repository(db_session):
     return SQLAlchemyShortURLRepository(db_session)
 
 
-@fixture
+@pytest.fixture
 def client(db_session):
 
     def session_override():
