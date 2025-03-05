@@ -23,7 +23,7 @@ class SlugGenerator:
         """
         return "".join(random.choices(self.chars, k=length))
     
-    def generate_unique_slug(
+    async def generate_unique_slug(
             self, 
             repository: ShortURLRepository, 
             length: int = RANDOM_LENGTH,
@@ -31,6 +31,7 @@ class SlugGenerator:
         ) -> str:
         """
         Generates a unique slug of a specified length.
+
         This method generates a random slug and checks its uniqueness against 
         the provided repository. If the slug already exists, it continues 
         generating new slugs until a unique one is found or until max_attempts 
@@ -41,7 +42,7 @@ class SlugGenerator:
                 existing slugs.
             length (int, optional): The length of the slug to generate. 
             max_attempts (int, optional): The maximum number of attempts 
-                to generate a unique slug. Default is 100.
+                to generate a unique slug.
 
         Returns:
             str: A unique slug.
@@ -54,7 +55,8 @@ class SlugGenerator:
         while attempts <= max_attempts:
             attempts += 1
             slug = self.generate_random_slug(length=length)
-            if not repository.exists_by_slug(slug):
+            
+            if not await repository.exists_by_slug(slug):
                 return slug
 
         raise RuntimeError(
