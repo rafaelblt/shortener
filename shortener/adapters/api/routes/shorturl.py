@@ -47,11 +47,11 @@ def get_shorturl(
 
 
 @router.post("/", status_code=HTTPStatus.CREATED, response_model=ShortURLSchema)
-def create_shorturl(
+async def create_shorturl(
     data: ShortURLCreateSchema,
     use_case: CreateShortURLUseCase = Depends(make_create_shorturl_use_case)
 ):    
-    shorturl = use_case.execute(
+    shorturl = await use_case.execute(
         original_url=data.original_url,
         custom_slug=data.custom_slug,
         owner_id=data.owner_id,
