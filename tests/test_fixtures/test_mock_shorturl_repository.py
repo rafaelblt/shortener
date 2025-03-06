@@ -2,13 +2,17 @@ import pytest
 
 from shortener.domain.shorturl import ShortURL
 
+from tests.mocks import MockShortURLRepository
+
 
 @pytest.fixture
-def mock_repository(mock_shorturl_repository):
+def mock_repository(mock_shorturl_repository) -> MockShortURLRepository:
     return mock_shorturl_repository
 
 
-def test_to_dict(mock_repository, normal_shorturl):
+def test_to_dict(
+    mock_repository: MockShortURLRepository, normal_shorturl: ShortURL
+):
     shorturl_dict = mock_repository._to_dict(normal_shorturl)
     assert isinstance(shorturl_dict, dict)
     assert shorturl_dict["id"] == normal_shorturl.id
@@ -22,7 +26,9 @@ def test_to_dict(mock_repository, normal_shorturl):
     assert shorturl_dict["last_accessed_at"] == normal_shorturl.last_accessed_at
 
 
-def test_to_domain(mock_repository, normal_shorturl):
+def test_to_domain(
+    mock_repository: MockShortURLRepository, normal_shorturl: ShortURL
+):
     shorturl_dict = mock_repository._to_dict(normal_shorturl)
     domain = mock_repository._to_domain(shorturl_dict)
     assert domain.id == shorturl_dict["id"]
@@ -36,45 +42,62 @@ def test_to_domain(mock_repository, normal_shorturl):
     assert domain.last_accessed_at == shorturl_dict["last_accessed_at"]
 
 
-def test_save_shorturl(mock_repository, normal_shorturl):
-    mock_repository.save(normal_shorturl)
+@pytest.mark.asyncio
+async def test_save_shorturl(
+    mock_repository: MockShortURLRepository, normal_shorturl: ShortURL
+):
+    retrieved = await mock_repository.save(normal_shorturl)
+    assert isinstance(retrieved, ShortURL)
+    assert retrieved.slug == normal_shorturl.slug
+
     shorturl_dict = mock_repository.data[1]
     assert shorturl_dict["id"] == 1
     assert shorturl_dict["slug"] == normal_shorturl.slug
 
 
-def test_get_by_id(mock_repository, normal_shorturl):
-    mock_repository.save(normal_shorturl)
-    mock_repository.get_by_id(1)
+@pytest.mark.asyncio
+async def test_get_by_id(
+    mock_repository: MockShortURLRepository, normal_shorturl: ShortURL
+):
+    await mock_repository.save(normal_shorturl)
 
-    retrieved = mock_repository.get_by_id(1)
+    retrieved = await mock_repository.get_by_id(1)
 
     assert isinstance(retrieved, ShortURL)
     assert retrieved.id == 1
     assert retrieved.slug == normal_shorturl.slug
 
 
-def test_get_by_slug(mock_repository, normal_shorturl):
-    mock_repository.save(normal_shorturl)
+@pytest.mark.asyncio
+async def test_get_by_slug(
+    mock_repository: MockShortURLRepository, normal_shorturl: ShortURL
+):
+    await mock_repository.save(normal_shorturl)
 
-    retrieved = mock_repository.get_by_slug(normal_shorturl.slug)
+    retrieved = await mock_repository.get_by_slug(normal_shorturl.slug)
 
     assert isinstance(retrieved, ShortURL)
     assert retrieved.slug == normal_shorturl.slug
 
 
-def test_exists_by_slug(mock_repository, normal_shorturl):
-    mock_repository.save(normal_shorturl)
-    assert mock_repository.exists_by_slug(normal_shorturl.slug) is True
-    assert mock_repository.exists_by_slug("nonexistentslug") is False
+@pytest.mark.asyncio
+async def test_exists_by_slug(
+    mock_repository: MockShortURLRepository, normal_shorturl: ShortURL
+):
+    await mock_repository.save(normal_shorturl)
+    assert await mock_repository.exists_by_slug(normal_shorturl.slug) is True
+    assert await mock_repository.exists_by_slug("nonexistentslug") is False
 
 
-def test_delete_by_id(mock_repository, normal_shorturl):
-    mock_repository.save(normal_shorturl) 
+@pytest.mark.asyncio
+async def test_delete_by_id(
+    mock_repository: MockShortURLRepository, normal_shorturl: ShortURL
+):
+    await mock_repository.save(normal_shorturl) 
 
-    deleted = mock_repository.delete_by_id(1)
+    deleted = await mock_repository.delete_by_id(1)
 
     assert isinstance(deleted, ShortURL)
     assert deleted.id == 1
     assert deleted.slug == normal_shorturl.slug
-    assert mock_repository.get_by_id(1) is None
+    assert await mock_repository.get_by_id(1) is None

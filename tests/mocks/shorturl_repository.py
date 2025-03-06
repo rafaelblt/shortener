@@ -7,7 +7,7 @@ class MockShortURLRepository(ShortURLRepository):
     def __init__(self):
         self.data = {}
 
-    def save(self, shorturl: ShortURL) -> ShortURL:
+    async def save(self, shorturl: ShortURL) -> ShortURL:
         shorturl_dict = self._to_dict(shorturl)
 
         if shorturl_dict["id"] is None:
@@ -20,24 +20,24 @@ class MockShortURLRepository(ShortURLRepository):
         
         return self._to_domain(shorturl_dict)
 
-    def get_by_id(self, id: int) -> ShortURL | None:
+    async def get_by_id(self, id: int) -> ShortURL | None:
         for id_key in self.data:
             if id_key == id:
                 return self._to_domain(self.data[id_key])
         return None
 
-    def get_by_slug(self, slug: str) -> ShortURL | None:
+    async def get_by_slug(self, slug: str) -> ShortURL | None:
         for shorturl_dict in self.data.values():
             if shorturl_dict["slug"] == slug:
                 return self._to_domain(shorturl_dict)
         return None
     
-    def exists_by_slug(self, slug: str) -> bool:
-        if self.get_by_slug(slug):
+    async def exists_by_slug(self, slug: str) -> bool:
+        if await self.get_by_slug(slug):
             return True
         return False
 
-    def delete_by_id(self, id: int) -> ShortURL:
+    async def delete_by_id(self, id: int) -> ShortURL:
         for id_key in self.data:
             if id_key == id:
                 shorturl_dict = self.data.pop(id_key)
