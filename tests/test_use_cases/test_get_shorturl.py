@@ -1,30 +1,39 @@
-from pytest import fixture
+import pytest
+import pytest_asyncio
+import copy
 
+from shortener.domain.shorturl import ShortURL
 from shortener.use_cases import GetShortURLUseCase
 
 
-@fixture
-def use_case(mock_shorturl_repository, normal_shorturl):
-    normal_shorturl.id = 1
-    mock_shorturl_repository.save(normal_shorturl)
-    return GetShortURLUseCase(repository=mock_shorturl_repository)
+@pytest_asyncio.fixture
+async def use_case(mock_shorturl_repository, normal_shorturl):
+    repository = copy.deepcopy(mock_shorturl_repository)
+    await repository.save(normal_shorturl)
+    return GetShortURLUseCase(repository=repository)
 
 
-def test_get_by_id(use_case, normal_shorturl):
-    retrieved = use_case.get_by_id(1)
+@pytest.mark.asyncio
+async def test_get_by_id(
+    use_case: GetShortURLUseCase, normal_shorturl: ShortURL
+):
+    retrieved = await use_case.get_by_id(1)
     assert retrieved.slug == normal_shorturl.slug
 
 
-def test_get_by_id_non_existent(use_case):
-    retrieved = use_case.get_by_id(2)
+@pytest.mark.asyncio
+async def test_get_by_id_non_existent(use_case: GetShortURLUseCase):
+    retrieved = await use_case.get_by_id(2)
     assert retrieved is None
 
 
-def test_get_by_slug(use_case, normal_shorturl):
-    retrieved = use_case.get_by_slug(normal_shorturl.slug)
+@pytest.mark.asyncio
+async def test_get_by_slug(use_case, normal_shorturl):
+    retrieved = await use_case.get_by_slug(normal_shorturl.slug)
     assert retrieved.original_url == normal_shorturl.original_url
 
 
-def test_get_by_slug_non_existent(use_case):
-    retrieved = use_case.get_by_slug("non-existent-slug")
+@pytest.mark.asyncio
+async def test_get_by_slug_non_existent(use_case):
+    retrieved = await use_case.get_by_slug("non-existent-slug")
     assert retrieved is None
