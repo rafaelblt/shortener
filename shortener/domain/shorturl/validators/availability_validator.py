@@ -14,7 +14,7 @@ class AvailabilityValidator(ShortURLValidator):
     def __init__(self):
         pass
 
-    def validate(self, shorturl: ShortURL) -> None:
+    async def validate(self, shorturl: ShortURL) -> None:
         """
         Args:
             shorturl (ShortURL): The shorturl object to be validated.
