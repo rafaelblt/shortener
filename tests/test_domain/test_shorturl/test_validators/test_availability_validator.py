@@ -1,38 +1,51 @@
+import pytest
+
 from datetime import datetime, timezone
 
-from pytest import fixture, raises
-
 from shortener.domain.shorturl import ShortURL
+from shortener.domain.shorturl.validators import AvailabilityValidator
 from shortener.domain.shorturl.exceptions import (
     ShortURLInactiveError, ShortURLExpiredError
 )
 
 
-@fixture
+@pytest.fixture
 def validator(shorturl_availability_validator):
     return shorturl_availability_validator
 
 
-def test_validate_normal_shorturl(validator, normal_shorturl):
-    validator.validate(normal_shorturl)
+@pytest.mark.asyncio
+async def test_validate_normal_shorturl(
+    validator: AvailabilityValidator, normal_shorturl: ShortURL
+):
+    await validator.validate(normal_shorturl)
 
 
-def test_validate_with_is_active_false(validator, normal_shorturl):
+@pytest.mark.asyncio
+async def test_validate_with_is_active_false(
+    validator: AvailabilityValidator, normal_shorturl: ShortURL
+):
     normal_shorturl.is_active = False
-    with raises(ShortURLInactiveError, match="The ShortURL is not active"):
-        validator.validate(normal_shorturl)
+    with pytest.raises(ShortURLInactiveError, match="The ShortURL is not active"):
+        await validator.validate(normal_shorturl)
 
 
-def test_validate_with_valid_expires_at(validator, normal_shorturl):
+@pytest.mark.asyncio
+async def test_validate_with_valid_expires_at(
+    validator: AvailabilityValidator, normal_shorturl: ShortURL
+):
     normal_shorturl.expires_at = datetime(
         year=3950, month=1, day=1, tzinfo=timezone.utc
     )
-    validator.validate(normal_shorturl)
+    await validator.validate(normal_shorturl)
 
 
-def test_validate_with_invalid_expires_at(validator, normal_shorturl):
+@pytest.mark.asyncio
+async def test_validate_with_invalid_expires_at(
+    validator: AvailabilityValidator, normal_shorturl: ShortURL
+):
     normal_shorturl.expires_at = datetime(
         year=2020, month=1, day=1, tzinfo=timezone.utc
     )
-    with raises(ShortURLExpiredError, match="The ShortURL has expired."):
-        validator.validate(normal_shorturl)
+    with pytest.raises(ShortURLExpiredError, match="The ShortURL has expired."):
+        await validator.validate(normal_shorturl)
