@@ -1,7 +1,7 @@
 from typing import Optional
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class ShortURLCreateSchema(BaseModel):
@@ -10,8 +10,8 @@ class ShortURLCreateSchema(BaseModel):
     owner_id: Optional[int] = None
     expires_at: Optional[datetime] = None
     
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "original_url": "https://example.com",
                 "custom_slug": "custom-slug",
@@ -19,3 +19,4 @@ class ShortURLCreateSchema(BaseModel):
                 "expires_at": "2023-12-31T23:59:59"
             }
         }
+    )
