@@ -15,7 +15,7 @@ class DeleteShortURLUseCase:
         """
         self.repository = repository
 
-    def delete_by_id(self, id: int) -> ShortURL:
+    async def delete_by_id(self, id: int) -> ShortURL:
         """
         Deletes a ShortURL by its ID.
 
@@ -29,12 +29,12 @@ class DeleteShortURLUseCase:
             ShortURLDeletionNotFoundError: If the ShortURL to be deleted is not 
                 found.
         """
-        shorturl = self.repository.get_by_id(id)
+        shorturl = await self.repository.get_by_id(id)
 
         # TODO: future validations for deletion
 
         if shorturl:
-            self.repository.delete_by_id(id)
+            await self.repository.delete_by_id(id)
             return shorturl
         
         raise ShortURLDeletionNotFoundError(
