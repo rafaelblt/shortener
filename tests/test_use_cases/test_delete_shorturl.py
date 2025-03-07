@@ -1,27 +1,33 @@
-from pytest import fixture, raises
+import pytest
+import pytest_asyncio
 
+from shortener.domain.shorturl import ShortURL
 from shortener.domain.shorturl.exceptions import ShortURLDeletionNotFoundError
 
 from shortener.use_cases import DeleteShortURLUseCase
 
 
-@fixture
-def use_case(mock_shorturl_repository, normal_shorturl):
-    mock_shorturl_repository.save(normal_shorturl)
+@pytest_asyncio.fixture
+async def use_case(mock_shorturl_repository, normal_shorturl):
+    await mock_shorturl_repository.save(normal_shorturl)
     return DeleteShortURLUseCase(repository=mock_shorturl_repository)
 
 
-def test_delete_by_id(use_case, normal_shorturl):
+@pytest.mark.asyncio
+async def test_delete_by_id(
+    use_case: DeleteShortURLUseCase, normal_shorturl: ShortURL
+):
     normal_shorturl.id = 1
-    retrieved = use_case.delete_by_id(normal_shorturl.id)
+    retrieved = await use_case.delete_by_id(normal_shorturl.id)
     assert retrieved.id == normal_shorturl.id
     assert retrieved.slug == normal_shorturl.slug
 
 
-def test_raises_not_found_delete_by_id(use_case):
+@pytest.mark.asyncio
+async def test_raises_not_found_delete_by_id(use_case: DeleteShortURLUseCase):
     example_id = 2
-    with raises(
+    with pytest.raises(
         ShortURLDeletionNotFoundError,
         match=f"ShortURL with id {example_id} not found for deletion."
     ):
-        use_case.delete_by_id(example_id)
+        await use_case.delete_by_id(example_id)
