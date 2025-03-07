@@ -22,7 +22,7 @@ class ResolveShortURLUseCase:
         self.repository = repository
         self.validator = validator
     
-    def resolve_slug(self, slug: str) -> str | None:
+    async def resolve_slug(self, slug: str) -> str | None:
         """
         Get the original_url attr of a ShortURL in the repository with the slug.
 
@@ -32,11 +32,11 @@ class ResolveShortURLUseCase:
         Returns:
             Optional[str]: The original_url of ShortURL or None if not found.
         """
-        shorturl = self.repository.get_by_slug(slug)
+        shorturl = await self.repository.get_by_slug(slug)
     
         if shorturl is None:
             return None
 
-        self.validator.validate(shorturl)
+        await self.validator.validate(shorturl)
 
         return shorturl.original_url
