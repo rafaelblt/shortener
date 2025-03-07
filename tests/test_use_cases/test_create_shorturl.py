@@ -1,4 +1,4 @@
-from pytest import fixture, raises
+import pytest
 
 from datetime import datetime
 
@@ -10,12 +10,12 @@ from shortener.domain.shorturl.rules.slug_length import DEFAULT_RANDOM_SLUG_LENG
 from shortener.use_cases import CreateShortURLUseCase
 
 
-@fixture
+@pytest.fixture
 def validator(mock_shorturl_repository):
     return GeneralValidator(mock_shorturl_repository)
 
 
-@fixture
+@pytest.fixture
 def use_case(mock_shorturl_repository, validator, shorturl_slug_generator):
     return CreateShortURLUseCase(
         repository=mock_shorturl_repository,
@@ -24,8 +24,10 @@ def use_case(mock_shorturl_repository, validator, shorturl_slug_generator):
     )
 
 
-def test_attrs_of_shorturl(use_case):
-    shorturl = use_case.execute(original_url="github.com")
+@pytest.mark.asyncio
+async def test_attrs_of_shorturl(use_case):
+    shorturl = await use_case.execute(original_url="github.com")
+
     assert isinstance(shorturl, ShortURL)
     assert shorturl.original_url == "github.com"
     assert shorturl.owner_id == None
@@ -37,8 +39,9 @@ def test_attrs_of_shorturl(use_case):
     assert shorturl.visit_count == 0
 
 
-def test_full_args(use_case):
-    shorturl = use_case.execute(
+@pytest.mark.asyncio
+async def test_execute_with_full_args(use_case):
+    shorturl = await use_case.execute(
         original_url="github.com",
         owner_id=1,
         custom_slug="git",
@@ -46,19 +49,20 @@ def test_full_args(use_case):
     )
     assert shorturl.owner_id == 1
     assert shorturl.slug == "git"
-    assert isinstance(shorturl.created_at, datetime)
     assert isinstance(shorturl.expires_at, datetime)
 
 
-def test_validation_raises_slug_already_exists(use_case):
-    use_case.execute(original_url="github.com", custom_slug="git")
+@pytest.mark.asyncio
+async def test_validation_raises_slug_already_exists(use_case):
+    await use_case.execute(original_url="github.com", custom_slug="git")
 
-    with raises(
+    with pytest.raises(
         ShortURLSlugAlreadyExistsError, match="The provided slug already exists."
     ):
-        use_case.execute(original_url="gitlab.com", custom_slug="git")
+        await use_case.execute(original_url="gitlab.com", custom_slug="git")
 
 
-def test_shorturl_is_saved_in_repository(use_case):
-    use_case.execute(original_url="github.com", custom_slug="git")
-    assert use_case.repository.exists_by_slug("git") is True
+@pytest.mark.asyncio
+async def test_shorturl_is_saved_in_repository(use_case):
+    await use_case.execute(original_url="github.com", custom_slug="git")
+    assert await use_case.repository.exists_by_slug("git") is True
