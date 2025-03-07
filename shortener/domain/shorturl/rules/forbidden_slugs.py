@@ -1,4 +1,9 @@
 FORBIDDEN_SLUGS = {
+    "shorturls",
+    "shorturl",
+    "users",
+    "user",
+    "docs",
     "admin", 
     "login", 
     "logout", 
