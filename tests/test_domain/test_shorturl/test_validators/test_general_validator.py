@@ -1,4 +1,4 @@
-from pytest import fixture, raises
+import pytest
 
 from shortener.domain.shorturl import ShortURL
 from shortener.domain.shorturl.validators import GeneralValidator
@@ -13,69 +13,84 @@ from shortener.domain.shorturl.exceptions import (
 )
 
 
-@fixture
-def validator(shorturl_general_validator):
+@pytest.fixture
+def validator(shorturl_general_validator) -> GeneralValidator:
     return shorturl_general_validator
 
 
-def test_validate_valid_slug(validator):
-    assert validator._validate_slug("my-short-url") == None
+@pytest.mark.asyncio
+async def test_validate_valid_slug(validator: GeneralValidator):
+    assert await validator._validate_slug("my-short-url") == None
 
 
-def test_validate_forbidden_slug(validator):
-    with raises(
+@pytest.mark.asyncio
+async def test_validate_forbidden_slug(validator: GeneralValidator):
+    with pytest.raises(
         ShortURLForbiddenSlugError, match="The provided slug is forbidden."
     ):
-        validator._validate_slug("api")
+        await validator._validate_slug("api")
 
 
-def test_validate_longer_slug(validator):
+@pytest.mark.asyncio
+async def test_validate_longer_slug(validator: GeneralValidator):
     slug = "a" * (SLUG_MAX_LENGTH + 1)
 
-    with raises(
+    with pytest.raises(
         ShortURLSlugTooLongError, 
         match="The provided slug is longer than max length"
     ):
-        validator._validate_slug(slug)
+        await validator._validate_slug(slug)
 
 
-def test_validate_slug_with_exactly_maxlength(validator):
+@pytest.mark.asyncio
+async def test_validate_slug_with_exactly_maxlength(validator: GeneralValidator):
     slug = "a" * SLUG_MAX_LENGTH 
-    validator._validate_slug(slug)
+    await validator._validate_slug(slug)
 
 
-def test_validate_shorter_slug(validator):
+@pytest.mark.asyncio
+async def test_validate_shorter_slug(validator: GeneralValidator):
     slug = "a" * (SLUG_MIN_LENGTH - 1)
 
-    with raises(
+    with pytest.raises(
         ShortURLSlugTooShortError, 
         match="The provided slug is shorter than min length"
     ):
-        validator._validate_slug(slug)
+        await validator._validate_slug(slug)
 
 
-def test_validate_slug_with_exactly_min_length(validator):
+@pytest.mark.asyncio
+async def test_validate_slug_with_exactly_min_length(validator: GeneralValidator):
     slug = "a" * SLUG_MIN_LENGTH
-    validator._validate_slug(slug)
+    await validator._validate_slug(slug)
 
 
-def test_validate_already_exists_slug(validator, normal_shorturl):
-    validator.repository.save(normal_shorturl)
+@pytest.mark.asyncio
+async def test_validate_already_exists_slug(
+    validator: GeneralValidator, normal_shorturl: ShortURL
+):
+    await validator.repository.save(normal_shorturl)
 
-    with raises(
+    with pytest.raises(
         ShortURLSlugAlreadyExistsError, match="The provided slug already exists."
     ):
-        validator._validate_slug(normal_shorturl.slug)
+        await validator._validate_slug(normal_shorturl.slug)
 
 
-def test_validate_valid_shorturl(validator, normal_shorturl):
-    assert validator.validate(normal_shorturl) == None
+@pytest.mark.asyncio
+async def test_validate_valid_shorturl(
+    validator: GeneralValidator, normal_shorturl: ShortURL
+):
+    assert await validator.validate(normal_shorturl) == None
 
 
-def test_validate_invalid_shorturl(validator, normal_shorturl):
+@pytest.mark.asyncio
+async def test_validate_invalid_shorturl(
+    validator: GeneralValidator, normal_shorturl: ShortURL
+):
     normal_shorturl.slug = "config"
 
-    with raises(
+    with pytest.raises(
         ShortURLForbiddenSlugError, match="The provided slug is forbidden."
     ):
-        validator.validate(normal_shorturl)
+        await validator.validate(normal_shorturl)
