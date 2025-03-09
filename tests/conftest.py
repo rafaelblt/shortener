@@ -30,6 +30,14 @@ def normal_shorturl():
 
 
 @pytest.fixture
+def other_shorturl():
+    return ShortURL(
+        slug="other-network",
+        original_url="www.git.com"
+    )
+
+
+@pytest.fixture
 def mock_shorturl_repository():
     return MockShortURLRepository()
 
