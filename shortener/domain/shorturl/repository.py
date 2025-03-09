@@ -5,21 +5,25 @@ from shortener.domain.shorturl import ShortURL
 class ShortURLRepository(ABC):
 
     @abstractmethod
-    def save(self, shorturl: ShortURL) -> ShortURL:
+    async def get_all(self) -> list[ShortURL]:
         pass
 
     @abstractmethod
-    def exists_by_slug(self, slug: str) -> bool:
+    async def save(self, shorturl: ShortURL) -> ShortURL:
         pass
 
     @abstractmethod
-    def get_by_slug(self, slug: str) -> ShortURL | None:
+    async def exists_by_slug(self, slug: str) -> bool:
         pass
 
     @abstractmethod
-    def get_by_id(self, id: int) -> ShortURL | None:
+    async def get_by_slug(self, slug: str) -> ShortURL | None:
         pass
 
     @abstractmethod
-    def delete_by_id(self, id: int) -> ShortURL:
+    async def get_by_id(self, id: int) -> ShortURL | None:
+        pass
+
+    @abstractmethod
+    async def delete_by_id(self, id: int) -> ShortURL:
         pass
