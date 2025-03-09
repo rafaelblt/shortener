@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import RedirectResponse, Response
 
 from shortener.use_cases import ResolveShortURLUseCase
-from shortener.adapters.api.dependencies import make_resolve_shorturl_use_case
+from shortener.adapters.api.v1.dependencies import make_resolve_shorturl_use_case
 
 
 router = APIRouter()

@@ -10,17 +10,17 @@ from shortener.use_cases import (
     DeleteShortURLUseCase
 )
 
-from shortener.adapters.api.dependencies import (
+from shortener.adapters.api.v1.dependencies import (
     make_create_shorturl_use_case,
     make_get_shorturl_use_case,
     make_delete_shorturl_use_case
 )
-from shortener.adapters.api.schemas import (
+from shortener.adapters.api.v1.schemas import (
     ShortURLSchema, ShortURLCreateSchema
 )
 
 
-router = APIRouter(prefix="/shorturls", tags=["shorturls"])
+router = APIRouter(prefix="/api/v1/shorturls", tags=["shorturls"])
 
 
 @router.get("/")
@@ -64,7 +64,7 @@ async def create_shorturl(
     return JSONResponse(
         status_code=HTTPStatus.CREATED,
         content=response_data,
-        headers={"Location": f"/shorturls/{shorturl.id}"}
+        headers={"Location": f"{router.prefix}/{shorturl.id}"}
     )
 
 
