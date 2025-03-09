@@ -9,7 +9,7 @@ class GetShortURLUseCase:
         Initializes the use case with a repository.
 
         Args:
-            repository (ShortURLRepository): The repository to get  ShortURL 
+            repository (ShortURLRepository): The repository to get ShortURL 
                 objects.
         """
         self.repository = repository
