@@ -43,6 +43,12 @@ def test_to_domain(
 
 
 @pytest.mark.asyncio
+async def test_get_all_with_no_shorturls(mock_repository: MockShortURLRepository):
+    retrieved = await mock_repository.get_all()
+    assert retrieved == []
+
+
+@pytest.mark.asyncio
 async def test_save_shorturl(
     mock_repository: MockShortURLRepository, normal_shorturl: ShortURL
 ):
@@ -53,6 +59,24 @@ async def test_save_shorturl(
     shorturl_dict = mock_repository.data[1]
     assert shorturl_dict["id"] == 1
     assert shorturl_dict["slug"] == normal_shorturl.slug
+
+
+@pytest.mark.asyncio
+async def test_get_all_with_shorturls(
+    mock_repository: MockShortURLRepository, normal_shorturl: ShortURL
+):
+    await mock_repository.save(normal_shorturl)
+    await mock_repository.save(normal_shorturl)
+
+    retrieved = await mock_repository.get_all()
+
+    assert len(retrieved) == 2
+    assert isinstance(retrieved[0], ShortURL)
+    assert isinstance(retrieved[1], ShortURL)
+    assert retrieved[0].id == 1
+    assert retrieved[1].id == 2
+    assert retrieved[0].slug == normal_shorturl.slug
+    assert retrieved[1].slug == normal_shorturl.slug
 
 
 @pytest.mark.asyncio
