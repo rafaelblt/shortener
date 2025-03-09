@@ -5,15 +5,17 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 
 from shortener.use_cases import (
-    CreateShortURLUseCase,
     GetShortURLUseCase,
+    ListShortURLUseCase,
+    CreateShortURLUseCase,
     DeleteShortURLUseCase
 )
 
 from shortener.adapters.api.v1.dependencies import (
     make_create_shorturl_use_case,
     make_get_shorturl_use_case,
-    make_delete_shorturl_use_case
+    make_delete_shorturl_use_case,
+    make_list_shorturl_use_case
 )
 from shortener.adapters.api.v1.schemas import (
     ShortURLSchema, ShortURLCreateSchema
@@ -24,8 +26,10 @@ router = APIRouter(prefix="/api/v1/shorturls", tags=["shorturls"])
 
 
 @router.get("/")
-def list_shorturls():
-    return {"message": "List all shorturls"} # TODO
+async def list_shorturls(
+    use_case: ListShortURLUseCase = Depends(make_list_shorturl_use_case)
+):
+    return await use_case.list_all()
 
 
 @router.get("/{id}", response_model=ShortURLSchema)
