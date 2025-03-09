@@ -64,6 +64,37 @@ async def test_save(
 
 
 @pytest.mark.asyncio
+async def test_get_all_with_no_shorturls(
+    repository: SQLAlchemyShortURLRepository
+):
+    retrieved = await repository.get_all()
+
+    assert isinstance(retrieved, list)
+    assert len(retrieved) == 0
+
+
+@pytest.mark.asyncio
+async def test_get_all_with_shorturls(
+    repository: SQLAlchemyShortURLRepository, 
+    normal_shorturl: ShortURL,
+    other_shorturl: ShortURL
+):
+    await repository.save(normal_shorturl)
+    await repository.save(other_shorturl)
+
+    retrieved = await repository.get_all()
+
+    assert isinstance(retrieved, list)
+    assert len(retrieved) == 2
+    assert isinstance(retrieved[0], ShortURL)
+    assert isinstance(retrieved[1], ShortURL)
+    assert retrieved[0].id == 1
+    assert retrieved[1].id == 2
+    assert retrieved[0].slug == normal_shorturl.slug
+    assert retrieved[1].slug == other_shorturl.slug
+
+
+@pytest.mark.asyncio
 async def test_get_by_id(
     repository: SQLAlchemyShortURLRepository, normal_shorturl: ShortURL
 ):
