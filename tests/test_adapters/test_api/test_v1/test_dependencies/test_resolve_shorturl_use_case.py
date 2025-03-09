@@ -6,7 +6,7 @@ from shortener.domain.shorturl.validators import AvailabilityValidator
 
 from shortener.use_cases import ResolveShortURLUseCase
 
-from shortener.adapters.api.dependencies import (
+from shortener.adapters.api.v1.dependencies import (
     make_resolve_shorturl_use_case, make_sqlalchemy_shorturl_repository
 )
 

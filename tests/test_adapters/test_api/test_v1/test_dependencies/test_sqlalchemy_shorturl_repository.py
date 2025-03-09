@@ -2,7 +2,9 @@ import pytest
 
 from fastapi.params import Depends
 
-from shortener.adapters.api.dependencies import make_sqlalchemy_shorturl_repository
+from shortener.adapters.api.v1.dependencies import (
+    make_sqlalchemy_shorturl_repository
+)
 
 from shortener.infra.db import get_session
 from shortener.infra.db.repositories import SQLAlchemyShortURLRepository
