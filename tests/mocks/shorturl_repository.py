@@ -7,6 +7,9 @@ class MockShortURLRepository(ShortURLRepository):
     def __init__(self):
         self.data = {}
 
+    async def get_all(self) -> list[ShortURL]:
+        return [self._to_domain(entity) for entity in self.data.values()]
+
     async def save(self, shorturl: ShortURL) -> ShortURL:
         shorturl_dict = self._to_dict(shorturl)
 
