@@ -18,6 +18,10 @@ class SQLAlchemyShortURLRepository(ShortURLRepository):
         """
         self.session = session
 
+    async def get_all(self) -> list[ShortURL]:
+        models = await self._get_all_models()
+        return [self._to_domain(model) for model in models]
+
     async def get_by_id(self, id: int) -> ShortURL | None:
         """
         Retrieves a ShortURL by its id.
@@ -87,6 +91,10 @@ class SQLAlchemyShortURLRepository(ShortURLRepository):
         await self.session.delete(shorturl_model)
         await self.session.commit()
         return self._to_domain(shorturl_model)
+
+    async def _get_all_models(self) -> list[ShortURLModel]:
+        result = await self.session.scalars(select(ShortURLModel))
+        return result.all()
 
     async def _get_model_by_id(self, id: int) -> ShortURLModel | None:
         """
