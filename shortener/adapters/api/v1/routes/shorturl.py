@@ -33,11 +33,11 @@ async def list_shorturls(
 
 
 @router.get("/{id}", response_model=ShortURLSchema)
-def get_shorturl(
+async def get_shorturl(
     id: int,
     use_case: GetShortURLUseCase = Depends(make_get_shorturl_use_case)
 ):
-    shorturl = use_case.get_by_id(id)
+    shorturl = await use_case.get_by_id(id)
 
     if shorturl is None:
         return JSONResponse(
