@@ -72,12 +72,10 @@ async def create_shorturl(
     )
 
 
-@router.delete("/{id}")
-def delete_shorturl(
+@router.delete("/{id}", status_code=HTTPStatus.NO_CONTENT)
+async def delete_shorturl(
     id: int,
     use_case: DeleteShortURLUseCase = Depends(make_delete_shorturl_use_case)
 ):
-    shorturl = use_case.delete_by_id(id)
-    response_data = ShortURLSchema.from_domain(shorturl).model_dump()
-
-    return response_data
+    await use_case.delete_by_id(id)
+    return JSONResponse(status_code=HTTPStatus.NO_CONTENT)
