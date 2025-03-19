@@ -1,0 +1,8 @@
+import pytest
+
+from shortener.adapters.api.v1.routes.shorturl import router
+
+
+@pytest.fixture
+def route():
+    return router.prefix
