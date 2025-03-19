@@ -17,7 +17,7 @@ def test_with_only_original_url(client: TestClient, route: str):
     )
 
     assert response.status_code == HTTPStatus.CREATED
-    assert response.headers["Location"] == route + "1" # .../shorturls/1
+    assert response.headers["Location"] == route + "/1" # .../shorturls/1
 
     today = datetime.now(tz=timezone.utc).strftime("%Y-%m-%d")
     json = response.json()
