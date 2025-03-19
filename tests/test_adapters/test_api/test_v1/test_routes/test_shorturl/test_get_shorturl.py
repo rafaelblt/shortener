@@ -17,10 +17,10 @@ async def test_with_existent_id(
     await sqlalchemy_shorturl_repository.save(normal_shorturl)
 
     response = client.get("/api/v1/shorturls/1")
+    
     assert response.status_code == HTTPStatus.OK
 
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-
     json = response.json()
     assert json["id"] == 1
     assert json["slug"] == normal_shorturl.slug
