@@ -73,14 +73,14 @@ class Slug(str):
                 "The provided slug is forbidden."
             )
 
-        if len(value) < Slug.SLUG_MIN_LENGTH:
+        if len(value) < SLUG_MIN_LENGTH:
             raise ShortURLSlugTooShortError(
-                f"Slug must be at least {Slug.SLUG_MIN_LENGTH} characters long."
+                f"Slug must be at least {SLUG_MIN_LENGTH} characters long."
             )
         
-        if len(value) > Slug.SLUG_MAX_LENGTH:
+        if len(value) > SLUG_MAX_LENGTH:
             raise ShortURLSlugTooLongError(
-                f"Slug must be at most {Slug.SLUG_MAX_LENGTH} characters long."
+                f"Slug must be at most {SLUG_MAX_LENGTH} characters long."
             )
 
     @classmethod
