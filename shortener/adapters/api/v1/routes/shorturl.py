@@ -1,8 +1,12 @@
 from http import HTTPStatus
 
 from fastapi import APIRouter, Depends
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from fastapi.encoders import jsonable_encoder
+
+from shortener.domain.shorturl.exceptions import (
+    ShortURLDeletionNotFoundError
+)
 
 from shortener.use_cases import (
     GetShortURLUseCase,
@@ -77,5 +81,14 @@ async def delete_shorturl(
     id: int,
     use_case: DeleteShortURLUseCase = Depends(make_delete_shorturl_use_case)
 ):
-    await use_case.delete_by_id(id)
-    return JSONResponse(status_code=HTTPStatus.NO_CONTENT)
+    try:
+        await use_case.delete_by_id(id)
+
+    except ShortURLDeletionNotFoundError as error:
+        return JSONResponse(
+            status_code=HTTPStatus.NOT_FOUND,
+            content={"message": str(error)},
+        )
+    
+    else:
+        return Response(status_code=HTTPStatus.NO_CONTENT)
