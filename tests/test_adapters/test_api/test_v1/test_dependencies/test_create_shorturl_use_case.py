@@ -2,8 +2,7 @@ import pytest
 
 from fastapi.params import Depends
 
-from shortener.domain.shorturl import SlugGenerator
-from shortener.domain.shorturl.validators import GeneralValidator
+from shortener.domain.shorturl.validators import CreateValidator
 
 from shortener.use_cases import CreateShortURLUseCase
 
@@ -27,8 +26,4 @@ def test_attr_repository(use_case: CreateShortURLUseCase):
 
 
 def test_attr_validator(use_case: CreateShortURLUseCase):
-    assert isinstance(use_case.validator, GeneralValidator)
-
-
-def test_attr_slug_generator(use_case: CreateShortURLUseCase):
-    assert isinstance(use_case.slug_generator, SlugGenerator)
+    assert isinstance(use_case.validator, CreateValidator)
