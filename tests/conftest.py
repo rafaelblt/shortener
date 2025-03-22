@@ -8,11 +8,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 
 from .mocks import MockShortURLRepository
 
-from shortener.domain.shorturl import ShortURL, SlugGenerator
-from shortener.domain.shorturl.validators import (
-    AvailabilityValidator as ShortURLAvailabilityValidator,
-    GeneralValidator as ShortURLGeneralValidator
-)
+from shortener.domain.shorturl import ShortURL, Slug
 
 from shortener.infra.db import get_session
 from shortener.infra.db.models import Base
@@ -24,7 +20,7 @@ from shortener.adapters.api import app
 @pytest.fixture
 def normal_shorturl():
     return ShortURL(
-        slug="lorem-ipsum-website",
+        slug=Slug("lorem-ipsum-website"),
         original_url="lorem.makeyoursite.com"
     )
 
@@ -32,7 +28,7 @@ def normal_shorturl():
 @pytest.fixture
 def other_shorturl():
     return ShortURL(
-        slug="other-network",
+        slug=Slug("other-network"),
         original_url="www.git.com"
     )
 
@@ -40,21 +36,6 @@ def other_shorturl():
 @pytest.fixture
 def mock_shorturl_repository():
     return MockShortURLRepository()
-
-
-@pytest.fixture
-def shorturl_slug_generator():
-    return SlugGenerator()
-
-
-@pytest.fixture
-def shorturl_availability_validator():
-    return ShortURLAvailabilityValidator()
-
-
-@pytest.fixture
-def shorturl_general_validator(mock_shorturl_repository):
-    return ShortURLGeneralValidator(repository=mock_shorturl_repository)
 
 
 @pytest_asyncio.fixture
