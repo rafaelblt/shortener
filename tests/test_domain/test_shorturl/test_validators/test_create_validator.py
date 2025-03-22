@@ -76,4 +76,4 @@ async def test_validate_raises_slug_already_exists(
     await validator.repository.save(normal_shorturl)
 
     with pytest.raises(ShortURLSlugAlreadyExistsError):
-        await validator.validate(normal_shorturl.slug)
+        await validator.validate(normal_shorturl)
