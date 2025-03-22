@@ -2,11 +2,13 @@ from datetime import datetime, timezone
 
 from typing import Optional
 
+from .slug import Slug
+
 
 class ShortURL:
     def __init__(
         self,
-        slug: str,
+        slug: Slug,
         original_url: str,
         id: Optional[int] = None, 
         owner_id: Optional[int] = None,
