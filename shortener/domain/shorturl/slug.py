@@ -3,7 +3,7 @@ import string
 import random
 
 from typing import Final
-
+from shortener.domain.shorturl.repository import ShortURLRepository
 from shortener.domain.shorturl.exceptions import (
     ShortURLSlugTooLongError,
     ShortURLSlugTooShortError,
@@ -15,6 +15,8 @@ from shortener.domain.shorturl.exceptions import (
 DEFAULT_RANDOM_SLUG_LENGTH: Final = 6
 SLUG_MAX_LENGTH: Final = 30
 SLUG_MIN_LENGTH: Final = 3
+
+DEFAULT_MAX_ATTEMPS_TO_GENERATE_UNIQUE_SLUG = 100
 
 DEFAULT_CHARS: Final = string.ascii_letters + string.digits
 SLUG_PATTERN: Final = re.compile(r"^[a-zA-Z0-9_-]+$")
@@ -101,3 +103,43 @@ class Slug(str):
         """
         random_slug = "".join(random.choices(chars, k=length))
         return cls(random_slug)
+
+
+async def generate_unique_slug( 
+    repository: ShortURLRepository, 
+    length: int = DEFAULT_RANDOM_SLUG_LENGTH,
+    max_attempts: int = DEFAULT_MAX_ATTEMPS_TO_GENERATE_UNIQUE_SLUG
+) -> Slug:
+    """
+    Generates a unique slug of a specified length.
+
+    This method generates a random slug and checks its uniqueness against 
+    the provided repository. If the slug already exists, it continues 
+    generating new slugs until a unique one is found or until max_attempts 
+    is reached.
+
+    Args:
+        repository (ShortURLRepository): The repository to check for 
+            existing slugs.
+        length (Optional[int]): The length of the slug to generate. 
+        max_attempts (Optional[int]): The maximum number of attempts 
+            to generate a unique slug.
+
+    Returns:
+        Slug: A unique slug.
+
+    Raises:
+        RuntimeError: If a unique slug cannot be found within max_attempts.
+    """
+    attempts = 0
+
+    while attempts <= max_attempts:
+        attempts += 1
+        slug = Slug.generate_random(length=length)
+        
+        if not await repository.exists_by_slug(slug):
+            return slug
+
+    raise RuntimeError(
+        f"Could not generate a unique slug after {max_attempts} attempts."
+    )
