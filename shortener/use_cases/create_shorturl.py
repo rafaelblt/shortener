@@ -3,10 +3,11 @@ from datetime import datetime
 
 from shortener.domain.shorturl import (
     ShortURL, 
+    Slug,
     ShortURLRepository,
     ShortURLValidator,
-    SlugGenerator,
 )
+from shortener.domain.shorturl.slug import generate_unique_slug
 
 
 class CreateShortURLUseCase:
@@ -16,7 +17,6 @@ class CreateShortURLUseCase:
             self, 
             repository: ShortURLRepository,
             validator: ShortURLValidator,
-            slug_generator: SlugGenerator,
         ):
         """
         Initializes the use case with a repository, validatior and slug generator.
@@ -24,19 +24,17 @@ class CreateShortURLUseCase:
         Args:
             repository (ShortURLRepository): Repository to save the ShortURL object.
             validator (ShortURLValidator): Validator to validate the ShortURL data.
-            slug_generator (SlugGenerator): Generator to generate unique slugs.
         """
         self.repository = repository
         self.validator = validator
-        self.slug_generator = slug_generator
 
     async def execute(
-            self, 
-            original_url: str, 
-            owner_id: Optional[int] = None, 
-            custom_slug: Optional[str] = None, 
-            expires_at: Optional[datetime] = None
-        ) -> ShortURL:
+        self, 
+        original_url: str, 
+        owner_id: Optional[int] = None, 
+        custom_slug: Optional[str] = None, 
+        expires_at: Optional[datetime] = None
+    ) -> ShortURL:
         """
         Executes the Use Case with the provided data.
 
@@ -49,9 +47,10 @@ class CreateShortURLUseCase:
         Returns:
             ShortURL: The ShortURL object.
         """
-        slug = custom_slug or await self.slug_generator.generate_unique_slug(
-            repository=self.repository
-        )
+        if custom_slug is None:
+            slug = await generate_unique_slug(repository=self.repository)
+        else:
+            slug = Slug(custom_slug)
 
         shorturl = ShortURL(
             slug=slug,
