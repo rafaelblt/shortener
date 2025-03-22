@@ -22,7 +22,7 @@ class CreateValidator:
     async def _validate_slug(self, slug: Slug):
         if not isinstance(slug, Slug):
             raise ShortURLInvalidSlugError(
-                "The ShortURL slug attr is not a Slug class"
+                "The slug attribute of the ShortURL is not a Slug instance"
             )
         await self._check_slug_exists(slug)
         

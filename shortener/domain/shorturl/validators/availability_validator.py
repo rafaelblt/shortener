@@ -27,7 +27,7 @@ class AvailabilityValidator(ShortURLValidator):
             ShortURLExpiredError: If the ShortURL has expired.
         """
         if not shorturl.is_active:
-            raise ShortURLInactiveError("The ShortURL is not active")
+            raise ShortURLInactiveError("The ShortURL is not active.")
         
         expiration = shorturl.expires_at
         
