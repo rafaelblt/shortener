@@ -10,19 +10,20 @@ from shortener.domain.shorturl.exceptions import (
 
 
 @pytest.fixture
-def validator(shorturl_availability_validator):
-    return shorturl_availability_validator
+def validator():
+    return AvailabilityValidator()
 
 
 @pytest.mark.asyncio
-async def test_validate_normal_shorturl(
+async def test_valid_shorturl(
     validator: AvailabilityValidator, normal_shorturl: ShortURL
 ):
-    await validator.validate(normal_shorturl)
+    retrieved = await validator.validate(normal_shorturl)
+    assert retrieved is None
 
 
 @pytest.mark.asyncio
-async def test_validate_with_is_active_false(
+async def test_with_is_active_false(
     validator: AvailabilityValidator, normal_shorturl: ShortURL
 ):
     normal_shorturl.is_active = False
@@ -31,7 +32,7 @@ async def test_validate_with_is_active_false(
 
 
 @pytest.mark.asyncio
-async def test_validate_with_valid_expires_at(
+async def test_with_valid_expires_at(
     validator: AvailabilityValidator, normal_shorturl: ShortURL
 ):
     normal_shorturl.expires_at = datetime(
@@ -41,7 +42,7 @@ async def test_validate_with_valid_expires_at(
 
 
 @pytest.mark.asyncio
-async def test_validate_with_invalid_expires_at(
+async def test_with_invalid_expires_at(
     validator: AvailabilityValidator, normal_shorturl: ShortURL
 ):
     normal_shorturl.expires_at = datetime(
