@@ -7,7 +7,7 @@ from shortener.domain.shorturl import (
     ShortURLRepository,
     ShortURLValidator,
 )
-from shortener.domain.shorturl.slug import generate_unique_slug
+from shortener.domain.shorturl.utils import generate_unique_slug
 
 
 class CreateShortURLUseCase:

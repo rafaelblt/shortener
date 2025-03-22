@@ -3,11 +3,11 @@ import pytest
 from tests.mocks import MockShortURLRepository
 
 from shortener.domain.shorturl.slug import (
-    Slug, 
-    generate_unique_slug,
+    Slug,
     DEFAULT_RANDOM_SLUG_LENGTH,
     DEFAULT_MAX_ATTEMPS_TO_GENERATE_UNIQUE_SLUG
 )
+from shortener.domain.shorturl.utils import generate_unique_slug
 
 
 class SlugAlwaysExists(MockShortURLRepository):    
