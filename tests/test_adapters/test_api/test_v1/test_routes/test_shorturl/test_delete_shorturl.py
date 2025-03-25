@@ -9,17 +9,28 @@ from shortener.infra.db.repositories import SQLAlchemyShortURLRepository
 
 
 @pytest.mark.asyncio
-async def test_with_existent_id(
+async def test_status_code_with_existent_id(
     client: TestClient,
     route: str,
     sqlalchemy_shorturl_repository: SQLAlchemyShortURLRepository,
     normal_shorturl: ShortURL
 ):
     shorturl = await sqlalchemy_shorturl_repository.save(normal_shorturl)
-
     response = client.delete(f"{route}/{shorturl.id}/")
-
     assert response.status_code == HTTPStatus.NO_CONTENT
+
+
+@pytest.mark.asyncio
+async def test_if_shorturl_is_deleted(
+    client: TestClient,
+    route: str,
+    sqlalchemy_shorturl_repository: SQLAlchemyShortURLRepository,
+    normal_shorturl: ShortURL
+):
+    shorturl = await sqlalchemy_shorturl_repository.save(normal_shorturl)
+    client.delete(f"{route}/{shorturl.id}/")
+    exists = await sqlalchemy_shorturl_repository.exists_by_slug(normal_shorturl.slug)
+    assert exists is False
 
 
 @pytest.mark.asyncio
