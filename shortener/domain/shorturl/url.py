@@ -1,11 +1,14 @@
+from urllib.parse import urlparse
+
+
 class URL(str):
     """A custom string class representing a URL for ShortURL"""
 
     def __new__(cls, value: str):
-        cls._validate_url(value)
+        cls.validate_url(value)
 
-    @staticmethod
-    def _validate_url(value: str):
+    @classmethod
+    def validate_url(cls, value: str):
         """
         Validate the URL value.
 
@@ -18,4 +21,10 @@ class URL(str):
         Raises:
             ...
         """
-        
+        if not cls.is_valid_https_url(value):
+            pass
+
+    @staticmethod
+    def is_valid_https_url(url: str) -> bool:
+        parsed_url = urlparse(url)
+        return parsed_url.scheme == "https"
