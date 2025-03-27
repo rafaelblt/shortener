@@ -1,7 +1,9 @@
 from typing import Optional
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from shortener.domain.shorturl import Slug
+
+from pydantic import BaseModel, ConfigDict, field_validator
 
 
 class ShortURLCreateSchema(BaseModel):
@@ -20,3 +22,14 @@ class ShortURLCreateSchema(BaseModel):
             }
         }
     )
+
+    @classmethod
+    @field_validator("custom_slug")
+    def validate_custom_slug(cls, value: str):
+        # TODO: not working...
+        if value:
+            try:
+                return Slug(value)
+            except Exception as e:
+                raise ValueError(str(e))
+        return value  
