@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 
 from .mocks import MockShortURLRepository
 
-from shortener.domain.shorturl import ShortURL, Slug
+from shortener.domain.shorturl import ShortURL, Slug, URL
 
 from shortener.infra.db import get_session
 from shortener.infra.db.models import Base
@@ -21,7 +21,7 @@ from shortener.adapters.api import app
 def normal_shorturl():
     return ShortURL(
         slug=Slug("lorem-ipsum-website"),
-        original_url="lorem.makeyoursite.com"
+        original_url=URL("https://lorem.makeyoursite.com")
     )
 
 
@@ -29,7 +29,7 @@ def normal_shorturl():
 def other_shorturl():
     return ShortURL(
         slug=Slug("other-network"),
-        original_url="www.git.com"
+        original_url=URL("https://others.com")
     )
 
 
