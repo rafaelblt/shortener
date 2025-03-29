@@ -17,17 +17,17 @@ class CreateValidator:
         self.repository = repository
 
     async def validate(self, shorturl: ShortURL):
-        await self._validate_slug(shorturl.slug)
-        await self._validate_original_url(shorturl.original_url)
+        await self.validate_slug(shorturl.slug)
+        await self.validate_original_url(shorturl.original_url)
 
-    async def _validate_slug(self, slug: Slug):
-        await self._check_slug_exists(slug)
+    async def validate_slug(self, slug: Slug):
+        await self.check_slug_exists(slug)
         
-    async def _check_slug_exists(self, slug: Slug):
+    async def check_slug_exists(self, slug: Slug):
         if await self.repository.exists_by_slug(slug):
             raise ShortURLSlugAlreadyExistsError(
                 "The provided slug already exists."
             )
         
-    async def _validate_original_url(self, url: URL):
+    async def validate_original_url(self, url: URL):
         pass
