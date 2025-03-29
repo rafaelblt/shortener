@@ -6,6 +6,7 @@ class URL(str):
 
     def __new__(cls, value: str):
         cls.validate_url(value)
+        return super().__new__(cls, value)
 
     @classmethod
     def validate_url(cls, value: str):
