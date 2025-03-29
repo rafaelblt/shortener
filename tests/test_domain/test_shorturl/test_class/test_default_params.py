@@ -10,7 +10,7 @@ def shorturl(normal_shorturl):
     return normal_shorturl
 
 
-def test_instance(shorturl):
+def test_instance(shorturl: ShortURL):
     assert isinstance(shorturl, ShortURL)
 
 
@@ -23,7 +23,7 @@ def test_slug(shorturl):
 
 
 def test_original_url(shorturl):
-    assert shorturl.original_url == "lorem.makeyoursite.com"
+    assert shorturl.original_url == "https://lorem.makeyoursite.com"
 
 
 def test_owner_id(shorturl):
@@ -40,13 +40,11 @@ def test_visit_count(shorturl):
 
 def test_created_at(shorturl):
     created_at = shorturl.created_at
-    now = datetime.now(tz=timezone.utc)
+    expected = datetime.now(tz=timezone.utc)
+    strftime = "%d/%m/%Y, %H:%M:%S"
 
     assert isinstance(created_at, datetime)
-    assert created_at.year == now.year
-    assert created_at.month == now.month
-    assert created_at.day == now.day
-    assert created_at.hour == now.hour
+    assert created_at.strftime(strftime) == expected.strftime(strftime)
 
 
 def test_expires_at(shorturl):

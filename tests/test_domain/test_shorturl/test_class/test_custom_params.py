@@ -1,6 +1,6 @@
-from datetime import datetime, timezone
+from datetime import datetime
 
-from shortener.domain.shorturl import ShortURL
+from shortener.domain.shorturl import ShortURL, Slug, URL
 
 from pytest import fixture
 
@@ -9,8 +9,8 @@ from pytest import fixture
 def shorturl():
     return ShortURL(
         id=1,
-        slug="i-am-url",
-        original_url="google.com",
+        slug=Slug("i-am-slug"),
+        original_url=URL("https://google.com"),
         owner_id=1,
         is_active=False,
         visit_count=5,
@@ -29,11 +29,13 @@ def test_id(shorturl):
 
 
 def test_slug(shorturl):
-    assert shorturl.slug == "i-am-url"
+    assert isinstance(shorturl.slug, Slug)
+    assert shorturl.slug == "i-am-slug"
 
 
 def test_original_url(shorturl):
-    assert shorturl.original_url == "google.com"
+    assert isinstance(shorturl.original_url, URL)
+    assert shorturl.original_url == "https://google.com"
 
 
 def test_owner_id(shorturl):
@@ -51,31 +53,25 @@ def test_visit_count(shorturl):
 def test_created_at(shorturl):
     created_at = shorturl.created_at
     expected = datetime(2002, 2, 2)
+    strftime = "%d/%m/%Y, %H:%M:%S"
 
     assert isinstance(created_at, datetime)
-    assert created_at.year == expected.year
-    assert created_at.month == expected.month
-    assert created_at.day == expected.day
-    assert created_at.hour == expected.hour
+    assert created_at.strftime(strftime) == expected.strftime(strftime)
 
 
 def test_expires_at(shorturl):
     expires_at = shorturl.expires_at
     expected = datetime(2006, 6, 6)
+    strftime = "%d/%m/%Y, %H:%M:%S"
 
     assert isinstance(expires_at, datetime)
-    assert expires_at.year == expected.year
-    assert expires_at.month == expected.month
-    assert expires_at.day == expected.day
-    assert expires_at.hour == expected.hour
+    assert expires_at.strftime(strftime) == expected.strftime(strftime)
 
 
 def test_last_accessed_at(shorturl):
     last_accessed_at = shorturl.last_accessed_at
     expected = datetime(2004, 4, 4)
+    strftime = "%d/%m/%Y, %H:%M:%S"
 
     assert isinstance(last_accessed_at, datetime)
-    assert last_accessed_at.year == expected.year
-    assert last_accessed_at.month == expected.month
-    assert last_accessed_at.day == expected.day
-    assert last_accessed_at.hour == expected.hour
+    assert last_accessed_at.strftime(strftime) == expected.strftime(strftime)
