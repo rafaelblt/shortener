@@ -1,11 +1,11 @@
 from http import HTTPStatus
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse, Response
 from fastapi.encoders import jsonable_encoder
 
 from shortener.domain.shorturl.exceptions import (
-    ShortURLDeletionNotFoundError
+    ShortURLDeletionNotFoundError, ShortURLValidationError
 )
 
 from shortener.use_cases import (
@@ -58,13 +58,19 @@ async def get_shorturl(
 async def create_shorturl(
     data: ShortURLCreateSchema,
     use_case: CreateShortURLUseCase = Depends(make_create_shorturl_use_case)
-):    
-    shorturl = await use_case.execute(
-        original_url=data.original_url,
-        custom_slug=data.custom_slug,
-        owner_id=data.owner_id,
-        expires_at=data.expires_at
-    )
+):  
+    try:  
+        shorturl = await use_case.execute(
+            original_url=data.original_url,
+            custom_slug=data.custom_slug,
+            owner_id=data.owner_id,
+            expires_at=data.expires_at
+        )
+    except ShortURLValidationError as e:
+        raise HTTPException(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail=str(e)
+        )
     
     response_data = ShortURLSchema.from_domain(shorturl).model_dump()
     response_data = jsonable_encoder(response_data)
