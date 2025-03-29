@@ -2,7 +2,8 @@ from typing import Optional
 from datetime import datetime
 
 from shortener.domain.shorturl import (
-    ShortURL, 
+    ShortURL,
+    URL,
     Slug,
     ShortURLRepository,
     ShortURLValidator,
@@ -30,8 +31,8 @@ class CreateShortURLUseCase:
 
     async def execute(
         self, 
-        original_url: str, 
-        custom_slug: Optional[str] = None,
+        original_url: URL,
+        custom_slug: Optional[Slug] = None,
         owner_id: Optional[int] = None,
         expires_at: Optional[datetime] = None
     ) -> ShortURL:
@@ -39,18 +40,21 @@ class CreateShortURLUseCase:
         Executes the Use Case with the provided data.
 
         Args:
-            original_url (str): The original_url to be shortened.
-            custom_slug (Optional[str]): Custom slug of the ShortURL.
+            original_url (URL): The original_url to be shortened.
+            custom_slug (Optional[Slug]): Custom slug of the ShortURL.
             owner_id (Optional[int]): User ID who created the ShortURL.
             expires_at (Optional[datetime]): Expiration date of the ShortURL.
 
         Returns:
             ShortURL: The ShortURL object.
+
+        Raises:
+            ShortURLValidationError: If any part of ShortURL is invalid.
         """
         if custom_slug is None:
             slug = await generate_unique_slug(repository=self.repository)
         else:
-            slug = Slug(custom_slug)
+            slug = custom_slug
 
         shorturl = ShortURL(
             slug=slug,
