@@ -31,8 +31,8 @@ class CreateShortURLUseCase:
     async def execute(
         self, 
         original_url: str, 
-        owner_id: Optional[int] = None, 
-        custom_slug: Optional[str] = None, 
+        custom_slug: Optional[str] = None,
+        owner_id: Optional[int] = None,
         expires_at: Optional[datetime] = None
     ) -> ShortURL:
         """
@@ -40,8 +40,8 @@ class CreateShortURLUseCase:
 
         Args:
             original_url (str): The original_url to be shortened.
-            owner_id (Optional[int]): User ID who created the ShortURL.
             custom_slug (Optional[str]): Custom slug of the ShortURL.
+            owner_id (Optional[int]): User ID who created the ShortURL.
             expires_at (Optional[datetime]): Expiration date of the ShortURL.
 
         Returns:
