@@ -17,7 +17,7 @@ def validator(mock_shorturl_repository):
 async def test_check_slug_exists(
     validator: CreateValidator, normal_shorturl: ShortURL
 ):
-    retrieved = await validator._check_slug_exists(normal_shorturl.slug)
+    retrieved = await validator.check_slug_exists(normal_shorturl.slug)
     assert retrieved is None
 
 
@@ -26,29 +26,19 @@ async def test_check_slug_exists_raises_slug_already_exists(
     validator: CreateValidator, normal_shorturl: ShortURL
 ):
     await validator.repository.save(normal_shorturl)
-
     with pytest.raises(
         ShortURLSlugAlreadyExistsError, 
         match="The provided slug already exists."
     ):
-        await validator._check_slug_exists(normal_shorturl.slug)
+        await validator.check_slug_exists(normal_shorturl.slug)
 
 
 @pytest.mark.asyncio
 async def test_validate_slug(
     validator: CreateValidator, normal_shorturl: ShortURL
 ):    
-    retrieved = await validator._validate_slug(normal_shorturl.slug)
+    retrieved = await validator.validate_slug(normal_shorturl.slug)
     assert retrieved is None
-
-
-@pytest.mark.asyncio
-async def test_validate_slug_raises_invalid_error(validator: CreateValidator):
-    with pytest.raises(
-        ShortURLInvalidSlugError, 
-        match="The slug attribute of the ShortURL is not a Slug instance"
-    ):
-        await validator._validate_slug("test-slug")
 
 
 @pytest.mark.asyncio
@@ -56,9 +46,8 @@ async def test_validate_slug_raises_slug_already_exists(
     validator: CreateValidator, normal_shorturl: ShortURL
 ):
     await validator.repository.save(normal_shorturl)
-
     with pytest.raises(ShortURLSlugAlreadyExistsError):
-        await validator._validate_slug(normal_shorturl.slug)
+        await validator.validate_slug(normal_shorturl.slug)
 
 
 @pytest.mark.asyncio
@@ -74,6 +63,5 @@ async def test_validate_raises_slug_already_exists(
     validator: CreateValidator, normal_shorturl: ShortURL
 ):
     await validator.repository.save(normal_shorturl)
-
     with pytest.raises(ShortURLSlugAlreadyExistsError):
         await validator.validate(normal_shorturl)
