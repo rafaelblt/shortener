@@ -13,7 +13,7 @@ async def use_case(mock_shorturl_repository):
 
 
 @pytest.mark.asyncio
-async def test_method_delete_by_id(
+async def test_delete_by_id(
     use_case: DeleteShortURLUseCase, normal_shorturl: ShortURL
 ):
     shorturl = await use_case.repository.save(normal_shorturl)
@@ -24,11 +24,8 @@ async def test_method_delete_by_id(
 
 
 @pytest.mark.asyncio
-async def test_method_delete_by_id_raises_not_found(
-    use_case: DeleteShortURLUseCase
-):
+async def test_delete_by_id_raises_not_found(use_case: DeleteShortURLUseCase):
     example_id = 2
-
     with pytest.raises(
         ShortURLDeletionNotFoundError,
         match=f"ShortURL with id {example_id} not found for deletion."
