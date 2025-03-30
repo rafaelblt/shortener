@@ -90,10 +90,10 @@ async def delete_shorturl(
     try:
         await use_case.delete_by_id(id)
 
-    except ShortURLDeletionNotFoundError as error:
+    except ShortURLDeletionNotFoundError as e:
         return JSONResponse(
             status_code=HTTPStatus.NOT_FOUND,
-            content={"message": str(error)},
+            content={"message": str(e)},
         )
     
     else:
