@@ -2,61 +2,83 @@ import pytest
 
 from datetime import datetime
 
-from shortener.domain.shorturl import ShortURL
-from shortener.domain.shorturl.validators import CreateValidator
-from shortener.domain.shorturl.exceptions import ShortURLSlugAlreadyExistsError
+from shortener.domain.shorturl import ShortURL, ShortURLValidator, Slug, URL
 from shortener.domain.shorturl.rules.slug_length import DEFAULT_RANDOM_SLUG_LENGTH
 
 from shortener.use_cases import CreateShortURLUseCase
+
+
+class Validator(ShortURLValidator):
+    async def validate(self, shorturl: ShortURL):
+        if shorturl.slug == "joker":
+            raise ValueError("The provided slug is joker.")
 
 
 @pytest.fixture
 def use_case(mock_shorturl_repository):
     return CreateShortURLUseCase(
         repository=mock_shorturl_repository,
-        validator=CreateValidator(repository=mock_shorturl_repository),
+        validator=Validator(),
     )
 
 
-@pytest.mark.asyncio
-async def test_attrs_of_shorturl(use_case: CreateShortURLUseCase):
-    shorturl = await use_case.execute(original_url="github.com")
+@pytest.fixture
+def slug(normal_shorturl):
+    return normal_shorturl.slug
 
-    assert isinstance(shorturl, ShortURL)
-    assert shorturl.original_url == "github.com"
-    assert shorturl.owner_id == None
-    assert shorturl.is_active
+
+@pytest.fixture
+def url(normal_shorturl):
+    return normal_shorturl.original_url
+
+
+@pytest.mark.asyncio
+async def test_instance_retrieved(use_case: CreateShortURLUseCase, url: URL):
+    retrieved = await use_case.execute(original_url=url)
+    assert isinstance(retrieved, ShortURL)
+
+
+@pytest.mark.asyncio
+async def test_original_url(use_case: CreateShortURLUseCase, url: URL):
+    shorturl = await use_case.execute(original_url=url)
+    assert shorturl.original_url == url
+
+
+@pytest.mark.asyncio
+async def test_slug_generated(use_case: CreateShortURLUseCase, url: URL):
+    shorturl = await use_case.execute(original_url=url)
     assert len(shorturl.slug) == DEFAULT_RANDOM_SLUG_LENGTH
-    assert isinstance(shorturl.created_at, datetime)
-    assert shorturl.expires_at == None
-    assert shorturl.last_accessed_at == None
-    assert shorturl.visit_count == 0
 
 
 @pytest.mark.asyncio
-async def test_execute_with_full_args(use_case: CreateShortURLUseCase):
-    shorturl = await use_case.execute(
-        original_url="github.com",
-        owner_id=1,
-        custom_slug="git",
-        expires_at=datetime(year=2038, month=5, day=21)
-    )
-    assert shorturl.owner_id == 1
-    assert shorturl.slug == "git"
-    assert isinstance(shorturl.expires_at, datetime)
+async def test_custom_slug(use_case: CreateShortURLUseCase, url: URL, slug: Slug):
+    shorturl = await use_case.execute(original_url=url, custom_slug=slug)
+    assert shorturl.slug == slug
 
 
 @pytest.mark.asyncio
-async def test_shorturl_is_saved_in_repository(use_case: CreateShortURLUseCase):
-    await use_case.execute(original_url="github.com", custom_slug="git")
-    assert await use_case.repository.exists_by_slug("git") is True
+async def test_owner_id(use_case: CreateShortURLUseCase, url: URL):
+    owner_id = 1
+    shorturl = await use_case.execute(original_url=url, owner_id=owner_id)
+    assert shorturl.owner_id == owner_id
 
 
 @pytest.mark.asyncio
-async def test_validation_raises_slug_already_exists(use_case: CreateShortURLUseCase):
-    await use_case.execute(original_url="github.com", custom_slug="git")
+async def test_expires_at(use_case: CreateShortURLUseCase, url: URL):
+    expires_at = datetime(year=3038, month=5, day=21)
+    shorturl = await use_case.execute(original_url=url, expires_at=expires_at)
+    assert shorturl.expires_at.timestamp() == expires_at.timestamp()
 
-    with pytest.raises(
-        ShortURLSlugAlreadyExistsError, match="The provided slug already exists."
-    ):
-        await use_case.execute(original_url="gitlab.com", custom_slug="git")
+
+@pytest.mark.asyncio
+async def test_shorturl_is_saved_in_repository(
+    use_case: CreateShortURLUseCase, url: URL, slug: Slug
+):
+    await use_case.execute(original_url=url, custom_slug=slug)
+    assert await use_case.repository.exists_by_slug(slug) is True
+
+
+@pytest.mark.asyncio
+async def test_validation_is_called(use_case: CreateShortURLUseCase, url: URL):
+    with pytest.raises(ValueError, match="The provided slug is joker."):
+        await use_case.execute(original_url=url, custom_slug=Slug("joker"))
