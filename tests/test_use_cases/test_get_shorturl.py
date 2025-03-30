@@ -18,6 +18,7 @@ async def test_get_by_id(
     use_case: GetShortURLUseCase, normal_shorturl: ShortURL
 ):
     retrieved = await use_case.get_by_id(1)
+    assert isinstance(retrieved, ShortURL)
     assert retrieved.slug == normal_shorturl.slug
 
 
@@ -28,12 +29,15 @@ async def test_get_by_id_non_existent(use_case: GetShortURLUseCase):
 
 
 @pytest.mark.asyncio
-async def test_get_by_slug(use_case, normal_shorturl):
+async def test_get_by_slug(
+    use_case: GetShortURLUseCase, normal_shorturl: ShortURL
+):
     retrieved = await use_case.get_by_slug(normal_shorturl.slug)
+    assert isinstance(retrieved, ShortURL)
     assert retrieved.original_url == normal_shorturl.original_url
 
 
 @pytest.mark.asyncio
-async def test_get_by_slug_non_existent(use_case):
+async def test_get_by_slug_non_existent(use_case: GetShortURLUseCase):
     retrieved = await use_case.get_by_slug("non-existent-slug")
     assert retrieved is None
