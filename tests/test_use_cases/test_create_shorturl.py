@@ -3,7 +3,7 @@ import pytest
 from datetime import datetime
 
 from shortener.domain.shorturl import ShortURL, ShortURLValidator, Slug, URL
-from shortener.domain.shorturl.rules.slug_length import DEFAULT_RANDOM_SLUG_LENGTH
+from shortener.domain.shorturl.slug import DEFAULT_RANDOM_SLUG_LENGTH
 
 from shortener.use_cases import CreateShortURLUseCase
 

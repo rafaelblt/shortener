@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 
 from fastapi.testclient import TestClient
 
-from shortener.domain.shorturl.rules.slug_length import DEFAULT_RANDOM_SLUG_LENGTH
+from shortener.domain.shorturl.slug import DEFAULT_RANDOM_SLUG_LENGTH
 
 
 def test_status_code_unprocessable_entity_without_json_data(
