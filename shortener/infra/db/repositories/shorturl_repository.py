@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from shortener.domain.shorturl import ShortURL, ShortURLRepository
+from shortener.domain.shorturl import ShortURL, ShortURLRepository, Slug, URL
 
 from shortener.infra.db.models import ShortURLModel
 
@@ -130,8 +130,8 @@ class SQLAlchemyShortURLRepository(ShortURLRepository):
         """
         return ShortURL(
             id=model.id,
-            slug=model.slug,
-            original_url=model.original_url,
+            slug=Slug(model.slug),
+            original_url=URL(model.original_url),
             is_active=model.is_active,
             visit_count=model.visit_count,
             created_at=model.created_at,
