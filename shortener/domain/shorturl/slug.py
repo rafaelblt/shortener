@@ -41,6 +41,7 @@ class Slug(str):
     """A custom string class representing a Slug for ShortURL"""
 
     def __new__(cls, value: str):
+        value = str(value)
         cls._validate_slug(value)
         return super().__new__(cls, value)
 
