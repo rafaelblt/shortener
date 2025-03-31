@@ -86,10 +86,9 @@ async def test_get_all_with_shorturls(
 
     assert isinstance(retrieved, list)
     assert len(retrieved) == 2
-    assert isinstance(retrieved[0], ShortURL)
-    assert isinstance(retrieved[1], ShortURL)
-    assert retrieved[0].id == 1
-    assert retrieved[1].id == 2
+    for i in range(len(retrieved)):
+        assert isinstance(retrieved[i], ShortURL)
+        assert retrieved[i].id == i+1
     assert retrieved[0].slug == normal_shorturl.slug
     assert retrieved[1].slug == other_shorturl.slug
 
