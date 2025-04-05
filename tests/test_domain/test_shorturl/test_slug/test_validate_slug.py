@@ -13,11 +13,11 @@ from shortener.domain.shorturl.slug import (
 )
 
 
-def test_method_validate_slug():
+def test_validate_slug():
     assert Slug._validate_slug("test-valid") == None
 
 
-def test_method_validate_slug_raises_slug_too_long():
+def test_validate_slug_raises_slug_too_long():
     value = "a" * (SLUG_MAX_LENGTH + 1)
     with pytest.raises(
         ShortURLSlugTooLongError, 
@@ -26,7 +26,7 @@ def test_method_validate_slug_raises_slug_too_long():
         Slug._validate_slug(value)
 
 
-def test_method_validate_slug_raises_slug_too_short():
+def test_validate_slug_raises_slug_too_short():
     value = "a" * (SLUG_MIN_LENGTH - 1)
     with pytest.raises(
         ShortURLSlugTooShortError, 
@@ -35,7 +35,7 @@ def test_method_validate_slug_raises_slug_too_short():
         Slug._validate_slug(value)
 
 
-def test_method_validate_slug_raises_forbidden_slug():
+def test_validate_slug_raises_forbidden_slug():
     value = "docs"
     with pytest.raises(
         ShortURLForbiddenSlugError,
@@ -44,7 +44,7 @@ def test_method_validate_slug_raises_forbidden_slug():
         Slug._validate_slug(value)
 
 
-def test_method_validate_slug_raises_invalid_slug():
+def test_validate_slug_raises_invalid_slug():
     value = "test.invalid"
     with pytest.raises(
         ShortURLInvalidSlugError,
