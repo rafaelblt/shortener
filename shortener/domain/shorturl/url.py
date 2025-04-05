@@ -10,18 +10,6 @@ class URL(str):
 
     @classmethod
     def validate_url(cls, value: str):
-        """
-        Validate the URL value.
-
-        Args:
-            value (str): The URL to be validated.
-        
-        Returns: 
-            None: The URL is valid.
-
-        Raises:
-            ...
-        """
         if not cls.is_valid_https_url(value):
             raise ShortURLInvalidURLError("URL must be a valid https url.")
 
