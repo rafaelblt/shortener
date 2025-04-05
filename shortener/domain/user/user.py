@@ -1,5 +1,4 @@
 from datetime import datetime, timezone
-
 from typing import Optional
 
 
@@ -12,9 +11,12 @@ class User:
         hashed_password: str = "",
         is_active: bool = True,
         is_superuser: bool = False,
-        created_at: datetime = datetime.now(tz=timezone.utc),
+        created_at: Optional[datetime] = None,
         last_login: Optional[datetime] = None
     ):
+        if created_at is None:
+            created_at = datetime.now(tz=timezone.utc)
+
         self.id = id
         self.name = name
         self.email = email
