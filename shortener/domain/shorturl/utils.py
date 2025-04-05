@@ -14,7 +14,7 @@ async def generate_unique_slug(
     """
     Generates a unique slug of a specified length.
 
-    This method generates a random slug and checks its uniqueness against 
+    This function generates a random slug and checks its uniqueness against 
     the provided repository. If the slug already exists, it continues 
     generating new slugs until a unique one is found or until max_attempts 
     is reached.
