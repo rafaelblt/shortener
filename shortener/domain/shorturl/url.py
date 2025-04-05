@@ -1,5 +1,7 @@
 from urllib.parse import urlparse
 
+from shortener.domain.shorturl.exceptions import ShortURLInvalidURLError
+
 
 class URL(str):
     """A custom string class representing a URL for ShortURL"""
