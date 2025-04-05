@@ -27,5 +27,8 @@ class URL(str):
 
     @staticmethod
     def is_valid_https_url(url: str) -> bool:
-        parsed_url = urlparse(url)
-        return parsed_url.scheme == "https"
+        try:
+            parsed_url = urlparse(url)
+            return parsed_url.scheme == "https" and bool(parsed_url.netloc)
+        except:
+            return False
