@@ -78,19 +78,15 @@ class SQLAlchemyShortURLRepository(ShortURLRepository):
         return model is not None
 
     async def delete_by_id(self, id: int) -> ShortURL:
-        """
-        Deletes a ShortURL object from the database.
-
-        Args:
-            id (int): The ShortURL id.
-
-        Returns:
-            ShortURL: The ShortURL domain object that was deleted.
-        """
-        shorturl_model = await self._get_model_by_id(id)
-        await self.session.delete(shorturl_model)
+        model = await self._get_model_by_id(id)
+        if model is None:
+            raise ShortURLNotFoundInDatabase(
+                f"ShortURL with id={id} not found in database."
+            )
+        
+        await self.session.delete(model)
         await self.session.commit()
-        return self._to_domain(shorturl_model)
+        return self._to_domain(model)
 
     async def _get_all_models(self) -> list[ShortURLModel]:
         result = await self.session.scalars(select(ShortURLModel))
