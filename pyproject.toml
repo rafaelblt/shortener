@@ -30,3 +30,6 @@ pytest-asyncio = "^0.25.3"
 run = 'fastapi dev shortener/adapters/api/main.py'
 test = 'pytest --cov=shortener -v'
 testlayers = 'pytest -v tests/test_domain/ && pytest -v tests/test_use_cases/ && pytest -v tests/test_infra/ && pytest -v tests/test_adapters/'
+
+[tool.pytest.ini_options]
+asyncio_default_fixture_loop_scope = "function"
