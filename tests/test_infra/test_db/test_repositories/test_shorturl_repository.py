@@ -1,9 +1,9 @@
 import pytest
 import pytest_asyncio
 
-from sqlalchemy.orm.exc import UnmappedInstanceError
-
+from shortener.domain.shared import PaginatedResult
 from shortener.domain.shorturl import ShortURL
+from shortener.domain.shorturl.exceptions import ShortURLNotFoundInDatabase
 
 from shortener.infra.db.models import ShortURLModel
 from shortener.infra.db.repositories import SQLAlchemyShortURLRepository
@@ -50,10 +50,10 @@ def test_to_domain(
 
 
 @pytest.mark.asyncio
-async def test_save(
+async def test_add(
     repository: SQLAlchemyShortURLRepository, normal_shorturl: ShortURL
 ):
-    retrieved = await repository.save(normal_shorturl)
+    retrieved = await repository.add(normal_shorturl)
 
     assert isinstance(retrieved, ShortURL)
     assert retrieved.id == 1
@@ -64,11 +64,24 @@ async def test_save(
 
 
 @pytest.mark.asyncio
+async def test_update(
+    repository: SQLAlchemyShortURLRepository, normal_shorturl: ShortURL
+):
+    added = await repository.add(normal_shorturl)
+    added.expires_at = None
+
+    retrieved = await repository.update(added)
+
+    assert isinstance(retrieved, ShortURL)
+    assert retrieved.id == added.id
+    assert retrieved.expires_at == None
+
+
+@pytest.mark.asyncio
 async def test_get_all_with_no_shorturls(
     repository: SQLAlchemyShortURLRepository
 ):
     retrieved = await repository.get_all()
-
     assert isinstance(retrieved, list)
     assert len(retrieved) == 0
 
@@ -79,16 +92,17 @@ async def test_get_all_with_shorturls(
     normal_shorturl: ShortURL,
     other_shorturl: ShortURL
 ):
-    await repository.save(normal_shorturl)
-    await repository.save(other_shorturl)
+    await repository.add(normal_shorturl)
+    await repository.add(other_shorturl)
 
     retrieved = await repository.get_all()
 
     assert isinstance(retrieved, list)
     assert len(retrieved) == 2
     for i in range(len(retrieved)):
+        expected_id = i + 1
         assert isinstance(retrieved[i], ShortURL)
-        assert retrieved[i].id == i+1
+        assert retrieved[i].id == expected_id
     assert retrieved[0].slug == normal_shorturl.slug
     assert retrieved[1].slug == other_shorturl.slug
 
@@ -97,7 +111,7 @@ async def test_get_all_with_shorturls(
 async def test_get_by_id(
     repository: SQLAlchemyShortURLRepository, normal_shorturl: ShortURL
 ):
-    await repository.save(normal_shorturl)
+    await repository.add(normal_shorturl)
 
     retrieved = await repository.get_by_id(1)
 
@@ -110,7 +124,7 @@ async def test_get_by_id(
 async def test_get_by_slug(
     repository: SQLAlchemyShortURLRepository, normal_shorturl: ShortURL
 ):
-    await repository.save(normal_shorturl)
+    await repository.add(normal_shorturl)
 
     retrieved = await repository.get_by_slug(normal_shorturl.slug)
 
@@ -120,10 +134,33 @@ async def test_get_by_slug(
 
 
 @pytest.mark.asyncio
+async def test_list_paginated(
+    repository: SQLAlchemyShortURLRepository, 
+    normal_shorturl: ShortURL,
+    other_shorturl: ShortURL,
+    old_shorturl: ShortURL
+):
+    await repository.add(normal_shorturl)
+    await repository.add(other_shorturl)
+    await repository.add(old_shorturl)
+
+    retrieved = await repository.list_paginated(offset=0, limit=2)
+
+    assert isinstance(retrieved, PaginatedResult)
+    assert len(retrieved.items) == 2
+    assert retrieved.offset == 0
+    assert retrieved.limit == 2
+    assert retrieved.total == 3
+    assert retrieved.current_page == 1
+    for entity in retrieved.items:
+        assert isinstance(entity, ShortURL)
+
+
+@pytest.mark.asyncio
 async def test_exists_by_slug(
     repository: SQLAlchemyShortURLRepository, normal_shorturl: ShortURL
 ):
-    await repository.save(normal_shorturl)
+    await repository.add(normal_shorturl)
     assert await repository.exists_by_slug(normal_shorturl.slug) is True
 
 
@@ -138,7 +175,7 @@ async def test_exists_by_slug_false(
 async def test_delete_by_id(
     repository: SQLAlchemyShortURLRepository, normal_shorturl: ShortURL
 ):
-    await repository.save(normal_shorturl)
+    await repository.add(normal_shorturl)
 
     retrieved = await repository.delete_by_id(1)
 
@@ -152,5 +189,8 @@ async def test_delete_by_id(
 async def test_delete_by_id_non_existent_shorturl(
     repository: SQLAlchemyShortURLRepository
 ):
-    with pytest.raises(UnmappedInstanceError):
+    with pytest.raises(
+        ShortURLNotFoundInDatabase, 
+        match=f"ShortURL with id=1 not found in database."
+    ):
         await repository.delete_by_id(1)
