@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+
 from shortener.domain.shared import PaginatedResult
 from shortener.domain.shorturl import ShortURL
 
@@ -11,10 +12,10 @@ class ShortURLRepository(ABC):
         Add a ShortURL object to the database and return the updated object.
 
         Args:
-            shorturl (ShortURL): The ShortURL domain object.
+            shorturl (ShortURL): The object to add.
         
         Returns:
-            ShortURL: Return the domain object updated.
+            ShortURL: Return the added object.
         """
 
     @abstractmethod
@@ -23,7 +24,7 @@ class ShortURLRepository(ABC):
         Update a existent ShortURL in database.
 
         Args:
-            shorturl (ShortURL): The ShortURL domain object to update.
+            shorturl (ShortURL): The object to update.
         
         Returns:
             ShortURL: The updated entity.
@@ -32,9 +33,16 @@ class ShortURLRepository(ABC):
             ShortURLInvalidToUpdate: ShortURL without id.
             ShortURLNotFoundInDatabase: ShortURL not found in database.
         """
+        pass
 
     @abstractmethod
     async def get_all(self) -> list[ShortURL]:
+        """
+        Retrieve all ShortURL objects from the database.
+
+        Returns:
+            list[ShortURL]: A list of all ShortURL objects.
+        """
         pass
 
     @abstractmethod
