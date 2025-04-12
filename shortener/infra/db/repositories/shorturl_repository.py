@@ -15,12 +15,42 @@ class SQLAlchemyShortURLRepository(ShortURLRepository):
 
     def __init__(self, session: AsyncSession):
         """
-        Initializes the repository with a SQLAlchemy Session instance.
-
         Args:
             session (Session): SQLAlchemy Session instance.
         """
         self.session = session
+
+    async def add(self, shorturl: ShortURL) -> ShortURL:
+        shorturl_model = self._to_model(shorturl)
+        self.session.add(shorturl_model)
+        await self.session.commit()
+        await self.session.refresh(shorturl_model)
+        return self._to_domain(shorturl_model)
+    
+    async def update(self, shorturl: ShortURL) -> ShortURL:
+        if shorturl.id is None:
+            raise ShortURLInvalidToUpdate("ShortURL needs a ID to update")
+
+        existing_model = await self._get_model_by_id(shorturl.id)
+        
+        if existing_model is None:
+            raise ShortURLNotFoundInDatabase(
+                f"ShortURL with id={shorturl.id} not found in database."
+            )
+
+        existing_model.slug = shorturl.slug
+        existing_model.original_url = shorturl.original_url
+        existing_model.is_active = shorturl.is_active
+        existing_model.visit_count = shorturl.visit_count
+        existing_model.created_at = shorturl.created_at
+        existing_model.expires_at = shorturl.expires_at
+        existing_model.last_accessed_at = shorturl.last_accessed_at
+
+        self.session.add(existing_model)
+        await self.session.commit()
+        await self.session.refresh(existing_model)
+
+        return self._to_domain(existing_model)
 
     async def get_all(self) -> list[ShortURL]:
         models = await self._get_all_models()
@@ -64,22 +94,6 @@ class SQLAlchemyShortURLRepository(ShortURLRepository):
         """
         model = await self._get_model_by_slug(slug)
         return model is not None
-
-    async def save(self, shorturl: ShortURL) -> ShortURL:
-        """
-        Saves a ShortURL object to the database and return the updated object.
-
-        Args:
-            shorturl (ShortURL): The ShortURL domain object.
-
-        Returns:
-            ShortURL: Return the domain object with id attr updated.
-        """
-        shorturl_model = self._to_model(shorturl)
-        self.session.add(shorturl_model)
-        await self.session.commit()
-        await self.session.refresh(shorturl_model)
-        return self._to_domain(shorturl_model)
 
     async def delete_by_id(self, id: int) -> ShortURL:
         """
