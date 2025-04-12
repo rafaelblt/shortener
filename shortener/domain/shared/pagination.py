@@ -26,3 +26,7 @@ class PaginatedResult(Generic[T]):
     @property
     def has_previous(self) -> bool:
         return self.offset > 0
+    
+    def __repr__(self):
+        return (f"<PaginatedResult total={self.total} offset={self.offset} "
+                f"limit={self.limit} items={self.items}>")
