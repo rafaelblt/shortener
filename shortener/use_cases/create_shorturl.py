@@ -15,13 +15,11 @@ class CreateShortURLUseCase:
     """Use case to create a new ShortURL object and save in repository."""
 
     def __init__(
-            self, 
-            repository: ShortURLRepository,
-            validator: ShortURLValidator,
-        ):
+        self, 
+        repository: ShortURLRepository,
+        validator: ShortURLValidator,
+    ):
         """
-        Initializes the use case with a repository, validatior and slug generator.
-
         Args:
             repository (ShortURLRepository): Repository to save the ShortURL object.
             validator (ShortURLValidator): Validator to validate the ShortURL data.
@@ -65,4 +63,4 @@ class CreateShortURLUseCase:
 
         await self.validator.validate(shorturl)
         
-        return await self.repository.save(shorturl)
+        return await self.repository.add(shorturl)
