@@ -1,7 +1,11 @@
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from shortener.domain.shared import PaginatedResult
 from shortener.domain.shorturl import ShortURL, ShortURLRepository, Slug, URL
+from shortener.domain.shorturl.exceptions import (
+    ShortURLNotFoundInDatabase, ShortURLInvalidToUpdate
+)
 
 from shortener.infra.db.models import ShortURLModel
 
