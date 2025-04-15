@@ -1,11 +1,10 @@
-from datetime import datetime
+import pytest
+from datetime import datetime, timezone
 
 from shortener.domain.shorturl import ShortURL, Slug, URL
 
-from pytest import fixture
 
-
-@fixture
+@pytest.fixture
 def shorturl():
     return ShortURL(
         id=1,
@@ -14,43 +13,43 @@ def shorturl():
         owner_id=1,
         is_active=False,
         visit_count=5,
-        created_at=datetime(year=2002, month=2, day=2),
-        expires_at=datetime(year=2006, month=6, day=6),
-        last_accessed_at=datetime(year=2004, month=4, day=4)
+        created_at=datetime(year=2002, month=2, day=2, tzinfo=timezone.utc),
+        expires_at=datetime(year=2006, month=6, day=6, tzinfo=timezone.utc),
+        last_accessed_at=datetime(year=2004, month=4, day=4, tzinfo=timezone.utc)
     )
 
 
-def test_instance(shorturl):
+def test_instance(shorturl: ShortURL):
     assert isinstance(shorturl, ShortURL)
 
 
-def test_id(shorturl):
+def test_id(shorturl: ShortURL):
     assert shorturl.id == 1
 
 
-def test_slug(shorturl):
+def test_slug(shorturl: ShortURL):
     assert isinstance(shorturl.slug, Slug)
     assert shorturl.slug == "i-am-slug"
 
 
-def test_original_url(shorturl):
+def test_original_url(shorturl: ShortURL):
     assert isinstance(shorturl.original_url, URL)
     assert shorturl.original_url == "https://google.com"
 
 
-def test_owner_id(shorturl):
+def test_owner_id(shorturl: ShortURL):
     assert shorturl.owner_id == 1
 
 
-def test_is_active(shorturl):
+def test_is_active(shorturl: ShortURL):
     assert shorturl.is_active == False
 
 
-def test_visit_count(shorturl):
+def test_visit_count(shorturl: ShortURL):
     assert shorturl.visit_count == 5
 
 
-def test_created_at(shorturl):
+def test_created_at(shorturl: ShortURL):
     created_at = shorturl.created_at
     expected = datetime(2002, 2, 2)
     strftime = "%d/%m/%Y, %H:%M:%S"
@@ -59,7 +58,7 @@ def test_created_at(shorturl):
     assert created_at.strftime(strftime) == expected.strftime(strftime)
 
 
-def test_expires_at(shorturl):
+def test_expires_at(shorturl: ShortURL):
     expires_at = shorturl.expires_at
     expected = datetime(2006, 6, 6)
     strftime = "%d/%m/%Y, %H:%M:%S"
@@ -68,7 +67,7 @@ def test_expires_at(shorturl):
     assert expires_at.strftime(strftime) == expected.strftime(strftime)
 
 
-def test_last_accessed_at(shorturl):
+def test_last_accessed_at(shorturl: ShortURL):
     last_accessed_at = shorturl.last_accessed_at
     expected = datetime(2004, 4, 4)
     strftime = "%d/%m/%Y, %H:%M:%S"
