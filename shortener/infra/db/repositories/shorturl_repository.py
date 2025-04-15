@@ -46,7 +46,6 @@ class SQLAlchemyShortURLRepository(ShortURLRepository):
         existing_model.expires_at = shorturl.expires_at
         existing_model.last_accessed_at = shorturl.last_accessed_at
 
-        self.session.add(existing_model)
         await self.session.commit()
         await self.session.refresh(existing_model)
 
@@ -63,6 +62,18 @@ class SQLAlchemyShortURLRepository(ShortURLRepository):
     async def get_by_slug(self, slug: str) -> ShortURL | None:
         model = await self._get_model_by_slug(slug)
         return self._to_domain(model) if model else None
+
+    async def list_paginated(self, offset: int, limit: int):
+        total = await self.session.scalar(
+            select(func.count()).select_from(ShortURLModel)
+        )
+        rows = await self.session.scalars(
+            select(ShortURLModel)
+            .offset(offset)
+            .limit(limit)
+        )
+        entities = [self._to_domain(m) for m in rows.all()]
+        return PaginatedResult(entities, total, offset, limit)
         
     async def exists_by_slug(self, slug: str) -> bool:
         """
