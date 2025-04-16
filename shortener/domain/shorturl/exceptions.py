@@ -1,3 +1,11 @@
+class ShortURLAttributeTypeError(TypeError):
+    def __init__(self, attr: str, type_expected: str, got):
+        super().__init__(
+            f"The ShortURL {attr} must be an instance of {type_expected}, not "
+            f"{type(got).__name__}"
+        )
+
+
 class ShortURLError(Exception):
     """Base Exception for ShortURL"""
 
@@ -19,6 +27,8 @@ class ShortURLInvalidDatetimeTimezone(ShortURLValidationError): ...
 # -- Availability exceptions
 class ShortURLInactiveError(ShortURLError): ...
 class ShortURLExpiredError(ShortURLError): ...
+# --
+
 
 
 # - REPOSITORY EXCEPTIONS
