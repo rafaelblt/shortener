@@ -1,5 +1,5 @@
 from shortener.domain.shorturl import ShortURLRepository
-from shortener.domain.shorturl.slug import (
+from shortener.domain.shorturl.fields.slug import (
     Slug,
     DEFAULT_RANDOM_SLUG_LENGTH,
     DEFAULT_MAX_ATTEMPS_TO_GENERATE_UNIQUE_SLUG
