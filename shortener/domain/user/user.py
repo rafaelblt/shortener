@@ -116,10 +116,13 @@ class User:
     
     @staticmethod
     def validate_shorturls(shorturls):
+        from shortener.domain.shorturl import ShortURL
         if not isinstance(shorturls, list):
             raise UserAttributeTypeError(
                 attr="shorturls", type_expected="list", got=shorturls
             )
+        if any(not isinstance(obj, ShortURL) for obj in shorturls):
+            raise TypeError("The User shorturls must be a list of only ShortURLs.")
     
     @staticmethod
     def validate_status(status):
