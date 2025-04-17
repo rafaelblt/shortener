@@ -1,16 +1,17 @@
+import pytest
+
 from datetime import datetime, timezone
 
 from shortener.domain.user import User
+from shortener.domain.user.fields import Name, Email, HashedPassword, UserStatus
 
-from pytest import fixture
 
-
-@fixture
+@pytest.fixture
 def user():
     return User(
-        name="User Example",
-        email="user@example.com",
-        hashed_password="hash#123"
+        name=Name("User Example"),
+        email=Email("user@example.com"),
+        hashed_password=HashedPassword("hash#123")
     )
 
 
@@ -30,19 +31,22 @@ def test_hashed_password(user):
     assert user.hashed_password == "hash#123"
 
 
-def test_is_active(user):
-    assert user.is_active == True
+def test_status(user):
+    assert user.status == UserStatus.ACTIVE
+
+
+def test_shorturls(user):
+    assert user.shorturls == []
 
 
 def test_created_at(user):
     created_at = user.created_at
-    now = datetime.now(tz=timezone.utc)
-
     assert isinstance(created_at, datetime)
-    assert created_at.year == now.year
-    assert created_at.month == now.month
-    assert created_at.day == now.day
-    assert created_at.hour == now.hour
+
+    now = datetime.now(tz=timezone.utc)
+    timeformat = "%d/%m/%Y %H:%M:%S"
+
+    assert created_at.strftime(timeformat) == now.strftime(timeformat)
 
 
 def test_is_superuser(user):
