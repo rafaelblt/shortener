@@ -1,28 +1,22 @@
-from shortener.domain.shorturl import ShortURLRepository, ShortURLValidator
+from shortener.domain.shorturl import ShortURLRepository
+from shortener.domain.shorturl.exceptions import ShortURLNotFoundInDatabase
 
 
 class ResolveShortURLUseCase:
     """
-    Use case to resolve a ShortURL object. It returns the original_url after 
-    validating the ShortURL from the repository.
+    Use case to resolve a ShortURL object.
     """
 
-    def __init__(
-            self, 
-            repository: ShortURLRepository, 
-            validator: ShortURLValidator
-        ):
+    def __init__(self, repository: ShortURLRepository):
         """
-        Initializes the use case with a repository and validator.
+        Initializes the use case with a repository.
 
         Args:
             repository (ShortURLRepository): The repository to get the ShortURL.
-            validator (ShortURLValidator): The validator to validate the object.
         """
         self.repository = repository
-        self.validator = validator
     
-    async def resolve_slug(self, slug: str) -> str | None:
+    async def resolve_slug(self, slug: str) -> str:
         """
         Get the original_url attr of a ShortURL in the repository with the slug.
 
@@ -30,13 +24,15 @@ class ResolveShortURLUseCase:
             slug (str): The ShortURL slug to be resolved.
 
         Returns:
-            Optional[str]: The original_url of ShortURL or None if not found.
+            str: The original_url of ShortURL if is available.
+        
+        Raises:
+            ShortURLNotFoundInDatabase: If the slug is not found in repository.
+            ShortURLAvailabilityError: If the ShortURL status is different of ACTIVE.
         """
         shorturl = await self.repository.get_by_slug(slug)
     
         if shorturl is None:
-            return None
-
-        await self.validator.validate(shorturl)
-
-        return shorturl.original_url
+            raise ShortURLNotFoundInDatabase()
+        
+        return shorturl.resolve()
