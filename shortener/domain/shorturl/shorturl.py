@@ -7,9 +7,11 @@ from shortener.domain.user import User
 
 from .fields import Slug, URL, ShortURLStatus
 from .exceptions import (
-    ShortURLExpiredError, 
-    ShortURLInactiveError, 
-    ShortURLInvalidDatetimeTimezone,
+    ShortURLAvailabilityError,
+    ShortURLExpiredError,
+    ShortURLDeactivatedError,
+    ShortURLSuspendedError,
+    ShortURLBannedError,
     ShortURLAttributeTypeError
 )
 
@@ -72,6 +74,8 @@ class ShortURL:
         self._created_at = created_at
         self._expires_at = expires_at
         self._last_accessed_at = last_accessed_at
+
+        self._update_status()
 
 
     @property
@@ -147,21 +151,9 @@ class ShortURL:
 
 
     @property
-    def is_expired(self) -> bool:
-        """Checks if the ShortURL is expired."""
-        return (
-            isinstance(self.expires_at, datetime) and
-            self.expires_at <= datetime.now(tz=timezone.utc)
-        )
-
-    @property
     def is_available(self) -> bool:
         """Returns True if the ShortURL is available to be accessed."""
-        try:
-            self.resolve()
-        except:
-            return False
-        return True
+        return self.status == ShortURLStatus.ACTIVE
 
 
     def validate_all(self):
@@ -240,7 +232,7 @@ class ShortURL:
                 attr="expires_at", type_expected="datetime or None", got=expires_at
             )
         if isinstance(expires_at, datetime) and not is_utc(expires_at):            
-            raise ShortURLInvalidDatetimeTimezone(
+            raise ValueError(
                 "The ShortURL expires_at must be in UTC timezone."
             )
 
@@ -253,7 +245,7 @@ class ShortURL:
                 got=last_accessed_at
             )
         if isinstance(last_accessed_at, datetime) and not is_utc(last_accessed_at):
-            raise ShortURLInvalidDatetimeTimezone(
+            raise ValueError(
                 "The ShortURL last_accessed_at must be in UTC timezone."
             )
 
@@ -270,11 +262,44 @@ class ShortURL:
         """
         Returns the original_url if the ShortURL is available to be resolved.
         """
-        if self.status != ShortURLStatus.ACTIVE:
-            raise ShortURLInactiveError()
-        if self.is_expired:
+        if self.status == ShortURLStatus.ACTIVE:
+            return self.original_url
+        elif self.status == ShortURLStatus.SUSPENDED:
+            raise ShortURLSuspendedError()
+        elif self.status == ShortURLStatus.DEACTIVATED:
+            raise ShortURLDeactivatedError()
+        elif self.status == ShortURLStatus.EXPIRED:
             raise ShortURLExpiredError()
-        return self.original_url
+        elif self.status == ShortURLStatus.BANNED:
+            raise ShortURLBannedError()
+        else:
+            ShortURLAvailabilityError()
+
+    def enable(self):
+        if self.status == ShortURLStatus.DEACTIVATED:
+            self._status = ShortURLStatus.ACTIVE
+            return
+
+        if self.status == ShortURLStatus.SUSPENDED:
+            raise ShortURLSuspendedError()
+        if self.status == ShortURLStatus.DEACTIVATED:
+            raise ShortURLDeactivatedError()
+        if self.status == ShortURLStatus.EXPIRED:
+            raise ShortURLExpiredError()
+        if self.status == ShortURLStatus.BANNED:
+            raise ShortURLBannedError()
+
+
+    def _update_status(self):
+        if self.status == ShortURLStatus.ACTIVE and self._check_expiration():
+            self._status = ShortURLStatus.EXPIRED
+
+    def _check_expiration(self):
+        return (
+            isinstance(self.expires_at, datetime) and
+            self.expires_at <= datetime.now(tz=timezone.utc)
+        )
+
 
     def __repr__(self):
         return (
