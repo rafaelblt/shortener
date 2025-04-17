@@ -1,5 +1,5 @@
 import pytest
-from shortener.domain.shorturl.url import URL
+from shortener.domain.shorturl.fields.url import URL
 
 
 @pytest.mark.parametrize(
