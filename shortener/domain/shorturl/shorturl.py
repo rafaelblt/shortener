@@ -288,13 +288,22 @@ class ShortURL:
 
         if self.status == ShortURLStatus.SUSPENDED:
             raise ShortURLSuspendedError()
-        if self.status == ShortURLStatus.DEACTIVATED:
-            raise ShortURLDeactivatedError()
+        elif self.status == ShortURLStatus.EXPIRED:
+            raise ShortURLExpiredError()
+        elif self.status == ShortURLStatus.BANNED:
+            raise ShortURLBannedError()
+        
+    def disable(self):
+        if self.status == ShortURLStatus.ACTIVE:
+            self._status = ShortURLStatus.DEACTIVATED
+            return
+
+        if self.status == ShortURLStatus.SUSPENDED:
+            raise ShortURLSuspendedError()
         if self.status == ShortURLStatus.EXPIRED:
             raise ShortURLExpiredError()
         if self.status == ShortURLStatus.BANNED:
             raise ShortURLBannedError()
-
 
     def _update_status(self):
         if self.status == ShortURLStatus.ACTIVE and self._check_expiration():
