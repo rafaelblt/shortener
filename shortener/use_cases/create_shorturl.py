@@ -1,14 +1,13 @@
 from typing import Optional
-from datetime import datetime
 
 from shortener.domain.shorturl import (
     ShortURL,
-    URL,
-    Slug,
     ShortURLRepository,
     ShortURLValidator,
 )
+from shortener.domain.shorturl.fields import Slug, URL
 from shortener.domain.shorturl.utils import generate_unique_slug
+from shortener.domain.user import User
 
 
 class CreateShortURLUseCase:
@@ -31,20 +30,19 @@ class CreateShortURLUseCase:
         self, 
         original_url: URL,
         custom_slug: Optional[Slug] = None,
-        owner_id: Optional[int] = None,
-        expires_at: Optional[datetime] = None
+        owner: Optional[User] = None
     ) -> ShortURL:
         """
         Executes the Use Case with the provided data.
 
         Args:
             original_url (URL): The original_url to be shortened.
-            custom_slug (Optional[Slug]): Custom slug of the ShortURL.
-            owner_id (Optional[int]): User ID who created the ShortURL.
-            expires_at (Optional[datetime]): Expiration date of the ShortURL.
+            custom_slug (Optional[Slug]): Custom slug of the ShortURL. Will be 
+                generated if not provided.
+            owner (Optional[User]): Onwer of the ShortURL. Defaults to None.
 
         Returns:
-            ShortURL: The ShortURL object.
+            ShortURL: The entity object created.
 
         Raises:
             ShortURLValidationError: If any part of ShortURL is invalid.
@@ -57,8 +55,7 @@ class CreateShortURLUseCase:
         shorturl = ShortURL(
             slug=slug,
             original_url=original_url,
-            owner_id=owner_id,
-            expires_at=expires_at
+            owner=owner,
         )
 
         await self.validator.validate(shorturl)
