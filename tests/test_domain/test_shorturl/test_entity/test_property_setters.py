@@ -1,7 +1,8 @@
 import pytest
 from datetime import datetime, timezone
 
-from shortener.domain.shorturl import ShortURL, Slug, URL
+from shortener.domain.shorturl import ShortURL
+from shortener.domain.shorturl.fields import Slug, URL, ShortURLStatus
 
 
 @pytest.fixture
@@ -37,22 +38,22 @@ def test_set_original_url_raises_type_error(shorturl: ShortURL):
         shorturl.original_url = "https://superhero.com"
 
 
-def test_set_owner_id(shorturl: ShortURL):
-    shorturl.owner_id = 3
-    assert shorturl.owner_id == 3
+def test_set_owner(shorturl: ShortURL, normal_user):
+    shorturl.owner = normal_user
+    assert shorturl.owner == normal_user
 
 
-def test_set_owner_id_raises_type_error(shorturl: ShortURL):
+def test_set_owner_raises_type_error(shorturl: ShortURL):
     with pytest.raises(TypeError):
-        shorturl.owner_id = "4"
+        shorturl.owner = 4
 
 
-def test_set_is_active_raises_attribute_error(shorturl: ShortURL):
+def test_set_status_raises_attribute_error(shorturl: ShortURL):
     with pytest.raises(
         AttributeError, 
-        match="property 'is_active' of 'ShortURL' object has no setter"
+        match="property 'status' of 'ShortURL' object has no setter"
     ):
-        shorturl.is_active = True
+        shorturl.status = ShortURLStatus.BANNED
 
 
 def test_set_visit_count(shorturl: ShortURL):

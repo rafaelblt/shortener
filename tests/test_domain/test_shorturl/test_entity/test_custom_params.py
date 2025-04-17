@@ -1,17 +1,20 @@
 import pytest
 from datetime import datetime, timezone
 
-from shortener.domain.shorturl import ShortURL, Slug, URL
+from shortener.domain.shorturl import ShortURL
+from shortener.domain.shorturl.fields import Slug, URL, ShortURLStatus
+
+from shortener.domain.user import User
 
 
 @pytest.fixture
-def shorturl():
+def shorturl(normal_user: User):
     return ShortURL(
         id=1,
         slug=Slug("i-am-slug"),
         original_url=URL("https://google.com"),
-        owner_id=1,
-        is_active=False,
+        owner=normal_user,
+        status=ShortURLStatus.SUSPENDED,
         visit_count=5,
         created_at=datetime(year=2002, month=2, day=2, tzinfo=timezone.utc),
         expires_at=datetime(year=2006, month=6, day=6, tzinfo=timezone.utc),
@@ -37,12 +40,12 @@ def test_original_url(shorturl: ShortURL):
     assert shorturl.original_url == "https://google.com"
 
 
-def test_owner_id(shorturl: ShortURL):
-    assert shorturl.owner_id == 1
+def test_owner(shorturl: ShortURL):
+    assert isinstance(shorturl.owner, User)
 
 
-def test_is_active(shorturl: ShortURL):
-    assert shorturl.is_active == False
+def test_status(shorturl: ShortURL):
+    assert shorturl.status == ShortURLStatus.SUSPENDED
 
 
 def test_visit_count(shorturl: ShortURL):

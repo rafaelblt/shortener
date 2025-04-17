@@ -2,6 +2,7 @@ import pytest
 from datetime import datetime, timezone
 
 from shortener.domain.shorturl import ShortURL
+from shortener.domain.shorturl.fields import ShortURLStatus
 
 
 @pytest.fixture
@@ -25,12 +26,12 @@ def test_original_url(shorturl: ShortURL):
     assert shorturl.original_url == "https://lorem.makeyoursite.com"
 
 
-def test_owner_id(shorturl: ShortURL):
-    assert shorturl.owner_id == None
+def test_owner(shorturl: ShortURL):
+    assert shorturl.owner == None
 
 
-def test_is_active(shorturl: ShortURL):
-    assert shorturl.is_active == True
+def test_status(shorturl: ShortURL):
+    assert shorturl.status == ShortURLStatus.ACTIVE
 
 
 def test_visit_count(shorturl: ShortURL):

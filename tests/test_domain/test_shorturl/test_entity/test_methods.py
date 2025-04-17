@@ -1,8 +1,11 @@
 import pytest
 from datetime import datetime, timezone
 
-from shortener.domain.shorturl import ShortURL, Slug, URL
-from shortener.domain.shorturl.exceptions import ShortURLInactiveError, ShortURLExpiredError
+from shortener.domain.shorturl import ShortURL
+from shortener.domain.shorturl.exceptions import (
+    ShortURLDeactivatedError, 
+    ShortURLExpiredError
+)
 
 
 def test_record_visit(normal_shorturl: ShortURL):
@@ -23,9 +26,9 @@ def test_resolve(normal_shorturl: ShortURL):
     assert normal_shorturl.resolve() == normal_shorturl.original_url
 
 
-def test_resolve_raises_inactive_error(normal_shorturl: ShortURL):
-    normal_shorturl._disable()
-    with pytest.raises(ShortURLInactiveError):
+def test_resolve_raises_deactivated_error(normal_shorturl: ShortURL):
+    normal_shorturl.disable()
+    with pytest.raises(ShortURLDeactivatedError):
         normal_shorturl.resolve()
 
 
