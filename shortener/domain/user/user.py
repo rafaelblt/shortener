@@ -1,6 +1,8 @@
 from datetime import datetime, timezone
 from typing import Optional
 
+from shortener.domain.shared.datetime_utils import is_utc
+
 from .fields import Email, Name, UserStatus, HashedPassword
 from .exceptions import UserAttributeTypeError
 
@@ -10,7 +12,7 @@ class User:
         self,
         email: Email,
         name: Name,
-        hashed_password: str = "",
+        hashed_password: HashedPassword,
         id: Optional[int] = None,
         shorturls: list = [],
         status: UserStatus = UserStatus.ACTIVE,
@@ -49,7 +51,7 @@ class User:
     def name(self):
         return self._name
     
-    @property.setter
+    @name.setter
     def name(self, name):
         self.validate_name(name)
         self._name = name
@@ -61,6 +63,11 @@ class User:
     @property
     def hashed_password(self):
         return self._hashed_password
+    
+    @hashed_password.setter
+    def hashed_password(self, hashed_password):
+        self.validate_hashed_password(hashed_password)
+        self._hashed_password = hashed_password
     
     @property
     def shorturls(self):
@@ -83,6 +90,11 @@ class User:
     @property
     def last_login(self):
         return self._last_login
+    
+    @last_login.setter
+    def last_login(self, last_login):
+        self.validate_last_login(last_login)
+        self._last_login = last_login
 
 
     @staticmethod
@@ -144,17 +156,29 @@ class User:
             raise UserAttributeTypeError(
                 attr="created_at", type_expected="datetime", got=created_at
             )
-    
+        if isinstance(created_at, datetime) and not is_utc(created_at):
+            raise ValueError(
+                "The User created_at datetime must be in UTC timezone."
+            )
+            
     @staticmethod 
     def validate_last_login(last_login):
         if not isinstance(last_login, (datetime, type(None))):
             raise UserAttributeTypeError(
                 attr="last_login", type_expected="datetime or None", got=last_login
             )
+        if isinstance(last_login, datetime) and not is_utc(last_login):
+            raise ValueError(
+                "The User last_login datetime must be in UTC timezone."
+            )
+    
+
+    def update_last_login(self):
+        self.last_login = datetime.now(tz=timezone.utc)
 
 
     def __repr__(self):
         return (f"<User id={self.id} email={self.email} name={self.name} "
                 f"hashed_password={self.hashed_password} shorturls={self.shorturls} "
                 f"status={self.status} is_superuser={self.is_superuser} "
-                f"created_at={self.created_at} las_login={self.last_login}>")
+                f"created_at={self.created_at} last_login={self.last_login}>")
