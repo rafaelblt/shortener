@@ -3,14 +3,15 @@ from datetime import datetime
 from typing import Optional
 
 from shortener.domain.shorturl import ShortURL
+from shortener.domain.shorturl.fields import ShortURLStatus
 
 
 class ShortURLSchema(BaseModel):
     id: int
     slug: str
     original_url: str
-    owner_id: Optional[int]
-    is_active: bool
+    owner_id: int
+    status: ShortURLStatus
     visit_count: int
     created_at: datetime
     expires_at: Optional[datetime]
@@ -18,12 +19,12 @@ class ShortURLSchema(BaseModel):
 
     @staticmethod
     def from_domain(entity: ShortURL):
-        return ShortURLSchema(    
+        return ShortURLSchema(
             id=entity.id,
             slug=entity.slug,
             original_url=entity.original_url,
-            owner_id=entity.owner_id,
-            is_active=entity.is_active,
+            owner_id=entity.owner.id,
+            status=entity.status,
             visit_count=entity.visit_count,
             created_at=entity.created_at,
             expires_at=entity.expires_at,
