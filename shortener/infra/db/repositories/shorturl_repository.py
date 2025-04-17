@@ -2,7 +2,8 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shortener.domain.shared import PaginatedResult
-from shortener.domain.shorturl import ShortURL, ShortURLRepository, Slug, URL
+from shortener.domain.shorturl import ShortURL, ShortURLRepository
+from shortener.domain.shorturl.fields import Slug, URL
 from shortener.domain.shorturl.exceptions import (
     ShortURLNotFoundInDatabase, ShortURLInvalidToUpdate
 )
@@ -16,7 +17,7 @@ class SQLAlchemyShortURLRepository(ShortURLRepository):
     def __init__(self, session: AsyncSession):
         """
         Args:
-            session (Session): SQLAlchemy Session instance.
+            session (Session): SQLAlchemy Async Session instance.
         """
         self.session = session
 
