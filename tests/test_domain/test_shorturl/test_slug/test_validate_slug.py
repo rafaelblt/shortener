@@ -6,7 +6,7 @@ from shortener.domain.shorturl.exceptions import (
     ShortURLInvalidSlugError,
     ShortURLForbiddenSlugError
 )
-from shortener.domain.shorturl.slug import (
+from shortener.domain.shorturl.fields.slug import (
     Slug,
     SLUG_MAX_LENGTH,
     SLUG_MIN_LENGTH

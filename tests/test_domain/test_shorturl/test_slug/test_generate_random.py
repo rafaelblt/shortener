@@ -1,4 +1,4 @@
-from shortener.domain.shorturl.slug import (
+from shortener.domain.shorturl.fields.slug import (
     Slug,
     DEFAULT_RANDOM_SLUG_LENGTH,
     DEFAULT_CHARS,

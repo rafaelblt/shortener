@@ -1,6 +1,6 @@
 import pytest
 
-from shortener.domain.shorturl.slug import Slug
+from shortener.domain.shorturl.fields.slug import Slug
 from shortener.domain.shorturl.exceptions import ShortURLInvalidSlugError
 
 
