@@ -1,1 +1,2 @@
 from .shorturl_repository import SQLAlchemyShortURLRepository
+from .user_repository import SQLAlchemyUserRepository
