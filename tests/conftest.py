@@ -1,3 +1,6 @@
+from tests.fixtures import *
+
+
 import pytest
 import pytest_asyncio
 
@@ -8,29 +11,12 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 
 from .mocks import MockShortURLRepository
 
-from shortener.domain.shorturl import ShortURL, Slug, URL
-
 from shortener.infra.db import get_session
 from shortener.infra.db.models import Base
 from shortener.infra.db.repositories import SQLAlchemyShortURLRepository
 
 from shortener.adapters.api import app
 
-
-@pytest.fixture
-def normal_shorturl():
-    return ShortURL(
-        slug=Slug("lorem-ipsum-website"),
-        original_url=URL("https://lorem.makeyoursite.com")
-    )
-
-
-@pytest.fixture
-def other_shorturl():
-    return ShortURL(
-        slug=Slug("other-network"),
-        original_url=URL("https://others.com")
-    )
 
 
 @pytest.fixture
