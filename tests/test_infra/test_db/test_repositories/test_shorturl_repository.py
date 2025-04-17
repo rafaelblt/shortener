@@ -3,7 +3,7 @@ import pytest_asyncio
 
 from shortener.domain.shared import PaginatedResult
 from shortener.domain.shorturl import ShortURL
-from shortener.domain.shorturl.exceptions import ShortURLNotFoundInDatabase
+from shortener.domain.shorturl.exceptions import ShortURLNotFoundInDatabaseError
 
 from shortener.infra.db.models import ShortURLModel
 from shortener.infra.db.repositories import SQLAlchemyShortURLRepository
@@ -157,7 +157,7 @@ async def test_list_paginated(
 
 
 @pytest.mark.asyncio
-async def test_exists_by_slug(
+async def test_exists_by_slug_true(
     repository: SQLAlchemyShortURLRepository, normal_shorturl: ShortURL
 ):
     await repository.add(normal_shorturl)
@@ -190,7 +190,7 @@ async def test_delete_by_id_non_existent_shorturl(
     repository: SQLAlchemyShortURLRepository
 ):
     with pytest.raises(
-        ShortURLNotFoundInDatabase, 
+        ShortURLNotFoundInDatabaseError, 
         match=f"ShortURL with id=1 not found in database."
     ):
         await repository.delete_by_id(1)

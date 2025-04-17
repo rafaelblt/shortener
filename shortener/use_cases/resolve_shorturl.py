@@ -1,5 +1,5 @@
 from shortener.domain.shorturl import ShortURLRepository
-from shortener.domain.shorturl.exceptions import ShortURLNotFoundInDatabase
+from shortener.domain.shorturl.exceptions import ShortURLNotFoundInDatabaseError
 
 
 class ResolveShortURLUseCase:
@@ -27,12 +27,12 @@ class ResolveShortURLUseCase:
             str: The original_url of ShortURL if is available.
         
         Raises:
-            ShortURLNotFoundInDatabase: If the slug is not found in repository.
+            ShortURLNotFoundInDatabaseError: If the slug is not found in repository.
             ShortURLAvailabilityError: If the ShortURL status is different of ACTIVE.
         """
         shorturl = await self.repository.get_by_slug(slug)
     
         if shorturl is None:
-            raise ShortURLNotFoundInDatabase()
+            raise ShortURLNotFoundInDatabaseError()
         
         return shorturl.resolve()

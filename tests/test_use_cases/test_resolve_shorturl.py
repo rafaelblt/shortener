@@ -1,5 +1,3 @@
-import copy
-
 import pytest
 import pytest_asyncio
 
@@ -7,7 +5,7 @@ from tests.mocks import MockShortURLRepository
 
 from shortener.domain.shorturl import ShortURL
 from shortener.domain.shorturl.exceptions import (
-    ShortURLNotFoundInDatabase, ShortURLAvailabilityError
+    ShortURLNotFoundInDatabaseError, ShortURLAvailabilityError
 )
 
 from shortener.use_cases import ResolveShortURLUseCase
@@ -29,7 +27,7 @@ async def test_resolve_slug(
 
 @pytest.mark.asyncio
 async def test_resolve_slug_raises_not_found(use_case: ResolveShortURLUseCase):
-    with pytest.raises(ShortURLNotFoundInDatabase):
+    with pytest.raises(ShortURLNotFoundInDatabaseError):
         await use_case.resolve_slug("non-existent-slug")
 
 
