@@ -221,7 +221,7 @@ class ShortURL:
                 attr="created_at", type_expected="datetime", got=created_at
             )
         if not is_utc(created_at):
-            raise ShortURLInvalidDatetimeTimezone(
+            raise ValueError(
                 "The ShortURL created_at must be in UTC timezone."
             )
 
