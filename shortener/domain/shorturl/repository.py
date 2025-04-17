@@ -30,8 +30,8 @@ class ShortURLRepository(ABC):
             ShortURL: The updated entity.
         
         Raises:
-            ShortURLInvalidToUpdate: ShortURL without id.
-            ShortURLNotFoundInDatabase: ShortURL not found in database.
+            ShortURLInvalidToUpdateError: ShortURL without id.
+            ShortURLNotFoundInDatabaseError: ShortURL not found in database.
         """
         pass
 
@@ -97,7 +97,7 @@ class ShortURLRepository(ABC):
             ShortURL: The deleted entity.
         
         Raises:
-            ShortURLNotFoundInDatabase: Id not found in database.
+            ShortURLNotFoundInDatabaseError: Id not found in database.
         """
         pass
 
