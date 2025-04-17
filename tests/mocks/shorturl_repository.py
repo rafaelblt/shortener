@@ -34,7 +34,7 @@ class MockShortURLRepository(ShortURLRepository):
         shorturl_dict = self.data[shorturl.id]
         shorturl_dict["slug"] = shorturl.slug
         shorturl_dict["original_url"] = shorturl.original_url
-        shorturl_dict["is_active"] = shorturl.is_active
+        shorturl_dict["status"] = shorturl.status
         shorturl_dict["visit_count"] = shorturl.visit_count
         shorturl_dict["created_at"] = shorturl.created_at
         shorturl_dict["expires_at"] = shorturl.expires_at
@@ -82,8 +82,8 @@ class MockShortURLRepository(ShortURLRepository):
             "id": shorturl.id,
             "slug": shorturl.slug,
             "original_url": shorturl.original_url,
-            "owner_id": shorturl.owner_id,
-            "is_active": shorturl.is_active,
+            "owner": shorturl.owner,
+            "status": shorturl.status,
             "visit_count": shorturl.visit_count,
             "created_at": shorturl.created_at,
             "expires_at": shorturl.expires_at,
@@ -95,8 +95,8 @@ class MockShortURLRepository(ShortURLRepository):
             id=shorturl_dict["id"],
             slug=shorturl_dict["slug"],
             original_url=shorturl_dict["original_url"],
-            owner_id=shorturl_dict["owner_id"],
-            is_active=shorturl_dict["is_active"],
+            owner=shorturl_dict["owner"],
+            status=shorturl_dict["status"],
             visit_count=shorturl_dict["visit_count"],
             created_at=shorturl_dict["created_at"],
             expires_at=shorturl_dict["expires_at"],
