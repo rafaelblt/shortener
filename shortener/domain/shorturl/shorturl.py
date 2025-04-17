@@ -261,6 +261,12 @@ class ShortURL:
     def resolve(self) -> URL:
         """
         Returns the original_url if the ShortURL is available to be resolved.
+
+        Raises:
+            ShortURLSuspendedError: If the ShortURL status is SUSPENDED.
+            ShortURLDeactivatedError: If the ShortURL status is DEACTIVATED.
+            ShortURLExpiredError: If the ShortURL status is EXPIRED.
+            ShortURLBannedError: If the ShortURL status is BANNED.
         """
         if self.status == ShortURLStatus.ACTIVE:
             return self.original_url
