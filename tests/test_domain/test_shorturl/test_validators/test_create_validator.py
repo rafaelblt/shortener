@@ -25,7 +25,8 @@ async def test_check_slug_exists(
 async def test_check_slug_exists_raises_slug_already_exists(
     validator: CreateValidator, normal_shorturl: ShortURL
 ):
-    await validator.repository.save(normal_shorturl)
+    await validator.repository.add(normal_shorturl)
+
     with pytest.raises(
         ShortURLSlugAlreadyExistsError, 
         match="The provided slug already exists."
@@ -45,7 +46,7 @@ async def test_validate_slug(
 async def test_validate_slug_raises_slug_already_exists(
     validator: CreateValidator, normal_shorturl: ShortURL
 ):
-    await validator.repository.save(normal_shorturl)
+    await validator.repository.add(normal_shorturl)
     with pytest.raises(ShortURLSlugAlreadyExistsError):
         await validator.validate_slug(normal_shorturl.slug)
 
@@ -62,6 +63,6 @@ async def test_validate(
 async def test_validate_raises_slug_already_exists(
     validator: CreateValidator, normal_shorturl: ShortURL
 ):
-    await validator.repository.save(normal_shorturl)
+    await validator.repository.add(normal_shorturl)
     with pytest.raises(ShortURLSlugAlreadyExistsError):
         await validator.validate(normal_shorturl)
