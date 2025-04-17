@@ -1,6 +1,5 @@
 from tests.fixtures import *
 
-
 import pytest
 import pytest_asyncio
 
