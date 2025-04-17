@@ -1,9 +1,8 @@
 import pytest
 
-from datetime import datetime
-
-from shortener.domain.shorturl import ShortURL, ShortURLValidator, Slug, URL
-from shortener.domain.shorturl.slug import DEFAULT_RANDOM_SLUG_LENGTH
+from shortener.domain.shorturl import ShortURL, ShortURLValidator
+from shortener.domain.shorturl.fields import Slug, URL
+from shortener.domain.shorturl.fields.slug import DEFAULT_RANDOM_SLUG_LENGTH
 
 from shortener.use_cases import CreateShortURLUseCase
 
@@ -21,11 +20,9 @@ def use_case(mock_shorturl_repository):
         validator=Validator(),
     )
 
-
 @pytest.fixture
 def slug(normal_shorturl):
     return normal_shorturl.slug
-
 
 @pytest.fixture
 def url(normal_shorturl):
@@ -57,17 +54,10 @@ async def test_custom_slug(use_case: CreateShortURLUseCase, url: URL, slug: Slug
 
 
 @pytest.mark.asyncio
-async def test_owner_id(use_case: CreateShortURLUseCase, url: URL):
-    owner_id = 1
-    shorturl = await use_case.execute(original_url=url, owner_id=owner_id)
-    assert shorturl.owner_id == owner_id
-
-
-@pytest.mark.asyncio
-async def test_expires_at(use_case: CreateShortURLUseCase, url: URL):
-    expires_at = datetime(year=3038, month=5, day=21)
-    shorturl = await use_case.execute(original_url=url, expires_at=expires_at)
-    assert shorturl.expires_at.timestamp() == expires_at.timestamp()
+async def test_owner(use_case: CreateShortURLUseCase, url: URL, normal_user):
+    owner = normal_user
+    shorturl = await use_case.execute(original_url=url, owner=owner)
+    assert shorturl.owner == owner
 
 
 @pytest.mark.asyncio
