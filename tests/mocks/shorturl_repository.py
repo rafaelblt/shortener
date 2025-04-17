@@ -1,7 +1,7 @@
 from shortener.domain.shared.pagination import PaginatedResult
 from shortener.domain.shorturl import ShortURL, ShortURLRepository
 from shortener.domain.shorturl.exceptions import (
-    ShortURLInvalidToUpdate, ShortURLNotFoundInDatabase
+    ShortURLInvalidToUpdateError, ShortURLNotFoundInDatabaseError
 )
 
 
@@ -24,10 +24,10 @@ class MockShortURLRepository(ShortURLRepository):
     
     async def update(self, shorturl: ShortURL) -> ShortURL:
         if shorturl.id is None:
-            raise ShortURLInvalidToUpdate("ShortURL needs a ID to update")
+            raise ShortURLInvalidToUpdateError("ShortURL needs a ID to update")
         
         if shorturl.id not in self.data:
-            raise ShortURLNotFoundInDatabase(
+            raise ShortURLNotFoundInDatabaseError(
                 f"ShortURL with id={shorturl.id} not found in MockShortURLRepository."
             )
 
@@ -73,7 +73,7 @@ class MockShortURLRepository(ShortURLRepository):
             if id_key == id:
                 shorturl_dict = self.data.pop(id_key)
                 return self._to_domain(shorturl_dict)
-        raise ShortURLNotFoundInDatabase(
+        raise ShortURLNotFoundInDatabaseError(
             f"ShortURL with id={id} not found in MockShortURLRepository."
         )
             
