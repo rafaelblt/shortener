@@ -2,7 +2,7 @@ import pytest
 
 from shortener.domain.shared.pagination import PaginatedResult
 from shortener.domain.shorturl import ShortURL
-from shortener.domain.shorturl.exceptions import ShortURLNotFoundInDatabase
+from shortener.domain.shorturl.exceptions import ShortURLNotFoundInDatabaseError
 
 from tests.mocks import MockShortURLRepository
 
@@ -184,7 +184,7 @@ async def test_delete_by_id_non_existent_shorturl(
     repository: MockShortURLRepository
 ):
     with pytest.raises(
-        ShortURLNotFoundInDatabase,
+        ShortURLNotFoundInDatabaseError,
         match=f"ShortURL with id=1 not found in MockShortURLRepository."
     ):
         await repository.delete_by_id(1)
