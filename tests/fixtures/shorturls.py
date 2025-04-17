@@ -1,6 +1,6 @@
 import pytest
 from datetime import datetime, timezone
-from shortener.domain.shorturl import ShortURL
+from shortener.domain.shorturl.shorturl import ShortURL
 from shortener.domain.shorturl.fields import URL, Slug
 
 
