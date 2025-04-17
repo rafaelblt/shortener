@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from shortener.domain.shorturl import ShortURL
+from shortener.domain.shorturl.shorturl import ShortURL
 
 
 class ShortURLValidator(ABC):
