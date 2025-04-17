@@ -1,11 +1,13 @@
-from shortener.domain.shorturl import ShortURL, Slug, URL, ShortURLRepository
+from shortener.domain.shorturl.shorturl import ShortURL
+from shortener.domain.shorturl.repository import ShortURLRepository
+from shortener.domain.shorturl.validators.base_validator import ShortURLValidator
+from shortener.domain.shorturl.fields import Slug, URL
 from shortener.domain.shorturl.exceptions import (
-    ShortURLSlugAlreadyExistsError,
-    ShortURLInvalidSlugError
+    ShortURLSlugAlreadyExistsError
 )
 
 
-class CreateValidator:
+class CreateValidator(ShortURLValidator):
     """ShortURL Validator class to validate a ShortURL to be created"""
 
     def __init__(self, repository: ShortURLRepository):
