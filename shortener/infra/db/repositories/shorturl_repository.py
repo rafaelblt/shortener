@@ -5,7 +5,7 @@ from shortener.domain.shared import PaginatedResult
 from shortener.domain.shorturl import ShortURL, ShortURLRepository
 from shortener.domain.shorturl.fields import Slug, URL
 from shortener.domain.shorturl.exceptions import (
-    ShortURLNotFoundInDatabase, ShortURLInvalidToUpdate
+    ShortURLNotFoundInDatabaseError, ShortURLInvalidToUpdateError
 )
 
 from shortener.infra.db.models import ShortURLModel
@@ -30,12 +30,12 @@ class SQLAlchemyShortURLRepository(ShortURLRepository):
     
     async def update(self, shorturl: ShortURL) -> ShortURL:
         if shorturl.id is None:
-            raise ShortURLInvalidToUpdate("ShortURL needs a ID to update")
+            raise ShortURLInvalidToUpdateError("ShortURL needs a ID to update")
 
         existing_model = await self._get_model_by_id(shorturl.id)
         
         if existing_model is None:
-            raise ShortURLNotFoundInDatabase(
+            raise ShortURLNotFoundInDatabaseError(
                 f"ShortURL with id={shorturl.id} not found in database."
             )
 
@@ -92,7 +92,7 @@ class SQLAlchemyShortURLRepository(ShortURLRepository):
     async def delete_by_id(self, id: int) -> ShortURL:
         model = await self._get_model_by_id(id)
         if model is None:
-            raise ShortURLNotFoundInDatabase(
+            raise ShortURLNotFoundInDatabaseError(
                 f"ShortURL with id={id} not found in database."
             )
         
