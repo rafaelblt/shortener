@@ -5,7 +5,7 @@ from shortener.domain.shared.datetime_utils import is_utc, utc_now
 from shortener.domain.plan import Plan
 
 from .fields import Email, Name, UserStatus, HashedPassword
-from .exceptions import UserAttributeTypeError
+from .exceptions import UserAttributeTypeError as AttrTypeError
 
 
 class User:
@@ -103,37 +103,37 @@ class User:
     @staticmethod
     def validate_id(id):
         if not isinstance(id, (int, type(None))):
-            raise UserAttributeTypeError(
-                attr="id", type_expected="int or None", got=id
-            )
+            raise AttrTypeError(attr="id", type_expected="int or None", got=id)
     
     @staticmethod
     def validate_name(name):
         if not isinstance(name, Name):
-            raise UserAttributeTypeError(
-                attr="name", type_expected="Name", got=name
-            )
+            raise AttrTypeError(attr="name", type_expected="Name", got=name)
     
     @staticmethod
     def validate_email(email):
         if not isinstance(email, Email):
-            raise UserAttributeTypeError(
-                attr="email", type_expected="Email", got=email
-            )
+            raise AttrTypeError(attr="email", type_expected="Email", got=email)
     
     @staticmethod
     def validate_hashed_password(hashed_password):
         if not isinstance(hashed_password, HashedPassword):
-            raise UserAttributeTypeError(
-                attr="hashed_password", type_expected="HashedPassword", 
+            raise AttrTypeError(
+                attr="hashed_password",
+                type_expected="HashedPassword",
                 got=hashed_password
             )
     
     @staticmethod
+    def validate_plan(plan):
+        if not isinstance(plan, Plan):
+            raise AttrTypeError(attr="plan", type_expected="Plan", got=plan)
+
+    @staticmethod
     def validate_shorturls(shorturls):
         from shortener.domain.shorturl import ShortURL
         if not isinstance(shorturls, list):
-            raise UserAttributeTypeError(
+            raise AttrTypeError(
                 attr="shorturls", type_expected="list", got=shorturls
             )
         if any(not isinstance(obj, ShortURL) for obj in shorturls):
@@ -142,21 +142,21 @@ class User:
     @staticmethod
     def validate_status(status):
         if not isinstance(status, UserStatus):
-            raise UserAttributeTypeError(
+            raise AttrTypeError(
                 attr="status", type_expected="UserStatus", got=status
             )
     
     @staticmethod
     def validate_is_superuser(is_superuser):
         if not isinstance(is_superuser, bool):
-            raise UserAttributeTypeError(
+            raise AttrTypeError(
                 attr="is_superuser", type_expected="bool", got=is_superuser
             )
     
     @staticmethod
     def validate_created_at(created_at):
         if not isinstance(created_at, datetime):
-            raise UserAttributeTypeError(
+            raise AttrTypeError(
                 attr="created_at", type_expected="datetime", got=created_at
             )
         if isinstance(created_at, datetime) and not is_utc(created_at):
@@ -167,7 +167,7 @@ class User:
     @staticmethod 
     def validate_last_login(last_login):
         if not isinstance(last_login, (datetime, type(None))):
-            raise UserAttributeTypeError(
+            raise AttrTypeError(
                 attr="last_login", type_expected="datetime or None", got=last_login
             )
         if isinstance(last_login, datetime) and not is_utc(last_login):
