@@ -6,3 +6,7 @@ def is_utc(dt: datetime) -> bool:
         dt.tzinfo is not None and 
         dt.tzinfo.utcoffset(dt) == timezone.utc.utcoffset(dt)
     )
+
+
+def utc_now() -> datetime:
+    return datetime.now(tz=timezone.utc)
