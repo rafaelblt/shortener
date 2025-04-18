@@ -1,7 +1,8 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Optional
 
 from shortener.domain.shared.datetime_utils import is_utc, utc_now
+from shortener.domain.plan import Plan
 
 from .fields import Email, Name, UserStatus, HashedPassword
 from .exceptions import UserAttributeTypeError
@@ -13,6 +14,7 @@ class User:
         email: Email,
         name: Name,
         hashed_password: HashedPassword,
+        plan: Plan,
         id: Optional[int] = None,
         shorturls: list = [],
         status: UserStatus = UserStatus.ACTIVE,
@@ -26,6 +28,7 @@ class User:
         self.validate_name(name)
         self.validate_email(email)
         self.validate_hashed_password(hashed_password)
+        self.validate_plan(plan)
         self.validate_shorturls(shorturls)
         self.validate_status(status)
         self.validate_is_superuser(is_superuser)
@@ -36,6 +39,7 @@ class User:
         self._name = name
         self._email = email
         self._hashed_password = hashed_password
+        self._plan = plan
         self._shorturls = shorturls
         self._status = status
         self._is_superuser = is_superuser
@@ -68,6 +72,10 @@ class User:
     def hashed_password(self, hashed_password):
         self.validate_hashed_password(hashed_password)
         self._hashed_password = hashed_password
+
+    @property
+    def plan(self):
+        return self._plan
     
     @property
     def shorturls(self):
