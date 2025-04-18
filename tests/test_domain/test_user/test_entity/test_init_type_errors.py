@@ -29,7 +29,7 @@ def required_fields(valid_email, valid_name, valid_hashed_password):
 
 def get_type_error_message(attr, type_expected, got):
     return (
-        f"The User {attr} must be an instance of {type_expected}, not "
+        f"The User {attr} must be an instance of {type_expected}, got "
         f"{type(got).__name__}"
     )
 

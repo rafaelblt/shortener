@@ -16,7 +16,7 @@ def valid_url():
 
 def get_type_error_message(attr, type_expected, got):
     return (
-        f"The ShortURL {attr} must be an instance of {type_expected}, not "
+        f"The ShortURL {attr} must be an instance of {type_expected}, got "
         f"{type(got).__name__}"
     )
 
