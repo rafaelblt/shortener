@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from typing import Optional
 
-from shortener.domain.shared.datetime_utils import is_utc
+from shortener.domain.shared.datetime_utils import is_utc, utc_now
 
 from .fields import Email, Name, UserStatus, HashedPassword
 from .exceptions import UserAttributeTypeError
@@ -20,7 +20,7 @@ class User:
         created_at: Optional[datetime] = None,
         last_login: Optional[datetime] = None
     ):
-        created_at = created_at or datetime.now(tz=timezone.utc)
+        created_at = created_at or utc_now()
 
         self.validate_id(id)
         self.validate_name(name)
