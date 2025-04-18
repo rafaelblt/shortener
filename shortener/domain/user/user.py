@@ -90,11 +90,6 @@ class User:
     @property
     def last_login(self):
         return self._last_login
-    
-    @last_login.setter
-    def last_login(self, last_login):
-        self.validate_last_login(last_login)
-        self._last_login = last_login
 
 
     @staticmethod
@@ -174,7 +169,7 @@ class User:
     
 
     def update_last_login(self):
-        self.last_login = datetime.now(tz=timezone.utc)
+        self._last_login = utc_now()
 
 
     def __repr__(self):
