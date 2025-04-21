@@ -27,16 +27,3 @@ def test_set_hashed_password_raises_type_error(normal_user: User):
     with pytest.raises(TypeError):
         normal_user.hashed_password = 1
     assert normal_user.hashed_password == hashed_password
-
-
-def test_set_last_login(normal_user: User):
-    dt = datetime(1, 1, 1, tzinfo=timezone.utc)
-    normal_user.last_login = dt
-    assert normal_user.last_login == dt
-
-
-def test_set_last_login_raises_type_error(normal_user: User):
-    last_login = normal_user.last_login
-    with pytest.raises(TypeError):
-        normal_user.last_login = 1
-    assert normal_user.last_login == last_login

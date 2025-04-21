@@ -7,23 +7,12 @@ from shortener.domain.user.fields import Name, Email, HashedPassword
 
 
 @pytest.fixture
-def valid_name():
-    return Name("Example Name Stone")
-
-@pytest.fixture
-def valid_email():
-    return Email("test-email@example.com")
-
-@pytest.fixture
-def valid_hashed_password():
-    return HashedPassword("AD@34m1~d/a@@f#kl2$$6@5$61*1")
-
-@pytest.fixture
-def required_fields(valid_email, valid_name, valid_hashed_password):
+def required_fields(default_plan):
     return {
-        "email": valid_email,
-        "name": valid_name,
-        "hashed_password": valid_hashed_password
+        "email": Email("test-email@example.com"),
+        "name": Name("Example Name Stone"),
+        "hashed_password": HashedPassword("AD@34m1~d/a@@f#kl2$$6@5$61*1"),
+        "plan": default_plan
     }
 
 
@@ -34,7 +23,7 @@ def get_type_error_message(attr, type_expected, got):
     )
 
 
-def test_invalid_id(valid_email, valid_name, valid_hashed_password):
+def test_invalid_id(required_fields):
     invalid_id = "1"
     with pytest.raises(
         TypeError, 
@@ -42,15 +31,11 @@ def test_invalid_id(valid_email, valid_name, valid_hashed_password):
             attr="id", type_expected="int or None", got=invalid_id
         )
     ):
-        User(
-            email=valid_email, 
-            hashed_password=valid_hashed_password, 
-            name=valid_name, 
-            id=invalid_id
-        )
+        User(**required_fields, id=invalid_id)
 
 
-def test_invalid_name(valid_email, valid_hashed_password):
+def test_invalid_name(required_fields):
+    required_fields.pop("name")
     invalid_name = None
     with pytest.raises(
         TypeError, 
@@ -58,14 +43,11 @@ def test_invalid_name(valid_email, valid_hashed_password):
             attr="name", type_expected="Name", got=invalid_name
         )
     ):
-        User(
-            name=invalid_name, 
-            email=valid_email, 
-            hashed_password=valid_hashed_password
-        )
+        User(**required_fields, name=invalid_name)
 
 
-def test_invalid_email(valid_name, valid_hashed_password):
+def test_invalid_email(required_fields):
+    required_fields.pop("email")
     invalid_email = None
     with pytest.raises(
         TypeError, 
@@ -73,14 +55,11 @@ def test_invalid_email(valid_name, valid_hashed_password):
             attr="email", type_expected="Email", got=invalid_email
         )
     ):
-        User(
-            name=valid_name,
-            email=invalid_email,
-            hashed_password=valid_hashed_password
-        )
+        User(**required_fields, email=invalid_email)
 
 
-def test_invalid_hashed_password(valid_name, valid_email):
+def test_invalid_hashed_password(required_fields):
+    required_fields.pop("hashed_password")
     invalid_hashed_password = None
     with pytest.raises(
         TypeError, 
@@ -90,11 +69,7 @@ def test_invalid_hashed_password(valid_name, valid_email):
             got=invalid_hashed_password
         )
     ):
-        User(
-            email=valid_email,
-            name=valid_name,
-            hashed_password=invalid_hashed_password
-        )
+        User(**required_fields, hashed_password=invalid_hashed_password)
 
 
 def test_invalid_shorturls(required_fields):
