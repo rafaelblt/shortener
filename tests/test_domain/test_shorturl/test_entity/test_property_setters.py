@@ -38,13 +38,11 @@ def test_set_original_url_raises_type_error(shorturl: ShortURL):
         shorturl.original_url = "https://superhero.com"
 
 
-def test_set_owner(shorturl: ShortURL, normal_user):
-    shorturl.owner = normal_user
-    assert shorturl.owner == normal_user
-
-
-def test_set_owner_raises_type_error(shorturl: ShortURL):
-    with pytest.raises(TypeError):
+def test_set_owner_raises_attribute_error(shorturl: ShortURL):
+    with pytest.raises(
+        AttributeError, 
+        match="property 'owner' of 'ShortURL' object has no setter"
+    ):
         shorturl.owner = 4
 
 
@@ -56,44 +54,33 @@ def test_set_status_raises_attribute_error(shorturl: ShortURL):
         shorturl.status = ShortURLStatus.BANNED
 
 
-def test_set_visit_count(shorturl: ShortURL):
-    shorturl.visit_count = 3
-    assert shorturl.visit_count == 3
+def test_set_visit_count_raises_attribute_error(shorturl: ShortURL):
+    with pytest.raises(
+        AttributeError, 
+        match="property 'visit_count' of 'ShortURL' object has no setter"
+    ):
+        shorturl.visit_count = 3
 
 
-def test_set_visit_count_raises_type_error(shorturl: ShortURL):
-    with pytest.raises(TypeError):
-        shorturl.visit_count = "4"
-
-
-def test_set_created_at(shorturl: ShortURL):
-    date = datetime(2000, 12, 12, tzinfo=timezone.utc)
-    shorturl.created_at = date
-    assert shorturl.created_at == date
-
-
-def test_set_created_at_raises_type_error(shorturl: ShortURL):
-    with pytest.raises(TypeError):
+def test_set_created_at_raises_attribute_error(shorturl: ShortURL):
+    with pytest.raises(
+        AttributeError, 
+        match="property 'created_at' of 'ShortURL' object has no setter"
+    ):
         shorturl.created_at = 2002
 
 
-def test_set_expires_at(shorturl: ShortURL):
-    date = datetime(2000, 12, 12, tzinfo=timezone.utc)
-    shorturl.expires_at = date
-    assert shorturl.expires_at == date
-
-
-def test_set_expires_at_raises_type_error(shorturl: ShortURL):
-    with pytest.raises(TypeError):
+def test_set_expires_at_raises_attribute_error(shorturl: ShortURL):
+    with pytest.raises(
+        AttributeError, 
+        match="property 'expires_at' of 'ShortURL' object has no setter"
+    ):
         shorturl.expires_at = 2002
 
 
-def test_set_last_accessed_at(shorturl: ShortURL):
-    date = datetime(2000, 12, 12, tzinfo=timezone.utc)
-    shorturl.last_accessed_at = date
-    assert shorturl.last_accessed_at == date
-
-
-def test_set_last_accessed_at_raises_type_error(shorturl: ShortURL):
-    with pytest.raises(TypeError):
+def test_set_last_accessed_at_raises_attribute_error(shorturl: ShortURL):
+    with pytest.raises(
+        AttributeError, 
+        match="property 'last_accessed_at' of 'ShortURL' object has no setter"
+    ):
         shorturl.last_accessed_at = 2002

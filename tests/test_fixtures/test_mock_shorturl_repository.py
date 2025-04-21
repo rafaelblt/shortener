@@ -63,16 +63,18 @@ async def test_add(
 
 @pytest.mark.asyncio
 async def test_update(
-    repository: MockShortURLRepository, normal_shorturl: ShortURL
+    repository: MockShortURLRepository, 
+    normal_shorturl: ShortURL,
+    other_shorturl: ShortURL
 ):
     added = await repository.add(normal_shorturl)
-    added.expires_at = None
+    added.slug = other_shorturl.slug
 
     retrieved = await repository.update(added)
 
     assert isinstance(retrieved, ShortURL)
     assert retrieved.id == added.id
-    assert retrieved.expires_at == None
+    assert retrieved.slug == other_shorturl.slug
 
 
 @pytest.mark.asyncio

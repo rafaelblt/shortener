@@ -22,8 +22,8 @@ class ShortURL:
         self,
         original_url: URL,
         slug: Slug,
+        owner: User = None,
         id: Optional[int] = None,
-        owner: Optional[User] = None,
         status: ShortURLStatus = ShortURLStatus.ACTIVE,
         visit_count: int = 0,
         created_at: Optional[datetime] = None,
@@ -36,8 +36,7 @@ class ShortURL:
                 Defaults to None.
             original_url (URL): The original URL being shortened.
             slug (Slug): The slug used to shorten the URL.
-            owner (Optional[User]): The instance of the owner of the ShortURL.
-                Defaults to None.
+            owner (User): The instance of the owner of the ShortURL.
             status (ShortURLStatus): Indicates the ShortURL status. Defaults to 
                 ACTIVE.
             visit_count (int): The number of times the ShortURL has been visited.
@@ -79,11 +78,11 @@ class ShortURL:
 
 
     @property
-    def id(self) -> int:
+    def id(self):
         return self._id
 
     @property
-    def slug(self) -> Slug:
+    def slug(self):
         return self._slug
 
     @slug.setter
@@ -92,7 +91,7 @@ class ShortURL:
         self._slug = slug
 
     @property
-    def original_url(self) -> URL:
+    def original_url(self):
         return self._original_url
     
     @original_url.setter
@@ -101,53 +100,28 @@ class ShortURL:
         self._original_url = original_url
 
     @property
-    def owner(self) -> User | None:
+    def owner(self):
         return self._owner
-
-    @owner.setter
-    def owner(self, owner):
-        self.validate_owner(owner)
-        self._owner = owner
 
     @property
     def status(self):
         return self._status
 
     @property
-    def visit_count(self) -> int:
+    def visit_count(self):
         return self._visit_count
 
-    @visit_count.setter
-    def visit_count(self, visit_count):
-        self.validate_visit_count(visit_count)
-        self._visit_count = visit_count
-
     @property
-    def created_at(self) -> datetime:
+    def created_at(self):
         return self._created_at
-    
-    @created_at.setter
-    def created_at(self, created_at):
-        self.validate_created_at(created_at)
-        self._created_at = created_at
 
     @property
-    def expires_at(self) -> datetime:
+    def expires_at(self):
         return self._expires_at
 
-    @expires_at.setter
-    def expires_at(self, expires_at):
-        self.validate_expires_at(expires_at)
-        self._expires_at = expires_at
-
     @property
-    def last_accessed_at(self) -> datetime:
+    def last_accessed_at(self):
         return self._last_accessed_at
-    
-    @last_accessed_at.setter
-    def last_accessed_at(self, last_accessed_at):
-        self.validate_last_accessed_at(last_accessed_at)
-        self._last_accessed_at = last_accessed_at
 
 
     @property
@@ -190,9 +164,9 @@ class ShortURL:
     
     @staticmethod
     def validate_owner(owner):
-        if not isinstance(owner, (User, type(None))):
+        if not isinstance(owner, User):
             raise ShortURLAttributeTypeError(
-                attr="owner", type_expected="User or None", got=owner
+                attr="owner", type_expected="User", got=owner
             )
     
     @staticmethod
@@ -255,8 +229,8 @@ class ShortURL:
         Registers a new visit to the ShortURL.
         Increments the visit count and updates the last accessed timestamp.
         """
-        self.visit_count = self.visit_count + 1
-        self.last_accessed_at = datetime.now(tz=timezone.utc)
+        self._visit_count = self.visit_count + 1
+        self._last_accessed_at = datetime.now(tz=timezone.utc)
     
     def resolve(self) -> URL:
         """
