@@ -2,7 +2,9 @@ import pytest
 
 from shortener.domain.shared.pagination import PaginatedResult
 from shortener.domain.shorturl import ShortURL
-from shortener.domain.shorturl.exceptions import ShortURLNotFoundInDatabaseError
+from shortener.domain.shorturl.exceptions import (
+    ShortURLNotFoundInDatabaseError, ShortURLInvalidToUpdateError
+)
 
 from tests.mocks import MockShortURLRepository
 
@@ -17,7 +19,7 @@ def test_to_dict(
 ):
     shorturl_dict = repository._to_dict(normal_shorturl)
     assert isinstance(shorturl_dict, dict)
-    assert shorturl_dict["id"] == normal_shorturl.id
+    assert shorturl_dict["pk"] == normal_shorturl.id
     assert shorturl_dict["slug"] == normal_shorturl.slug
     assert shorturl_dict["original_url"] == normal_shorturl.original_url
     assert shorturl_dict["owner"] == normal_shorturl.owner
@@ -33,7 +35,7 @@ def test_to_domain(
 ):
     shorturl_dict = repository._to_dict(normal_shorturl)
     domain = repository._to_domain(shorturl_dict)
-    assert domain.id == shorturl_dict["id"]
+    assert domain.id == shorturl_dict["pk"]
     assert domain.slug == shorturl_dict["slug"]
     assert domain.original_url == shorturl_dict["original_url"]
     assert domain.owner == shorturl_dict["owner"]
@@ -54,8 +56,8 @@ async def test_add(
     assert retrieved.id == 1
     assert retrieved.slug == normal_shorturl.slug
 
-    shorturl_dict = repository.data[1]
-    assert shorturl_dict["id"] == 1
+    shorturl_dict = repository.database.get_by_index(1)
+    assert shorturl_dict["pk"] == 1
     assert shorturl_dict["slug"] == normal_shorturl.slug
 
 
@@ -71,6 +73,30 @@ async def test_update(
     assert isinstance(retrieved, ShortURL)
     assert retrieved.id == added.id
     assert retrieved.expires_at == None
+
+
+@pytest.mark.asyncio
+async def test_update_raises_shorturl_invalid_to_update(
+    repository: MockShortURLRepository, normal_shorturl: ShortURL
+):
+    with pytest.raises(
+        ShortURLInvalidToUpdateError,
+        match="ShortURL needs a ID to update"
+    ):
+        await repository.update(normal_shorturl)
+
+
+@pytest.mark.asyncio
+async def test_update_raises_shorturl_not_found(
+    repository: MockShortURLRepository, normal_shorturl: ShortURL
+):
+    shorturl = await repository.add(normal_shorturl)
+    await repository.delete_by_id(shorturl.id)
+    with pytest.raises(
+        ShortURLNotFoundInDatabaseError,
+        match="ShortURL with id=1 not found in MockShortURLRepository."
+    ):
+        await repository.update(shorturl)
 
 
 @pytest.mark.asyncio
@@ -115,6 +141,12 @@ async def test_get_by_id(
 
 
 @pytest.mark.asyncio
+async def test_get_by_id_non_existent(repository: MockShortURLRepository):
+    retrieved = await repository.get_by_id(1)
+    assert retrieved is None
+
+
+@pytest.mark.asyncio
 async def test_get_by_slug(
     repository: MockShortURLRepository, normal_shorturl: ShortURL
 ):
@@ -125,6 +157,14 @@ async def test_get_by_slug(
     assert isinstance(retrieved, ShortURL)
     assert retrieved.id == 1
     assert retrieved.slug == normal_shorturl.slug
+
+
+@pytest.mark.asyncio
+async def test_get_by_slug_non_existent(
+    repository: MockShortURLRepository, normal_shorturl: ShortURL
+):
+    retrieved = await repository.get_by_slug(normal_shorturl.slug)
+    assert retrieved is None
 
 
 @pytest.mark.asyncio

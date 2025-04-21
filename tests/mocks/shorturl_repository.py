@@ -4,36 +4,31 @@ from shortener.domain.shorturl.exceptions import (
     ShortURLInvalidToUpdateError, ShortURLNotFoundInDatabaseError
 )
 
+from .database import MockDatabase, IdManager
+
 
 class MockShortURLRepository(ShortURLRepository):
-    data: dict[int, dict]
-
     def __init__(self):
-        self.data = {}
-        self.id_counter = 0
+        self.database = MockDatabase(index_manager=IdManager())
 
     async def add(self, shorturl: ShortURL) -> ShortURL:
         shorturl_dict = self._to_dict(shorturl)
-
-        if shorturl_dict["id"] is None:
-            shorturl_dict["id"] = self._get_next_id()
-
-        self.data[shorturl_dict["id"]] = shorturl_dict
-        
+        shorturl_dict = self.database.add(entity=shorturl_dict)
         return self._to_domain(shorturl_dict)
     
     async def update(self, shorturl: ShortURL) -> ShortURL:
         if shorturl.id is None:
             raise ShortURLInvalidToUpdateError("ShortURL needs a ID to update")
         
-        if shorturl.id not in self.data:
+        if not self.database.exists_by_index(shorturl.id):
             raise ShortURLNotFoundInDatabaseError(
                 f"ShortURL with id={shorturl.id} not found in MockShortURLRepository."
             )
 
-        shorturl_dict = self.data[shorturl.id]
+        shorturl_dict = self.database.get_by_index(shorturl.id)
         shorturl_dict["slug"] = shorturl.slug
         shorturl_dict["original_url"] = shorturl.original_url
+        shorturl_dict["owner"] = shorturl.owner
         shorturl_dict["status"] = shorturl.status
         shorturl_dict["visit_count"] = shorturl.visit_count
         shorturl_dict["created_at"] = shorturl.created_at
@@ -43,25 +38,25 @@ class MockShortURLRepository(ShortURLRepository):
         return self._to_domain(shorturl_dict)
     
     async def get_all(self) -> list[ShortURL]:
-        return [self._to_domain(entity) for entity in self.data.values()]
+        return [self._to_domain(entity) for entity in self.database.get_all()]
 
     async def get_by_id(self, id: int) -> ShortURL | None:
-        for id_key in self.data:
-            if id_key == id:
-                return self._to_domain(self.data[id_key])
+        shorturl_dict = self.database.get_by_index(id)
+        if shorturl_dict:
+            return self._to_domain(shorturl_dict)
         return None
 
     async def get_by_slug(self, slug: str) -> ShortURL | None:
-        for shorturl_dict in self.data.values():
-            if shorturl_dict["slug"] == slug:
-                return self._to_domain(shorturl_dict)
+        shorturl_dict = self.database.get_by_field(field="slug", value=slug)
+        if shorturl_dict:
+            return self._to_domain(shorturl_dict)
         return None
     
     async def list_paginated(self, offset, limit):
-        total = len(self.data)
-        rows = list(self.data.values())[offset:offset + limit]
-        entities = [self._to_domain(row) for row in rows]
-        return PaginatedResult(entities, total, offset, limit)
+        data = await self.get_all()
+        total = len(data)
+        rows = list(data)[offset:offset + limit]
+        return PaginatedResult(rows, total, offset, limit)
 
     async def exists_by_slug(self, slug: str) -> bool:
         if await self.get_by_slug(slug):
@@ -69,17 +64,16 @@ class MockShortURLRepository(ShortURLRepository):
         return False
 
     async def delete_by_id(self, id: int) -> ShortURL:
-        for id_key in self.data:
-            if id_key == id:
-                shorturl_dict = self.data.pop(id_key)
-                return self._to_domain(shorturl_dict)
+        user_dict = self.database.delete_by_index(id)
+        if user_dict:
+            return self._to_domain(user_dict)
         raise ShortURLNotFoundInDatabaseError(
             f"ShortURL with id={id} not found in MockShortURLRepository."
         )
             
-    def _to_dict(self, shorturl: ShortURL) ->dict:
+    def _to_dict(self, shorturl: ShortURL) -> dict:
         return {
-            "id": shorturl.id,
+            "pk": shorturl.id,
             "slug": shorturl.slug,
             "original_url": shorturl.original_url,
             "owner": shorturl.owner,
@@ -92,7 +86,7 @@ class MockShortURLRepository(ShortURLRepository):
     
     def _to_domain(self, shorturl_dict:dict) -> ShortURL:
         return ShortURL(
-            id=shorturl_dict["id"],
+            id=shorturl_dict["pk"],
             slug=shorturl_dict["slug"],
             original_url=shorturl_dict["original_url"],
             owner=shorturl_dict["owner"],
@@ -102,7 +96,3 @@ class MockShortURLRepository(ShortURLRepository):
             expires_at=shorturl_dict["expires_at"],
             last_accessed_at=shorturl_dict["last_accessed_at"]
         ) 
-
-    def _get_next_id(self):
-        self.id_counter += 1
-        return self.id_counter
