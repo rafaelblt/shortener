@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 
-from .mocks import MockShortURLRepository
+from .mocks import MockShortURLRepository, MockUserRepository
 
 from shortener.infra.db import get_session
 from shortener.infra.db.models import Base
@@ -21,6 +21,11 @@ from shortener.adapters.api import app
 @pytest.fixture
 def mock_shorturl_repository():
     return MockShortURLRepository()
+
+
+@pytest.fixture
+def mock_user_repository():
+    return MockUserRepository()
 
 
 @pytest_asyncio.fixture
