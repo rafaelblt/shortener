@@ -87,7 +87,7 @@ class MockUserRepository(UserRepository):
             "last_login": user.last_login
         }
     
-    def _to_domain(self, user_dict:dict) -> User:
+    def _to_domain(self, user_dict: dict) -> User:
         return User(
             id=user_dict["pk"],
             email=user_dict["email"],
