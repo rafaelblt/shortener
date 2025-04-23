@@ -30,7 +30,7 @@ class MockDatabase:
         self.data = {}
         self._index_manager = index_manager
 
-    def add(self, entity: dict) -> tuple[object, dict]:
+    def add(self, entity: dict) -> dict:
         index = self._index_manager.generate_index()
         self.insert(index=index, entity=entity)
         return entity
