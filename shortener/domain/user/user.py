@@ -16,12 +16,13 @@ class User:
         hashed_password: HashedPassword,
         plan: Plan,
         id: Optional[int] = None,
-        shorturls: list = [],
+        shorturls: Optional[list] = None,
         status: UserStatus = UserStatus.ACTIVE,
         is_superuser: bool = False,
         created_at: Optional[datetime] = None,
         last_login: Optional[datetime] = None
     ):
+        shorturls = shorturls or []
         created_at = created_at or utc_now()
 
         self.validate_id(id)
