@@ -4,7 +4,7 @@ from shortener.domain.shorturl import (
 from shortener.domain.shorturl.fields import URL, Slug
 
 
-class PutShortURLUseCase:
+class UpdateShortURLUseCase:
     """Use case to update a ShortURL object."""
 
     def __init__(
