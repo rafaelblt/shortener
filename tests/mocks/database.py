@@ -6,6 +6,7 @@ class IndexManager(ABC):
     def generate_index(self) -> object:
         pass
 
+    @abstractmethod
     def validate_index(self, index) -> None:
         pass
 
