@@ -5,7 +5,7 @@ from shortener.domain.shorturl.shorturl import ShortURL
 class ShortURLValidator(ABC):
     
     @abstractmethod
-    def validate(self, shorturl: ShortURL) -> None:
+    async def validate(self, shorturl: ShortURL) -> None:
         """
         Abstract method to validate ShortURL.
 

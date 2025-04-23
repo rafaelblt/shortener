@@ -5,7 +5,7 @@ from shortener.domain.user.user import User
 class UserValidator(ABC):
     
     @abstractmethod
-    def validate(self, user: User) -> None:
+    async def validate(self, user: User) -> None:
         """
         Abstract method to validate User.
 
