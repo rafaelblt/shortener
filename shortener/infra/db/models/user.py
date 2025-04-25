@@ -21,7 +21,9 @@ class UserModel(Base):
     created_at = Column(DateTime, default=lambda: utc_now(), nullable=False)
     last_login = Column(DateTime, nullable=True)
 
-    plan_id = Column(Integer, ForeignKey("plans.id"), nullable=False)
+    plan_id = Column(
+        Integer, ForeignKey("plans.id", ondelete="SET NULL"), nullable=True
+    )
 
     shorturls = relationship(
         "ShortURLModel", back_populates="owner", cascade="all, delete-orphan"

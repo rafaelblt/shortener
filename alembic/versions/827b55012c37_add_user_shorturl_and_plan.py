@@ -40,8 +40,8 @@ def upgrade() -> None:
         sa.Column('is_superuser', sa.Boolean(), nullable=False),
         sa.Column('created_at', sa.DateTime(), nullable=False),
         sa.Column('last_login', sa.DateTime(), nullable=True),
-        sa.Column('plan_id', sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(['plan_id'], ['plans.id'], ),
+        sa.Column('plan_id', sa.Integer(), nullable=True),
+        sa.ForeignKeyConstraint(['plan_id'], ['plans.id'], ondelete="SET NULL"),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_users_email'), 'users', ['email'], unique=True)
