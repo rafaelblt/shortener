@@ -16,13 +16,12 @@ class User:
         hashed_password: HashedPassword,
         plan: Plan,
         id: Optional[int] = None,
-        shorturls: Optional[list] = None,
+        shorturls_count: int = 0,
         status: UserStatus = UserStatus.ACTIVE,
         is_superuser: bool = False,
         created_at: Optional[datetime] = None,
         last_login: Optional[datetime] = None
     ):
-        shorturls = shorturls or []
         created_at = created_at or utc_now()
 
         self.validate_id(id)
@@ -30,7 +29,7 @@ class User:
         self.validate_email(email)
         self.validate_hashed_password(hashed_password)
         self.validate_plan(plan)
-        self.validate_shorturls(shorturls)
+        self.validate_shorturls_count(shorturls_count)
         self.validate_status(status)
         self.validate_is_superuser(is_superuser)
         self.validate_created_at(created_at)
@@ -41,7 +40,7 @@ class User:
         self._email = email
         self._hashed_password = hashed_password
         self._plan = plan
-        self._shorturls = shorturls
+        self._shorturls_count = shorturls_count
         self._status = status
         self._is_superuser = is_superuser
         self._created_at = created_at
@@ -79,10 +78,8 @@ class User:
         return self._plan
     
     @property
-    def shorturls(self):
-        from shortener.domain.shorturl import ShortURL
-        self._shorturls: list[ShortURL]
-        return self._shorturls
+    def shorturls_count(self):
+        return self._shorturls_count
     
     @property
     def status(self):
@@ -131,14 +128,16 @@ class User:
             raise AttrTypeError(attr="plan", type_expected="Plan", got=plan)
 
     @staticmethod
-    def validate_shorturls(shorturls):
-        from shortener.domain.shorturl import ShortURL
-        if not isinstance(shorturls, list):
+    def validate_shorturls_count(shorturls_count):
+        if not isinstance(shorturls_count, int):
             raise AttrTypeError(
-                attr="shorturls", type_expected="list", got=shorturls
+                attr="shorturls", type_expected="int", got=shorturls_count
             )
-        if any(not isinstance(obj, ShortURL) for obj in shorturls):
-            raise TypeError("The User shorturls must be a list of only ShortURLs.")
+        if shorturls_count < 0:
+            raise ValueError(
+                ("The User shorturls_count must be greater than or equal to 0, "
+                f"got {shorturls_count}")
+            )
     
     @staticmethod
     def validate_status(status):
