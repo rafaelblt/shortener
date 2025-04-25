@@ -1,3 +1,5 @@
+from typing import Sequence
+
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -8,7 +10,10 @@ from shortener.domain.user.exceptions import (
     UserNotFoundInDatabaseError, UserInvalidToUpdateError
 )
 
-from shortener.infra.db.models import UserModel
+from shortener.infra.db.mappers import (
+    map_user_model_to_domain, map_user_domain_to_model
+)
+from shortener.infra.db.models import UserModel, ShortURLModel
 
 
 class SQLAlchemyUserRepository(UserRepository):
@@ -27,13 +32,13 @@ class SQLAlchemyUserRepository(UserRepository):
         await self.session.commit()
         await self.session.refresh(model)
         return self._to_domain(model)
-    
+
     async def update(self, user: User) -> User:
         if user.id is None:
             raise UserInvalidToUpdateError("User needs a ID to update")
 
         existing_model = await self._get_model_by_id(user.id)
-        
+
         if existing_model is None:
             raise UserNotFoundInDatabaseError(
                 f"User with id={user.id} not found in database."
@@ -76,7 +81,7 @@ class SQLAlchemyUserRepository(UserRepository):
         )
         entities = [self._to_domain(m) for m in rows.all()]
         return PaginatedResult(entities, total, offset, limit)
-        
+
     async def exists_by_email(self, email: str) -> bool:
         """
         Checks if a User exists by its email.
@@ -96,12 +101,12 @@ class SQLAlchemyUserRepository(UserRepository):
             raise UserNotFoundInDatabaseError(
                 f"User with id={id} not found in database."
             )
-        
+
         await self.session.delete(model)
         await self.session.commit()
         return self._to_domain(model)
 
-    async def _get_all_models(self) -> list[UserModel]:
+    async def _get_all_models(self) -> Sequence[UserModel]:
         result = await self.session.scalars(select(UserModel))
         return result.all()
 
@@ -133,32 +138,10 @@ class SQLAlchemyUserRepository(UserRepository):
         )
         return model
 
-    def _to_domain(self, model: UserModel) -> User:
-        """
-        Converts a SQLAlchemy model instance to a domain entity.
-        """
-        return User(
-            id=model.id,
-            email=Email(model.email),
-            name=Name(model.name),
-            hashed_password=HashedPassword(model.hashed_password),
-            status=model.status,
-            is_superuser=model.is_superuser,
-            created_at=model.created_at,
-            last_login=model.last_login,
-        )
-    
+    def _to_domain(model: UserModel) -> User:
+        """Converts a SQLAlchemy model instance to a domain entity."""
+        return map_user_model_to_domain(model)
+
     def _to_model(self, entity: User) -> UserModel:
-        """
-        Converts a domain entity to a SQLAlchemy model instance.
-        """
-        return UserModel(
-            id=entity.id,
-            email=entity.email,
-            name=entity.name,
-            hashed_password=entity.hashed_password,
-            status=entity.status,
-            is_superuser=entity.is_superuser,
-            created_at=entity.created_at,
-            last_login=entity.last_login,
-        )
+        """Converts a domain entity to a SQLAlchemy model instance."""
+        return map_user_domain_to_model(entity)

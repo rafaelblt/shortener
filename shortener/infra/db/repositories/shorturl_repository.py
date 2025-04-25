@@ -1,13 +1,17 @@
+from typing import Sequence
+
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shortener.domain.shared import PaginatedResult
 from shortener.domain.shorturl import ShortURL, ShortURLRepository
-from shortener.domain.shorturl.fields import Slug, URL
 from shortener.domain.shorturl.exceptions import (
     ShortURLNotFoundInDatabaseError, ShortURLInvalidToUpdateError
 )
 
+from shortener.infra.db.mappers import (
+    map_shorturl_model_to_domain, map_shorturl_domain_to_model
+)
 from shortener.infra.db.models import ShortURLModel
 
 
@@ -100,7 +104,7 @@ class SQLAlchemyShortURLRepository(ShortURLRepository):
         await self.session.commit()
         return self._to_domain(model)
 
-    async def _get_all_models(self) -> list[ShortURLModel]:
+    async def _get_all_models(self) -> Sequence[ShortURLModel]:
         result = await self.session.scalars(select(ShortURLModel))
         return result.all()
 
@@ -133,31 +137,9 @@ class SQLAlchemyShortURLRepository(ShortURLRepository):
         return model
 
     def _to_domain(self, model: ShortURLModel) -> ShortURL:
-        """
-        Converts a SQLAlchemy model instance to a domain entity.
-        """
-        return ShortURL(
-            id=model.id,
-            slug=Slug(model.slug),
-            original_url=URL(model.original_url),
-            is_active=model.is_active,
-            visit_count=model.visit_count,
-            created_at=model.created_at,
-            expires_at=model.expires_at,
-            last_accessed_at=model.last_accessed_at,
-        )
+        """Convets a SQLAlchemy model instance to a domain entity."""
+        return map_shorturl_model_to_domain(model)
     
     def _to_model(self, entity: ShortURL) -> ShortURLModel:
-        """
-        Converts a domain entity to a SQLAlchemy model instance.
-        """
-        return ShortURLModel(
-            id=entity.id,
-            slug=entity.slug,
-            original_url=entity.original_url,
-            is_active=entity.is_active,
-            visit_count=entity.visit_count,
-            created_at=entity.created_at,
-            expires_at=entity.expires_at,
-            last_accessed_at=entity.last_accessed_at,
-        )
+        """Converts a domain entity to a SQLAlchemy model instance."""
+        return map_shorturl_domain_to_model(entity)
