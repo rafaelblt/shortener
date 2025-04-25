@@ -1,11 +1,10 @@
-from datetime import datetime, timezone
-
 from sqlalchemy import Column, Integer, String, DateTime, Enum, ForeignKey
 from sqlalchemy.orm import relationship
 
-from shortener.domain.shorturl.fields import ShortURLStatus
-from shortener.domain.shorturl.fields.slug import SLUG_MAX_LENGTH
+from shortener.domain.shared.datetime_utils import utc_now
 
+from shortener.domain.shorturl.fields import ShortURLStatus as Status
+from shortener.domain.shorturl.fields.slug import SLUG_MAX_LENGTH
 
 from .base import Base
 
@@ -16,14 +15,10 @@ class ShortURLModel(Base):
     id = Column(Integer, primary_key=True, index=True)
     slug = Column(String(SLUG_MAX_LENGTH), unique=True, nullable=False, index=True)
     original_url = Column(String, nullable=False)
-    owner_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    status = Column(
-        Enum(ShortURLStatus), default=ShortURLStatus.ACTIVE, nullable=False
-    )
-    visit_count = Column(Integer, default=0, nullable=False)
-    created_at = Column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
-    )
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    status = Column(Enum(Status), default=Status.ACTIVE, nullable=False)
+    visit_count = Column(Integer(), default=0, nullable=False)
+    created_at = Column(DateTime, default=lambda: utc_now(), nullable=False)
     expires_at = Column(DateTime, nullable=True)
     last_accessed_at = Column(DateTime, nullable=True)
 
