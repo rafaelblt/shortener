@@ -72,24 +72,27 @@ def test_invalid_hashed_password(required_fields):
         User(**required_fields, hashed_password=invalid_hashed_password)
 
 
-def test_invalid_shorturls(required_fields):
-    invalid_shorturls = None
+def test_invalid_shorturls_count(required_fields):
+    invalid_shorturls_count = None
     with pytest.raises(
         TypeError, 
         match=get_type_error_message(
-            attr="shorturls", type_expected="list", got=invalid_shorturls
+            attr="shorturls_count", 
+            type_expected="int", 
+            got=invalid_shorturls_count
         )
     ):
-        User(**required_fields, shorturls=invalid_shorturls)
+        User(**required_fields, shorturls_count=invalid_shorturls_count)
 
 
-def test_shorturls_with_non_shorturls(required_fields):
-    invalid_shorturls = [1, "a", True]
+def test_shorturls_count_negative(required_fields):
+    invalid_shorturls_count = -2
     with pytest.raises(
-        TypeError, 
-        match="The User shorturls must be a list of only ShortURLs."
+        ValueError, 
+        match=("The User shorturls_count must be greater than or equal to 0, "
+              f"got {invalid_shorturls_count}")
     ):
-        User(**required_fields, shorturls=invalid_shorturls)
+        User(**required_fields, shorturls_count=invalid_shorturls_count)
 
 
 def test_invalid_status(required_fields):

@@ -25,6 +25,7 @@ def test_to_dict(
     assert user_dict["name"] == normal_user.name
     assert user_dict["hashed_password"] == normal_user.hashed_password
     assert user_dict["plan"] == normal_user.plan
+    assert user_dict["shorturls_count"] == normal_user.shorturls_count
     assert user_dict["status"] == normal_user.status
     assert user_dict["is_superuser"] == normal_user.is_superuser
     assert user_dict["created_at"] == normal_user.created_at
@@ -41,6 +42,7 @@ def test_to_domain(
     assert domain.name == user_dict["name"]
     assert domain.hashed_password == user_dict["hashed_password"]
     assert domain.plan == user_dict["plan"]
+    assert domain.shorturls_count == user_dict["shorturls_count"]
     assert domain.status == user_dict["status"]
     assert domain.is_superuser == user_dict["is_superuser"]
     assert domain.created_at == user_dict["created_at"]

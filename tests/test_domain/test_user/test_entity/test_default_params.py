@@ -40,12 +40,12 @@ def test_plan(user):
     assert isinstance(user.plan, Plan)
 
 
+def test_shorturls_count(user):
+    assert user.shorturls_count == 0
+
+
 def test_status(user):
     assert user.status == UserStatus.ACTIVE
-
-
-def test_shorturls(user):
-    assert user.shorturls == []
 
 
 def test_is_superuser(user):

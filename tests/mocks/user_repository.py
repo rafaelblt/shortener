@@ -31,7 +31,7 @@ class MockUserRepository(UserRepository):
         user_dict["name"] = user.name
         user_dict["hashed_password"] = user.hashed_password
         user_dict["plan"] = user.plan
-        user_dict["shorturls"] = user.shorturls
+        user_dict["shorturls_count"] = user.shorturls_count
         user_dict["status"] = user.status
         user_dict["is_superuser"] = user.is_superuser
         user_dict["created_at"] = user.created_at
@@ -80,7 +80,7 @@ class MockUserRepository(UserRepository):
             "name": user.name,
             "hashed_password": user.hashed_password,
             "plan": user.plan,
-            "shorturls": user.shorturls,
+            "shorturls_count": user.shorturls_count,
             "status": user.status,
             "is_superuser": user.is_superuser,
             "created_at": user.created_at,
@@ -94,7 +94,7 @@ class MockUserRepository(UserRepository):
             name=user_dict["name"],
             hashed_password=user_dict["hashed_password"],
             plan=user_dict["plan"],
-            shorturls=user_dict["shorturls"],
+            shorturls_count=user_dict["shorturls_count"],
             status=user_dict["status"],
             is_superuser=user_dict["is_superuser"],
             created_at=user_dict["created_at"],

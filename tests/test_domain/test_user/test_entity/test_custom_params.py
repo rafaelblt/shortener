@@ -16,6 +16,7 @@ def user(default_plan):
         email=Email("user-user@outlook.com"),
         hashed_password=HashedPassword("hash#@$%12356788"),
         plan=default_plan,
+        shorturls_count=4,
         status=UserStatus.BANNED,
         is_superuser=True,
         created_at=datetime(year=2010, month=5, day=22, tzinfo=timezone.utc),
@@ -41,6 +42,10 @@ def test_hashed_password(user):
 
 def test_plan(user):
     assert isinstance(user.plan, Plan)
+
+
+def test_shorturls_count(user):
+    assert user.shorturls_count == 4
 
 
 def test_status(user):

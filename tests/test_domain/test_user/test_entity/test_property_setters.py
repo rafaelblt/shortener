@@ -1,5 +1,4 @@
 import pytest
-from datetime import datetime, timezone
 
 from shortener.domain.user import User
 from shortener.domain.user.fields import Name, HashedPassword
