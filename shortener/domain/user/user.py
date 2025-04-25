@@ -131,7 +131,7 @@ class User:
     def validate_shorturls_count(shorturls_count):
         if not isinstance(shorturls_count, int):
             raise AttrTypeError(
-                attr="shorturls", type_expected="int", got=shorturls_count
+                attr="shorturls_count", type_expected="int", got=shorturls_count
             )
         if shorturls_count < 0:
             raise ValueError(
