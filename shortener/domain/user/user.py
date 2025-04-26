@@ -176,6 +176,10 @@ class User:
             )
     
 
+    def change_plan(self, new_plan: Plan):
+        self.validate_plan(new_plan)
+        self._plan = new_plan
+
     def update_last_login(self):
         self._last_login = utc_now()
 
