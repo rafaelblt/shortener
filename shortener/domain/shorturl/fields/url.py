@@ -10,6 +10,9 @@ class URL(str):
         cls.validate_url(value)
         return super().__new__(cls, value)
 
+    def __repr__(self):
+        return f"<URL({super().__repr__()})>"
+
     @classmethod
     def validate_url(cls, value: str):
         if not cls.is_valid_https_url(value):
