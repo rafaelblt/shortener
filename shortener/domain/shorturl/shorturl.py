@@ -224,6 +224,10 @@ class ShortURL:
             )
 
 
+    def change_owner(self, new_owner: User):
+        self.validate_owner(new_owner)
+        self._owner = new_owner
+
     def record_visit(self):
         """
         Registers a new visit to the ShortURL.
