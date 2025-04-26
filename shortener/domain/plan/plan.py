@@ -53,4 +53,3 @@ class Plan:
                 ("The Plan max_shorturls must be greater than or equal to 0, "
                 f"got {max_shorturls}")
             )
-        
