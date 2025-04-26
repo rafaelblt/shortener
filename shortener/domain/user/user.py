@@ -159,7 +159,7 @@ class User:
             raise AttrTypeError(
                 attr="created_at", type_expected="datetime", got=created_at
             )
-        if isinstance(created_at, datetime) and not is_utc(created_at):
+        if not is_utc(created_at):
             raise ValueError(
                 "The User created_at datetime must be in UTC timezone."
             )
@@ -185,7 +185,4 @@ class User:
 
 
     def __repr__(self):
-        return (f"<User id={self.id} email={self.email} name={self.name} "
-                f"hashed_password={self.hashed_password} shorturls={self.shorturls} "
-                f"status={self.status} is_superuser={self.is_superuser} "
-                f"created_at={self.created_at} last_login={self.last_login}>")
+        return f"<User id={self.id} email={self.email} name={self.name}>"

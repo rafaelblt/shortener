@@ -12,11 +12,12 @@ class UserRepository(ABC):
         Add a User object to the database and return the updated object.
 
         Args:
-            User (User): The object to add.
+            user (User): The object to add.
         
         Returns:
             User: Return the added object.
         """
+        pass
 
     @abstractmethod
     async def update(self, user: User) -> User:
