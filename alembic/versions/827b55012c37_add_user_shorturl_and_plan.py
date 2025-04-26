@@ -37,9 +37,10 @@ def upgrade() -> None:
             'ACTIVE', 'DEACTIVATED', 'BANNED', 'SUSPENDED', 'INACTIVE', 
             name='userstatus'
         ), nullable=False),
+        sa.Column('shorturls_count', sa.Integer(), nullable=False),
         sa.Column('is_superuser', sa.Boolean(), nullable=False),
-        sa.Column('created_at', sa.DateTime(), nullable=False),
-        sa.Column('last_login', sa.DateTime(), nullable=True),
+        sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
+        sa.Column('last_login', sa.DateTime(timezone=True), nullable=True),
         sa.Column('plan_id', sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(['plan_id'], ['plans.id'], ondelete="SET NULL"),
         sa.PrimaryKeyConstraint('id')
@@ -57,9 +58,9 @@ def upgrade() -> None:
             name='shorturlstatus'
         ), nullable=False),
         sa.Column('visit_count', sa.Integer(), nullable=False),
-        sa.Column('created_at', sa.DateTime(), nullable=False),
-        sa.Column('expires_at', sa.DateTime(), nullable=True),
-        sa.Column('last_accessed_at', sa.DateTime(), nullable=True),
+        sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
+        sa.Column('expires_at', sa.DateTime(timezone=True), nullable=True),
+        sa.Column('last_accessed_at', sa.DateTime(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(['owner_id'], ['users.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
