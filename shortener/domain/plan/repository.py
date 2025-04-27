@@ -31,7 +31,8 @@ class PlanRepository(ABC):
             Plan: The updated entity.
         
         Raises:
-            PlanNotFoundInDatabase: Plan not found in database.
+            PlanInvalidToUpdateError: Plan is invalid to update.
+            PlanNotFoundInDatabaseError: Plan not found in database.
         """
         pass
 
@@ -55,20 +56,6 @@ class PlanRepository(ABC):
 
         Returns:
             Optional[Plan]: The entity object or None if not found.
-        """
-        pass
-
-    @abstractmethod
-    async def list_paginated(self, offset: int, limit: int) -> PaginatedResult[Plan]:
-        """
-        Retrieve a paginated list of Plan objects.
-
-        Args:
-            offset (int): The starting index of the pagination.
-            limit (int): The maximum number of items to retrieve.
-
-        Returns:
-            PaginatedResult[Plan]: A paginated result containing the objects. 
         """
         pass
 
