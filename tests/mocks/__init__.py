@@ -1,2 +1,0 @@
-from .shorturl_repository import MockShortURLRepository
-from .user_repository import MockUserRepository

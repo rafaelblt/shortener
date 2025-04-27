@@ -6,7 +6,7 @@ from shortener.domain.shorturl.exceptions import (
     ShortURLNotFoundInDatabaseError, ShortURLInvalidToUpdateError
 )
 
-from tests.mocks import MockShortURLRepository
+from tests.fixtures.mocks.shorturl_repository import MockShortURLRepository
 
 
 @pytest.fixture

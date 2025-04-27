@@ -7,7 +7,7 @@ from shortener.domain.user.exceptions import (
     UserInvalidToUpdateError, UserNotFoundInDatabaseError
 )
 
-from tests.mocks import MockUserRepository
+from tests.fixtures.mocks.user_repository import MockUserRepository
 
 
 @pytest.fixture
