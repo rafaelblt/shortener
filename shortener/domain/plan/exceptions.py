@@ -4,3 +4,8 @@ class PlanAttributeTypeError(TypeError):
             f"The Plan {attr} must be an instance of {type_expected}, got "
             f"{type(got).__name__}"
         )
+
+
+
+class PlanInvalidToUpdateError(Exception): ...
+class PlanNotFoundInDatabaseError(Exception): ...
