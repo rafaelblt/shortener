@@ -12,7 +12,11 @@ from .mocks import MockShortURLRepository, MockUserRepository
 
 from shortener.infra.db import get_session
 from shortener.infra.db.models import Base
-from shortener.infra.db.repositories import SQLAlchemyShortURLRepository
+from shortener.infra.db.repositories import (
+    SQLAlchemyShortURLRepository,
+    SQLAlchemyUserRepository,
+    SQLAlchemyPlanRepository
+)
 
 from shortener.adapters.api import app
 
@@ -51,6 +55,11 @@ async def db_session():
 @pytest_asyncio.fixture
 async def sqlalchemy_shorturl_repository(db_session):
     return SQLAlchemyShortURLRepository(db_session)
+
+
+@pytest_asyncio.fixture
+async def sqlalchemy_plan_repository(db_session):
+    return SQLAlchemyPlanRepository(db_session)
 
 
 @pytest.fixture
