@@ -5,7 +5,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from shortener.domain.shared import PaginatedResult
 from shortener.domain.user import User, UserRepository
-from shortener.domain.user.fields import Email, Name, HashedPassword
 from shortener.domain.user.exceptions import (
     UserNotFoundInDatabaseError, UserInvalidToUpdateError
 )
@@ -13,7 +12,7 @@ from shortener.domain.user.exceptions import (
 from shortener.infra.db.mappers import (
     map_user_model_to_domain, map_user_domain_to_model
 )
-from shortener.infra.db.models import UserModel, ShortURLModel
+from shortener.infra.db.models import UserModel
 
 
 class SQLAlchemyUserRepository(UserRepository):
@@ -47,8 +46,8 @@ class SQLAlchemyUserRepository(UserRepository):
         existing_model.email = user.email
         existing_model.name = user.name
         existing_model.hashed_password = user.hashed_password
+        existing_model.plan_id = user.plan.id
         existing_model.status = user.status
-        # TODO: update model.shorturls
         existing_model.is_superuser = user.is_superuser
         existing_model.created_at = user.created_at
         existing_model.last_login = user.last_login
@@ -138,7 +137,7 @@ class SQLAlchemyUserRepository(UserRepository):
         )
         return model
 
-    def _to_domain(model: UserModel) -> User:
+    def _to_domain(self, model: UserModel) -> User:
         """Converts a SQLAlchemy model instance to a domain entity."""
         return map_user_model_to_domain(model)
 
