@@ -1,5 +1,7 @@
 from typing import Optional
 
+from shortener.domain.user import User, UserRepository
+
 from shortener.domain.shorturl import (
     ShortURL,
     ShortURLRepository,
@@ -7,39 +9,43 @@ from shortener.domain.shorturl import (
 )
 from shortener.domain.shorturl.fields import Slug, URL
 from shortener.domain.shorturl.utils import generate_unique_slug
-from shortener.domain.user import User
+from shortener.domain.shorturl.exceptions import ShortURLValidationError
 
 
 class CreateShortURLUseCase:
-    """Use case to create a new ShortURL object and save in repository."""
+    """Use case to create a new ShortURL object."""
 
     def __init__(
         self, 
-        repository: ShortURLRepository,
+        shorturl_repository: ShortURLRepository,
+        user_repository: UserRepository,
         validator: ShortURLValidator,
     ):
         """
         Args:
-            repository (ShortURLRepository): Repository to save the ShortURL object.
+            shorturl_repository (ShortURLRepository): Repository to save the 
+                ShortURL object.
+            user_repository (UserRepository): Repository to get the ShortURL owner.
             validator (ShortURLValidator): Validator to validate the ShortURL data.
         """
-        self.repository = repository
+        self.shorturl_repository = shorturl_repository
+        self.user_repository = user_repository
         self.validator = validator
 
     async def execute(
         self, 
         original_url: URL,
+        owner_id: int,
         custom_slug: Optional[Slug] = None,
-        owner: Optional[User] = None
     ) -> ShortURL:
         """
         Executes the Use Case with the provided data.
 
         Args:
             original_url (URL): The original_url to be shortened.
+            owner_id (int): Owner ID of the ShortURL.
             custom_slug (Optional[Slug]): Custom slug of the ShortURL. Will be 
                 generated if not provided.
-            owner (Optional[User]): Onwer of the ShortURL. Defaults to None.
 
         Returns:
             ShortURL: The entity object created.
@@ -47,10 +53,13 @@ class CreateShortURLUseCase:
         Raises:
             ShortURLValidationError: If any part of ShortURL is invalid.
         """
-        if custom_slug is None:
-            slug = await generate_unique_slug(repository=self.repository)
-        else:
-            slug = custom_slug
+        owner = await self.user_repository.get_by_id(owner_id)
+        if owner is None:
+            raise ShortURLValidationError(
+                "There is no user in the database with the given owner_id."
+            )
+
+        slug = custom_slug or await generate_unique_slug(self.shorturl_repository)
 
         shorturl = ShortURL(
             slug=slug,
@@ -60,4 +69,4 @@ class CreateShortURLUseCase:
 
         await self.validator.validate(shorturl)
         
-        return await self.repository.add(shorturl)
+        return await self.shorturl_repository.add(shorturl)
