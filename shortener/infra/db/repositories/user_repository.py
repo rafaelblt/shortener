@@ -5,9 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from shortener.domain.shared import PaginatedResult
 from shortener.domain.user import User, UserRepository
-from shortener.domain.user.exceptions import (
-    UserNotFoundInDatabaseError, UserInvalidToUpdateError
-)
+from shortener.domain.user.exceptions import UserNotFoundInDatabaseError
 
 from shortener.infra.db.mappers import (
     map_user_model_to_domain, map_user_domain_to_model
@@ -33,9 +31,6 @@ class SQLAlchemyUserRepository(UserRepository):
         return self._to_domain(model)
 
     async def update(self, user: User) -> User:
-        if user.id is None:
-            raise UserInvalidToUpdateError("User needs a ID to update")
-
         existing_model = await self._get_model_by_id(user.id)
 
         if existing_model is None:
@@ -82,15 +77,6 @@ class SQLAlchemyUserRepository(UserRepository):
         return PaginatedResult(entities, total, offset, limit)
 
     async def exists_by_email(self, email: str) -> bool:
-        """
-        Checks if a User exists by its email.
-
-        Args:
-            email (str): The User email.
-
-        Returns:
-            bool: True if a User with the given email exists, False otherwise.
-        """
         model = await self._get_model_by_email(email)
         return model is not None
 
@@ -101,9 +87,11 @@ class SQLAlchemyUserRepository(UserRepository):
                 f"User with id={id} not found in database."
             )
 
+        domain = self._to_domain(model)
+
         await self.session.delete(model)
         await self.session.commit()
-        return self._to_domain(model)
+        return domain
 
     async def _get_all_models(self) -> Sequence[UserModel]:
         result = await self.session.scalars(select(UserModel))
