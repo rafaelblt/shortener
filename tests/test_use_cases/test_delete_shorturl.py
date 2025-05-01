@@ -16,7 +16,7 @@ async def use_case(mock_shorturl_repository):
 async def test_delete_by_id(
     use_case: DeleteShortURLUseCase, normal_shorturl: ShortURL
 ):
-    shorturl = await use_case.repository.save(normal_shorturl)
+    shorturl = await use_case.repository.add(normal_shorturl)
     retrieved = await use_case.delete_by_id(shorturl.id)
 
     assert retrieved.id == shorturl.id
