@@ -2,9 +2,7 @@ import pytest
 import pytest_asyncio
 
 from shortener.domain.plan import Plan
-from shortener.domain.plan.exceptions import (
-    PlanInvalidToUpdateError, PlanNotFoundInDatabaseError
-)
+from shortener.domain.plan.exceptions import PlanNotFoundInDatabaseError
 
 from shortener.infra.db.repositories import SQLAlchemyPlanRepository
 
