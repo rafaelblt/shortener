@@ -40,7 +40,8 @@ async def test_update_plan_without_id_raises_error(
     repository: SQLAlchemyPlanRepository, default_plan: Plan
 ):
     with pytest.raises(
-        PlanInvalidToUpdateError, match="Plan needs a id to update."
+        PlanNotFoundInDatabaseError, 
+        match=f"Plan with id={default_plan.id} not found in database."
     ):
         await repository.update(default_plan)
 

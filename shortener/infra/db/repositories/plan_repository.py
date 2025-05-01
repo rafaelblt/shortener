@@ -33,11 +33,7 @@ class SQLAlchemyPlanRepository(PlanRepository):
         return self._to_domain(model)
 
     async def update(self, plan: Plan) -> Plan:
-        if plan.id is None:
-            raise PlanInvalidToUpdateError("Plan needs a ID to update")
-
         existing_model = await self._get_model_by_id(plan.id)
-
         if existing_model is None:
             raise PlanNotFoundInDatabaseError(
                 f"Plan with id={plan.id} not found in database."
