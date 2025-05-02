@@ -46,7 +46,7 @@ async def get_shorturl(
     if shorturl is None:
         return JSONResponse(
             status_code=HTTPStatus.NOT_FOUND,
-            content={"message": "ShortURL not found"}
+            content={"message": f"ShortURL with id={id} not found"}
         )
 
     response_data = ShortURLSchema.from_domain(shorturl).model_dump()
