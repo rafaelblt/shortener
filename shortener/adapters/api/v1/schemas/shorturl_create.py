@@ -23,7 +23,7 @@ def validate_url(value: str) -> URL:
 class ShortURLCreateSchema(BaseModel):
     original_url: Annotated[str, AfterValidator(validate_url)]
     custom_slug: Annotated[str, AfterValidator(validate_custom_slug)] = None
-    owner_id: Optional[int] = None
+    owner_id: int
     
     model_config = ConfigDict(
         json_schema_extra={
