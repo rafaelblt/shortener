@@ -1,9 +1,8 @@
 from shortener.domain.shorturl.shorturl import ShortURL
 from shortener.domain.shorturl.repository import ShortURLRepository
 from shortener.domain.shorturl.validator import ShortURLValidator
-from shortener.domain.shorturl.exceptions import (
-    ShortURLSlugAlreadyExistsError
-)
+
+from .slug_exists_validator import validate_slug_exists
 
 
 class ShortURLCreateValidator(ShortURLValidator):
@@ -13,5 +12,4 @@ class ShortURLCreateValidator(ShortURLValidator):
         self.repository = repository
 
     async def validate(self, shorturl: ShortURL):
-        if await self.repository.exists_by_slug(shorturl.slug):
-            raise ShortURLSlugAlreadyExistsError(provided_slug=shorturl.slug)
+        await validate_slug_exists(slug=shorturl.slug, repository=self.repository)
