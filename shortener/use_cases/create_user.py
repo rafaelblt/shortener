@@ -52,7 +52,7 @@ class CreateUserUseCase:
         plan = await self.plan_repository.get_by_id(plan_id)
         if plan is None:
             raise UserValidationError(
-                "There is no user in the database with the given plan_id."
+                f"There is no plan in the database with the given plan_id: {plan_id}."
             )
 
         hashed_password = HashedPassword(self.password_hasher.hash(password))

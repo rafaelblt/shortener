@@ -63,7 +63,7 @@ async def test_with_non_existent_plan(
 ):
     with pytest.raises(
         UserValidationError, 
-        match="There is no user in the database with the given plan_id: 1."
+        match="There is no plan in the database with the given plan_id: 1."
     ):
         await use_case.execute(
             email=normal_user.email, 
