@@ -34,3 +34,18 @@ async def get_persistent_shorturl(session: AsyncSession, shorturl: ShortURL):
 
     repository = SQLAlchemyShortURLRepository(session=session)
     return await repository.add(shorturl)
+
+
+def assert_shorturl_fields(
+    first: ShortURL, second: ShortURL, ignore_id: bool = False
+):
+    if not ignore_id:
+        assert first.id == second.id
+    assert first.slug == second.slug
+    assert first.original_url == second.original_url
+    assert first.owner.id == second.owner.id
+    assert first.status == second.status
+    assert first.visit_count == second.visit_count
+    assert first.created_at == second.created_at
+    assert first.expires_at == second.expires_at
+    assert first.last_accessed_at == second.last_accessed_at
