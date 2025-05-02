@@ -63,8 +63,7 @@ async def create_shorturl(
         shorturl = await use_case.execute(
             original_url=data.original_url,
             custom_slug=data.custom_slug,
-            owner_id=data.owner_id,
-            expires_at=data.expires_at
+            owner_id=data.owner_id
         )
     except ShortURLValidationError as e:
         raise HTTPException(
