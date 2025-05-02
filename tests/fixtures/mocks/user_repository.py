@@ -1,9 +1,7 @@
 from shortener.domain.shared.pagination import PaginatedResult
 
 from shortener.domain.user import User, UserRepository
-from shortener.domain.user.exceptions import (
-    UserInvalidToUpdateError, UserNotFoundInDatabaseError
-)
+from shortener.domain.user.exceptions import UserNotFoundInDatabaseError
 
 from .database import MockDatabase, IdManager
 
@@ -18,9 +16,6 @@ class MockUserRepository(UserRepository):
         return self._to_domain(user_dict)
     
     async def update(self, user: User) -> User:
-        if user.id is None:
-            raise UserInvalidToUpdateError("User needs a ID to update")
-        
         if not self.database.exists_by_index(user.id):
             raise UserNotFoundInDatabaseError(
                 f"User with id={user.id} not found in MockUserRepository."
