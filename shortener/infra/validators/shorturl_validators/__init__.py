@@ -1,2 +1,2 @@
 from .shorturl_create_validator import ShortURLCreateValidator
-from .slug_exists_validator import validate_slug_exists
+from .shorturl_update_validator import ShortURLUpdateValidator
