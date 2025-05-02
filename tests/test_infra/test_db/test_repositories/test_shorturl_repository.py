@@ -3,7 +3,7 @@ import pytest_asyncio
 
 from datetime import datetime, timezone
 
-from tests.utils.entity_helpers import get_persistent_user
+from tests.utils.entity_helpers import get_persistent_user, assert_shorturl_fields
 
 from shortener.domain.shared import PaginatedResult
 
@@ -15,19 +15,6 @@ from shortener.domain.shorturl.exceptions import ShortURLNotFoundInDatabaseError
 
 from shortener.infra.db.models import ShortURLModel
 from shortener.infra.db.repositories import SQLAlchemyShortURLRepository
-
-
-def assert_shorturl_fields(first: ShortURL, second: ShortURL, ignore_id: bool = False):
-    if not ignore_id:
-        assert first.id == second.id
-    assert first.slug == second.slug
-    assert first.original_url == second.original_url
-    assert first.owner.id == second.owner.id
-    assert first.status == second.status
-    assert first.visit_count == second.visit_count
-    assert first.created_at == second.created_at
-    assert first.expires_at == second.expires_at
-    assert first.last_accessed_at == second.last_accessed_at
 
 
 @pytest_asyncio.fixture
