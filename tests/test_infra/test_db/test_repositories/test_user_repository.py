@@ -104,11 +104,6 @@ async def test_update(
 async def test_update_user_without_id_raises_error(
     repository: SQLAlchemyUserRepository, normal_user: User
 ):
-    saved_plan = await get_persistent_plan(
-        session=repository.session, plan=normal_user.plan
-    )
-    normal_user.change_plan(saved_plan)
-
     with pytest.raises(
         UserNotFoundInDatabaseError, 
         match=f"User with id={normal_user.id} not found in database."
@@ -121,7 +116,6 @@ async def test_update_user_non_existent_raises_error(
     repository: SQLAlchemyUserRepository, normal_user: User
 ):
     normal_user._id = 1
-
     with pytest.raises(
         UserNotFoundInDatabaseError, 
         match=f"User with id={normal_user.id} not found in database."
