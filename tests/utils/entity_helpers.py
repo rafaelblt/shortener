@@ -27,7 +27,7 @@ async def get_persistent_user(session: AsyncSession, user: User):
 
 
 async def get_persistent_shorturl(session: AsyncSession, shorturl: ShortURL):
-    user = shorturl.user
+    user = shorturl.owner
     if user.id is None:
         user = await get_persistent_user(session, user)
     shorturl.change_owner(user)
