@@ -1,7 +1,7 @@
 import pytest
 import pytest_asyncio
 
-from tests.mocks import MockShortURLRepository
+from tests.fixtures import MockShortURLRepository
 
 from shortener.domain.shorturl import ShortURL
 from shortener.domain.shorturl.exceptions import (
