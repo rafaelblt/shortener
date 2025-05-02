@@ -1,6 +1,6 @@
 import pytest
 
-from tests.mocks import MockShortURLRepository
+from tests.fixtures.mocks.shorturl_repository import MockShortURLRepository
 
 from shortener.domain.shorturl.fields.slug import (
     Slug,
