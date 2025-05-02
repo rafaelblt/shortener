@@ -1,13 +1,12 @@
 from http import HTTPStatus
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import JSONResponse, Response
 from fastapi.encoders import jsonable_encoder
 
 from shortener.domain.shorturl.exceptions import (
     ShortURLDeletionNotFoundError, ShortURLValidationError
 )
-
 from shortener.use_cases import (
     GetShortURLUseCase,
     ListShortURLUseCase,
