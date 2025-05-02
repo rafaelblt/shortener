@@ -11,17 +11,18 @@ from shortener.use_cases import (
     GetShortURLUseCase,
     ListShortURLUseCase,
     CreateShortURLUseCase,
-    DeleteShortURLUseCase
+    DeleteShortURLUseCase,
+    UpdateShortURLUseCase
 )
-
 from shortener.adapters.api.v1.dependencies import (
     make_create_shorturl_use_case,
     make_get_shorturl_use_case,
     make_delete_shorturl_use_case,
-    make_list_shorturl_use_case
+    make_list_shorturl_use_case,
+    make_update_shorturl_use_case
 )
 from shortener.adapters.api.v1.schemas import (
-    ShortURLSchema, ShortURLCreateSchema
+    ShortURLSchema, ShortURLCreateSchema, ShortURLUpdateSchema
 )
 
 
@@ -97,3 +98,29 @@ async def delete_shorturl(
     
     else:
         return Response(status_code=HTTPStatus.NO_CONTENT)
+    
+
+@router.put("/{id}", status_code=HTTPStatus.OK)
+async def update_shorturl(
+    id: int,
+    data: ShortURLUpdateSchema,
+    use_case: UpdateShortURLUseCase = Depends(make_update_shorturl_use_case)
+):
+    try:
+        updated_shorturl = await use_case.execute(
+            id=id, slug=data.slug, original_url=data.original_url
+        ) 
+    except ShortURLValidationError as e:
+        raise HTTPException(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail=str(e)
+        )
+
+    response_data = ShortURLSchema.from_domain(updated_shorturl).model_dump()
+    response_data = jsonable_encoder(response_data)
+
+    return JSONResponse(
+        status_code=HTTPStatus.CREATED,
+        content=response_data,
+        headers={"Location": f"{router.prefix}/{updated_shorturl.id}"}
+    )
