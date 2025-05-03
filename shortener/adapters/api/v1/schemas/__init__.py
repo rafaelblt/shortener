@@ -1,5 +1,5 @@
-from .login_user import LoginUserSchema
-from .register_user import RegisterUserSchema
+from .user_login import UserLoginSchema
+from .user_register import UserRegisterSchema
 
 from .shorturl import ShortURLSchema
 from .shorturl_create import ShortURLCreateSchema
