@@ -4,5 +4,7 @@ from .get_shorturl_use_case import make_get_shorturl_use_case
 from .list_shorturl_use_case import make_list_shorturl_use_case
 from .resolve_shorturl_use_case import make_resolve_shorturl_use_case
 from .update_shorturl_use_case import make_update_shorturl_use_case
+
+from .sqlalchemy_user_repository import make_sqlalchemy_user_repository
 from .sqlalchemy_shorturl_repository import make_sqlalchemy_shorturl_repository
 from .sqlalchemy_user_repository import make_sqlalchemy_user_repository
