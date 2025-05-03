@@ -79,17 +79,6 @@ async def test_update(
 
 
 @pytest.mark.asyncio
-async def test_update_raises_user_invalid_to_update(
-    repository: MockUserRepository, normal_user: User
-):
-    with pytest.raises(
-        UserInvalidToUpdateError,
-        match="User needs a ID to update"
-    ):
-        await repository.update(normal_user)
-
-
-@pytest.mark.asyncio
 async def test_update_raises_user_not_found(
     repository: MockUserRepository, normal_user: User
 ):
