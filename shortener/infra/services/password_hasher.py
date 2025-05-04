@@ -3,7 +3,7 @@ from shortener.domain.services.password_hasher import PasswordHasher
 from passlib.context import CryptContext
 
 
-class PasswordHasherService(PasswordHasher):
+class PasslibPasswordHasher(PasswordHasher):
     def __init__(self):
         self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

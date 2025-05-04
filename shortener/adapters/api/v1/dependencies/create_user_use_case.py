@@ -2,7 +2,7 @@ from fastapi import Depends
 
 from shortener.use_cases import CreateUserUseCase
 
-from shortener.infra.services.password_hasher import PasswordHasherService
+from shortener.infra.services.password_hasher import PasslibPasswordHasher
 from shortener.infra.validators.user_validators import UserCreateValidator
 
 from .sqlalchemy_user_repository import make_sqlalchemy_user_repository
@@ -16,6 +16,6 @@ def make_create_user_use_case(
     return CreateUserUseCase(
         user_repository=user_repository,
         plan_repository=plan_repository,
-        password_hasher=PasswordHasherService(),
+        password_hasher=PasslibPasswordHasher(),
         validator=UserCreateValidator(repository=user_repository)
     )
