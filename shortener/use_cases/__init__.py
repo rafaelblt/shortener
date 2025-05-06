@@ -1,4 +1,5 @@
 from .create_user import CreateUserUseCase
+from .login_user import LoginUserUseCase
 
 from .get_shorturl import GetShortURLUseCase
 from .resolve_shorturl import ResolveShortURLUseCase
