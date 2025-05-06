@@ -17,6 +17,9 @@ class UserEmailInvalidPatternError(UserValidationError): ...
 class UserEmailAlreadyExistsError(UserValidationError): 
     def __init__(self, provided_email: str):
         super().__init__(f"The provided email '{provided_email}' already exists.")
+class UserPasswordIncorretError(UserValidationError):
+    def __init__(self):
+        super().__init__("The provided password doesn't match.")
 
 
 class UserRepositoryError(Exception): ...
