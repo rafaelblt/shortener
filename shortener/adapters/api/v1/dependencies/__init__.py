@@ -1,4 +1,5 @@
 from .create_user_use_case import make_create_user_use_case
+from .login_user_use_case import make_login_user_use_case
 
 from .create_shorturl_use_case import make_create_shorturl_use_case
 from .delete_shorturl_use_case import make_delete_shorturl_use_case
