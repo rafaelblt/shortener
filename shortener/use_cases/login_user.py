@@ -32,7 +32,8 @@ class LoginUserUseCase:
             str: The auth token.
         
         Raises:
-            UserPasswordIncorretError: If the password doesn't match.
+            UserNotFoundInDatabaseError: If the email doesn't exist in database.
+            UserPasswordIncorrectError: If the password doesn't match.
         """
         user = await self.repository.get_by_email(email)
         if user is None:
