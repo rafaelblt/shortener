@@ -9,7 +9,7 @@ from shortener.domain.user.fields import Name, Email, HashedPassword
 @pytest.fixture
 def required_fields(default_plan):
     return {
-        "email": Email("test-email@example.com"),
+        "email": Email("test-email@gmail.com"),
         "name": Name("Example Name Stone"),
         "hashed_password": HashedPassword("AD@34m1~d/a@@f#kl2$$6@5$61*1"),
         "plan": default_plan

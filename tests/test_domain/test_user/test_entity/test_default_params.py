@@ -14,7 +14,7 @@ from shortener.domain.user.fields import Name, Email, HashedPassword, UserStatus
 def user(default_plan):
     return User(
         name=Name("User Example"),
-        email=Email("user@example.com"),
+        email=Email("user@gmail.com"),
         hashed_password=HashedPassword("hash#123"),
         plan=default_plan
     )
@@ -29,7 +29,7 @@ def test_name(user):
 
 
 def test_email(user):
-    assert user.email == "user@example.com"
+    assert user.email == "user@gmail.com"
 
 
 def test_hashed_password(user):

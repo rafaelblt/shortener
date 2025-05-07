@@ -1,9 +1,6 @@
-import re
+from email_validator import validate_email as lib_validate_email
 
-from shortener.domain.user.exceptions import UserEmailInvalidPatternError
-
-
-EMAIL_REGEX_PATTERN = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
+from shortener.domain.user.exceptions import EmailInvalidError
 
 
 class Email(str):
@@ -18,5 +15,7 @@ class Email(str):
 
     @staticmethod
     def validate_email(value: str):
-        if not EMAIL_REGEX_PATTERN.match(value):
-            raise UserEmailInvalidPatternError("Email contains invalid characters.")
+        try:
+            lib_validate_email(value)
+        except Exception:
+            raise EmailInvalidError(email=value)

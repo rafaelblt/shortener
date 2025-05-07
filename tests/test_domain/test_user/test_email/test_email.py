@@ -1,13 +1,13 @@
 import pytest
 from shortener.domain.user.fields.email import Email
-from shortener.domain.user.exceptions import UserEmailInvalidPatternError
+from shortener.domain.user.exceptions import EmailInvalidError
 
 
 def test_new_email():
-    email = Email("test-email@example.com")
+    email = Email("test-email@outlook.com")
     assert isinstance(email, Email)
     assert isinstance(email, str)
-    assert email == "test-email@example.com"
+    assert email == "test-email@outlook.com"
 
 
 def test_email_repr():
@@ -22,5 +22,5 @@ def test_new_email_raises_type_error():
 
 def test_new_email_raises_validation_error():
     value = "12"
-    with pytest.raises(UserEmailInvalidPatternError):
+    with pytest.raises(EmailInvalidError):
         Email(value)

@@ -11,7 +11,7 @@ from shortener.domain.user.fields import Email, Name, HashedPassword
 @pytest.fixture
 def normal_user(default_plan: Plan):
     return User(
-        email=Email("normal.user@example.com"),
+        email=Email("normal.user@gmail.com"),
         name=Name("Normal User Example"),
         hashed_password=HashedPassword("hash"),
         plan=default_plan
