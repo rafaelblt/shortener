@@ -1,9 +1,9 @@
 import re
 
 from shortener.domain.user.exceptions import (
-    UserNameTooLongError, 
-    UserNameTooShortError,
-    UserNameInvalidPatternError
+    NameTooLongError, 
+    NameTooShortError,
+    NameInvalidPatternError
 )
 
 
@@ -27,17 +27,10 @@ class Name(str):
     @staticmethod
     def validate_name(value: str):
         if len(value) > NAME_MAX_LENGTH:
-            raise UserNameTooLongError(
-                f"Name must be at most {NAME_MAX_LENGTH} characters long."
-            )
+            raise NameTooLongError(value=value, max_length=NAME_MAX_LENGTH)
         
         if len(value) < NAME_MIN_LENGTH:
-            raise UserNameTooShortError(
-                f"Name must be at least {NAME_MIN_LENGTH} characters long."
-            )
+            raise NameTooShortError(value=value, min_length=NAME_MIN_LENGTH)
         
         if not NAME_REGEX_PATTERN.match(value):
-            raise UserNameInvalidPatternError(
-                ("Name must contain only letters, spaces, hyphens, "
-                 "and apostrophes.")
-            )
+            raise NameInvalidPatternError(value=value)

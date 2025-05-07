@@ -1,6 +1,6 @@
 import pytest
 from shortener.domain.user.fields.name import Name
-from shortener.domain.user.exceptions import UserNameInvalidPatternError
+from shortener.domain.user.exceptions import NameInvalidPatternError
 
 
 def test_new_name():
@@ -22,5 +22,5 @@ def test_new_name_raises_type_error():
 
 def test_new_name_raises_validation_error():
     value = "12"
-    with pytest.raises(UserNameInvalidPatternError):
+    with pytest.raises(NameInvalidPatternError):
         Name(value)
