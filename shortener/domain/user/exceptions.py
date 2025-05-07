@@ -10,10 +10,39 @@ class UserInvalidTimezoneError(ValueError): ...
 
 
 class UserValidationError(Exception): ...
-class UserNameTooLongError(UserValidationError): ...
-class UserNameTooShortError(UserValidationError): ...
-class UserNameInvalidPatternError(UserValidationError): ...
-class UserEmailInvalidPatternError(UserValidationError): ...
+
+
+# Name Validation Exceptions
+class NameValidationError(Exception): ...
+class NameTooLongError(NameValidationError): 
+    def __init__(self, value: str, max_length: int):
+        self.value = value
+        self.max_length = max_length
+        super().__init__(
+            f"Name must be at most {max_length} characters long. Got: {value}"
+        )
+class NameTooShortError(NameValidationError): 
+    def __init__(self, value: str, min_length: int):
+        self.value = value
+        self.min_length = min_length
+        super().__init__(
+            f"Name must be at least {min_length} characters long. Got: {value}"
+        )
+class NameInvalidPatternError(NameValidationError): 
+    def __init__(self, value: str):
+        self.value = value
+        super().__init__(
+            f"The name '{value}' does not match the required pattern."
+        )
+
+
+# Email Validation Exceptions
+class EmailValidationError(Exception): ...
+class EmailInvalidError(EmailValidationError): 
+    def __init__(self, email: str):
+        super().__init__(f"The provided email '{email}' is invalid.")
+
+
 class UserEmailAlreadyExistsError(UserValidationError): 
     def __init__(self, provided_email: str):
         super().__init__(f"The provided email '{provided_email}' already exists.")
