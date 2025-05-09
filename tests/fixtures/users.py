@@ -31,7 +31,7 @@ def super_user(default_plan: Plan):
 @pytest.fixture
 def old_user(default_plan: Plan):
     return User(
-        email=Email("wiseoldman@example.com"),
+        email=Email("wiseoldman@outlook.com"),
         name=Name("Richard Park"),
         hashed_password=HashedPassword("2000"),
         plan=default_plan,
