@@ -4,7 +4,7 @@ from shortener.domain.services.auth_token import AuthTokenService
 from shortener.domain.user import UserRepository
 from shortener.domain.user.fields import Email
 from shortener.domain.user.exceptions import (
-    UserPasswordIncorretError,
+    UserPasswordIncorrectError,
     UserNotFoundInDatabaseError
 )
 
@@ -44,4 +44,4 @@ class LoginUserUseCase:
         )
         if password_match:
             return self.auth_token_service.generate_token()
-        raise UserPasswordIncorretError()
+        raise UserPasswordIncorrectError()
