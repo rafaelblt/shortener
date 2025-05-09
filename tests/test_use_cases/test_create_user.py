@@ -23,7 +23,7 @@ class MockPasswordHasher(PasswordHasher):
 
 class MockValidator(UserValidator):
     async def validate(self, user: User):
-        if user.email == "joker@joker.joker":
+        if user.email == "joker@gmail.com":
             raise UserValidationError()
 
 
@@ -59,7 +59,7 @@ async def test_instance_retrieved(
 
 @pytest.mark.asyncio
 async def test_with_non_existent_plan(
-    use_case: CreateUserUseCase, normal_user: User, default_plan: Plan
+    use_case: CreateUserUseCase, normal_user: User
 ):
     with pytest.raises(
         UserValidationError, 
@@ -78,7 +78,7 @@ async def test_raises_validation(
     use_case: CreateUserUseCase, normal_user: User, default_plan: Plan
 ):
     plan = await use_case.plan_repository.add(default_plan)
-    joker_email = Email("joker@joker.joker")
+    joker_email = Email("joker@gmail.com")
     with pytest.raises(UserValidationError):
         await use_case.execute(
             email=joker_email, 
