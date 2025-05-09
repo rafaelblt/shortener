@@ -1,16 +1,8 @@
 from typing import Annotated
 
-from shortener.domain.user.fields import Email
-from shortener.domain.user.exceptions import UserValidationError
+from shortener.adapters.api.v1.validators import validate_email
 
 from pydantic import BaseModel, AfterValidator, ConfigDict
-
-
-def validate_email(value: str) -> Email:
-    try:
-        return Email(value)
-    except UserValidationError as e:
-        raise ValueError(str(e))
 
 
 class UserLoginSchema(BaseModel):
