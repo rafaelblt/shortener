@@ -38,14 +38,15 @@ class NameInvalidPatternError(NameValidationError):
 
 # Email Validation Exceptions
 class EmailValidationError(Exception): ...
-class EmailInvalidError(EmailValidationError): 
+class EmailInvalidError(EmailValidationError):
     def __init__(self, email: str):
         super().__init__(f"The provided email '{email}' is invalid.")
+class EmailAlreadyExistsError(EmailValidationError):
+    def __init__(self, email: str):
+        self.email = email
+        super().__init__(f"The provided email '{email}' already exists.")
 
 
-class UserEmailAlreadyExistsError(UserValidationError): 
-    def __init__(self, provided_email: str):
-        super().__init__(f"The provided email '{provided_email}' already exists.")
 class UserPasswordIncorrectError(UserValidationError):
     def __init__(self):
         super().__init__("The provided password doesn't match.")
