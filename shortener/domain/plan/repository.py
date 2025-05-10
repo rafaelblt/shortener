@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 
-from shortener.domain.shared.pagination import PaginatedResult
 from shortener.domain.plan import Plan
 
 
@@ -31,7 +30,6 @@ class PlanRepository(ABC):
             Plan: The updated entity.
         
         Raises:
-            PlanInvalidToUpdateError: Plan is invalid to update.
             PlanNotFoundInDatabaseError: Plan not found in database.
         """
         pass

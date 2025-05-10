@@ -6,8 +6,6 @@ class PlanAttributeTypeError(TypeError):
         )
 
 
-
-class PlanInvalidToUpdateError(Exception): ...
 class PlanNotFoundInDatabaseError(Exception):
     def __init__(self, plan_id: int):
         self.plan_id = plan_id
