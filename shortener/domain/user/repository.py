@@ -31,7 +31,6 @@ class UserRepository(ABC):
             User: The updated entity.
         
         Raises:
-            UserInvalidToUpdate: User without id.
             UserNotFoundInDatabase: User not found in database.
         """
         pass
