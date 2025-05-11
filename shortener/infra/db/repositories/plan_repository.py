@@ -4,9 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shortener.domain.plan import Plan, PlanRepository
-from shortener.domain.plan.exceptions import (
-    PlanInvalidToUpdateError, PlanNotFoundInDatabaseError
-)
+from shortener.domain.plan.exceptions import PlanNotFoundInDatabaseError
 
 from shortener.infra.db.mappers import (
     map_plan_model_to_domain, map_plan_domain_to_model
