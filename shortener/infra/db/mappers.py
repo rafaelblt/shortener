@@ -59,6 +59,7 @@ def map_user_domain_to_model(domain: User) -> UserModel:
         "hashed_password": domain.hashed_password,
         "status": domain.status,
         "plan_id": domain.plan.id,
+        "shorturls_count": domain.shorturls_count,
         "is_superuser": domain.is_superuser,
         "created_at": domain.created_at,
         "last_login": domain.last_login,
