@@ -3,8 +3,6 @@ import pytest_asyncio
 
 from datetime import datetime, timezone
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from shortener.domain.shared.pagination import PaginatedResult
 
 from shortener.domain.plan import Plan
@@ -15,25 +13,12 @@ from shortener.domain.user.exceptions import UserNotFoundInDatabaseError
 
 from shortener.infra.db.repositories import SQLAlchemyUserRepository
 
-from tests.utils.entity_helpers import get_persistent_plan
+from tests.utils.entity_helpers import get_persistent_plan, assert_user_fields
 
 
 @pytest_asyncio.fixture
 async def repository(sqlalchemy_user_repository):
     return sqlalchemy_user_repository
-
-
-def assert_user_fields(first, second, ignore_id: bool = False):
-    if not ignore_id:
-        assert first.id == second.id
-    assert first.email == second.email
-    assert first.name == second.name
-    assert first.hashed_password == second.hashed_password
-    assert first.plan.id == second.plan.id
-    assert first.status == second.status
-    assert first.is_superuser == second.is_superuser
-    assert first.created_at == second.created_at
-    assert first.last_login == second.last_login
 
 
 @pytest.mark.asyncio
