@@ -1,12 +1,11 @@
 import pytest
 
-from tests.utils.entity_helpers import get_persistent_plan
-
 from shortener.domain.services.password_hasher import PasswordHasher
 
-from shortener.domain.plan import Plan, PlanRepository
+from shortener.domain.plan import Plan
+from shortener.domain.plan.exceptions import PlanNotFoundInDatabaseError
 
-from shortener.domain.user import User, UserRepository, UserValidator
+from shortener.domain.user import User, UserValidator
 from shortener.domain.user.fields import Email
 from shortener.domain.user.exceptions import UserValidationError
 
@@ -61,16 +60,14 @@ async def test_instance_retrieved(
 async def test_with_non_existent_plan(
     use_case: CreateUserUseCase, normal_user: User
 ):
-    with pytest.raises(
-        UserValidationError, 
-        match="There is no plan in the database with the given plan_id: 1."
-    ):
+    with pytest.raises(PlanNotFoundInDatabaseError) as error:
         await use_case.execute(
             email=normal_user.email, 
             name=normal_user.name, 
             plan_id=1,
             password="Test123#"
         )
+    assert error.value.plan_id == 1
 
 
 @pytest.mark.asyncio

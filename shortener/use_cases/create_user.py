@@ -1,10 +1,10 @@
 from shortener.domain.services.password_hasher import PasswordHasher
 
-from shortener.domain.plan import Plan, PlanRepository
+from shortener.domain.plan import PlanRepository
+from shortener.domain.plan.exceptions import PlanNotFoundInDatabaseError
 
 from shortener.domain.user import User, UserRepository, UserValidator
 from shortener.domain.user.fields import Email, Name, HashedPassword
-from shortener.domain.user.exceptions import UserValidationError
 
 
 class CreateUserUseCase:
@@ -51,9 +51,7 @@ class CreateUserUseCase:
         """
         plan = await self.plan_repository.get_by_id(plan_id)
         if plan is None:
-            raise UserValidationError(
-                f"There is no plan in the database with the given plan_id: {plan_id}."
-            )
+            raise PlanNotFoundInDatabaseError(plan_id=plan_id)
 
         hashed_password = HashedPassword(self.password_hasher.hash(password))
         
