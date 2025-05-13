@@ -3,9 +3,7 @@ import pytest
 from shortener.domain.shared.pagination import PaginatedResult
 from shortener.domain.user import User
 from shortener.domain.user.fields import Name
-from shortener.domain.user.exceptions import (
-    UserInvalidToUpdateError, UserNotFoundInDatabaseError
-)
+from shortener.domain.user.exceptions import UserNotFoundInDatabaseError
 
 from tests.fixtures.mocks.user_repository import MockUserRepository
 
