@@ -1,6 +1,6 @@
 import pytest
 
-from shortener.domain.services.password_hasher import PasswordHasher
+from shortener.domain.services.password_hasher import PasswordHasherService
 
 from shortener.domain.plan import Plan
 from shortener.domain.plan.exceptions import PlanNotFoundInDatabaseError
@@ -12,7 +12,7 @@ from shortener.domain.user.exceptions import UserValidationError
 from shortener.use_cases.create_user import CreateUserUseCase
 
 
-class MockPasswordHasher(PasswordHasher):
+class MockPasswordHasherService(PasswordHasherService):
     def hash(self, plain_password: str) -> str:
         return f"hashed-{plain_password}"
 
@@ -31,7 +31,7 @@ def use_case(mock_user_repository, mock_plan_repository):
     return CreateUserUseCase(
         user_repository=mock_user_repository,
         plan_repository=mock_plan_repository,
-        password_hasher=MockPasswordHasher(),
+        password_hasher=MockPasswordHasherService(),
         validator=MockValidator(),
     )
 
@@ -41,6 +41,7 @@ async def test_instance_retrieved(
     use_case: CreateUserUseCase, normal_user: User, default_plan: Plan
 ):
     plan = await use_case.plan_repository.add(default_plan)
+    plan_id: int = plan.id
 
     retrieved = await use_case.execute(
         email=normal_user.email, 

@@ -1,4 +1,4 @@
-from shortener.domain.services.password_hasher import PasswordHasher
+from shortener.domain.services.password_hasher import PasswordHasherService
 from shortener.domain.services.auth_token import AuthTokenService
 
 from shortener.domain.user import UserRepository
@@ -13,7 +13,7 @@ class LoginUserUseCase:
     def __init__(
         self,
         repository: UserRepository,
-        password_hasher: PasswordHasher,
+        password_hasher: PasswordHasherService,
         auth_token_service: AuthTokenService
     ):
         self.repository = repository

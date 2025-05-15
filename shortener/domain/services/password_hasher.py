@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class PasswordHasher(ABC):
+class PasswordHasherService(ABC):
 
     @abstractmethod
     def hash(self, plain_password: str) -> str:

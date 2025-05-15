@@ -1,4 +1,4 @@
-from shortener.domain.services.password_hasher import PasswordHasher
+from shortener.domain.services.password_hasher import PasswordHasherService
 
 from shortener.domain.plan import PlanRepository
 from shortener.domain.plan.exceptions import PlanNotFoundInDatabaseError
@@ -12,14 +12,14 @@ class CreateUserUseCase:
         self,
         user_repository: UserRepository,
         plan_repository: PlanRepository,
-        password_hasher: PasswordHasher,
+        password_hasher: PasswordHasherService,
         validator: UserValidator
     ):
         """
         Args:
             user_repository (UserRepository): Repository to save the user.
             plan_repository (PlanRepository): Repository to get the User plan.
-            password_hasher (PasswordHasher): PasswordHasher to hash the password.
+            password_hasher (PasswordHasherService): Hasher to hash the password.
             validator (UserValidator): Validator to validate the User object.
         """
         self.user_repository = user_repository
