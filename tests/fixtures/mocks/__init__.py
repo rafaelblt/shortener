@@ -1,6 +1,7 @@
 import pytest
 
 from .shorturl_repository import MockShortURLRepository
+from .password_hasher import MockPasswordHasherService
 from .user_repository import MockUserRepository
 from .plan_repository import MockPlanRepository
 from .auth_token import MockAuthTokenService
@@ -9,6 +10,11 @@ from .auth_token import MockAuthTokenService
 @pytest.fixture
 def mock_shorturl_repository():
     return MockShortURLRepository()
+
+
+@pytest.fixture
+def mock_password_hasher():
+    return MockPasswordHasherService()
 
 
 @pytest.fixture
