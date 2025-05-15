@@ -53,4 +53,8 @@ class UserPasswordIncorrectError(UserValidationError):
 
 
 class UserRepositoryError(Exception): ...
-class UserNotFoundInDatabaseError(UserRepositoryError): ...
+class UserNotFoundInDatabaseError(UserRepositoryError): 
+    def __init__(self, value, field: str):
+        self.value = value
+        self.field = field
+        super().__init__(f"User with {field}={value} not found in the database.")
