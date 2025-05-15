@@ -43,5 +43,5 @@ class LoginUserUseCase:
             plain_password=password, hashed_password=user.hashed_password
         )
         if password_match:
-            return self.auth_token_service.generate_token()
+            return self.auth_token_service.generate_token(user.email)
         raise UserPasswordIncorrectError()
