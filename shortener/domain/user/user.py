@@ -67,11 +67,6 @@ class User:
     @property
     def hashed_password(self):
         return self._hashed_password
-    
-    @hashed_password.setter
-    def hashed_password(self, hashed_password):
-        self.validate_hashed_password(hashed_password)
-        self._hashed_password = hashed_password
 
     @property
     def plan(self):
@@ -175,6 +170,10 @@ class User:
                 "The User last_login datetime must be in UTC timezone."
             )
     
+
+    def change_hashed_password(self, new_hashed_password: HashedPassword):
+        self.validate_hashed_password(new_hashed_password)
+        self._hashed_password = new_hashed_password
 
     def change_plan(self, new_plan: Plan):
         self.validate_plan(new_plan)
