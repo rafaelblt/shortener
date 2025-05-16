@@ -53,8 +53,8 @@ class MockUserRepository(UserRepository):
         rows = list(data)[offset:offset + limit]
         return PaginatedResult(rows, total, offset, limit)
 
-    async def exists_by_email(self, slug: str) -> bool:
-        if await self.get_by_email(slug):
+    async def exists_by_email(self, email: str) -> bool:
+        if await self.get_by_email(email):
             return True
         return False
 
