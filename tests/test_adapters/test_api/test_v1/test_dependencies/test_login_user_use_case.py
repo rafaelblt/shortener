@@ -29,8 +29,8 @@ def test_instance(use_case: LoginUserUseCase):
 
 
 def test_attr_user_repository(use_case: LoginUserUseCase):
-    assert isinstance(use_case.repository, Depends)
-    assert use_case.repository.dependency == make_sqlalchemy_user_repository
+    assert isinstance(use_case.user_repository, Depends)
+    assert use_case.user_repository.dependency == make_sqlalchemy_user_repository
 
 
 def test_attr_password_hasher(use_case: LoginUserUseCase):

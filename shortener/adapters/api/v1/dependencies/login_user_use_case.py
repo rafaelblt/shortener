@@ -12,7 +12,7 @@ def make_login_user_use_case(
     repository = Depends(make_sqlalchemy_user_repository)
 ):
     return LoginUserUseCase(
-        repository=repository,
+        user_repository=repository,
         password_hasher=PasslibPasswordHasher(),
         auth_token_service=JwtAuthTokenService()
     )
