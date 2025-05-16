@@ -1,5 +1,6 @@
 from typing import Annotated
 
+from shortener.domain.user.fields import Email
 from shortener.adapters.api.v1.validators import validate_email
 
 from pydantic import BaseModel, AfterValidator, ConfigDict
@@ -17,3 +18,7 @@ class UserLoginSchema(BaseModel):
             }
         }
     )
+
+    def get_email(self) -> Email:
+        assert isinstance(self.email, Email)
+        return self.email
