@@ -17,9 +17,7 @@ class MockUserRepository(UserRepository):
     
     async def update(self, user: User) -> User:
         if not self.database.exists_by_index(user.id):
-            raise UserNotFoundInDatabaseError(
-                f"User with id={user.id} not found in MockUserRepository."
-            )
+            raise UserNotFoundInDatabaseError(value=user.id, field="id")
 
         user_dict = self.database.get_by_index(user.id)
         user_dict["email"] = user.email
@@ -64,9 +62,7 @@ class MockUserRepository(UserRepository):
         user_dict = self.database.delete_by_index(id)
         if user_dict:
             return self._to_domain(user_dict)
-        raise UserNotFoundInDatabaseError(
-            f"User with id={id} not found in MockUserRepository."
-        )
+        raise UserNotFoundInDatabaseError(value=id, field="id")
             
     def _to_dict(self, user: User) -> dict:
         return {
