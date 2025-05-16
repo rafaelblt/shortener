@@ -1,4 +1,5 @@
 from shortener.domain.services.password_hasher import PasswordHasherService
+from shortener.domain.services.password_validator import PasswordValidatorService
 
 from shortener.domain.plan import PlanRepository
 from shortener.domain.plan.exceptions import PlanNotFoundInDatabaseError
@@ -13,19 +14,23 @@ class CreateUserUseCase:
         user_repository: UserRepository,
         plan_repository: PlanRepository,
         password_hasher: PasswordHasherService,
-        validator: UserValidator
+        password_validator: PasswordValidatorService,
+        user_validator: UserValidator
     ):
         """
         Args:
             user_repository (UserRepository): Repository to save the user.
             plan_repository (PlanRepository): Repository to get the User plan.
             password_hasher (PasswordHasherService): Hasher to hash the password.
-            validator (UserValidator): Validator to validate the User object.
+            password_validator (PasswordValidatorService): Validator to validate 
+                the password security.
+            user_validator (UserValidator): Validator to validate the User object.
         """
         self.user_repository = user_repository
         self.plan_repository = plan_repository
         self.password_hasher = password_hasher
-        self.validator = validator
+        self.password_validator = password_validator
+        self.user_validator = user_validator
 
     async def execute(
         self,
@@ -47,12 +52,14 @@ class CreateUserUseCase:
             User: The object created.
         
         Raises: 
+            PasswordValidationError: If the provided password is invalid.
             UserValidationError: If any part of the User is invalid.
         """
         plan = await self.plan_repository.get_by_id(plan_id)
         if plan is None:
             raise PlanNotFoundInDatabaseError(plan_id=plan_id)
-
+        
+        self.password_validator.validate(password)
         hashed_password = HashedPassword(self.password_hasher.hash(password))
         
         new_user = User(
@@ -62,6 +69,6 @@ class CreateUserUseCase:
             plan=plan
         )
     
-        await self.validator.validate(new_user)
+        await self.user_validator.validate(new_user)
 
         return await self.user_repository.add(new_user)

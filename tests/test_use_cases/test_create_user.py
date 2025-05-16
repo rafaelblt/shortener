@@ -1,6 +1,7 @@
 import pytest
 
-from shortener.domain.services.password_hasher import PasswordHasherService
+from shortener.domain.services.password_validator import PasswordValidatorService
+from shortener.domain.services.exceptions import PasswordValidationError
 
 from shortener.domain.plan import Plan
 from shortener.domain.plan.exceptions import PlanNotFoundInDatabaseError
@@ -12,27 +13,24 @@ from shortener.domain.user.exceptions import UserValidationError
 from shortener.use_cases.create_user import CreateUserUseCase
 
 
-class MockPasswordHasherService(PasswordHasherService):
-    def hash(self, plain_password: str) -> str:
-        return f"hashed-{plain_password}"
-
-    def verify(self, plain_password: str, hashed_password: str) -> bool:
-        return hashed_password == f"hashed-{plain_password}"
-
-
-class MockValidator(UserValidator):
+class MockUserValidator(UserValidator):
     async def validate(self, user: User):
         if user.email == "joker@gmail.com":
             raise UserValidationError()
 
 
 @pytest.fixture
-def use_case(mock_user_repository, mock_plan_repository):
+def use_case(
+    mock_user_repository,
+    mock_plan_repository,
+    mock_password_hasher
+):
     return CreateUserUseCase(
         user_repository=mock_user_repository,
         plan_repository=mock_plan_repository,
-        password_hasher=MockPasswordHasherService(),
-        validator=MockValidator(),
+        password_hasher=mock_password_hasher,
+        password_validator=PasswordValidatorService(),
+        user_validator=MockUserValidator(),
     )
 
 
@@ -41,24 +39,27 @@ async def test_instance_retrieved(
     use_case: CreateUserUseCase, normal_user: User, default_plan: Plan
 ):
     plan = await use_case.plan_repository.add(default_plan)
-    plan_id: int = plan.id
+
+    plain_password = "T!@#jnmuj1GBals*#71"
 
     retrieved = await use_case.execute(
         email=normal_user.email, 
         name=normal_user.name, 
-        plan_id=plan.id,
-        password="Test123#"
+        plan_id=plan.get_int_id(),
+        password=plain_password
     )
 
     assert isinstance(retrieved, User)
     assert retrieved.email == normal_user.email
     assert retrieved.name == normal_user.name
     assert retrieved.plan.id == plan.id
-    assert use_case.password_hasher.verify("Test123#", retrieved.hashed_password)
+    assert use_case.password_hasher.verify(
+        plain_password, retrieved.hashed_password
+    )
 
 
 @pytest.mark.asyncio
-async def test_with_non_existent_plan(
+async def test_raises_plan_not_found(
     use_case: CreateUserUseCase, normal_user: User
 ):
     with pytest.raises(PlanNotFoundInDatabaseError) as error:
@@ -72,16 +73,32 @@ async def test_with_non_existent_plan(
 
 
 @pytest.mark.asyncio
-async def test_raises_validation(
+async def test_raises_password_validation(
     use_case: CreateUserUseCase, normal_user: User, default_plan: Plan
 ):
     plan = await use_case.plan_repository.add(default_plan)
+
+    with pytest.raises(PasswordValidationError):
+        await use_case.execute(
+            email=normal_user.email, 
+            name=normal_user.name, 
+            plan_id=plan.get_int_id(),
+            password="123"
+        )
+
+
+@pytest.mark.asyncio
+async def test_raises_user_validation(
+    use_case: CreateUserUseCase, normal_user: User, default_plan: Plan
+):
+    plan = await use_case.plan_repository.add(default_plan)
+
     joker_email = Email("joker@gmail.com")
     with pytest.raises(UserValidationError):
         await use_case.execute(
             email=joker_email, 
             name=normal_user.name, 
-            plan_id=plan.id,
+            plan_id=plan.get_int_id(),
             password="Test123#"
         )
 
@@ -94,7 +111,7 @@ async def test_if_user_is_saved_in_repository(
     await use_case.execute(
         email=normal_user.email, 
         name=normal_user.name, 
-        plan_id=plan.id,
-        password="Test123#"
+        plan_id=plan.get_int_id(),
+        password="T!@#jnmuj1GBals*#71"
     )
     assert await use_case.user_repository.exists_by_email(normal_user.email)
