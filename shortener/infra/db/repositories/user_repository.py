@@ -34,9 +34,7 @@ class SQLAlchemyUserRepository(UserRepository):
         existing_model = await self._get_model_by_id(user.id)
 
         if existing_model is None:
-            raise UserNotFoundInDatabaseError(
-                f"User with id={user.id} not found in database."
-            )
+            raise UserNotFoundInDatabaseError(value=user.id, field="id")
 
         existing_model.email = user.email
         existing_model.name = user.name
@@ -83,9 +81,7 @@ class SQLAlchemyUserRepository(UserRepository):
     async def delete_by_id(self, id: int) -> User:
         model = await self._get_model_by_id(id)
         if model is None:
-            raise UserNotFoundInDatabaseError(
-                f"User with id={id} not found in database."
-            )
+            raise UserNotFoundInDatabaseError(value=id, field="id")
 
         domain = self._to_domain(model)
 

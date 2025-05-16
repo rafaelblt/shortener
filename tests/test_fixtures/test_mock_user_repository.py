@@ -82,11 +82,10 @@ async def test_update_raises_user_not_found(
 ):
     user = await repository.add(normal_user)
     await repository.delete_by_id(user.id)
-    with pytest.raises(
-        UserNotFoundInDatabaseError,
-        match="User with id=1 not found in MockUserRepository."
-    ):
+    with pytest.raises(UserNotFoundInDatabaseError) as error:
         await repository.update(user)
+    assert error.value.value == user.id
+    assert error.value.field == "id"
 
 
 @pytest.mark.asyncio
@@ -214,8 +213,7 @@ async def test_delete_by_id(
 async def test_delete_by_id_non_existent_user(
     repository: MockUserRepository
 ):
-    with pytest.raises(
-        UserNotFoundInDatabaseError,
-        match=f"User with id=1 not found in MockUserRepository."
-    ):
+    with pytest.raises(UserNotFoundInDatabaseError) as error:
         await repository.delete_by_id(1)
+    assert error.value.value == 1
+    assert error.value.field == "id"

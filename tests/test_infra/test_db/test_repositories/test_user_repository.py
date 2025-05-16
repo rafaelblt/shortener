@@ -89,11 +89,10 @@ async def test_update(
 async def test_update_user_without_id_raises_error(
     repository: SQLAlchemyUserRepository, normal_user: User
 ):
-    with pytest.raises(
-        UserNotFoundInDatabaseError, 
-        match=f"User with id={normal_user.id} not found in database."
-    ):
+    with pytest.raises(UserNotFoundInDatabaseError) as error:
         await repository.update(normal_user)
+    assert error.value.value == normal_user.id
+    assert error.value.field == "id"
 
 
 @pytest.mark.asyncio
@@ -101,11 +100,10 @@ async def test_update_user_non_existent_raises_error(
     repository: SQLAlchemyUserRepository, normal_user: User
 ):
     normal_user._id = 1
-    with pytest.raises(
-        UserNotFoundInDatabaseError, 
-        match=f"User with id={normal_user.id} not found in database."
-    ):
+    with pytest.raises(UserNotFoundInDatabaseError) as error:
         await repository.update(normal_user)
+    assert error.value.value == 1
+    assert error.value.field == "id"
 
 
 @pytest.mark.asyncio
@@ -230,8 +228,7 @@ async def test_delete_by_id(
 async def test_delete_by_id_with_non_existent_id_raises_error(
     repository: SQLAlchemyUserRepository
 ):
-    with pytest.raises(
-        UserNotFoundInDatabaseError,
-        match=f"User with id=1 not found in database."
-    ):
+    with pytest.raises(UserNotFoundInDatabaseError) as error:
         await repository.delete_by_id(1)
+    assert error.value.value == 1
+    assert error.value.field == "id"
