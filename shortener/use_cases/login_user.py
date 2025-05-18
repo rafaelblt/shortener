@@ -38,6 +38,8 @@ class LoginUserUseCase:
         user = await self.user_repository.get_by_email(email)
         if user is None:
             raise UserNotFoundInDatabaseError(value=email, field="email")
+        
+        user.ensure_can_login()
 
         password_match = self.password_hasher.verify(
             plain_password=password, hashed_password=user.hashed_password
