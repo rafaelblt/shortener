@@ -211,5 +211,11 @@ class User:
         self._last_login = utc_now()
 
 
+    def get_datetime_last_login(self):
+        if self.last_login is None:
+            raise ValueError("User last_login is None")
+        return self.last_login
+
+
     def __repr__(self):
         return f"<User id={self.id} email={self.email} name={self.name}>"
