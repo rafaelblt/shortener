@@ -5,7 +5,13 @@ from shortener.domain.shared.datetime_utils import is_utc, utc_now
 from shortener.domain.plan import Plan
 
 from .fields import Email, Name, UserStatus, HashedPassword
-from .exceptions import UserAttributeTypeError as AttrTypeError
+from .exceptions import (
+    UserAttributeTypeError as AttrTypeError,
+    UserEmailNotVerifiedError,
+    UserSuspendedError,
+    UserBannedError,
+    UserLockedError,
+)
 
 
 class User:
@@ -170,6 +176,28 @@ class User:
                 "The User last_login datetime must be in UTC timezone."
             )
     
+    
+    def ensure_can_login(self) -> None:
+        """
+        Checks if the user is allowed to login based on their status.
+        
+        Returns:
+            None: The user can login.
+
+        Raises:
+            UserEmailNotVerifiedError: The email has not been verified.
+            UserSuspendedError: The user has been suspended.
+            UserLockedError: The user has been locked.
+            UserBannedError: The user has been banned.
+        """
+        if self.status == UserStatus.EMAIL_UNVERIFIED:
+            raise UserEmailNotVerifiedError()
+        elif self.status == UserStatus.SUSPENDED:
+            raise UserSuspendedError()
+        elif self.status == UserStatus.LOCKED:
+            raise UserLockedError()
+        elif self.status == UserStatus.BANNED:
+            raise UserBannedError()
 
     def change_hashed_password(self, new_hashed_password: HashedPassword):
         self.validate_hashed_password(new_hashed_password)

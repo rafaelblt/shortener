@@ -6,6 +6,21 @@ class UserAttributeTypeError(TypeError):
         )
 
 
+class UserAccessDeniedError(Exception): ...
+class UserEmailNotVerifiedError(UserAccessDeniedError):
+    def __init__(self):
+        super().__init__("The User email has not been verified.")
+class UserLockedError(UserAccessDeniedError):
+    def __init__(self):
+        super().__init__("The User has been locked.")
+class UserSuspendedError(UserAccessDeniedError):
+    def __init__(self):
+        super().__init__("The User has been suspended.")
+class UserBannedError(UserAccessDeniedError):
+    def __init__(self):
+        super().__init__("The User has been banned.")
+
+
 class UserInvalidTimezoneError(ValueError): ...
 
 
