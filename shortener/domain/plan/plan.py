@@ -58,5 +58,4 @@ class Plan:
     def get_int_id(self) -> int:
         if self.id is None:
             raise ValueError("Plan id is None.")
-        else:
-            return self.id
+        return self.id
