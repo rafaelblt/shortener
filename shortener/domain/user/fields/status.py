@@ -3,7 +3,7 @@ from enum import Enum
 
 class UserStatus(Enum):
     ACTIVE = "active"
-    DEACTIVATED = "deactivated"
+    EMAIL_UNVERIFIED = "email_unverified"
     BANNED = "banned"
     SUSPENDED = "suspended"
-    INACTIVE = "inactive"
+    LOCKED = "locked"
