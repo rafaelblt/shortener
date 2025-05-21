@@ -1,3 +1,9 @@
+from shortener.domain.shared.exceptions import ValidationError
+
+
+class UserValidationError(Exception): ...
+
+
 class UserAttributeTypeError(TypeError):
     def __init__(self, attr: str, type_expected: str, got):
         super().__init__(
@@ -19,16 +25,13 @@ class UserSuspendedError(UserAccessDeniedError):
 class UserBannedError(UserAccessDeniedError):
     def __init__(self):
         super().__init__("The User has been banned.")
-
-
-class UserInvalidTimezoneError(ValueError): ...
-
-
-class UserValidationError(Exception): ...
+class UserPasswordIncorrectError(UserAccessDeniedError):
+    def __init__(self):
+        super().__init__("The provided password doesn't match.")
 
 
 # Name Validation Exceptions
-class NameValidationError(Exception): ...
+class NameValidationError(ValidationError): ...
 class NameTooLongError(NameValidationError): 
     def __init__(self, value: str, max_length: int):
         self.value = value
@@ -52,7 +55,7 @@ class NameInvalidPatternError(NameValidationError):
 
 
 # Email Validation Exceptions
-class EmailValidationError(Exception): ...
+class EmailValidationError(ValidationError): ...
 class EmailInvalidError(EmailValidationError):
     def __init__(self, email: str):
         super().__init__(f"The provided email '{email}' is invalid.")
@@ -62,11 +65,7 @@ class EmailAlreadyExistsError(EmailValidationError):
         super().__init__(f"The provided email '{email}' already exists.")
 
 
-class UserPasswordIncorrectError(UserValidationError):
-    def __init__(self):
-        super().__init__("The provided password doesn't match.")
-
-
+# User Repository Exceptions
 class UserRepositoryError(Exception): ...
 class UserNotFoundInDatabaseError(UserRepositoryError): 
     def __init__(self, value, field: str):

@@ -1,4 +1,4 @@
-from .create_user import CreateUserUseCase
+from .register_user import RegisterUserUseCase
 from .login_user import LoginUserUseCase
 
 from .get_shorturl import GetShortURLUseCase

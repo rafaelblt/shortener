@@ -1,36 +1,40 @@
+import asyncio
+from types import CoroutineType
+
+from shortener.domain.shared.validator import Validator
+
 from shortener.domain.services.password_hasher import PasswordHasherService
-from shortener.domain.services.password_validator import PasswordValidatorService
 
 from shortener.domain.plan import PlanRepository
 from shortener.domain.plan.exceptions import PlanNotFoundInDatabaseError
 
-from shortener.domain.user import User, UserRepository, UserValidator
-from shortener.domain.user.fields import Email, Name, HashedPassword
+from shortener.domain.user import User, UserRepository
+from shortener.domain.user.fields import Email, Name, HashedPassword, UserStatus
 
 
-class CreateUserUseCase:
+class CustomValidator(Validator):
+    async def validate(self, value: object) -> None:
+        return None
+
+
+class RegisterUserUseCase:
     def __init__(
         self,
         user_repository: UserRepository,
         plan_repository: PlanRepository,
         password_hasher: PasswordHasherService,
-        password_validator: PasswordValidatorService,
-        user_validator: UserValidator
+        validators: dict[str, list[Validator]]
     ):
         """
         Args:
             user_repository (UserRepository): Repository to save the user.
             plan_repository (PlanRepository): Repository to get the User plan.
             password_hasher (PasswordHasherService): Hasher to hash the password.
-            password_validator (PasswordValidatorService): Validator to validate 
-                the password security.
-            user_validator (UserValidator): Validator to validate the User object.
         """
         self.user_repository = user_repository
         self.plan_repository = plan_repository
         self.password_hasher = password_hasher
-        self.password_validator = password_validator
-        self.user_validator = user_validator
+        self.validators = validators
 
     async def execute(
         self,
@@ -59,16 +63,27 @@ class CreateUserUseCase:
         if plan is None:
             raise PlanNotFoundInDatabaseError(plan_id=plan_id)
         
-        self.password_validator.validate(password)
-        hashed_password = HashedPassword(self.password_hasher.hash(password))
+        validations: list[CoroutineType] = []
+
+        for field, validators in self.validators.items():
+            match field:
+                case "email": 
+                    validations.extend([v.validate(email) for v in validators])
+                case "name": 
+                    validations.extend([v.validate(name) for v in validators])
+                case "password": 
+                    validations.extend([v.validate(password) for v in validators])
         
+        await asyncio.gather(*validations)
+
+        hashed_password = HashedPassword(self.password_hasher.hash(password))
+
         new_user = User(
             email=email,
             name=name,
             hashed_password=hashed_password,
-            plan=plan
+            plan=plan,
+            status=UserStatus.EMAIL_UNVERIFIED
         )
-    
-        await self.user_validator.validate(new_user)
 
         return await self.user_repository.add(new_user)
