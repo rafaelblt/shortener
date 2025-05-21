@@ -33,6 +33,7 @@ def test_default_special_chars(validator: PasswordValidatorService):
     assert validator.special_chars == PASSWORD_SPECIAL_CHARS
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "password",
     [
@@ -47,47 +48,53 @@ def test_default_special_chars(validator: PasswordValidatorService):
         "u$9WTXp3ZgKQv@JMdYAF2N+ct!HRozEnfL#7slX40Brmw^CUejOi5xLPdkgVbhqNaYRM*vwTz"
     ]
 )
-def test_valid_passwords(validator: PasswordValidatorService, password: str):
-    validator.validate(password)
+async def test_valid_passwords(validator: PasswordValidatorService, password: str):
+    await validator.validate(password)
 
 
-def test_raises_password_too_short(validator: PasswordValidatorService):
+@pytest.mark.asyncio
+async def test_raises_password_too_short(validator: PasswordValidatorService):
     invalid_password = "12aB@"
     with pytest.raises(PasswordTooShortError) as error:
-        validator.validate(invalid_password)
+        await validator.validate(invalid_password)
     assert error.value.value == invalid_password
 
 
-def test_raises_password_too_long(validator: PasswordValidatorService):
+@pytest.mark.asyncio
+async def test_raises_password_too_long(validator: PasswordValidatorService):
     invalid_password = "Ab1@" * (PASSWORD_MAX_LENGTH)
     with pytest.raises(PasswordTooLongError) as error:
-        validator.validate(invalid_password)
+        await validator.validate(invalid_password)
     assert error.value.value == invalid_password
 
 
-def test_raises_password_missing_uppercase(validator: PasswordValidatorService):
+@pytest.mark.asyncio
+async def test_raises_password_missing_uppercase(validator: PasswordValidatorService):
     invalid_password = "123!@#$invalid"
     with pytest.raises(PasswordMissingUppercaseError) as error:
-        validator.validate(invalid_password)
+        await validator.validate(invalid_password)
     assert error.value.value == invalid_password
 
 
-def test_raises_password_missing_lowercase(validator: PasswordValidatorService):
+@pytest.mark.asyncio
+async def test_raises_password_missing_lowercase(validator: PasswordValidatorService):
     invalid_password = "123!@#$INVALID"
     with pytest.raises(PasswordMissingLowercaseError) as error:
-        validator.validate(invalid_password)
+        await validator.validate(invalid_password)
     assert error.value.value == invalid_password
 
 
-def test_raises_password_missing_digit(validator: PasswordValidatorService):
+@pytest.mark.asyncio
+async def test_raises_password_missing_digit(validator: PasswordValidatorService):
     invalid_password = "!@#$InVaLiD"
     with pytest.raises(PasswordMissingDigitError) as error:
-        validator.validate(invalid_password)
+        await validator.validate(invalid_password)
     assert error.value.value == invalid_password
 
 
-def test_raises_password_missing_special_char(validator: PasswordValidatorService):
+@pytest.mark.asyncio
+async def test_raises_password_missing_special_char(validator: PasswordValidatorService):
     invalid_password = "1234565InVaLiD"
     with pytest.raises(PasswordMissingSpecialCharError) as error:
-        validator.validate(invalid_password)
+        await validator.validate(invalid_password)
     assert error.value.value == invalid_password

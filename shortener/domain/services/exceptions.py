@@ -1,3 +1,7 @@
+from shortener.domain.shared.exceptions import ValidationError
+
+
+
 class AuthTokenError(Exception): ...
 class AuthTokenExpiredError(AuthTokenError): 
     def __init__(self, message="Authentication token has expired"):
@@ -8,7 +12,7 @@ class AuthTokenInvalidError(AuthTokenError):
 
 
 
-class PasswordValidationError(Exception): ...
+class PasswordValidationError(ValidationError): ...
 class PasswordTooShortError(PasswordValidationError):
     def __init__(self, value: str, min_length: int):
         self.value = value
