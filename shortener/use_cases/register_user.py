@@ -56,8 +56,8 @@ class RegisterUserUseCase:
             User: The object created.
         
         Raises: 
-            PasswordValidationError: If the provided password is invalid.
-            UserValidationError: If any part of the User is invalid.
+            PlanNotFoundInDatabaseError: If the plan_id is not found in repository.
+            ValidationError: If any of the data provided is invalid.
         """
         plan = await self.plan_repository.get_by_id(plan_id)
         if plan is None:
