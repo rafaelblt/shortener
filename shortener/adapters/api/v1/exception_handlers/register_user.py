@@ -48,15 +48,15 @@ class RegisterUserExceptionHandler:
                 status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
                 detail="The password must contain at least one special character (!@#$%^&*)."
             )
-        elif isinstance(error, PasswordTooLongError):
-            raise HTTPException(
-                status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-                detail=("The password is too short. It must be at least "
-                       f"{error.max_length} characters long.")
-            )
         elif isinstance(error, PasswordTooShortError):
             raise HTTPException(
                 status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-                detail=("The password is too long. It must be at most "
+                detail=("The password is too short. It must be at least "
                        f"{error.min_length} characters long.")
+            )
+        elif isinstance(error, PasswordTooLongError):
+            raise HTTPException(
+                status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+                detail=("The password is too long. It must be at most "
+                       f"{error.max_length} characters long.")
             )
