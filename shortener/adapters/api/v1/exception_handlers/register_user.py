@@ -1,3 +1,5 @@
+from typing import NoReturn
+
 from http import HTTPStatus
 
 from fastapi.exceptions import HTTPException
@@ -17,7 +19,7 @@ from shortener.domain.services.exceptions import (
 class RegisterUserExceptionHandler:
 
     @staticmethod
-    def handle(error: Exception):
+    def handle(error: Exception) -> NoReturn:
         if isinstance(error, PlanNotFoundInDatabaseError):
             raise HTTPException(
                 status_code=HTTPStatus.BAD_REQUEST,
