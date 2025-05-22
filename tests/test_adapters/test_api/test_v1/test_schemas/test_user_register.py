@@ -52,26 +52,25 @@ def test_raises_validation_error_without_data():
 
 
 def test_email_after_validator(valid_name: str):
-    with pytest.raises(ValueError, match="The User email is invalid."):
+    with pytest.raises(ValidationError) as error:
         UserRegisterSchema(
             email="invalid_email",
             name=valid_name,
             password="pass123",
             plan_id=1
         )
+    assert error.value.errors()[0]["type"] == "invalid_email"
 
 
 def test_name_after_validator(valid_email: str):
-    with pytest.raises(
-        ValueError, 
-        match=f"The User name must be at least {NAME_MIN_LENGTH} characters long."
-    ):
+    with pytest.raises(ValidationError) as error:
         UserRegisterSchema(
             email=valid_email,
             name="a",
             password="pass123",
             plan_id=1
         )
+    assert error.value.errors()[0]["type"] == "invalid_name"
 
 
 def test_method_get_email(valid_schema: UserRegisterSchema, valid_email: str):
