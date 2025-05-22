@@ -9,14 +9,20 @@ from shortener.domain.user.exceptions import (
 )
 
 from shortener.use_cases import (
-    LoginUserUseCase
+    LoginUserUseCase,
+    RegisterUserUseCase
 )
 
+from shortener.adapters.api.v1.exception_handlers import (
+    RegisterUserExceptionHandler
+)
 from shortener.adapters.api.v1.schemas import (
-    UserLoginSchema
+    UserLoginSchema,
+    UserRegisterSchema
 )
 from shortener.adapters.api.v1.dependencies import (
-    make_login_user_use_case
+    make_login_user_use_case,
+    make_register_user_use_case
 )
 
 
@@ -41,4 +47,26 @@ async def login(
     return JSONResponse(
         status_code=HTTPStatus.OK,
         content={"access_token": token, "token_type": "bearer"}
+    )
+
+
+@router.post("/register")
+async def register(
+    data: UserRegisterSchema,
+    use_case: RegisterUserUseCase = Depends(make_register_user_use_case),
+    exception_handler = RegisterUserExceptionHandler
+):
+    try:
+        user = await use_case.execute(
+            email=data.get_email(),
+            name=data.get_name(),
+            plan_id=data.plan_id,
+            password=data.password
+        )
+    except Exception as error:
+        exception_handler.handle(error)
+
+    return JSONResponse(
+        status_code=HTTPStatus.CREATED,
+        content={"message": "User registered successfully."}
     )
