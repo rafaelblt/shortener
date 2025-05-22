@@ -33,6 +33,7 @@ pytest-asyncio = "^0.25.3"
 run = 'fastapi dev shortener/adapters/api/main.py'
 test = 'pytest --cov=shortener -v'
 test-domain = "pytest -v tests/test_domain/"
+test-adapters = "pytest -v tests/test_adapters/"
 test-infra = "pytest -v tests/test_infra/"
 test-layers = 'pytest -v tests/test_domain/ && pytest -v tests/test_fixtures/ && pytest -v tests/test_use_cases/ && pytest -v tests/test_infra/ && pytest -v tests/test_adapters/'
 
