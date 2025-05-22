@@ -5,6 +5,12 @@ from shortener.domain.user.exceptions import (
     NameInvalidPatternError
 )
 
+from shortener.adapters.api.v1.exceptions import (
+    get_pydantic_name_invalid_pattern_error,
+    get_pydantic_name_too_long_error,
+    get_pydantic_name_too_short_error
+)
+
 
 def validate_name(name: str) -> Name:
     """
@@ -22,12 +28,8 @@ def validate_name(name: str) -> Name:
     try:
         return Name(name)
     except NameTooLongError as e:
-        raise ValueError(
-            f"The User name must be at most {e.max_length} characters long."
-        )
+        raise get_pydantic_name_too_long_error(input=e.value, max_length=e.max_length)
     except NameTooShortError as e:
-        raise ValueError(
-            f"The User name must be at least {e.min_length} characters long."
-        )
+        raise get_pydantic_name_too_short_error(input=e.value, min_length=e.min_length)
     except NameInvalidPatternError as e:
-        raise ValueError("The User name does not match the required pattern.")
+        raise get_pydantic_name_invalid_pattern_error(input=e.value)
