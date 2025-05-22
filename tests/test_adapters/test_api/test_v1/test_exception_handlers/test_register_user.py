@@ -94,3 +94,9 @@ def test_password_too_long(exception_handler: RegisterUserExceptionHandler):
     ) as http_error:
         exception_handler.handle(PasswordTooLongError(value="pass", max_length=1))
     assert http_error.value.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
+def test_with_another_exception(exception_handler: RegisterUserExceptionHandler):
+    message = "Another error occurred."    
+    with pytest.raises(RuntimeError, match=message):
+        exception_handler.handle(RuntimeError(message))

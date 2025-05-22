@@ -60,3 +60,5 @@ class RegisterUserExceptionHandler:
                 detail=("The password is too long. It must be at most "
                        f"{error.max_length} characters long.")
             )
+        else:
+            raise error
