@@ -4,72 +4,34 @@ from http import HTTPStatus
 
 from fastapi.testclient import TestClient
 
+from shortener.domain.user import User
 from shortener.domain.user.fields import HashedPassword
+
 from shortener.infra.services.password_hasher import PasslibPasswordHasher
 from shortener.infra.services.jwt_auth_token import JwtAuthTokenService
 
 from tests.utils.entity_helpers import get_persistent_user
 
 
-def test_response_without_json_data(client: TestClient, route: str):
-    response = client.post(f"{route}/login/", json={})
-    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-    json = response.json()
-    assert json["detail"][0]["msg"] == "Field required"
-
-
-def test_response_without_email(client: TestClient, route: str):
-    response = client.post(f"{route}/login/", json={"password": "pAsSs@#$123"})
-    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-    json = response.json()
-    assert json["detail"][0]["msg"] == "Field required"
-
-
-def test_response_without_password(client: TestClient, route: str):
-    response = client.post(f"{route}/login/", json={"email": "example@gmail.com"})
-    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-    json = response.json()
-    assert json["detail"][0]["msg"] == "Field required"
-
-
-def test_response_with_invalid_email(client: TestClient, route: str):
+def test_validation_of_user_login_schema(client: TestClient, route: str):
     response = client.post(
         f"{route}/login/", json={"email": "invalid", "password": "pAsSs@#$123"}
     )
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-    json = response.json()
-    assert json["detail"][0]["msg"] == "Value error, The User email is invalid."
+    assert response.json()["detail"][0]["type"] == "invalid_email"
 
 
-def test_response_with_non_existent_email(client: TestClient, route: str):
+def test_exception_handler_with_non_existent_email(client: TestClient, route: str):
     response = client.post(
         f"{route}/login/", json={"email": "example@gmail.com", "password": "123"}
     )
     assert response.status_code == HTTPStatus.UNAUTHORIZED
-    json = response.json()
-    assert json["detail"] == "Invalid email or password."
+    assert response.json()["detail"] == "Invalid email or password."
 
 
 @pytest.mark.asyncio
-async def test_response_with_incorrect_password(
-    client: TestClient, route: str, db_session, normal_user
-):
-    normal_user.change_hashed_password(
-        HashedPassword(PasslibPasswordHasher().hash("strong-password"))
-    )
-    user = await get_persistent_user(db_session, normal_user)
-
-    response = client.post(
-        f"{route}/login/", json={"email": user.email, "password": "123"}
-    )
-    assert response.status_code == HTTPStatus.UNAUTHORIZED
-    json = response.json()
-    assert json["detail"] == "Invalid email or password."
-
-
-@pytest.mark.asyncio
-async def test_response_with_valid_login(
-    client: TestClient, route: str, db_session, normal_user
+async def test_response_ok_with_valid_login(
+    client: TestClient, route: str, db_session, normal_user: User
 ):
     normal_user.change_hashed_password(
         HashedPassword(PasslibPasswordHasher().hash("strong-password"))

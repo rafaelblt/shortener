@@ -6,7 +6,6 @@ from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shortener.domain.user import User
-from shortener.infra.db.models import UserModel
 from shortener.infra.db.repositories import SQLAlchemyUserRepository
 
 from tests.utils.entity_helpers import get_persistent_plan
