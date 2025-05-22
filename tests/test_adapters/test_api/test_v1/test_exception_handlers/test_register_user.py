@@ -2,14 +2,10 @@ import pytest
 import re
 
 from http import HTTPStatus
-
 from fastapi import HTTPException
 
 from shortener.domain.plan.exceptions import PlanNotFoundInDatabaseError
 from shortener.domain.user.exceptions import EmailAlreadyExistsError
-from shortener.domain.services.password_validator import (
-    PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH
-)
 from shortener.domain.services.exceptions import (
     PasswordMissingDigitError,
     PasswordMissingLowercaseError,
