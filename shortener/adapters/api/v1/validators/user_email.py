@@ -1,6 +1,8 @@
 from shortener.domain.user.fields import Email
 from shortener.domain.user.exceptions import EmailInvalidError
 
+from shortener.adapters.api.v1.exceptions import get_pydantic_email_invalid_error
+
 
 def validate_email(email: str) -> Email:
     """
@@ -13,9 +15,9 @@ def validate_email(email: str) -> Email:
         Email: A valid Email object.
 
     Raises:
-        ValueError: If the email is invalid.
+        PydanticCustomError: If the email is invalid.
     """
     try:
         return Email(email)
     except EmailInvalidError:
-        raise ValueError("The User email is invalid.")
+        raise get_pydantic_email_invalid_error(input=email)

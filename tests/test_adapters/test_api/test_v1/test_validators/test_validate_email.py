@@ -1,5 +1,7 @@
 import pytest
 
+from pydantic_core import PydanticCustomError
+
 from shortener.domain.user import User
 from shortener.domain.user.fields import Email
 
@@ -17,6 +19,6 @@ def test_instance_retrieved(str_email):
 
 
 def test_raises_value_error_with_invalid_email():
-    with pytest.raises(ValueError, match="The User email is invalid."):
+    with pytest.raises(PydanticCustomError) as error:
         validate_email("invalid@invalid")
-
+    assert error.value.message() == "The User email is invalid."
