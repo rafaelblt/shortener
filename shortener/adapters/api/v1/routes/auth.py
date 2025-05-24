@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from http import HTTPStatus
 
 from fastapi import APIRouter, Depends
@@ -20,14 +22,28 @@ from shortener.adapters.api.v1.dependencies import (
 )
 
 
+LoginUserUseCaseDependency = Annotated[
+    LoginUserUseCase, Depends(make_login_user_use_case)
+]
+LoginUserExceptionHandlerDependency = Annotated[
+    LoginUserExceptionHandler, Depends(LoginUserExceptionHandler)
+]
+RegisterUserUseCaseDependency = Annotated[
+    RegisterUserUseCase, Depends(make_register_user_use_case)
+]
+RegisterUserExceptionHandlerDependency = Annotated[
+    RegisterUserExceptionHandler, Depends(RegisterUserExceptionHandler)
+]
+
+
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 
 
 @router.post("/login")
 async def login(
     data: UserLoginSchema,
-    use_case: LoginUserUseCase = Depends(make_login_user_use_case),
-    exception_handler = LoginUserExceptionHandler
+    use_case: LoginUserUseCaseDependency,
+    exception_handler: LoginUserExceptionHandlerDependency
 ): 
     try:
         token = await use_case.execute(
@@ -45,8 +61,8 @@ async def login(
 @router.post("/register")
 async def register(
     data: UserRegisterSchema,
-    use_case: RegisterUserUseCase = Depends(make_register_user_use_case),
-    exception_handler = RegisterUserExceptionHandler
+    use_case: RegisterUserUseCaseDependency,
+    exception_handler: RegisterUserExceptionHandlerDependency
 ):
     try:
         user = await use_case.execute(
