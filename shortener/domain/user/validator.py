@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from shortener.domain.user.user import User
 
 
+@DeprecationWarning
 class UserValidator(ABC):
     
     @abstractmethod

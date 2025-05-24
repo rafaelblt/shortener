@@ -1,9 +1,6 @@
 from shortener.domain.shared.exceptions import ValidationError
 
 
-class UserValidationError(Exception): ...
-
-
 class UserAttributeTypeError(TypeError):
     def __init__(self, attr: str, type_expected: str, got):
         super().__init__(
