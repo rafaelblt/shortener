@@ -11,7 +11,6 @@ from shortener.domain.plan.exceptions import PlanNotFoundInDatabaseError
 
 from shortener.domain.user import User
 from shortener.domain.user.fields import Email, Name
-from shortener.domain.user.exceptions import UserValidationError
 
 from shortener.use_cases.register_user import RegisterUserUseCase
 
