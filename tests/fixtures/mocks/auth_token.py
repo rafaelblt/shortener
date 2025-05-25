@@ -12,10 +12,13 @@ class MockAuthTokenService(AuthTokenService):
     def __init__(self, secret_key: str = "secret123", expires_minutes: int = 60):
         self.secret_key = secret_key
         self.expires_minutes = expires_minutes
+        self.mock_data = {"generated_tokens": []}
 
     def generate_token(self, subject: str) -> str:
         expiration = utc_now() + timedelta(minutes=self.expires_minutes)
-        return f"{subject}|{self.secret_key}|{expiration.timestamp()}"
+        token = f"{subject}|{self.secret_key}|{expiration.timestamp()}"
+        self.mock_data["generated_tokens"].append(token)
+        return token
 
     def decode_token(self, token: str) -> str:
         token_split = token.split("|")

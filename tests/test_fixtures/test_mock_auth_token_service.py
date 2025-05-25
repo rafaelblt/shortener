@@ -61,3 +61,13 @@ def test_decode_token_raises_expired_error():
 
     with pytest.raises(AuthTokenExpiredError):
         short_token_service.decode_token(token)
+
+
+def test_mock_data(service: MockAuthTokenService):
+    assert len(service.mock_data["generated_tokens"]) == 0
+
+    subject = "user123"
+    token = service.generate_token(subject=subject)
+    
+    assert len(service.mock_data["generated_tokens"]) == 1
+    assert service.mock_data["generated_tokens"][0] == token
