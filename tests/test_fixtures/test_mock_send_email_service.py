@@ -20,8 +20,8 @@ async def test_method_send_email(mock_send_email_service: MockSendEmailService):
         receiver=receiver, subject=subject, body=body
     )
 
-    assert len(mock_send_email_service.logs) == 1
-    assert mock_send_email_service.logs[0] == {
+    assert len(mock_send_email_service.mock_logs) == 1
+    assert mock_send_email_service.mock_logs[0] == {
         "receiver": receiver, "subject": subject, "body": body
     }
 
@@ -39,10 +39,10 @@ async def test_logs_with_multiple_emails(mock_send_email_service: MockSendEmailS
             body=f"{body}-{i}"
         )
     
-    assert len(mock_send_email_service.logs) == 10
+    assert len(mock_send_email_service.mock_logs) == 10
 
     for i in range(10):
-        assert mock_send_email_service.logs[i] == {
+        assert mock_send_email_service.mock_logs[i] == {
             "receiver": f"{receiver}-{i}",
             "subject": f"{subject}-{i}",
             "body": f"{body}-{i}"

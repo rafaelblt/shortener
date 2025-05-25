@@ -3,9 +3,9 @@ from shortener.domain.services.send_email import SendEmailService
 
 class MockSendEmailService(SendEmailService):
     def __init__(self):
-        self.logs = []
+        self.mock_logs = []
 
     async def send_email(self, receiver: str, subject: str, body: str):
-        self.logs.append(
+        self.mock_logs.append(
             {"receiver": receiver, "subject": subject, "body": body}
         )
