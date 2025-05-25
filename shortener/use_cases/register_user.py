@@ -1,20 +1,19 @@
 import asyncio
+
 from types import CoroutineType
 
 from shortener.domain.shared.validator import Validator
 
 from shortener.domain.services.password_hasher import PasswordHasherService
+from shortener.domain.services.auth_token import AuthTokenService
+from shortener.domain.services.send_email import SendEmailService
+from shortener.domain.services.email_template_renderer import EmailTemplateRenderer
 
-from shortener.domain.plan import PlanRepository
+from shortener.domain.plan import Plan, PlanRepository
 from shortener.domain.plan.exceptions import PlanNotFoundInDatabaseError
 
 from shortener.domain.user import User, UserRepository
 from shortener.domain.user.fields import Email, Name, HashedPassword, UserStatus
-
-
-class CustomValidator(Validator):
-    async def validate(self, value: object) -> None:
-        return None
 
 
 class RegisterUserUseCase:
@@ -22,18 +21,39 @@ class RegisterUserUseCase:
         self,
         user_repository: UserRepository,
         plan_repository: PlanRepository,
+        auth_token_service: AuthTokenService,
+        send_email_service: SendEmailService,
         password_hasher: PasswordHasherService,
+        email_template_renderer: EmailTemplateRenderer,
         validators: dict[str, list[Validator]]
     ):
         """
         Args:
             user_repository (UserRepository): Repository to save the user.
             plan_repository (PlanRepository): Repository to get the User plan.
-            password_hasher (PasswordHasherService): Hasher to hash the password.
+            auth_token_service (AuthTokenService): Service to generate the 
+                verification token.
+            send_email_service (SendEmailService): Service to send the 
+                verification email.
+            password_hasher (PasswordHasherService): Service to hash the password.
+            validators (dict[str, list[Validator]]): Dictionary with validations
+                list for each field.
+        
+        Examples:
+            ```
+            validations = {
+                "email": [ValidatorX, ValidatorY],
+                "name": [ValidatorZ],
+                "password": []
+            }
+            ```
         """
         self.user_repository = user_repository
         self.plan_repository = plan_repository
+        self.auth_token_service = auth_token_service
+        self.send_email_service = send_email_service
         self.password_hasher = password_hasher
+        self.email_template = email_template_renderer
         self.validators = validators
 
     async def execute(
@@ -59,10 +79,24 @@ class RegisterUserUseCase:
             PlanNotFoundInDatabaseError: If the plan_id is not found in repository.
             ValidationError: If any of the data provided is invalid.
         """
+        validations_coro = self._get_validations_coro(
+            email=email, name=name, password=password
+        )
+        results = await asyncio.gather(self._get_plan(plan_id), *validations_coro)
+
+        plan = results[0]
+        new_user = await self._create_user(email, name, password, plan)
+        await self._send_verification_email(email, name)
+
+        return new_user
+
+    async def _get_plan(self, plan_id: int) -> Plan:
         plan = await self.plan_repository.get_by_id(plan_id)
         if plan is None:
             raise PlanNotFoundInDatabaseError(plan_id=plan_id)
-        
+        return plan
+
+    def _get_validations_coro(self, email: Email, name: Name, password: str):
         validations: list[CoroutineType] = []
 
         for field, validators in self.validators.items():
@@ -73,17 +107,31 @@ class RegisterUserUseCase:
                     validations.extend([v.validate(name) for v in validators])
                 case "password": 
                     validations.extend([v.validate(password) for v in validators])
-        
-        await asyncio.gather(*validations)
+            
+        return validations
 
+    async def _create_user(
+        self, email: Email, name: Name, password: str, plan: Plan
+    ) -> User:
         hashed_password = HashedPassword(self.password_hasher.hash(password))
-
-        new_user = User(
+        user = User(
             email=email,
             name=name,
             hashed_password=hashed_password,
             plan=plan,
             status=UserStatus.EMAIL_UNVERIFIED
         )
+        return await self.user_repository.add(user)
 
-        return await self.user_repository.add(new_user)
+    async def _send_verification_email(self, email: Email, name: Name):
+        token = self.auth_token_service.generate_token(email)
+        subject = self.email_template.render_subject()
+        body = self.email_template.render_body(
+            name=name,
+            token=token,
+            expires_minutes=self.auth_token_service.expires_minutes
+        )
+
+        await self.send_email_service.send_email(
+            receiver=email, subject=subject, body=body
+        )
