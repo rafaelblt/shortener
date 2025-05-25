@@ -5,6 +5,7 @@ from .password_hasher import MockPasswordHasherService
 from .user_repository import MockUserRepository
 from .plan_repository import MockPlanRepository
 from .auth_token import MockAuthTokenService
+from .send_email import MockSendEmailService
 
 
 @pytest.fixture
@@ -30,3 +31,8 @@ def mock_plan_repository():
 @pytest.fixture
 def mock_auth_token_service():
     return MockAuthTokenService()
+
+
+@pytest.fixture
+def mock_send_email_service():
+    return MockSendEmailService()
