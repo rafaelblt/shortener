@@ -7,6 +7,7 @@ from shortener.domain.plan import Plan
 from .fields import Email, Name, UserStatus, HashedPassword
 from .exceptions import (
     UserAttributeTypeError as AttrTypeError,
+    UserStatusInvalidToVerifyEmailError,
     UserEmailNotVerifiedError,
     UserSuspendedError,
     UserBannedError,
@@ -177,6 +178,24 @@ class User:
             )
     
     
+    def verify_email(self) -> None:
+        """
+        Checks if the user can verify their email and updates the status to 
+        ACTIVE.
+
+        Returns:
+            None: The user status is updated to ACTIVE.
+
+        Raises:
+            UserStatusInvalidToVerifyEmailError: If the user status is not 
+                EMAIL_UNVERIFIED.
+        """
+        if self.status != UserStatus.EMAIL_UNVERIFIED:
+            raise UserStatusInvalidToVerifyEmailError(
+                status=self.status, required_status=UserStatus.EMAIL_UNVERIFIED
+            )
+        self._status = UserStatus.ACTIVE
+
     def ensure_can_login(self) -> None:
         """
         Checks if the user is allowed to login based on their status.
