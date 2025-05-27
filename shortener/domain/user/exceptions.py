@@ -13,6 +13,8 @@ class UserAttributeTypeError(TypeError):
 
 class UserStatusInvalidToVerifyEmailError(Exception):
     def __init__(self, status: UserStatus, required_status: UserStatus):
+        self.status = status
+        self.required_status = required_status
         super().__init__(
             (f"Only users with {required_status} status can be verified. User "
              f"status is {status}")
