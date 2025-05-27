@@ -1,5 +1,7 @@
 from shortener.domain.shared.exceptions import ValidationError
 
+from shortener.domain.user.fields.status import UserStatus
+
 
 class UserAttributeTypeError(TypeError):
     def __init__(self, attr: str, type_expected: str, got):
@@ -9,6 +11,15 @@ class UserAttributeTypeError(TypeError):
         )
 
 
+class UserStatusInvalidToVerifyEmailError(Exception):
+    def __init__(self, status: UserStatus, required_status: UserStatus):
+        super().__init__(
+            (f"Only users with {required_status} status can be verified. User "
+             f"status is {status}")
+        )
+
+
+# User Access Denied Exceptions
 class UserAccessDeniedError(Exception): ...
 class UserEmailNotVerifiedError(UserAccessDeniedError):
     def __init__(self):
