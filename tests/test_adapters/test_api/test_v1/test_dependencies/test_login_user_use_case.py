@@ -39,6 +39,6 @@ def test_attr_password_hasher(use_case: LoginUserUseCase):
 
 def test_attr_auth_token_service(use_case: LoginUserUseCase):
     assert isinstance(use_case.auth_token_service, JwtAuthTokenService)
-    assert use_case.auth_token_service.secret_key == JWT_AUTH_SECRET_KEY
-    assert use_case.auth_token_service.algorithm == JWT_AUTH_TOKEN_ALGORITHM
+    assert use_case.auth_token_service._secret_key == JWT_AUTH_SECRET_KEY
+    assert use_case.auth_token_service._algorithm == JWT_AUTH_TOKEN_ALGORITHM
     assert use_case.auth_token_service.expires_minutes == JWT_AUTH_TOKEN_EXPIRES_MINUTES
