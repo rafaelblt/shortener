@@ -1,5 +1,6 @@
 from .register_user import RegisterUserUseCase
 from .login_user import LoginUserUseCase
+from .verify_email import VerifyEmailUseCase
 
 from .get_shorturl import GetShortURLUseCase
 from .resolve_shorturl import ResolveShortURLUseCase
