@@ -15,6 +15,8 @@ from shortener.domain.services.exceptions import (
     PasswordTooShortError
 )
 
+from .utils import test_raise_unhandled_exception
+
 from shortener.adapters.api.v1.exception_handlers import RegisterUserExceptionHandler
 
 
@@ -97,6 +99,4 @@ def test_password_too_long(exception_handler: RegisterUserExceptionHandler):
 
 
 def test_unhandled_exception(exception_handler: RegisterUserExceptionHandler):
-    message = "Another error occurred."    
-    with pytest.raises(RuntimeError, match=message):
-        exception_handler.handle(RuntimeError(message))
+    test_raise_unhandled_exception(exception_handler)

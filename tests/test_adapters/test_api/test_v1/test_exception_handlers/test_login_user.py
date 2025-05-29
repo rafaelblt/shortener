@@ -7,6 +7,8 @@ from shortener.domain.user.exceptions import (
     UserNotFoundInDatabaseError, UserPasswordIncorrectError
 )
 
+from .utils import test_raise_unhandled_exception
+
 from shortener.adapters.api.v1.exception_handlers import LoginUserExceptionHandler
 
 
@@ -32,6 +34,4 @@ def test_user_password_incorrect(exception_handler: LoginUserExceptionHandler):
 
 
 def test_unhandled_exception(exception_handler: LoginUserExceptionHandler):
-    message = "Another error occurred."    
-    with pytest.raises(RuntimeError, match=message):
-        exception_handler.handle(RuntimeError(message))
+    test_raise_unhandled_exception(exception_handler)
