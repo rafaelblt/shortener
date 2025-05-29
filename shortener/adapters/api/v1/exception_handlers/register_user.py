@@ -15,8 +15,10 @@ from shortener.domain.services.exceptions import (
     PasswordTooShortError
 )
 
+from . import ExceptionHandler
 
-class RegisterUserExceptionHandler:
+
+class RegisterUserExceptionHandler(ExceptionHandler):
 
     @staticmethod
     def handle(error: Exception) -> NoReturn:
