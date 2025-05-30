@@ -22,9 +22,9 @@ def use_case(mock_user_repository, mock_auth_token_service):
 
 @pytest.mark.asyncio
 async def test_if_user_status_is_updated(
-    use_case: VerifyEmailUseCase, email_not_verified_user: User
+    use_case: VerifyEmailUseCase, unverified_email_user: User
 ):
-    user = email_not_verified_user
+    user = unverified_email_user
     await use_case.user_repository.add(user)
     token = use_case.auth_token_service.generate_token(user.email)
 

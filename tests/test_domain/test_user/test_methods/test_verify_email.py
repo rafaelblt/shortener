@@ -23,7 +23,7 @@ def test_with_invalid_status(normal_user: User, status: UserStatus):
     assert error.value.required_status == UserStatus.EMAIL_UNVERIFIED
 
 
-def test_with_valid_status(email_not_verified_user: User):
-    user = email_not_verified_user
+def test_with_valid_status(unverified_email_user: User):
+    user = unverified_email_user
     assert user.verify_email() is None
     assert user.status == UserStatus.ACTIVE

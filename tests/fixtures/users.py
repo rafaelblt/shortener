@@ -40,7 +40,7 @@ def old_user(default_plan: Plan):
 
 
 @pytest.fixture
-def email_not_verified_user(default_plan: Plan):
+def unverified_email_user(default_plan: Plan):
     return User(
         email=Email("i-was-not-checked@gmail.com"),
         name=Name("Unverified Person"),

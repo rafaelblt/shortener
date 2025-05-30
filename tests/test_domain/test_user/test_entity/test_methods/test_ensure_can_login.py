@@ -12,11 +12,11 @@ def test_ensure_can_login(normal_user: User):
     assert normal_user.ensure_can_login() is None
 
 
-def test_ensure_can_login_with_email_not_verified_user(
-    email_not_verified_user: User
+def test_ensure_can_login_with_unverified_email_user(
+    unverified_email_user: User
 ):
     with pytest.raises(UserEmailNotVerifiedError):
-        email_not_verified_user.ensure_can_login()
+        unverified_email_user.ensure_can_login()
 
 
 def test_ensure_can_login_with_suspended_user(suspended_user: User):
