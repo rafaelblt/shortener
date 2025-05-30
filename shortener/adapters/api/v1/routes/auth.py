@@ -7,18 +7,24 @@ from fastapi.responses import JSONResponse
 
 from shortener.use_cases import (
     LoginUserUseCase,
-    RegisterUserUseCase
+    RegisterUserUseCase,
+    VerifyEmailUseCase
 )
 
 from shortener.adapters.api.v1.exception_handlers import (
-    RegisterUserExceptionHandler, LoginUserExceptionHandler
+    RegisterUserExceptionHandler,
+    LoginUserExceptionHandler,
+    VerifyEmailExceptionHandler
 )
 from shortener.adapters.api.v1.schemas import (
-    UserLoginSchema, UserRegisterSchema
+    MessageResponse,
+    UserLoginSchema,
+    UserRegisterSchema
 )
 from shortener.adapters.api.v1.dependencies import (
     make_login_user_use_case,
-    make_register_user_use_case
+    make_register_user_use_case,
+    make_verify_email_use_case
 )
 
 
@@ -28,11 +34,19 @@ LoginUserUseCaseDependency = Annotated[
 LoginUserExceptionHandlerDependency = Annotated[
     LoginUserExceptionHandler, Depends(LoginUserExceptionHandler)
 ]
+
 RegisterUserUseCaseDependency = Annotated[
     RegisterUserUseCase, Depends(make_register_user_use_case)
 ]
 RegisterUserExceptionHandlerDependency = Annotated[
     RegisterUserExceptionHandler, Depends(RegisterUserExceptionHandler)
+]
+
+VerifyEmailUseCaseDependency = Annotated[
+    VerifyEmailUseCase, Depends(make_verify_email_use_case)
+]
+VerifyEmailExceptionHandlerDependency = Annotated[
+    VerifyEmailExceptionHandler, Depends(VerifyEmailExceptionHandler)
 ]
 
 
@@ -78,3 +92,17 @@ async def register(
         status_code=HTTPStatus.CREATED,
         content={"message": "User registered successfully."}
     )
+
+
+@router.get("/verify-email/{token}", response_model=MessageResponse)
+async def verify_email(
+    token: str,
+    use_case: VerifyEmailUseCaseDependency,
+    exception_handler: VerifyEmailExceptionHandlerDependency
+):
+    try:
+        await use_case.execute(token)
+    except Exception as error:
+        exception_handler.handle(error)
+    
+    return {"message": "Email successfully verified."}
