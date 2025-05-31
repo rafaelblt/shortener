@@ -18,10 +18,10 @@ from shortener.adapters.api.v1.exception_handlers import (
 )
 from shortener.adapters.api.v1.schemas import (
     MessageResponse,
-    UserLoginSchema,
     UserRegisterSchema
 )
 from shortener.adapters.api.v1.schemas.auth import (
+    LoginRequest,
     LoginResponse
 )
 from shortener.adapters.api.v1.dependencies import (
@@ -58,14 +58,14 @@ router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 
 @router.post("/login", response_model=LoginResponse)
 async def login(
-    data: UserLoginSchema,
+    request: LoginRequest,
     use_case: LoginUserUseCaseDependency,
     exception_handler: LoginUserExceptionHandlerDependency
 ): 
-    email = data.get_email()
+    email = request.get_email()
     try:
         token = await use_case.execute(
-            email=email, password=data.password
+            email=email, password=request.password
         )
     except Exception as error:
         exception_handler.handle(error)

@@ -6,7 +6,7 @@ from shortener.adapters.api.v1.validators import validate_email
 from pydantic import BaseModel, AfterValidator, ConfigDict
 
 
-class UserLoginSchema(BaseModel):
+class LoginRequest(BaseModel):
     email: Annotated[str, AfterValidator(validate_email)]
     password: str
     

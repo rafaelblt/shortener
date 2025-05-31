@@ -1,6 +1,5 @@
 from .message_response import MessageResponse
 
-from .user_login import UserLoginSchema
 from .user_register import UserRegisterSchema
 
 from .shorturl import ShortURLSchema
