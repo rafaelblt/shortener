@@ -7,6 +7,8 @@ from fastapi.testclient import TestClient
 from shortener.domain.user import User
 from shortener.domain.user.fields import HashedPassword
 
+from shortener.adapters.api.v1.schemas.auth import LoginResponse
+
 from shortener.infra.services.password_hasher import PasslibPasswordHasher
 from shortener.infra.services.jwt_auth_token import JwtAuthTokenService
 
@@ -43,9 +45,12 @@ async def test_response_ok_with_valid_login(
         json={"email": normal_user.email, "password": "strong-password"}
     )
     assert response.status_code == HTTPStatus.OK
-    json = response.json()
-    assert json["token_type"] == "bearer"
-    assert (
-        JwtAuthTokenService().decode_token(json["access_token"]) == 
-        normal_user.email
-    )
+
+    json: dict = response.json()
+    access_token = json.pop("access_token")
+    assert json == {
+        "token_type": "bearer",
+        "expires_minutes": 60,
+        "email": normal_user.email
+    }
+    assert JwtAuthTokenService().decode_token(access_token) == normal_user.email

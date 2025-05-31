@@ -21,6 +21,9 @@ from shortener.adapters.api.v1.schemas import (
     UserLoginSchema,
     UserRegisterSchema
 )
+from shortener.adapters.api.v1.schemas.auth import (
+    LoginResponse
+)
 from shortener.adapters.api.v1.dependencies import (
     make_login_user_use_case,
     make_register_user_use_case,
@@ -53,23 +56,26 @@ VerifyEmailExceptionHandlerDependency = Annotated[
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 
 
-@router.post("/login")
+@router.post("/login", response_model=LoginResponse)
 async def login(
     data: UserLoginSchema,
     use_case: LoginUserUseCaseDependency,
     exception_handler: LoginUserExceptionHandlerDependency
 ): 
+    email = data.get_email()
     try:
         token = await use_case.execute(
-            email=data.get_email(), password=data.password
+            email=email, password=data.password
         )
     except Exception as error:
         exception_handler.handle(error)
 
-    return JSONResponse(
-        status_code=HTTPStatus.OK,
-        content={"access_token": token, "token_type": "bearer"}
-    )
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "expires_minutes": use_case.auth_token_service.expires_minutes,
+        "email": email
+    }
 
 
 @router.post("/register")
