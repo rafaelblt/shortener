@@ -16,13 +16,11 @@ from shortener.adapters.api.v1.exception_handlers import (
     LoginUserExceptionHandler,
     VerifyEmailExceptionHandler
 )
-from shortener.adapters.api.v1.schemas import (
-    MessageResponse,
-    UserRegisterSchema
-)
+from shortener.adapters.api.v1.schemas import MessageResponse
 from shortener.adapters.api.v1.schemas.auth import (
     LoginRequest,
-    LoginResponse
+    LoginResponse,
+    RegisterRequest
 )
 from shortener.adapters.api.v1.dependencies import (
     make_login_user_use_case,
@@ -78,9 +76,11 @@ async def login(
     }
 
 
-@router.post("/register")
+@router.post(
+    "/register", status_code=HTTPStatus.CREATED, response_model=MessageResponse
+)
 async def register(
-    data: UserRegisterSchema,
+    data: RegisterRequest,
     use_case: RegisterUserUseCaseDependency,
     exception_handler: RegisterUserExceptionHandlerDependency
 ):
@@ -94,10 +94,7 @@ async def register(
     except Exception as error:
         exception_handler.handle(error)
 
-    return JSONResponse(
-        status_code=HTTPStatus.CREATED,
-        content={"message": "User registered successfully."}
-    )
+    return {"message": "User registered successfully."}
 
 
 @router.get("/verify-email/{token}", response_model=MessageResponse)

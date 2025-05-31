@@ -6,7 +6,7 @@ from shortener.adapters.api.v1.validators import validate_email, validate_name
 from pydantic import BaseModel, AfterValidator, ConfigDict
 
 
-class UserRegisterSchema(BaseModel):
+class RegisterRequest(BaseModel):
     email: Annotated[str, AfterValidator(validate_email)]
     name: Annotated[str, AfterValidator(validate_name)]
     password: str

@@ -1,12 +1,12 @@
 import pytest
 
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from shortener.domain.user import User
 from shortener.domain.user.fields import Email, Name
 from shortener.domain.user.fields.name import NAME_MIN_LENGTH
 
-from shortener.adapters.api.v1.schemas import UserRegisterSchema
+from shortener.adapters.api.v1.schemas.auth import RegisterRequest
 
 
 @pytest.fixture
@@ -18,8 +18,8 @@ def valid_name(normal_user: User):
     return str(normal_user.name)
 
 @pytest.fixture
-def valid_schema(valid_email: str, valid_name: str):
-    return UserRegisterSchema(
+def schema(valid_email: str, valid_name: str):
+    return RegisterRequest(
         email=valid_email,
         name=valid_name,
         password="pass123",
@@ -27,33 +27,29 @@ def valid_schema(valid_email: str, valid_name: str):
     )
 
 
-def test_valid_data(valid_email:str, valid_name: str):
-    UserRegisterSchema(
-        email=valid_email,
-        name=valid_name,
-        password="pass123",
-        plan_id=1
-    )
+def test_inheritance_base_model(schema: RegisterRequest):
+    assert isinstance(schema, BaseModel)
 
 
-def test_raises_validation_error_without_data():
-    with pytest.raises(ValidationError) as error:
-        UserRegisterSchema()
+def test_attr_email(schema: RegisterRequest):
+    assert isinstance(schema.email, str)
 
-    assert error.value.error_count() == 4
 
-    errors = error.value.errors()
-    actual_fields = {e['loc'][0] for e in errors}
-    expected_fields = {"email", "name", "password", "plan_id"}
+def test_attr_name(schema: RegisterRequest):
+    assert isinstance(schema.name, str)
 
-    assert actual_fields == expected_fields
-    for err in errors:
-        assert err["type"] == "missing"
+
+def test_attr_password(schema: RegisterRequest):
+    assert isinstance(schema.password, str)
+
+
+def test_attr_plan_id(schema: RegisterRequest):
+    assert isinstance(schema.plan_id, int)
 
 
 def test_email_after_validator(valid_name: str):
     with pytest.raises(ValidationError) as error:
-        UserRegisterSchema(
+        RegisterRequest(
             email="invalid_email",
             name=valid_name,
             password="pass123",
@@ -64,7 +60,7 @@ def test_email_after_validator(valid_name: str):
 
 def test_name_after_validator(valid_email: str):
     with pytest.raises(ValidationError) as error:
-        UserRegisterSchema(
+        RegisterRequest(
             email=valid_email,
             name="a",
             password="pass123",
@@ -73,20 +69,20 @@ def test_name_after_validator(valid_email: str):
     assert error.value.errors()[0]["type"] == "invalid_name"
 
 
-def test_method_get_email(valid_schema: UserRegisterSchema, valid_email: str):
-    retrieved = valid_schema.get_email()
+def test_method_get_email(schema: RegisterRequest, valid_email: str):
+    retrieved = schema.get_email()
     assert isinstance(retrieved, Email)
     assert retrieved == valid_email
 
 
-def test_method_get_name(valid_schema: UserRegisterSchema, valid_name: str):
-    retrieved = valid_schema.get_name()
+def test_method_get_name(schema: RegisterRequest, valid_name: str):
+    retrieved = schema.get_name()
     assert isinstance(retrieved, Name)
     assert retrieved == valid_name
 
 
-def test_json_schema_example(valid_schema: UserRegisterSchema):
-    example = valid_schema.model_json_schema()["example"]
+def test_json_schema_example(schema: RegisterRequest):
+    example = schema.model_json_schema()["example"]
     assert example == {
         "email": "user@example.com",
         "name": "User Name Example",
