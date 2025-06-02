@@ -17,6 +17,8 @@ from shortener.domain.user.fields import Email, Name, HashedPassword, UserStatus
 
 
 class RegisterUserUseCase:
+    """Use case for registering a new user in the system."""
+
     def __init__(
         self,
         user_repository: UserRepository,
@@ -30,7 +32,7 @@ class RegisterUserUseCase:
         """
         Args:
             user_repository (UserRepository): Repository to save the user.
-            plan_repository (PlanRepository): Repository to get the User plan.
+            plan_repository (PlanRepository): Repository to get the user plan.
             auth_token_service (AuthTokenService): Service to generate the 
                 verification token.
             send_email_service (SendEmailService): Service to send the 
@@ -64,7 +66,9 @@ class RegisterUserUseCase:
         password: str,
     ) -> User:
         """
-        Executes the Use Case with the provided data.
+        It performs the validations, creates the user, saves with the 
+        UNVERIFIED_EMAIL status and sends the verification token to the email 
+        address provided.
 
         Args:
             email (Email): The email of user.
