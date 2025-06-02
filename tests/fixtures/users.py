@@ -46,7 +46,7 @@ def unverified_email_user(default_plan: Plan):
         name=Name("Unverified Person"),
         hashed_password=HashedPassword("n0t"),
         plan=default_plan,
-        status=UserStatus.EMAIL_UNVERIFIED
+        status=UserStatus.UNVERIFIED_EMAIL
     )
 
 

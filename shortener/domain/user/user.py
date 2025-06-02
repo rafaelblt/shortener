@@ -188,11 +188,11 @@ class User:
 
         Raises:
             UserStatusInvalidToVerifyEmailError: If the user status is not 
-                EMAIL_UNVERIFIED.
+                UNVERIFIED_EMAIL.
         """
-        if self.status != UserStatus.EMAIL_UNVERIFIED:
+        if self.status != UserStatus.UNVERIFIED_EMAIL:
             raise UserStatusInvalidToVerifyEmailError(
-                status=self.status, required_status=UserStatus.EMAIL_UNVERIFIED
+                status=self.status, required_status=UserStatus.UNVERIFIED_EMAIL
             )
         self._status = UserStatus.ACTIVE
 
@@ -209,7 +209,7 @@ class User:
             UserLockedError: The user has been locked.
             UserBannedError: The user has been banned.
         """
-        if self.status == UserStatus.EMAIL_UNVERIFIED:
+        if self.status == UserStatus.UNVERIFIED_EMAIL:
             raise UserEmailNotVerifiedError()
         elif self.status == UserStatus.SUSPENDED:
             raise UserSuspendedError()

@@ -119,7 +119,7 @@ class RegisterUserUseCase:
             name=name,
             hashed_password=hashed_password,
             plan=plan,
-            status=UserStatus.EMAIL_UNVERIFIED
+            status=UserStatus.UNVERIFIED_EMAIL
         )
         return await self.user_repository.add(user)
 

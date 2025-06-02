@@ -20,7 +20,7 @@ def test_with_invalid_status(normal_user: User, status: UserStatus):
     with pytest.raises(UserStatusInvalidToVerifyEmailError) as error:
         normal_user.verify_email()
     assert error.value.status == status
-    assert error.value.required_status == UserStatus.EMAIL_UNVERIFIED
+    assert error.value.required_status == UserStatus.UNVERIFIED_EMAIL
 
 
 def test_with_valid_status(unverified_email_user: User):

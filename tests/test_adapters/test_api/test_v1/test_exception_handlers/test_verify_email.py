@@ -49,7 +49,7 @@ def test_auth_token_expired(exception_handler: VerifyEmailExceptionHandler):
 
 def test_user_status_invalid(exception_handler: VerifyEmailExceptionHandler):
     status = UserStatus.ACTIVE
-    required_status = UserStatus.EMAIL_UNVERIFIED
+    required_status = UserStatus.UNVERIFIED_EMAIL
     with pytest.raises(HTTPException) as http_error:
         exception_handler.handle(UserStatusInvalidToVerifyEmailError(
             status=status, required_status=required_status

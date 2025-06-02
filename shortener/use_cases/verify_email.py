@@ -36,7 +36,7 @@ class VerifyEmailUseCase:
             AuthTokenExpiredError: The token is expired.
             UserNotFoundInDatabaseError: If the user is not found in the database.
             UserStatusInvalidToVerifyEmailError: If the user status is not 
-                EMAIL_UNVERIFIED.
+                UNVERIFIED_EMAIL.
         """
         email = self.auth_token_service.decode_token(token)
         

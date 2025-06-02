@@ -34,7 +34,7 @@ def upgrade() -> None:
         sa.Column('name', sa.String(length=200), nullable=False),
         sa.Column('hashed_password', sa.String(length=255), nullable=False),
         sa.Column('status', sa.Enum(
-            'ACTIVE', 'EMAIL_UNVERIFIED', 'BANNED', 'SUSPENDED', 'LOCKED', 
+            'ACTIVE', 'UNVERIFIED_EMAIL', 'BANNED', 'SUSPENDED', 'LOCKED', 
             name='userstatus'
         ), nullable=False),
         sa.Column('shorturls_count', sa.Integer(), nullable=False),

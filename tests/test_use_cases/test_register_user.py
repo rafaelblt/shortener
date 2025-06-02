@@ -83,7 +83,7 @@ async def test_instance_retrieved(
     assert retrieved.email == normal_user.email
     assert retrieved.name == normal_user.name
     assert retrieved.plan.id == plan.id
-    assert retrieved.status == UserStatus.EMAIL_UNVERIFIED
+    assert retrieved.status == UserStatus.UNVERIFIED_EMAIL
     assert use_case.password_hasher.verify(
         plain_password, retrieved.hashed_password
     )
