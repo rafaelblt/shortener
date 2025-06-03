@@ -18,12 +18,12 @@ def service():
 
 
 def test_attr_default_secret_key(service: JwtAuthTokenService):
-    assert hasattr(service, "secret_key")
+    assert hasattr(service, "_secret_key")
     assert service._secret_key == JWT_AUTH_SECRET_KEY
 
 
 def test_attr_default_algorithm(service: JwtAuthTokenService):
-    assert hasattr(service, "algorithm")
+    assert hasattr(service, "_algorithm")
     assert service._algorithm == JWT_AUTH_TOKEN_ALGORITHM
 
 
