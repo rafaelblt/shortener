@@ -109,7 +109,7 @@ async def test_delete_by_id(
 
 
 @pytest.mark.asyncio
-async def test_delete_by_id_non_existent_plan(
+async def test_delete_by_id_non_existent_plan_raises_error(
     repository: SQLAlchemyPlanRepository
 ):
     with pytest.raises(PlanNotFoundError) as error:

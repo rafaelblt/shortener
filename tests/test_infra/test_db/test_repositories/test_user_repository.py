@@ -9,7 +9,7 @@ from shortener.domain.plan import Plan
 
 from shortener.domain.user import User
 from shortener.domain.user.fields import Email, Name, HashedPassword, UserStatus
-from shortener.domain.user.exceptions import UserNotFoundInDatabaseError
+from shortener.domain.user.exceptions import UserNotFoundError
 
 from shortener.infra.db.repositories import SQLAlchemyUserRepository
 
@@ -46,7 +46,7 @@ async def test_get_by_id(
     normal_user.change_plan(saved_plan)
     saved_user = await repository.add(normal_user)
 
-    retrieved = await repository.get_by_id(saved_user.id)
+    retrieved = await repository.get_by_id(saved_user.get_int_id())
 
     assert isinstance(retrieved, User)
     assert_user_fields(retrieved, saved_user)
@@ -80,7 +80,7 @@ async def test_update(
     assert isinstance(retrieved, User)
     assert_user_fields(retrieved, saved_user)
 
-    updated_user = await repository.get_by_id(saved_user.id)
+    updated_user = await repository.get_by_id(saved_user.get_int_id())
     assert isinstance(updated_user, User)
     assert_user_fields(updated_user, saved_user)
 
@@ -89,7 +89,7 @@ async def test_update(
 async def test_update_user_without_id_raises_error(
     repository: SQLAlchemyUserRepository, normal_user: User
 ):
-    with pytest.raises(UserNotFoundInDatabaseError) as error:
+    with pytest.raises(UserNotFoundError) as error:
         await repository.update(normal_user)
     assert error.value.value == normal_user.id
     assert error.value.field == "id"
@@ -100,7 +100,7 @@ async def test_update_user_non_existent_raises_error(
     repository: SQLAlchemyUserRepository, normal_user: User
 ):
     normal_user._id = 1
-    with pytest.raises(UserNotFoundInDatabaseError) as error:
+    with pytest.raises(UserNotFoundError) as error:
         await repository.update(normal_user)
     assert error.value.value == 1
     assert error.value.field == "id"
@@ -218,7 +218,7 @@ async def test_delete_by_id(
     normal_user.change_plan(saved_plan)
     saved_user = await repository.add(normal_user)
 
-    retrieved = await repository.delete_by_id(saved_user.id)
+    retrieved = await repository.delete_by_id(saved_user.get_int_id())
 
     assert isinstance(retrieved, User)
     assert_user_fields(retrieved, saved_user)
@@ -228,7 +228,7 @@ async def test_delete_by_id(
 async def test_delete_by_id_with_non_existent_id_raises_error(
     repository: SQLAlchemyUserRepository
 ):
-    with pytest.raises(UserNotFoundInDatabaseError) as error:
+    with pytest.raises(UserNotFoundError) as error:
         await repository.delete_by_id(1)
     assert error.value.value == 1
     assert error.value.field == "id"

@@ -7,7 +7,7 @@ from shortener.domain.services.exceptions import (
     AuthTokenInvalidError
 )
 from shortener.domain.user.exceptions import (
-    UserNotFoundInDatabaseError,
+    UserNotFoundError,
     UserStatusInvalidToVerifyEmailError
 )
 
@@ -18,7 +18,7 @@ class VerifyEmailExceptionHandler(ExceptionHandler):
 
     @staticmethod
     def handle(error: Exception) -> NoReturn:
-        if isinstance(error, (AuthTokenInvalidError, UserNotFoundInDatabaseError)):
+        if isinstance(error, (AuthTokenInvalidError, UserNotFoundError)):
             raise HTTPException(
                 status_code=HTTPStatus.BAD_REQUEST,
                 detail="Invalid email verification token."

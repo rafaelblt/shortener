@@ -6,7 +6,7 @@ from shortener.domain.services.exceptions import AuthTokenInvalidError
 from shortener.domain.user import User
 from shortener.domain.user.fields import UserStatus
 from shortener.domain.user.exceptions import (
-    UserNotFoundInDatabaseError, UserStatusInvalidToVerifyEmailError
+    UserNotFoundError, UserStatusInvalidToVerifyEmailError
 )
 
 from shortener.use_cases import VerifyEmailUseCase
@@ -60,7 +60,7 @@ async def test_with_non_existent_email(
 ):
     token = use_case.auth_token_service.generate_token(normal_user.email)
 
-    with pytest.raises(UserNotFoundInDatabaseError) as error:
+    with pytest.raises(UserNotFoundError) as error:
         await use_case.execute(token)
 
     assert error.value.field == "email"

@@ -3,7 +3,7 @@ import pytest
 from shortener.domain.shared.pagination import PaginatedResult
 from shortener.domain.user import User
 from shortener.domain.user.fields import Name
-from shortener.domain.user.exceptions import UserNotFoundInDatabaseError
+from shortener.domain.user.exceptions import UserNotFoundError
 
 from tests.fixtures.mocks.user_repository import MockUserRepository
 
@@ -81,8 +81,8 @@ async def test_update_raises_user_not_found(
     repository: MockUserRepository, normal_user: User
 ):
     user = await repository.add(normal_user)
-    await repository.delete_by_id(user.id)
-    with pytest.raises(UserNotFoundInDatabaseError) as error:
+    await repository.delete_by_id(user.get_int_id())
+    with pytest.raises(UserNotFoundError) as error:
         await repository.update(user)
     assert error.value.value == user.id
     assert error.value.field == "id"
@@ -213,7 +213,7 @@ async def test_delete_by_id(
 async def test_delete_by_id_non_existent_user(
     repository: MockUserRepository
 ):
-    with pytest.raises(UserNotFoundInDatabaseError) as error:
+    with pytest.raises(UserNotFoundError) as error:
         await repository.delete_by_id(1)
     assert error.value.value == 1
     assert error.value.field == "id"

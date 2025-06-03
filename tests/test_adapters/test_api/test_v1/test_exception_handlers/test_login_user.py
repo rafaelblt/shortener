@@ -4,7 +4,7 @@ from http import HTTPStatus
 from fastapi import HTTPException
 
 from shortener.domain.user.exceptions import (
-    UserNotFoundInDatabaseError, UserPasswordIncorrectError
+    UserNotFoundError, UserPasswordIncorrectError
 )
 
 from .utils import test_raise_unhandled_exception
@@ -21,7 +21,7 @@ def test_user_not_found_in_database(exception_handler: LoginUserExceptionHandler
     with pytest.raises(
         HTTPException, match="Invalid email or password."
     ) as http_error:
-        exception_handler.handle(UserNotFoundInDatabaseError(field="id", value=1))
+        exception_handler.handle(UserNotFoundError(field="id", value=1))
     assert http_error.value.status_code == HTTPStatus.UNAUTHORIZED
 
 

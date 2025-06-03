@@ -1,7 +1,7 @@
 from shortener.domain.shared.pagination import PaginatedResult
 
 from shortener.domain.user import User, UserRepository
-from shortener.domain.user.exceptions import UserNotFoundInDatabaseError
+from shortener.domain.user.exceptions import UserNotFoundError
 
 from .database import MockDatabase, IdManager
 
@@ -17,7 +17,7 @@ class MockUserRepository(UserRepository):
     
     async def update(self, user: User) -> User:
         if not self.database.exists_by_index(user.id):
-            raise UserNotFoundInDatabaseError(value=user.id, field="id")
+            raise UserNotFoundError(value=user.id, field="id")
 
         user_dict = self.database.get_by_index(user.id)
         user_dict["email"] = user.email
@@ -62,7 +62,7 @@ class MockUserRepository(UserRepository):
         user_dict = self.database.delete_by_index(id)
         if user_dict:
             return self._to_domain(user_dict)
-        raise UserNotFoundInDatabaseError(value=id, field="id")
+        raise UserNotFoundError(value=id, field="id")
             
     def _to_dict(self, user: User) -> dict:
         return {

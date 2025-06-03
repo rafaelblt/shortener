@@ -8,7 +8,7 @@ from shortener.domain.services.exceptions import (
     AuthTokenInvalidError
 )
 from shortener.domain.user.exceptions import (
-    UserNotFoundInDatabaseError,
+    UserNotFoundError,
     UserStatusInvalidToVerifyEmailError
 )
 from shortener.domain.user.fields import UserStatus
@@ -35,7 +35,7 @@ def test_user_not_found(exception_handler: VerifyEmailExceptionHandler):
     with pytest.raises(
         HTTPException, match="Invalid email verification token."
     ) as http_error:
-        exception_handler.handle(UserNotFoundInDatabaseError(field="e", value="t"))
+        exception_handler.handle(UserNotFoundError(field="e", value="t"))
     assert http_error.value.status_code == HTTPStatus.BAD_REQUEST
 
 

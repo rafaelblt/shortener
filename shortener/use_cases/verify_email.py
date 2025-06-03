@@ -1,4 +1,4 @@
-from shortener.domain.user.exceptions import UserNotFoundInDatabaseError
+from shortener.domain.user.exceptions import UserNotFoundError
 
 from shortener.domain.services.auth_token import AuthTokenService
 
@@ -34,7 +34,7 @@ class VerifyEmailUseCase:
         Raises:
             AuthTokenInvalidError: The token is invalid.
             AuthTokenExpiredError: The token is expired.
-            UserNotFoundInDatabaseError: If the user is not found in the database.
+            UserNotFoundError: If the user is not found in the database.
             UserStatusInvalidToVerifyEmailError: If the user status is not 
                 UNVERIFIED_EMAIL.
         """
@@ -42,7 +42,7 @@ class VerifyEmailUseCase:
         
         user = await self.user_repository.get_by_email(email)
         if user is None:
-            raise UserNotFoundInDatabaseError(field="email", value=email)
+            raise UserNotFoundError(field="email", value=email)
         
         user.verify_email()
         await self.user_repository.update(user)

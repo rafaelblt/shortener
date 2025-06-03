@@ -3,7 +3,7 @@ import pytest
 from shortener.domain.user import User
 from shortener.domain.user.fields import HashedPassword
 from shortener.domain.user.exceptions import (
-    UserNotFoundInDatabaseError, UserPasswordIncorrectError
+    UserNotFoundError, UserPasswordIncorrectError
 )
 
 from shortener.use_cases.login_user import LoginUserUseCase
@@ -34,7 +34,7 @@ async def test_retrieved_token(use_case: LoginUserUseCase, normal_user: User):
 async def test_raises_user_not_found_in_database(
     use_case: LoginUserUseCase, normal_user: User
 ):
-    with pytest.raises(UserNotFoundInDatabaseError) as error:
+    with pytest.raises(UserNotFoundError) as error:
         await use_case.execute(email=normal_user.email, password="123")
     assert error.value.value == normal_user.email
     assert error.value.field == "email"
