@@ -1,6 +1,6 @@
 from typing import Optional
 
-from .exceptions import PlanAttributeTypeError
+from .exceptions import PlanAttributeTypeError, PlanIdIsNotIntError
 
 
 class Plan:
@@ -57,5 +57,5 @@ class Plan:
 
     def get_int_id(self) -> int:
         if self.id is None:
-            raise ValueError("Plan id is None.")
+            raise PlanIdIsNotIntError(value=self.id)
         return self.id
