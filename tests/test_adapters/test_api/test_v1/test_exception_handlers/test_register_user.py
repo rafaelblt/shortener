@@ -4,7 +4,7 @@ import re
 from http import HTTPStatus
 from fastapi import HTTPException
 
-from shortener.domain.plan.exceptions import PlanNotFoundInDatabaseError
+from shortener.domain.plan.exceptions import PlanNotFoundError
 from shortener.domain.user.exceptions import EmailAlreadyExistsError
 from shortener.domain.services.exceptions import (
     PasswordMissingDigitError,
@@ -29,7 +29,7 @@ def test_plan_not_found_in_database(exception_handler: RegisterUserExceptionHand
     with pytest.raises(
         HTTPException, match="There is no plan with the given id: 1."
     ) as http_error:
-        exception_handler.handle(PlanNotFoundInDatabaseError(plan_id=1))
+        exception_handler.handle(PlanNotFoundError(plan_id=1))
     assert http_error.value.status_code == HTTPStatus.BAD_REQUEST
 
 

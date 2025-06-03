@@ -30,7 +30,7 @@ class PlanRepository(ABC):
             Plan: The updated entity.
         
         Raises:
-            PlanNotFoundInDatabaseError: Plan not found in database.
+            PlanNotFoundError: Plan not found in database.
         """
         pass
 

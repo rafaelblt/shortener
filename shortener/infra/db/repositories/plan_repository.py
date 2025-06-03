@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shortener.domain.plan import Plan, PlanRepository
-from shortener.domain.plan.exceptions import PlanNotFoundInDatabaseError
+from shortener.domain.plan.exceptions import PlanNotFoundError
 
 from shortener.infra.db.mappers import (
     map_plan_model_to_domain, map_plan_domain_to_model
@@ -31,11 +31,11 @@ class SQLAlchemyPlanRepository(PlanRepository):
         return self._to_domain(model)
 
     async def update(self, plan: Plan) -> Plan:
-        existing_model = await self._get_model_by_id(plan.id)
+        plan_id = plan.get_int_id()
+        
+        existing_model = await self._get_model_by_id(plan_id)
         if existing_model is None:
-            raise PlanNotFoundInDatabaseError(
-                f"Plan with id={plan.id} not found in database."
-            )
+            raise PlanNotFoundError(plan_id=plan_id)
 
         existing_model.name = plan.name
         existing_model.max_shorturls = plan.max_shorturls
@@ -56,9 +56,7 @@ class SQLAlchemyPlanRepository(PlanRepository):
     async def delete_by_id(self, id: int) -> Plan:
         model = await self._get_model_by_id(id)
         if model is None:
-            raise PlanNotFoundInDatabaseError(
-                f"Plan with id={id} not found in database."
-            )
+            raise PlanNotFoundError(plan_id=id)
 
         await self.session.delete(model)
         await self.session.commit()

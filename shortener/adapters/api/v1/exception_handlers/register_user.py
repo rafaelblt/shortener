@@ -4,7 +4,7 @@ from http import HTTPStatus
 
 from fastapi.exceptions import HTTPException
 
-from shortener.domain.plan.exceptions import PlanNotFoundInDatabaseError
+from shortener.domain.plan.exceptions import PlanNotFoundError
 from shortener.domain.user.exceptions import EmailAlreadyExistsError
 from shortener.domain.services.exceptions import (
     PasswordMissingDigitError,
@@ -22,7 +22,7 @@ class RegisterUserExceptionHandler(ExceptionHandler):
 
     @staticmethod
     def handle(error: Exception) -> NoReturn:
-        if isinstance(error, PlanNotFoundInDatabaseError):
+        if isinstance(error, PlanNotFoundError):
             raise HTTPException(
                 status_code=HTTPStatus.BAD_REQUEST,
                 detail=f"There is no plan with the given id: {error.plan_id}."

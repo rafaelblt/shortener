@@ -10,7 +10,7 @@ from shortener.domain.services.send_email import SendEmailService
 from shortener.domain.services.email_template_renderer import EmailTemplateRenderer
 
 from shortener.domain.plan import Plan, PlanRepository
-from shortener.domain.plan.exceptions import PlanNotFoundInDatabaseError
+from shortener.domain.plan.exceptions import PlanNotFoundError
 
 from shortener.domain.user import User, UserRepository
 from shortener.domain.user.fields import Email, Name, HashedPassword, UserStatus
@@ -80,7 +80,7 @@ class RegisterUserUseCase:
             User: The object created.
         
         Raises: 
-            PlanNotFoundInDatabaseError: If the plan_id is not found in repository.
+            PlanNotFoundError: If the plan_id is not found in repository.
             ValidationError: If any of the data provided is invalid.
         """
         validations_coro = self._get_validations_coro(
@@ -97,7 +97,7 @@ class RegisterUserUseCase:
     async def _get_plan(self, plan_id: int) -> Plan:
         plan = await self.plan_repository.get_by_id(plan_id)
         if plan is None:
-            raise PlanNotFoundInDatabaseError(plan_id=plan_id)
+            raise PlanNotFoundError(plan_id=plan_id)
         return plan
 
     def _get_validations_coro(self, email: Email, name: Name, password: str):

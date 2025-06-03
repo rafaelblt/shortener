@@ -1,7 +1,5 @@
-from shortener.domain.shared.pagination import PaginatedResult
-
 from shortener.domain.plan import Plan, PlanRepository
-from shortener.domain.plan.exceptions import PlanNotFoundInDatabaseError
+from shortener.domain.plan.exceptions import PlanNotFoundError
 
 from .database import MockDatabase, IdManager
 
@@ -16,12 +14,12 @@ class MockPlanRepository(PlanRepository):
         return self._to_domain(plan_dict)
     
     async def update(self, plan: Plan) -> Plan:
-        if not self.database.exists_by_index(plan.id):
-            raise PlanNotFoundInDatabaseError(
-                f"Plan with id={plan.id} not found in MockPlanRepository."
-            )
+        plan_id = plan.get_int_id()
 
-        plan_dict = self.database.get_by_index(plan.id)
+        if not self.database.exists_by_index(plan_id):
+            raise PlanNotFoundError(plan_id=plan_id)
+
+        plan_dict = self.database.get_by_index(plan_id)
         plan_dict["name"] = plan.name
         plan_dict["max_shorturls"] = plan.max_shorturls
     
@@ -40,9 +38,7 @@ class MockPlanRepository(PlanRepository):
         plan_dict = self.database.delete_by_index(id)
         if plan_dict:
             return self._to_domain(plan_dict)
-        raise PlanNotFoundInDatabaseError(
-            f"Plan with id={id} not found in MockPlanRepository."
-        )
+        raise PlanNotFoundError(plan_id=id)
             
     def _to_dict(self, plan: Plan) -> dict:
         return {

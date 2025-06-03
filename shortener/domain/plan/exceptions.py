@@ -6,7 +6,7 @@ class PlanAttributeTypeError(TypeError):
         )
 
 
-class PlanNotFoundInDatabaseError(Exception):
+class PlanNotFoundError(Exception):
     def __init__(self, plan_id: int):
         self.plan_id = plan_id
         super().__init__(f"Plan with id={plan_id} not found.")

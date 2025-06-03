@@ -10,7 +10,7 @@ from shortener.domain.services.email_template_renderer import EmailTemplateRende
 from shortener.domain.services.exceptions import PasswordValidationError
 
 from shortener.domain.plan import Plan
-from shortener.domain.plan.exceptions import PlanNotFoundInDatabaseError
+from shortener.domain.plan.exceptions import PlanNotFoundError
 
 from shortener.domain.user import User
 from shortener.domain.user.fields import Email, Name, UserStatus
@@ -93,7 +93,7 @@ async def test_instance_retrieved(
 async def test_raises_plan_not_found(
     use_case: RegisterUserUseCase, normal_user: User
 ):
-    with pytest.raises(PlanNotFoundInDatabaseError) as error:
+    with pytest.raises(PlanNotFoundError) as error:
         await use_case.execute(
             email=normal_user.email, 
             name=normal_user.name, 

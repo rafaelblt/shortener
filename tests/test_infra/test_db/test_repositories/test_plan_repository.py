@@ -2,7 +2,7 @@ import pytest
 import pytest_asyncio
 
 from shortener.domain.plan import Plan
-from shortener.domain.plan.exceptions import PlanNotFoundInDatabaseError
+from shortener.domain.plan.exceptions import PlanNotFoundError, PlanIdIsNotIntError
 
 from shortener.infra.db.repositories import SQLAlchemyPlanRepository
 
@@ -37,11 +37,9 @@ async def test_update(repository: SQLAlchemyPlanRepository, default_plan: Plan):
 async def test_update_plan_without_id_raises_error(
     repository: SQLAlchemyPlanRepository, default_plan: Plan
 ):
-    with pytest.raises(
-        PlanNotFoundInDatabaseError, 
-        match=f"Plan with id={default_plan.id} not found in database."
-    ):
+    with pytest.raises(PlanIdIsNotIntError) as error:
         await repository.update(default_plan)
+    assert error.value.value == None
 
 
 @pytest.mark.asyncio
@@ -49,11 +47,9 @@ async def test_update_plan_with_id_non_existent_raises_error(
     repository: SQLAlchemyPlanRepository, default_plan: Plan
 ):
     default_plan._id = 1
-    with pytest.raises(
-        PlanNotFoundInDatabaseError, 
-        match=f"Plan with id={default_plan.id} not found in database."
-    ):
+    with pytest.raises(PlanNotFoundError) as error:
         await repository.update(default_plan)
+    assert error.value.plan_id == default_plan.id
 
 
 @pytest.mark.asyncio
@@ -116,8 +112,6 @@ async def test_delete_by_id(
 async def test_delete_by_id_non_existent_plan(
     repository: SQLAlchemyPlanRepository
 ):
-    with pytest.raises(
-        PlanNotFoundInDatabaseError, 
-        match=f"Plan with id=1 not found in database."
-    ):
+    with pytest.raises(PlanNotFoundError) as error:
         await repository.delete_by_id(1)
+    assert error.value.plan_id == 1
