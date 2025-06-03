@@ -9,6 +9,12 @@ class UserAttributeTypeError(TypeError):
             f"The User {attr} must be an instance of {type_expected}, got "
             f"{type(got).__name__}"
         )
+class UserIdIsNotIntError(ValueError):
+    def __init__(self, value):
+        self.value = value
+        super().__init__(
+            f"The User id is not an integer. Value: {value} ({value.__class__.__name__})"
+        )
 
 
 class UserStatusInvalidToVerifyEmailError(Exception):
@@ -77,8 +83,8 @@ class EmailAlreadyExistsError(EmailValidationError):
 
 # User Repository Exceptions
 class UserRepositoryError(Exception): ...
-class UserNotFoundInDatabaseError(UserRepositoryError): 
+class UserNotFoundError(UserRepositoryError): 
     def __init__(self, value, field: str):
         self.value = value
         self.field = field
-        super().__init__(f"User with {field}={value} not found in the database.")
+        super().__init__(f"User with {field}={value} not found.")

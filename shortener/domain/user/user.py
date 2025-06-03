@@ -8,6 +8,7 @@ from .fields import Email, Name, UserStatus, HashedPassword
 from .exceptions import (
     UserAttributeTypeError as AttrTypeError,
     UserStatusInvalidToVerifyEmailError,
+    UserIdIsNotIntError,
     UserEmailNotVerifiedError,
     UserSuspendedError,
     UserBannedError,
@@ -229,6 +230,11 @@ class User:
     def update_last_login(self):
         self._last_login = utc_now()
 
+
+    def get_int_id(self) -> int:
+        if self.id is None:
+            raise UserIdIsNotIntError(value=self.id)
+        return self.id
 
     def get_datetime_last_login(self):
         if self.last_login is None:
