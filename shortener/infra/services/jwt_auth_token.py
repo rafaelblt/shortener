@@ -8,22 +8,18 @@ from shortener.domain.services.exceptions import (
     AuthTokenInvalidError,
     AuthTokenExpiredError
 )
-from shortener.infra.settings import (
-    JWT_AUTH_SECRET_KEY,
-    JWT_AUTH_TOKEN_ALGORITHM,
-    JWT_AUTH_TOKEN_EXPIRES_MINUTES
-)
+from shortener.infra import settings
 
 from shortener.domain.services.auth_token import AuthTokenService 
 
 
 class JwtAuthTokenService(AuthTokenService):
     def __init__(
-            self,
-            secret_key: str = JWT_AUTH_SECRET_KEY,
-            algorithm: str = JWT_AUTH_TOKEN_ALGORITHM,
-            expires_minutes: int = JWT_AUTH_TOKEN_EXPIRES_MINUTES
-        ):
+        self,
+        secret_key: str = settings.JWT_AUTH_SECRET_KEY,
+        algorithm: str = settings.JWT_AUTH_TOKEN_ALGORITHM,
+        expires_minutes: int = settings.JWT_AUTH_TOKEN_EXPIRES_MINUTES
+    ):
         self._secret_key = secret_key
         self._algorithm = algorithm
         self.expires_minutes = expires_minutes
