@@ -65,11 +65,6 @@ class User:
     def name(self):
         return self._name
     
-    @name.setter
-    def name(self, name):
-        self.validate_name(name)
-        self._name = name
-    
     @property
     def email(self):
         return self._email
@@ -221,6 +216,11 @@ class User:
         elif self.status == UserStatus.BANNED:
             raise UserBannedError()
 
+
+    def change_name(self, new_name: Name):
+        self.validate_name(new_name)
+        self._name = new_name
+
     def change_hashed_password(self, new_hashed_password: HashedPassword):
         self.validate_hashed_password(new_hashed_password)
         self._hashed_password = new_hashed_password
@@ -229,7 +229,9 @@ class User:
         self.validate_plan(new_plan)
         self._plan = new_plan
 
+
     def update_last_login(self):
+        """Updates the last_login attribute to the current UTC datetime."""
         self._last_login = utc_now()
 
 
