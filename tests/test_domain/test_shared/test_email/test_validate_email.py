@@ -1,7 +1,7 @@
 import pytest
 
-from shortener.domain.user.fields import Email
-from shortener.domain.user.exceptions import EmailInvalidError
+from shortener.domain.shared.email import Email
+from shortener.domain.shared.exceptions import EmailInvalidError
 
 
 @pytest.mark.parametrize("email", [

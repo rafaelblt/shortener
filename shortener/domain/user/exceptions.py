@@ -70,12 +70,7 @@ class NameInvalidPatternError(NameValidationError):
         )
 
 
-# Email Validation Exceptions
-class EmailValidationError(ValidationError): ...
-class EmailInvalidError(EmailValidationError):
-    def __init__(self, email: str):
-        super().__init__(f"The provided email '{email}' is invalid.")
-class EmailAlreadyExistsError(EmailValidationError):
+class EmailAlreadyExistsError(ValidationError):
     def __init__(self, email: str):
         self.email = email
         super().__init__(f"The provided email '{email}' already exists.")

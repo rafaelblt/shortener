@@ -1,6 +1,6 @@
 from email_validator import validate_email as lib_validate_email
 
-from shortener.domain.user.exceptions import EmailInvalidError
+from .exceptions import EmailInvalidError
 
 
 class Email(str):

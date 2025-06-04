@@ -1,5 +1,5 @@
 from shortener.domain.user.fields import Email
-from shortener.domain.user.exceptions import EmailInvalidError
+from shortener.domain.shared.exceptions import EmailInvalidError
 
 from shortener.adapters.api.v1.exceptions import get_pydantic_email_invalid_error
 

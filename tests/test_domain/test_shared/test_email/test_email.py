@@ -1,6 +1,6 @@
 import pytest
-from shortener.domain.user.fields.email import Email
-from shortener.domain.user.exceptions import EmailInvalidError
+from shortener.domain.shared.email import Email
+from shortener.domain.shared.exceptions import EmailInvalidError
 
 
 def test_new_email():

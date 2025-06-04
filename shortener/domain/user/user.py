@@ -2,9 +2,11 @@ from datetime import datetime
 from typing import Optional
 
 from shortener.domain.shared.datetime_utils import is_utc, utc_now
+from shortener.domain.shared.email import Email
+
 from shortener.domain.plan import Plan
 
-from .fields import Email, Name, UserStatus, HashedPassword
+from .fields import Name, UserStatus, HashedPassword
 from .exceptions import (
     UserAttributeTypeError as AttrTypeError,
     UserStatusInvalidToVerifyEmailError,
