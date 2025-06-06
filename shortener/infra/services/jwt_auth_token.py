@@ -8,7 +8,7 @@ from shortener.domain.services.exceptions import (
     AuthTokenInvalidError,
     AuthTokenExpiredError
 )
-from shortener.infra import settings
+from shortener.infra.settings import settings
 
 from shortener.domain.services.auth_token import AuthTokenService 
 

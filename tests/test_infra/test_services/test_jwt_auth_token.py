@@ -3,11 +3,7 @@ import pytest
 from shortener.domain.services.exceptions import (
     AuthTokenExpiredError, AuthTokenInvalidError
 )
-from shortener.infra.settings import (
-    JWT_AUTH_SECRET_KEY,
-    JWT_AUTH_TOKEN_ALGORITHM,
-    JWT_AUTH_TOKEN_EXPIRES_MINUTES
-)
+from shortener.infra.settings import settings
 
 from shortener.infra.services.jwt_auth_token import JwtAuthTokenService
 
@@ -19,17 +15,17 @@ def service():
 
 def test_attr_default_secret_key(service: JwtAuthTokenService):
     assert hasattr(service, "_secret_key")
-    assert service._secret_key == JWT_AUTH_SECRET_KEY
+    assert service._secret_key == settings.JWT_AUTH_SECRET_KEY
 
 
 def test_attr_default_algorithm(service: JwtAuthTokenService):
     assert hasattr(service, "_algorithm")
-    assert service._algorithm == JWT_AUTH_TOKEN_ALGORITHM
+    assert service._algorithm == settings.JWT_AUTH_TOKEN_ALGORITHM
 
 
 def test_attr_default_expires_minutes(service: JwtAuthTokenService):
     assert hasattr(service, "expires_minutes")
-    assert service.expires_minutes == JWT_AUTH_TOKEN_EXPIRES_MINUTES
+    assert service.expires_minutes == settings.JWT_AUTH_TOKEN_EXPIRES_MINUTES
 
 
 def test_method_generate_token(service: JwtAuthTokenService):
