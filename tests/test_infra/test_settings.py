@@ -10,8 +10,8 @@ from shortener.infra.settings import Settings
 
 @pytest.fixture
 def settings():
-    os.putenv("SENDGRID_API_KEY", "apikey")
-    os.putenv("SENDGRID_FROM_EMAIL", "from")
+    os.environ["SENDGRID_API_KEY"] = "apikey"
+    os.environ["SENDGRID_FROM_EMAIL"] = "from@gmail.com"
     return Settings()
 
 
@@ -47,7 +47,7 @@ def test_sendgrid_api_key(settings: Settings):
 
 def test_sendgrid_from_email(settings: Settings):
     assert isinstance(settings.SENDGRID_FROM_EMAIL, Email)
-    assert settings.SENDGRID_FROM_EMAIL == "from"
+    assert settings.SENDGRID_FROM_EMAIL == "from@gmail.com"
 
 
 @pytest.mark.parametrize(
