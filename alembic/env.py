@@ -7,7 +7,7 @@ from sqlalchemy import pool
 
 from alembic import context
 
-from shortener.infra.settings import ALEMBIC_DATABASE_URL
+from shortener.infra.settings import settings
 from shortener.infra.db.models import *
 
 
@@ -15,7 +15,7 @@ from shortener.infra.db.models import *
 # access to the values within the .ini file in use.
 config = context.config
 
-config.set_main_option("sqlalchemy.url", ALEMBIC_DATABASE_URL)
+config.set_main_option("sqlalchemy.url", settings.ALEMBIC_DATABASE_URL)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
