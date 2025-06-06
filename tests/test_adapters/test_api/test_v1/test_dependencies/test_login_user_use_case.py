@@ -4,7 +4,7 @@ from fastapi.params import Depends
 
 from shortener.infra.settings import settings
 
-from shortener.infra.services.password_hasher import PasslibPasswordHasher
+from shortener.infra.services.passlib_hasher import PasslibPasswordHasher
 from shortener.infra.services.jwt_auth_token import JwtAuthTokenService
 
 from shortener.use_cases import LoginUserUseCase

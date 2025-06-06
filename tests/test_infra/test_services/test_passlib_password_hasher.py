@@ -2,7 +2,7 @@ import pytest
 
 from passlib.context import CryptContext
 
-from shortener.infra.services.password_hasher import PasslibPasswordHasher
+from shortener.infra.services.passlib_hasher import PasslibPasswordHasher
 
 
 @pytest.fixture

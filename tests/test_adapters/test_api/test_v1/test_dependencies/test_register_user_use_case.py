@@ -3,7 +3,7 @@ import pytest
 from fastapi.params import Depends
 
 from shortener.domain.services.password_validator import PasswordValidatorService
-from shortener.infra.services.password_hasher import PasslibPasswordHasher
+from shortener.infra.services.passlib_hasher import PasslibPasswordHasher
 from shortener.infra.services.user_validators import EmailExistsValidator
 
 from shortener.use_cases import RegisterUserUseCase
