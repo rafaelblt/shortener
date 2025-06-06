@@ -9,7 +9,7 @@ from shortener.domain.plan import Plan
 
 from shortener.domain.user import User
 from shortener.domain.user.fields import Email, Name, HashedPassword, UserStatus
-from shortener.domain.user.exceptions import UserNotFoundError
+from shortener.domain.user.exceptions import UserNotFoundError, UserIdIsNotIntError
 
 from shortener.infra.db.repositories import SQLAlchemyUserRepository
 
@@ -22,9 +22,7 @@ async def repository(sqlalchemy_user_repository):
 
 
 @pytest.mark.asyncio
-async def test_add(
-    repository: SQLAlchemyUserRepository, normal_user: User
-):
+async def test_add(repository: SQLAlchemyUserRepository, normal_user: User):
     saved_plan = await get_persistent_plan(
         session=repository.session, plan=normal_user.plan
     )
@@ -89,10 +87,9 @@ async def test_update(
 async def test_update_user_without_id_raises_error(
     repository: SQLAlchemyUserRepository, normal_user: User
 ):
-    with pytest.raises(UserNotFoundError) as error:
+    with pytest.raises(UserIdIsNotIntError) as error:
         await repository.update(normal_user)
     assert error.value.value == normal_user.id
-    assert error.value.field == "id"
 
 
 @pytest.mark.asyncio
