@@ -6,7 +6,7 @@ from shortener.domain.shared.validator import Validator
 from shortener.domain.shared.exceptions import ValidationError
 
 from shortener.domain.services.password_validator import PasswordValidatorService
-from shortener.domain.services.email_template_renderer import EmailTemplateRenderer
+from shortener.domain.services.email_template import EmailTemplate
 from shortener.domain.services.exceptions import PasswordValidationError
 
 from shortener.domain.plan import Plan
@@ -30,7 +30,7 @@ class MockNameValidator(Validator):
             raise ValidationError("name validation error")
         
 
-class MockEmailTemplateRenderer(EmailTemplateRenderer):
+class MockEmailTemplate(EmailTemplate):
     def render_subject(self, **kwargs) -> str:
         return "Verification Email"
 
@@ -63,7 +63,7 @@ def use_case(
         auth_token_service=mock_auth_token_service,
         send_email_service=mock_send_email_service,
         password_hasher=mock_password_hasher,
-        email_template_renderer=MockEmailTemplateRenderer(),
+        email_template_renderer=MockEmailTemplate(),
         validators={
             "email": [MockEmailValidator()],
             "name": [MockNameValidator()],
@@ -187,7 +187,7 @@ async def test_if_email_is_sent_with_token(
     assert isinstance(use_case.send_email_service, MockSendEmailService)
     assert isinstance(use_case.auth_token_service, MockAuthTokenService)
     
-    template = MockEmailTemplateRenderer()
+    template = MockEmailTemplate()
     token = use_case.auth_token_service.mock_data["generated_tokens"][0]
     expires_minutes = use_case.auth_token_service.expires_minutes
     

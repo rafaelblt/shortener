@@ -7,7 +7,7 @@ from shortener.domain.shared.validator import Validator
 from shortener.domain.services.password_hasher import PasswordHasherService
 from shortener.domain.services.auth_token import AuthTokenService
 from shortener.domain.services.send_email import SendEmailService
-from shortener.domain.services.email_template_renderer import EmailTemplateRenderer
+from shortener.domain.services.email_template import EmailTemplate
 
 from shortener.domain.plan import Plan, PlanRepository
 from shortener.domain.plan.exceptions import PlanNotFoundError
@@ -26,7 +26,7 @@ class RegisterUserUseCase:
         auth_token_service: AuthTokenService,
         send_email_service: SendEmailService,
         password_hasher: PasswordHasherService,
-        email_template_renderer: EmailTemplateRenderer,
+        email_template_renderer: EmailTemplate,
         validators: dict[str, list[Validator]]
     ):
         """

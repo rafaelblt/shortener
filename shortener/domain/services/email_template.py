@@ -2,8 +2,8 @@ from abc import ABC, abstractmethod
 from typing import Optional
 
 
-class EmailTemplateRenderer(ABC):
-    """Template renderer service for emails"""
+class EmailTemplate(ABC):
+    """Template service for emails"""
 
     @abstractmethod
     def render_subject(self, **kwargs) -> str:
