@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Optional
 
 
 class EmailTemplateRenderer(ABC):
@@ -12,8 +13,15 @@ class EmailTemplateRenderer(ABC):
         pass
 
     @abstractmethod
-    def render_body(self, **kwargs) -> str:
+    def render_plain_body(self, **kwargs) -> str:
         """
-        Render the body of the email using the provided keyword arguments.
+        Render the plain body of the email using the provided keyword arguments.
+        """
+        pass
+
+    @abstractmethod
+    def render_html_body(self, **kwargs) -> Optional[str]:
+        """
+        Render the HTML body of the email using the provided keyword arguments.
         """
         pass
