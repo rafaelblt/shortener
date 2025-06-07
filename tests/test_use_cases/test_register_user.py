@@ -34,11 +34,19 @@ class MockEmailTemplateRenderer(EmailTemplateRenderer):
     def render_subject(self, **kwargs) -> str:
         return "Verification Email"
 
-    def render_body(self, **kwargs) -> str:
+    def render_plain_body(self, **kwargs) -> str:
         token = kwargs.pop("token")
         name = kwargs.pop("name")
         expires_minutes = kwargs.pop("expires_minutes")
         return f"Token: {token}, name: {name}, expires_minutes: {expires_minutes}"
+    
+    def render_html_body(self, **kwargs) -> str:
+        token = kwargs.pop("token")
+        name = kwargs.pop("name")
+        expires_minutes = kwargs.pop("expires_minutes")
+        return (
+            f"<HTML> Token: {token}, name: {name}, expires_minutes: {expires_minutes}"
+        )
 
 
 @pytest.fixture
@@ -184,8 +192,11 @@ async def test_if_email_is_sent_with_token(
     expires_minutes = use_case.auth_token_service.expires_minutes
     
     email_log = use_case.send_email_service.mock_logs[0]
-    assert email_log["receiver"] == normal_user.email
+    assert email_log["to"] == normal_user.email
     assert email_log["subject"] == template.render_subject()
-    assert email_log["body"] == template.render_body(
+    assert email_log["plain_body"] == template.render_plain_body(
+        token=token, expires_minutes=expires_minutes, name=normal_user.name
+    )
+    assert email_log["html_body"] == template.render_html_body(
         token=token, expires_minutes=expires_minutes, name=normal_user.name
     )
