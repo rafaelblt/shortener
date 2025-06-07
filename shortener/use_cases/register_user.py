@@ -129,13 +129,16 @@ class RegisterUserUseCase:
 
     async def _send_verification_email(self, email: Email, name: Name):
         token = self.auth_token_service.generate_token(email)
+        template_data = {
+            "name": name,
+            "token": token,
+            "expires_minutes": self.auth_token_service.expires_minutes
+        }
+
         subject = self.email_template.render_subject()
-        body = self.email_template.render_body(
-            name=name,
-            token=token,
-            expires_minutes=self.auth_token_service.expires_minutes
-        )
+        plain_body = self.email_template.render_plain_body(**template_data)
+        html_body = self.email_template.render_html_body(**template_data)
 
         await self.send_email_service.send_email(
-            receiver=email, subject=subject, body=body
+            to=email, subject=subject, plain_body=plain_body, html_body=html_body
         )
