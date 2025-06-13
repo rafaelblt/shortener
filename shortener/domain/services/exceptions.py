@@ -12,6 +12,11 @@ class AuthTokenInvalidError(AuthTokenError):
 
 
 
+class MissingTemplateVariableError(Exception):
+    def __init__(self, var_name: str):
+        super().__init__(f"Missing required template variable: '{var_name}'")
+
+
 class PasswordValidationError(ValidationError): ...
 class PasswordTooShortError(PasswordValidationError):
     def __init__(self, value: str, min_length: int):
