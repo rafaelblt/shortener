@@ -14,6 +14,7 @@ class AuthTokenInvalidError(AuthTokenError):
 
 class MissingTemplateVariableError(Exception):
     def __init__(self, var_names: list[str]):
+        self.var_names = var_names
         super().__init__(f"Missing required template variables: {var_names}")
 
 
