@@ -6,6 +6,7 @@ from shortener.infra.exceptions import MissingEnvironmentVariableError
 
 class Settings:
     def __init__(self):
+        self._api_base_url = self.get_api_base_url()
         self._database_url = self.get_database_url()
         self._alembic_database_url = self.get_alembic_database_url()
         self._jwt_auth_secret_key = self.get_jwt_auth_secret_key()
@@ -13,6 +14,14 @@ class Settings:
         self._jwt_auth_token_expires_minutes = self.get_jwt_auth_token_expires_minutes()
         self._sendgrid_api_key = self.get_sendgrid_api_key()
         self._sendgrid_from_email = self.get_sendgrid_from_email()
+
+    @property
+    def APP_NAME(self) -> str:
+        return "Shortener"
+
+    @property
+    def API_BASE_URL(self) -> str:
+        return self._api_base_url
 
     @property
     def DATABASE_URL(self) -> str:
@@ -41,6 +50,9 @@ class Settings:
     @property
     def SENDGRID_FROM_EMAIL(self) -> Email:
         return self._sendgrid_from_email
+
+    def get_api_base_url(self) -> str:
+        return os.getenv("API_BASE_URL", "https://testshort.com")
 
     def get_database_url(self) -> str:
         return os.getenv("DATABASE_URL", "sqlite+aiosqlite:///default.db")

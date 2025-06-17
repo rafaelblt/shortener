@@ -15,6 +15,14 @@ def settings():
     return Settings()
 
 
+def test_app_name(settings: Settings):
+    assert settings.APP_NAME == "Shortener"
+
+
+def test_api_base_url(settings: Settings):
+    assert settings.API_BASE_URL == "https://testshort.com"
+
+
 def test_database_url(settings: Settings):
     assert isinstance(settings.DATABASE_URL, str)
     assert settings.DATABASE_URL == "sqlite+aiosqlite:///default.db"
