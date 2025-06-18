@@ -30,19 +30,24 @@ class EmailTemplate(ABC):
         """
         pass
 
-    def _get_context(self, **kwargs) -> dict[str, str]:
-        context = {}
+    def process_context(self, context: dict[str, str]) -> dict[str, str]:
+        processed_ctx = {}
         missing_vars = []
-        for field in self.REQUIRED_CONTEXT_VARS:
+        input_ctx = context.copy()
+
+        for var in self.REQUIRED_CONTEXT_VARS:
             try:
-                context[field] = kwargs.pop(field)
+                processed_ctx[var] = input_ctx.pop(var)
             except KeyError:
-                missing_vars.append(field)
+                missing_vars.append(var)
+        
         if missing_vars:
             raise MissingTemplateVariableError(missing_vars)
-        for extra_field in kwargs:
+        
+        for extra_var in input_ctx:
             try:
-                context[extra_field] = kwargs.get(extra_field)
+                processed_ctx[extra_var] = input_ctx.get(extra_var)
             except KeyError:
                 continue
-        return context
+        
+        return processed_ctx
