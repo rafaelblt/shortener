@@ -3,6 +3,7 @@ import asyncio
 from types import CoroutineType
 
 from shortener.domain.shared.validator import Validator
+from shortener.domain.shared.language import Language
 
 from shortener.domain.services.password_hasher import PasswordHasherService
 from shortener.domain.services.auth_token import AuthTokenService
@@ -26,7 +27,7 @@ class RegisterUserUseCase:
         auth_token_service: AuthTokenService,
         send_email_service: SendEmailService,
         password_hasher: PasswordHasherService,
-        email_template_renderer: EmailTemplate,
+        email_template: EmailTemplate,
         validators: dict[str, list[Validator]]
     ):
         """
@@ -55,7 +56,7 @@ class RegisterUserUseCase:
         self.auth_token_service = auth_token_service
         self.send_email_service = send_email_service
         self.password_hasher = password_hasher
-        self.email_template = email_template_renderer
+        self.email_template = email_template
         self.validators = validators
 
     async def execute(
@@ -64,6 +65,7 @@ class RegisterUserUseCase:
         name: Name,
         plan_id: int,
         password: str,
+        lang: Language
     ) -> User:
         """
         It performs the validations, creates the user, saves with the 
@@ -75,6 +77,7 @@ class RegisterUserUseCase:
             name (Name): The name of user.
             plan_id (int): Plan ID of the user.
             password (str): Plain password of the user.
+            lang (Language): The language for translation.
         
         Returns:
             User: The object created.
@@ -90,7 +93,7 @@ class RegisterUserUseCase:
 
         plan = results[0]
         new_user = await self._create_user(email, name, password, plan)
-        await self._send_verification_email(email, name)
+        await self._send_verification_email(email, name, lang)
 
         return new_user
 
@@ -127,17 +130,19 @@ class RegisterUserUseCase:
         )
         return await self.user_repository.add(user)
 
-    async def _send_verification_email(self, email: Email, name: Name):
+    async def _send_verification_email(
+        self, email: Email, name: Name, lang: Language
+    ):
         token = self.auth_token_service.generate_token(email)
-        template_data = {
-            "name": name,
+        ctx = {
+            "user_name": name,
             "token": token,
             "expires_minutes": self.auth_token_service.expires_minutes
         }
 
-        subject = self.email_template.render_subject()
-        plain_body = self.email_template.render_plain_body(**template_data)
-        html_body = self.email_template.render_html_body(**template_data)
+        subject = self.email_template.render_subject(lang=lang, context=ctx)
+        plain_body = self.email_template.render_plain_body(lang=lang, context=ctx)
+        html_body = self.email_template.render_html_body(lang=lang, context=ctx)
 
         await self.send_email_service.send_email(
             to=email, subject=subject, plain_body=plain_body, html_body=html_body
