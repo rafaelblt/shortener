@@ -1,6 +1,7 @@
 import os
 
 from shortener.domain.shared.email import Email
+from shortener.domain.shared.language import Language
 from shortener.infra.exceptions import MissingEnvironmentVariableError
 
 
@@ -50,6 +51,11 @@ class Settings:
     @property
     def SENDGRID_FROM_EMAIL(self) -> Email:
         return self._sendgrid_from_email
+    
+    @property
+    def SUPPORTED_LANGUAGES(self) -> list[Language]:
+        return [Language.EN, Language.PT_BR]
+
 
     def get_api_base_url(self) -> str:
         return os.getenv("API_BASE_URL", "https://testshort.com")
