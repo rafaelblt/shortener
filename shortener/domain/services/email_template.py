@@ -1,8 +1,14 @@
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, TypedDict
 
 from shortener.domain.shared.language import Language
 from shortener.domain.services.exceptions import MissingTemplateVariableError
+
+
+class RenderResult(TypedDict):
+    subject: str
+    plain_body: str
+    html_body: Optional[str]
 
 
 class EmailTemplate(ABC):
@@ -10,44 +16,32 @@ class EmailTemplate(ABC):
     REQUIRED_CONTEXT_VARS: list[str]
 
     @abstractmethod
-    def render_subject(self, lang: Language, context: dict[str, str]) -> str:
+    def render(self, lang: Language, context: dict[str, str]) -> RenderResult:
         """
-        Render the subject of the email using the provided language and context.
+        Render the email template using the provided language and context.
+
+        Args:
+            lang (Language): The language for translating the template.
+            context(dict): The context to be loaded in the template.
+
+        Returns:
+            RenderResult: The TypedDict with the subject and bodies.
+
+        Raises:
+            MissingTemplateVariableError: A required variable is missing.
         """
         pass
-
-    @abstractmethod
-    def render_plain_body(self, lang: Language, context: dict[str, str]) -> str:
+    
+    def _validate_context(self, context: dict[str, str]) -> None:
         """
-        Render the plain body of the email using the provided language and context.
+        Returns `None` if the context is valid or raises 
+        `MissingTemplateVariableError` if the context has missing required vars.
         """
-        pass
-
-    @abstractmethod
-    def render_html_body(self, lang: Language, context: dict[str, str]) -> Optional[str]:
-        """
-        Render the HTML body of the email using the provided language and context.
-        """
-        pass
-
-    def process_context(self, context: dict[str, str]) -> dict[str, str]:
-        processed_ctx = {}
         missing_vars = []
-        input_ctx = context.copy()
 
         for var in self.REQUIRED_CONTEXT_VARS:
-            try:
-                processed_ctx[var] = input_ctx.pop(var)
-            except KeyError:
+            if var not in context:
                 missing_vars.append(var)
-        
+
         if missing_vars:
             raise MissingTemplateVariableError(missing_vars)
-        
-        for extra_var in input_ctx:
-            try:
-                processed_ctx[extra_var] = input_ctx.get(extra_var)
-            except KeyError:
-                continue
-        
-        return processed_ctx
