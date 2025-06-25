@@ -6,6 +6,7 @@ from .user_repository import MockUserRepository
 from .plan_repository import MockPlanRepository
 from .auth_token import MockAuthTokenService
 from .send_email import MockSendEmailService
+from .email_template import MockEmailTemplate, mock_email_template
 
 
 @pytest.fixture
