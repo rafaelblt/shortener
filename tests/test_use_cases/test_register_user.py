@@ -31,34 +31,14 @@ class MockNameValidator(Validator):
             raise ValidationError("name validation error")
         
 
-class MockEmailTemplate(EmailTemplate):
-    REQUIRED_CONTEXT_VARS = ["token", "user_name", "expires_minutes"]
-
-    def render_subject(self, lang: Language, context: dict[str, str]) -> str:
-        return f"{lang} => Verification Email"
-
-    def render_plain_body(self, lang: Language, context: dict[str, str]) -> str:
-        ctx = self.process_context(context)
-        token = ctx["token"]
-        user_name = ctx["user_name"]
-        expires_minutes = ctx["expires_minutes"]
-        return f"{token} // {user_name} // {expires_minutes} // {lang}"
-    
-    def render_html_body(self, lang: Language, context: dict[str, str]) -> str:
-        ctx = self.process_context(context)
-        token = ctx["token"]
-        user_name = ctx["user_name"]
-        expires_minutes = ctx["expires_minutes"]
-        return f"<html>{token} : {user_name} : {expires_minutes} : {lang}</html>"
-
-
 @pytest.fixture
 def use_case(
     mock_user_repository,
     mock_plan_repository,
     mock_password_hasher,
     mock_auth_token_service,
-    mock_send_email_service
+    mock_send_email_service,
+    mock_email_template,
 ):
     return RegisterUserUseCase(
         user_repository=mock_user_repository,
@@ -66,7 +46,7 @@ def use_case(
         auth_token_service=mock_auth_token_service,
         send_email_service=mock_send_email_service,
         password_hasher=mock_password_hasher,
-        email_template=MockEmailTemplate(),
+        email_template=mock_email_template,
         validators={
             "email": [MockEmailValidator()],
             "name": [MockNameValidator()],
@@ -180,7 +160,10 @@ async def test_if_user_is_saved_in_repository(
 
 @pytest.mark.asyncio
 async def test_if_email_is_sent_with_token(
-    use_case: RegisterUserUseCase, normal_user: User, default_plan: Plan
+    use_case: RegisterUserUseCase,
+    normal_user: User,
+    default_plan: Plan,
+    mock_email_template: EmailTemplate
 ):
     example_lang = Language.PT_BR
     plan = await use_case.plan_repository.add(default_plan)
@@ -194,19 +177,21 @@ async def test_if_email_is_sent_with_token(
 
     assert isinstance(use_case.auth_token_service, MockAuthTokenService)
     expected_context = {
+        "user_name": normal_user.name,
         "token": use_case.auth_token_service.mock_data["generated_tokens"][0],
-        "expires_minutes": use_case.auth_token_service.expires_minutes,
-        "user_name": normal_user.name
+        "expires_minutes": use_case.auth_token_service.expires_minutes
     }
 
-    template = MockEmailTemplate()
+    template_result = mock_email_template.render(example_lang, expected_context)
     expected_email_log = {
         "to": normal_user.email,
-        "subject": template.render_subject(example_lang, expected_context),
-        "plain_body": template.render_plain_body(example_lang, expected_context),
-        "html_body": template.render_html_body(example_lang, expected_context)
+        "subject": template_result["subject"],
+        "plain_body": template_result["plain_body"],
+        "html_body": template_result["html_body"]
     }
     
     assert isinstance(use_case.send_email_service, MockSendEmailService)
     email_log = use_case.send_email_service.mock_logs[0]
+    print(email_log)
+    print(expected_email_log)
     assert email_log == expected_email_log

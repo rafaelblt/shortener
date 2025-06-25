@@ -134,16 +134,17 @@ class RegisterUserUseCase:
         self, email: Email, name: Name, lang: Language
     ):
         token = self.auth_token_service.generate_token(email)
-        ctx = {
+        context = {
             "user_name": name,
             "token": token,
             "expires_minutes": self.auth_token_service.expires_minutes
         }
 
-        subject = self.email_template.render_subject(lang=lang, context=ctx)
-        plain_body = self.email_template.render_plain_body(lang=lang, context=ctx)
-        html_body = self.email_template.render_html_body(lang=lang, context=ctx)
+        result = self.email_template.render(lang=lang, context=context)
 
         await self.send_email_service.send_email(
-            to=email, subject=subject, plain_body=plain_body, html_body=html_body
+            to=email,
+            subject=result["subject"],
+            plain_body=result["plain_body"],
+            html_body=result["html_body"]
         )
