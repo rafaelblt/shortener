@@ -6,10 +6,12 @@ from shortener.infra.templates.jinja import JinjaEnvironment
 from shortener.infra.translations.i18n import get_translator
 
 
+APP_NAME = settings.APP_NAME
+
+
 class VerificationEmailTemplate(EmailTemplate):
     REQUIRED_CONTEXT_VARS = ["token", "user_name", "expires_minutes"]
     PLAIN_TEMPLATE_PATH = f"auth/verification_email.txt"
-    SUBJECT = "Verification Email - %(app_name)s"
 
     def __init__(self, jinja_env: JinjaEnvironment):
         self._jinja_env = jinja_env
@@ -19,10 +21,11 @@ class VerificationEmailTemplate(EmailTemplate):
         ctx = self.process_context(context)
         ctx["_"] = _
 
+        subject = _("Verification Email - %(app_name)s") % {"app_name": APP_NAME}
         plain_template = self._jinja_env.get_template(self.PLAIN_TEMPLATE_PATH)
         
         return RenderResult(
-            subject=self.SUBJECT % {"app_name": settings.APP_NAME},
+            subject=subject,
             plain_body=plain_template.render(ctx),
             html_body=None
         )
