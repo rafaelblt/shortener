@@ -1,0 +1,48 @@
+# Portuguese (Brazil) translations for PROJECT.
+# Copyright (C) 2025 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2025-06-26 18:55-0300\n"
+"PO-Revision-Date: 2025-06-16 17:38-0300\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: pt_BR\n"
+"Language-Team: pt_BR <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: shortener/infra/templates/jinja/auth/verification_email.py:24
+#, python-format
+msgid "Verification Email - %(app_name)s"
+msgstr "Verificação de Email - %(app_name)s"
+
+#: shortener/infra/templates/jinja/auth/verification_email.txt:1
+#, python-format
+msgid "Hello, %(user_name)s!"
+msgstr "Olá, %(user_name)s!"
+
+#: shortener/infra/templates/jinja/auth/verification_email.txt:3
+#, python-format
+msgid "Thank you for signing up for %(app_name)s."
+msgstr "Obrigado por se cadastrar em %(app_name)s."
+
+#: shortener/infra/templates/jinja/auth/verification_email.txt:4
+msgid "To verify your account, use the link below:"
+msgstr "Para completar a verificação da sua conta, clique no link abaixo:"
+
+#: shortener/infra/templates/jinja/auth/verification_email.txt:8
+#, python-format
+msgid "This link will expire in %(expires_minutes)s minutes."
+msgstr "Esse link vai expirar em %(expires_minutes)s minutos."
+
+#: shortener/infra/templates/jinja/auth/verification_email.txt:9
+msgid "If you did not create this account, please ignore this message."
+msgstr "Se você não solicitou esse cadastro, por favor ignore esse email."
+
