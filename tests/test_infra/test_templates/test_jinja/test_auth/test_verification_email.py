@@ -34,10 +34,6 @@ def test_attr_plain_template_path(template: VerificationEmailTemplate):
     assert template.PLAIN_TEMPLATE_PATH == f"auth/verification_email.txt"
 
 
-def test_attr_subject(template: VerificationEmailTemplate):
-    assert template.SUBJECT == "Verification Email - %(app_name)s"
-
-
 def test_template_in_jinja_env(template: VerificationEmailTemplate):
     jinja_env = JinjaEnvironment()
     assert jinja_env._env.loader
@@ -87,7 +83,7 @@ def test_method_render(
     plain_body = result["plain_body"]
     html_body = result["html_body"]
 
-    assert subject == template.SUBJECT % {"app_name": settings.APP_NAME}
+    assert subject == f"Verification Email - {settings.APP_NAME}"
     assert html_body is None
 
     jinja_env = JinjaEnvironment()._env
@@ -95,6 +91,27 @@ def test_method_render(
     token = required_context["token"]
     required_context["verification_link"] = template.get_verification_link(token)
     required_context["_"] = get_translator(Language.EN)
+    expected_plain_body = jinja_env.get_template(path).render(required_context)
+
+    assert plain_body == expected_plain_body
+
+
+def test_method_render_with_language_ptbr(
+    template: VerificationEmailTemplate, required_context: dict
+):
+    result = template.render(lang=Language.PT_BR, context=required_context)
+    subject = result["subject"]
+    plain_body = result["plain_body"]
+    html_body = result["html_body"]
+
+    assert subject == f"Verificação de Email - {settings.APP_NAME}"
+    assert html_body is None
+
+    jinja_env = JinjaEnvironment()._env
+    path = template.PLAIN_TEMPLATE_PATH
+    token = required_context["token"]
+    required_context["verification_link"] = template.get_verification_link(token)
+    required_context["_"] = get_translator(Language.PT_BR)
     expected_plain_body = jinja_env.get_template(path).render(required_context)
 
     assert plain_body == expected_plain_body
