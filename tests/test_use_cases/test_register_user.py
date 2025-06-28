@@ -193,9 +193,6 @@ async def test_if_email_is_sent_with_token(
         "plain_body": template_result["plain_body"],
         "html_body": template_result["html_body"]
     }
-    
-    assert isinstance(use_case.send_email_service, MockSendEmailService)
-    email_log = use_case.send_email_service.mock_logs[0]
-    print(email_log)
-    print(expected_email_log)
+
+    email_log = MockSendEmailService().mock_logs[0]
     assert email_log == expected_email_log
