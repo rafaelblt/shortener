@@ -1,6 +1,7 @@
 import asyncio
 
 from types import CoroutineType
+from typing import TypedDict
 
 from shortener.domain.shared.validator import Validator
 from shortener.domain.shared.language import Language
@@ -17,6 +18,12 @@ from shortener.domain.user import User, UserRepository
 from shortener.domain.user.fields import Email, Name, HashedPassword, UserStatus
 
 
+class ValidatorsMap(TypedDict):
+    email: list[Validator]
+    name: list[Validator]
+    password: list[Validator]
+
+
 class RegisterUserUseCase:
     """Use case for registering a new user in the system."""
 
@@ -28,7 +35,7 @@ class RegisterUserUseCase:
         send_email_service: SendEmailService,
         password_hasher: PasswordHasherService,
         email_template: EmailTemplate,
-        validators: dict[str, list[Validator]]
+        validators: ValidatorsMap
     ):
         """
         Args:
@@ -41,15 +48,6 @@ class RegisterUserUseCase:
             password_hasher (PasswordHasherService): Service to hash the password.
             validators (dict[str, list[Validator]]): Dictionary with validations
                 list for each field.
-        
-        Examples:
-            ```
-            validations = {
-                "email": [ValidatorX, ValidatorY],
-                "name": [ValidatorZ],
-                "password": []
-            }
-            ```
         """
         self.user_repository = user_repository
         self.plan_repository = plan_repository
