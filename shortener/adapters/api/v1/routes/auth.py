@@ -3,7 +3,6 @@ from typing import Annotated
 from http import HTTPStatus
 
 from fastapi import APIRouter, Depends
-from fastapi.responses import JSONResponse
 
 from shortener.use_cases import (
     LoginUserUseCase,
@@ -25,7 +24,8 @@ from shortener.adapters.api.v1.schemas.auth import (
 from shortener.adapters.api.v1.dependencies import (
     make_login_user_use_case,
     make_register_user_use_case,
-    make_verify_email_use_case
+    make_verify_email_use_case,
+    LanguageParserDependency
 )
 
 
@@ -80,16 +80,18 @@ async def login(
     "/register", status_code=HTTPStatus.CREATED, response_model=MessageResponse
 )
 async def register(
-    data: RegisterRequest,
+    request: RegisterRequest,
     use_case: RegisterUserUseCaseDependency,
-    exception_handler: RegisterUserExceptionHandlerDependency
+    exception_handler: RegisterUserExceptionHandlerDependency,
+    language: LanguageParserDependency
 ):
     try:
         user = await use_case.execute(
-            email=data.get_email(),
-            name=data.get_name(),
-            plan_id=data.plan_id,
-            password=data.password
+            email=request.get_email(),
+            name=request.get_name(),
+            plan_id=request.plan_id,
+            password=request.password,
+            lang=language
         )
     except Exception as error:
         exception_handler.handle(error)
