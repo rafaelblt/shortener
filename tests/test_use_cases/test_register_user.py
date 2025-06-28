@@ -6,10 +6,7 @@ from shortener.domain.shared.language import Language
 from shortener.domain.shared.validator import Validator
 from shortener.domain.shared.exceptions import ValidationError
 
-from shortener.domain.services.password_validator import PasswordStrengthValidator
 from shortener.domain.services.email_template import EmailTemplate
-from shortener.domain.services.exceptions import PasswordValidationError
-
 from shortener.domain.plan import Plan
 from shortener.domain.plan.exceptions import PlanNotFoundError
 
@@ -31,6 +28,12 @@ class MockNameValidator(Validator):
             raise ValidationError("name validation error")
         
 
+class MockPasswordValidator(Validator):
+    async def validate(self, value: Name):
+        if value == "joker123":
+            raise ValidationError("password validation error")
+        
+
 @pytest.fixture
 def use_case(
     mock_user_repository,
@@ -50,7 +53,7 @@ def use_case(
         validators={
             "email": [MockEmailValidator()],
             "name": [MockNameValidator()],
-            "password": [PasswordStrengthValidator()]
+            "password": [MockPasswordValidator()]
         }
     )
 
@@ -132,13 +135,14 @@ async def test_raises_name_validation_error(
 async def test_raises_password_validation_error(
     use_case: RegisterUserUseCase, normal_user: User, default_plan: Plan
 ):
+    joker_pwd = "joker123"
     plan = await use_case.plan_repository.add(default_plan)
-    with pytest.raises(PasswordValidationError):
+    with pytest.raises(ValidationError, match="password validation error"):
         await use_case.execute(
             email=normal_user.email, 
             name=normal_user.name, 
             plan_id=plan.get_int_id(),
-            password="123",
+            password=joker_pwd,
             lang=Language.EN
         )
 
