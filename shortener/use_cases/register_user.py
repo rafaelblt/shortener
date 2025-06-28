@@ -46,8 +46,8 @@ class RegisterUserUseCase:
             send_email_service (SendEmailService): Service to send the 
                 verification email.
             password_hasher (PasswordHasherService): Service to hash the password.
-            validators (dict[str, list[Validator]]): Dictionary with validations
-                list for each field.
+            validators (ValidatorsMap): Dictionary with validations list for 
+                each field.
         """
         self.user_repository = user_repository
         self.plan_repository = plan_repository
