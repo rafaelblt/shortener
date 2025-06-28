@@ -104,14 +104,13 @@ class RegisterUserUseCase:
     def _get_validations_coro(self, email: Email, name: Name, password: str):
         validations: list[CoroutineType] = []
 
-        for field, validators in self.validators.items():
-            match field:
-                case "email": 
-                    validations.extend([v.validate(email) for v in validators])
-                case "name": 
-                    validations.extend([v.validate(name) for v in validators])
-                case "password": 
-                    validations.extend([v.validate(password) for v in validators])
+        email_validators = self.validators["email"]
+        name_validators = self.validators["name"]
+        pwd_validators = self.validators["password"]
+
+        validations.extend([v.validate(email) for v in email_validators])
+        validations.extend([v.validate(name) for v in name_validators])
+        validations.extend([v.validate(password) for v in pwd_validators])
             
         return validations
 
