@@ -15,7 +15,7 @@ PASSWORD_MAX_LENGTH = 128
 PASSWORD_SPECIAL_CHARS = "!@#$%^&*()-_=+[]{}|;:'\",.<>/?\\"
 
 
-class PasswordValidatorService(Validator):
+class PasswordStrengthValidator(Validator):
     """Service to validate password security and strength."""
 
     def __init__(

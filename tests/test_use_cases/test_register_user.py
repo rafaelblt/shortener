@@ -6,7 +6,7 @@ from shortener.domain.shared.language import Language
 from shortener.domain.shared.validator import Validator
 from shortener.domain.shared.exceptions import ValidationError
 
-from shortener.domain.services.password_validator import PasswordValidatorService
+from shortener.domain.services.password_validator import PasswordStrengthValidator
 from shortener.domain.services.email_template import EmailTemplate
 from shortener.domain.services.exceptions import PasswordValidationError
 
@@ -50,7 +50,7 @@ def use_case(
         validators={
             "email": [MockEmailValidator()],
             "name": [MockNameValidator()],
-            "password": [PasswordValidatorService()]
+            "password": [PasswordStrengthValidator()]
         }
     )
 

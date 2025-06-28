@@ -1,7 +1,7 @@
 import pytest
 
 from shortener.domain.services.password_validator import (
-    PasswordValidatorService,
+    PasswordStrengthValidator,
     PASSWORD_MIN_LENGTH,
     PASSWORD_MAX_LENGTH,
     PASSWORD_SPECIAL_CHARS
@@ -18,18 +18,18 @@ from shortener.domain.services.exceptions import (
 
 @pytest.fixture
 def validator():
-    return PasswordValidatorService()
+    return PasswordStrengthValidator()
 
 
-def test_default_min_length(validator: PasswordValidatorService):
+def test_default_min_length(validator: PasswordStrengthValidator):
     assert validator.min_length == PASSWORD_MIN_LENGTH
 
 
-def test_default_max_length(validator: PasswordValidatorService):
+def test_default_max_length(validator: PasswordStrengthValidator):
     assert validator.max_length == PASSWORD_MAX_LENGTH
 
 
-def test_default_special_chars(validator: PasswordValidatorService):
+def test_default_special_chars(validator: PasswordStrengthValidator):
     assert validator.special_chars == PASSWORD_SPECIAL_CHARS
 
 
@@ -48,12 +48,12 @@ def test_default_special_chars(validator: PasswordValidatorService):
         "u$9WTXp3ZgKQv@JMdYAF2N+ct!HRozEnfL#7slX40Brmw^CUejOi5xLPdkgVbhqNaYRM*vwTz"
     ]
 )
-async def test_valid_passwords(validator: PasswordValidatorService, password: str):
+async def test_valid_passwords(validator: PasswordStrengthValidator, password: str):
     await validator.validate(password)
 
 
 @pytest.mark.asyncio
-async def test_raises_password_too_short(validator: PasswordValidatorService):
+async def test_raises_password_too_short(validator: PasswordStrengthValidator):
     invalid_password = "12aB@"
     with pytest.raises(PasswordTooShortError) as error:
         await validator.validate(invalid_password)
@@ -61,7 +61,7 @@ async def test_raises_password_too_short(validator: PasswordValidatorService):
 
 
 @pytest.mark.asyncio
-async def test_raises_password_too_long(validator: PasswordValidatorService):
+async def test_raises_password_too_long(validator: PasswordStrengthValidator):
     invalid_password = "Ab1@" * (PASSWORD_MAX_LENGTH)
     with pytest.raises(PasswordTooLongError) as error:
         await validator.validate(invalid_password)
@@ -69,7 +69,7 @@ async def test_raises_password_too_long(validator: PasswordValidatorService):
 
 
 @pytest.mark.asyncio
-async def test_raises_password_missing_uppercase(validator: PasswordValidatorService):
+async def test_raises_password_missing_uppercase(validator: PasswordStrengthValidator):
     invalid_password = "123!@#$invalid"
     with pytest.raises(PasswordMissingUppercaseError) as error:
         await validator.validate(invalid_password)
@@ -77,7 +77,7 @@ async def test_raises_password_missing_uppercase(validator: PasswordValidatorSer
 
 
 @pytest.mark.asyncio
-async def test_raises_password_missing_lowercase(validator: PasswordValidatorService):
+async def test_raises_password_missing_lowercase(validator: PasswordStrengthValidator):
     invalid_password = "123!@#$INVALID"
     with pytest.raises(PasswordMissingLowercaseError) as error:
         await validator.validate(invalid_password)
@@ -85,7 +85,7 @@ async def test_raises_password_missing_lowercase(validator: PasswordValidatorSer
 
 
 @pytest.mark.asyncio
-async def test_raises_password_missing_digit(validator: PasswordValidatorService):
+async def test_raises_password_missing_digit(validator: PasswordStrengthValidator):
     invalid_password = "!@#$InVaLiD"
     with pytest.raises(PasswordMissingDigitError) as error:
         await validator.validate(invalid_password)
@@ -93,7 +93,7 @@ async def test_raises_password_missing_digit(validator: PasswordValidatorService
 
 
 @pytest.mark.asyncio
-async def test_raises_password_missing_special_char(validator: PasswordValidatorService):
+async def test_raises_password_missing_special_char(validator: PasswordStrengthValidator):
     invalid_password = "1234565InVaLiD"
     with pytest.raises(PasswordMissingSpecialCharError) as error:
         await validator.validate(invalid_password)
