@@ -12,3 +12,5 @@ from .update_shorturl_use_case import make_update_shorturl_use_case
 from .sqlalchemy_plan_repository import make_sqlalchemy_plan_repository
 from .sqlalchemy_user_repository import make_sqlalchemy_user_repository
 from .sqlalchemy_shorturl_repository import make_sqlalchemy_shorturl_repository
+
+from .language_parser import LanguageParserDependency
