@@ -6,14 +6,21 @@ from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shortener.domain.user import User
+from shortener.domain.shared.language import Language
 from shortener.infra.db.repositories import SQLAlchemyUserRepository
 
+from tests.fixtures import MockSendEmailService
 from tests.utils.entity_helpers import get_persistent_plan
+
+
+@pytest.fixture
+def route(auth_route: str):
+    return f"{auth_route}/register"
 
 
 def test_validation_of_user_register_schema(client: TestClient, route: str):
     response = client.post(
-        f"{route}/login/", 
+        route, 
         json={
             "email": "invalid_email_value",
             "name": "A Common Name",
@@ -29,7 +36,7 @@ def test_exception_handler_with_plan_id_non_existent(
     client: TestClient, route: str, normal_user: User
 ):
     response = client.post(
-        f"{route}/register/", 
+        route, 
         json={
             "email": normal_user.email,
             "name": normal_user.name,
@@ -70,7 +77,7 @@ async def test_if_user_is_saved_in_session(
     await get_persistent_plan(db_session, normal_user.plan)
 
     client.post(
-        f"{route}/register/", 
+        route,
         json={
             "email": normal_user.email,
             "name": normal_user.name,
@@ -85,3 +92,24 @@ async def test_if_user_is_saved_in_session(
     assert user.name == normal_user.name
     assert user.email == normal_user.email
     assert user.plan.id == 1
+
+
+@pytest.mark.asyncio
+async def test_if_email_is_sent_to_user(
+    client: TestClient, route: str, normal_user: User, db_session: AsyncSession
+):
+    await get_persistent_plan(db_session, normal_user.plan)
+
+    client.post(
+        route,
+        headers={"Accept-Language": Language.PT_BR},
+        json={
+            "email": normal_user.email,
+            "name": normal_user.name,
+            "password": "!@#$Password123",
+            "plan_id": 1
+        }
+    )
+    
+    logs = MockSendEmailService().mock_logs
+    assert logs[0]["to"] == normal_user.email
