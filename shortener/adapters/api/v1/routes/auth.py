@@ -23,7 +23,7 @@ from shortener.adapters.api.v1.schemas.auth import (
 )
 from shortener.adapters.api.v1.dependencies import (
     make_login_user_use_case,
-    make_register_user_use_case,
+    RegisterUserUseCaseDependency,
     make_verify_email_use_case,
     LanguageParserDependency
 )
@@ -36,9 +36,6 @@ LoginUserExceptionHandlerDependency = Annotated[
     LoginUserExceptionHandler, Depends(LoginUserExceptionHandler)
 ]
 
-RegisterUserUseCaseDependency = Annotated[
-    RegisterUserUseCase, Depends(make_register_user_use_case)
-]
 RegisterUserExceptionHandlerDependency = Annotated[
     RegisterUserExceptionHandler, Depends(RegisterUserExceptionHandler)
 ]

@@ -1,4 +1,4 @@
-from .register_user_use_case import make_register_user_use_case
+from .register_user_use_case import make_register_user_use_case, RegisterUserUseCaseDependency
 from .login_user_use_case import make_login_user_use_case
 from .verify_email_use_case import make_verify_email_use_case
 
