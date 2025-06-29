@@ -1,14 +1,7 @@
-from typing import Annotated
-
 from http import HTTPStatus
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 
-from shortener.adapters.api.v1.exception_handlers import (
-    RegisterUserExceptionHandler,
-    LoginUserExceptionHandler,
-    VerifyEmailExceptionHandler
-)
 from shortener.adapters.api.v1.schemas import MessageResponse
 from shortener.adapters.api.v1.schemas.auth import (
     LoginRequest,
@@ -19,22 +12,11 @@ from shortener.adapters.api.v1.dependencies import (
     LoginUserUseCaseDependency,
     RegisterUserUseCaseDependency,
     VerifyEmailUseCaseDependency,
+    LoginUserExceptionHandlerDependency,
+    RegisterUserExceptionHandlerDependency,
+    VerifyEmailExceptionHandlerDependency,
     LanguageParserDependency
 )
-
-
-
-LoginUserExceptionHandlerDependency = Annotated[
-    LoginUserExceptionHandler, Depends(LoginUserExceptionHandler)
-]
-
-RegisterUserExceptionHandlerDependency = Annotated[
-    RegisterUserExceptionHandler, Depends(RegisterUserExceptionHandler)
-]
-
-VerifyEmailExceptionHandlerDependency = Annotated[
-    VerifyEmailExceptionHandler, Depends(VerifyEmailExceptionHandler)
-]
 
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])

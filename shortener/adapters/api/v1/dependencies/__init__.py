@@ -1,3 +1,6 @@
+from typing import Annotated
+from fastapi import Depends
+
 from .register_user_use_case import make_register_user_use_case, RegisterUserUseCaseDependency
 from .login_user_use_case import make_login_user_use_case, LoginUserUseCaseDependency
 from .verify_email_use_case import make_verify_email_use_case, VerifyEmailUseCaseDependency
@@ -12,5 +15,11 @@ from .update_shorturl_use_case import make_update_shorturl_use_case
 from .sqlalchemy_plan_repository import make_sqlalchemy_plan_repository
 from .sqlalchemy_user_repository import make_sqlalchemy_user_repository
 from .sqlalchemy_shorturl_repository import make_sqlalchemy_shorturl_repository
+
+from .exception_handlers import (
+    LoginUserExceptionHandlerDependency,
+    RegisterUserExceptionHandlerDependency,
+    VerifyEmailExceptionHandlerDependency
+)
 
 from .language_parser import LanguageParserDependency
