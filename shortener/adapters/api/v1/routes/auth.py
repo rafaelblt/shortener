@@ -6,7 +6,6 @@ from fastapi import APIRouter, Depends
 
 from shortener.use_cases import (
     LoginUserUseCase,
-    RegisterUserUseCase,
     VerifyEmailUseCase
 )
 
