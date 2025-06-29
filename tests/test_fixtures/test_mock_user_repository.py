@@ -67,7 +67,7 @@ async def test_update(
     repository: MockUserRepository, normal_user: User
 ):
     added = await repository.add(normal_user)
-    added.name = Name("New Name")
+    added._name = Name("New Name")
 
     retrieved = await repository.update(added)
 
