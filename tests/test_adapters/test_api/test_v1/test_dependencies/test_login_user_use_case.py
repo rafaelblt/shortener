@@ -11,8 +11,11 @@ from shortener.use_cases import LoginUserUseCase
 
 from shortener.adapters.api.v1.dependencies import (
     make_login_user_use_case,
-    make_sqlalchemy_user_repository
+    make_sqlalchemy_user_repository,
+    LoginUserUseCaseDependency
 )
+
+from tests.utils.type_helpers import get_annotated_args
 
 
 @pytest.fixture
@@ -38,3 +41,10 @@ def test_attr_auth_token_service(use_case: LoginUserUseCase):
     assert use_case.auth_token_service._secret_key == settings.JWT_AUTH_SECRET_KEY
     assert use_case.auth_token_service._algorithm == settings.JWT_AUTH_TOKEN_ALGORITHM
     assert use_case.auth_token_service.expires_minutes == settings.JWT_AUTH_TOKEN_EXPIRES_MINUTES
+
+
+def test_dependency():
+    args = get_annotated_args(LoginUserUseCaseDependency)
+    assert args[0] == LoginUserUseCase
+    assert isinstance(args[1], Depends)
+    assert args[1].dependency == make_login_user_use_case

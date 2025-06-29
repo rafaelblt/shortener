@@ -13,8 +13,11 @@ from shortener.use_cases import RegisterUserUseCase
 from shortener.adapters.api.v1.dependencies import (
     make_register_user_use_case,
     make_sqlalchemy_user_repository,
-    make_sqlalchemy_plan_repository
+    make_sqlalchemy_plan_repository,
+    RegisterUserUseCaseDependency
 )
+
+from tests.utils.type_helpers import get_annotated_args
 
 
 @pytest.fixture
@@ -73,3 +76,10 @@ def test_attr_validators(use_case: RegisterUserUseCase):
 
     assert isinstance(email_validators[0].repository, Depends)
     assert email_validators[0].repository.dependency == make_sqlalchemy_user_repository
+
+
+def test_dependency():
+    args = get_annotated_args(RegisterUserUseCaseDependency)
+    assert args[0] == RegisterUserUseCase
+    assert isinstance(args[1], Depends)
+    assert args[1].dependency == make_register_user_use_case

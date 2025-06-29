@@ -5,14 +5,15 @@ from fastapi.params import Depends
 from shortener.infra.services.jwt_auth_token import JwtAuthTokenService
 from shortener.infra.settings import settings
 
-from shortener.adapters.api.v1.dependencies import make_verify_email_use_case
-
 from shortener.use_cases import VerifyEmailUseCase
 
 from shortener.adapters.api.v1.dependencies import (
     make_verify_email_use_case,
-    make_sqlalchemy_user_repository
+    make_sqlalchemy_user_repository,
+    VerifyEmailUseCaseDependency
 )
+
+from tests.utils.type_helpers import get_annotated_args
 
 
 @pytest.fixture
@@ -34,3 +35,10 @@ def test_attr_auth_token_service(use_case: VerifyEmailUseCase):
     assert use_case.auth_token_service._secret_key == settings.JWT_AUTH_SECRET_KEY
     assert use_case.auth_token_service._algorithm == settings.JWT_AUTH_TOKEN_ALGORITHM
     assert use_case.auth_token_service.expires_minutes == settings.JWT_AUTH_TOKEN_EXPIRES_MINUTES
+
+
+def test_dependency():
+    args = get_annotated_args(VerifyEmailUseCaseDependency)
+    assert args[0] == VerifyEmailUseCase
+    assert isinstance(args[1], Depends)
+    assert args[1].dependency == make_verify_email_use_case

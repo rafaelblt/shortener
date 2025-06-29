@@ -4,11 +4,6 @@ from http import HTTPStatus
 
 from fastapi import APIRouter, Depends
 
-from shortener.use_cases import (
-    LoginUserUseCase,
-    VerifyEmailUseCase
-)
-
 from shortener.adapters.api.v1.exception_handlers import (
     RegisterUserExceptionHandler,
     LoginUserExceptionHandler,
@@ -21,16 +16,14 @@ from shortener.adapters.api.v1.schemas.auth import (
     RegisterRequest
 )
 from shortener.adapters.api.v1.dependencies import (
-    make_login_user_use_case,
+    LoginUserUseCaseDependency,
     RegisterUserUseCaseDependency,
-    make_verify_email_use_case,
+    VerifyEmailUseCaseDependency,
     LanguageParserDependency
 )
 
 
-LoginUserUseCaseDependency = Annotated[
-    LoginUserUseCase, Depends(make_login_user_use_case)
-]
+
 LoginUserExceptionHandlerDependency = Annotated[
     LoginUserExceptionHandler, Depends(LoginUserExceptionHandler)
 ]
@@ -39,9 +32,6 @@ RegisterUserExceptionHandlerDependency = Annotated[
     RegisterUserExceptionHandler, Depends(RegisterUserExceptionHandler)
 ]
 
-VerifyEmailUseCaseDependency = Annotated[
-    VerifyEmailUseCase, Depends(make_verify_email_use_case)
-]
 VerifyEmailExceptionHandlerDependency = Annotated[
     VerifyEmailExceptionHandler, Depends(VerifyEmailExceptionHandler)
 ]

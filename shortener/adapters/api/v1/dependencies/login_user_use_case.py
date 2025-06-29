@@ -1,3 +1,4 @@
+from typing import Annotated
 from fastapi import Depends
 
 from shortener.infra.services.passlib_hasher import PasslibPasswordHasher
@@ -16,3 +17,8 @@ def make_login_user_use_case(
         password_hasher=PasslibPasswordHasher(),
         auth_token_service=JwtAuthTokenService()
     )
+
+
+LoginUserUseCaseDependency = Annotated[
+    LoginUserUseCase, Depends(make_login_user_use_case)
+]
