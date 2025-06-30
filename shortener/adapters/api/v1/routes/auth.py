@@ -67,7 +67,7 @@ async def register(
     return {"message": "User registered successfully."}
 
 
-@router.get("/verify-email/{token}", response_model=MessageResponse)
+@router.get("/verify-email", response_model=MessageResponse)
 async def verify_email(
     token: str,
     use_case: VerifyEmailUseCaseDependency,

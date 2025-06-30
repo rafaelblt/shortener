@@ -39,4 +39,4 @@ class VerificationEmailTemplate(EmailTemplate):
         return ctx
 
     def get_verification_link(self, token: str):
-        return f"{settings.API_BASE_URL}/auth/verify-email/{token}"
+        return f"{settings.API_BASE_URL}/auth/verify-email?token={token}"

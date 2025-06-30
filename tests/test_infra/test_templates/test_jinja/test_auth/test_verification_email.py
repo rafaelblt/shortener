@@ -44,7 +44,7 @@ def test_template_in_jinja_env(template: VerificationEmailTemplate):
 def test_method_get_verification_link(template: VerificationEmailTemplate):
     token = "token"
     retrieved = template.get_verification_link(token)
-    expected = f"{settings.API_BASE_URL}/auth/verify-email/{token}"
+    expected = f"{settings.API_BASE_URL}/auth/verify-email?token={token}"
     assert retrieved == expected
 
 
