@@ -1,6 +1,5 @@
-import os
+from tests.settings import set_test_env_vars
 
-os.environ.setdefault("SENDGRID_API_KEY", "fake-sendgrid-key")
-os.environ.setdefault("SENDGRID_FROM_EMAIL", "admin@gmail.com")
+set_test_env_vars()
 
 from tests.fixtures import *
