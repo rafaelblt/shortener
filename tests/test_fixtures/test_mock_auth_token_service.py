@@ -20,6 +20,11 @@ def test_inheritance(service: MockAuthTokenService):
     assert isinstance(service, AuthTokenService)
 
 
+def test_singleton(service: MockAuthTokenService):
+    other_instance = MockAuthTokenService()
+    assert other_instance == service
+
+
 def test_generate_token(service: MockAuthTokenService):
     subject = "user123"
     token = service.generate_token(subject=subject)

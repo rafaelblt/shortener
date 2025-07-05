@@ -1,3 +1,7 @@
+import pytest
+
+from typing import TypedDict
+
 from datetime import datetime, timedelta, timezone
 
 from shortener.domain.shared.datetime_utils import utc_now
@@ -8,11 +12,23 @@ from shortener.domain.services.exceptions import (
 )
 
 
+class MockDataType(TypedDict):
+    generated_tokens: list[str]
+
+
 class MockAuthTokenService(AuthTokenService):
+    _instance = None
+    mock_data: MockDataType
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance.mock_data = cls._generate_mock_data()
+        return cls._instance
+
     def __init__(self, secret_key: str = "secret123", expires_minutes: int = 60):
         self.secret_key = secret_key
         self.expires_minutes = expires_minutes
-        self.mock_data = {"generated_tokens": []}
 
     def generate_token(self, subject: str) -> str:
         expiration = utc_now() + timedelta(minutes=self.expires_minutes)
@@ -36,3 +52,17 @@ class MockAuthTokenService(AuthTokenService):
             raise AuthTokenExpiredError()
         
         return subject
+    
+    @staticmethod
+    def _generate_mock_data():
+        return MockDataType(generated_tokens=[])
+
+    def reset(self):
+        self.mock_data = self._generate_mock_data()
+
+
+@pytest.fixture
+def mock_auth_token_service():
+    service = MockAuthTokenService()
+    service.reset()
+    return service
