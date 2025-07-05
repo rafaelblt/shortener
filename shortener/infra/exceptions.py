@@ -2,9 +2,9 @@ from shortener.domain.shared.language import Language
 
 
 class MissingEnvironmentVariableError(Exception):
-    def __init__(self, var_name: str):
-        self.var_name = var_name
-        super().__init__(f"Missing required environment variable: {var_name}")
+    def __init__(self, var_names: list[str]):
+        self.var_names = var_names
+        super().__init__(f"Missing required environment variables: {var_names}")
 
 
 class MissingSupportedLanguageTranslationError(Exception):
