@@ -7,14 +7,14 @@ from shortener.infra.exceptions import MissingEnvironmentVariableError
 
 class Settings:
     def __init__(self):
-        self._api_base_url = self.get_api_base_url()
-        self._database_url = self.get_database_url()
-        self._alembic_database_url = self.get_alembic_database_url()
-        self._jwt_auth_secret_key = self.get_jwt_auth_secret_key()
-        self._jwt_auth_token_algorithm = self.get_jwt_auth_token_algorithm()
-        self._jwt_auth_token_expires_minutes = self.get_jwt_auth_token_expires_minutes()
-        self._sendgrid_api_key = self.get_sendgrid_api_key()
-        self._sendgrid_from_email = self.get_sendgrid_from_email()
+        self._api_base_url = self._get_api_base_url()
+        self._database_url = self._get_database_url()
+        self._alembic_database_url = self._get_alembic_database_url()
+        self._jwt_auth_secret_key = self._get_jwt_auth_secret_key()
+        self._jwt_auth_token_algorithm = self._get_jwt_auth_token_algorithm()
+        self._jwt_auth_token_expires_minutes = self._get_jwt_auth_token_expires_minutes()
+        self._sendgrid_api_key = self._get_sendgrid_api_key()
+        self._sendgrid_from_email = self._get_sendgrid_from_email()
 
     @property
     def APP_NAME(self) -> str:
@@ -57,29 +57,29 @@ class Settings:
         return [Language.EN, Language.PT_BR]
 
 
-    def get_api_base_url(self) -> str:
+    def _get_api_base_url(self) -> str:
         return os.getenv("API_BASE_URL", "https://testshort.com")
 
-    def get_database_url(self) -> str:
+    def _get_database_url(self) -> str:
         return os.getenv("DATABASE_URL", "sqlite+aiosqlite:///default.db")
 
-    def get_alembic_database_url(self) -> str:
+    def _get_alembic_database_url(self) -> str:
         return os.getenv("ALEMBIC_DATABASE_URL", "sqlite:///default.db")
 
-    def get_jwt_auth_secret_key(self) -> str:
+    def _get_jwt_auth_secret_key(self) -> str:
         return os.getenv("JWT_AUTH_SECRET_KEY", "ko@34i!1@!3$!345Aba71")
     
-    def get_jwt_auth_token_algorithm(self) -> str:
+    def _get_jwt_auth_token_algorithm(self) -> str:
         return os.getenv("JWT_AUTH_TOKEN_ALGORITHM", "HS256")
     
-    def get_jwt_auth_token_expires_minutes(self) -> int:
+    def _get_jwt_auth_token_expires_minutes(self) -> int:
         return int(os.getenv("JWT_AUTH_TOKEN_EXPIRES_MINUTES", 60))
     
-    def get_sendgrid_api_key(self) -> str:
+    def _get_sendgrid_api_key(self) -> str:
         value = self.require_env("SENDGRID_API_KEY")
         return value
     
-    def get_sendgrid_from_email(self) -> Email:
+    def _get_sendgrid_from_email(self) -> Email:
         value = self.require_env("SENDGRID_FROM_EMAIL")
         return Email(value)
     
