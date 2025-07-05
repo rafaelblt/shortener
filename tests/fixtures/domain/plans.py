@@ -1,4 +1,5 @@
 import pytest
+
 from shortener.domain.plan import Plan
 
 
