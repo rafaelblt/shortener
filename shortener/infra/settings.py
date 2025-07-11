@@ -8,14 +8,20 @@ from shortener.domain.shared.language import Language
 from shortener.infra.exceptions import MissingEnvironmentVariableError
 
 
+ENV_PATTERNS: dict[str, dict] = {
+    "development": {
+        "API_BASE_URL": "https://devshort.com",
+        "DATABASE_URL": "sqlite+aiosqlite:///default.db",
+        "ALEMBIC_DATABASE_URL": "",
+        "JWT_AUTH_SECRET_KEY": "[DevShort]->S3cr3tK3y!@#$%&*()-+",
+        "SENDGRID_API_KEY": "fake-sendgrid-key",
+        "SENDGRID_FROM_EMAIL": "admin@gmail.com"
+    }
+}
+
+
 class StaticSettingsType(TypedDict):
     SUPPORTED_LANGUAGES: list[Language]
-
-
-class EnvDefaultsType(TypedDict):
-    APP_NAME: str
-    JWT_AUTH_TOKEN_ALGORITHM: str
-    JWT_AUTH_TOKEN_EXPIRES_MINUTES: str
 
 
 class Settings:
@@ -23,7 +29,7 @@ class Settings:
         "SUPPORTED_LANGUAGES": [Language.EN, Language.PT_BR]
     }
 
-    _ENV_DEFAULTS: EnvDefaultsType = {
+    _ENV_DEFAULTS: dict[str, str] = {
         "APP_NAME": "Shortener",
         "JWT_AUTH_TOKEN_ALGORITHM": "HS256",
         "JWT_AUTH_TOKEN_EXPIRES_MINUTES": "60",
@@ -39,19 +45,38 @@ class Settings:
     ]
 
     def __init__(self):
-        self._env_vars = {}
-        missing_vars = []
+        from dotenv import load_dotenv
+        load_dotenv()
 
+        self._env_vars: dict[str, str] = {}
+
+        self._set_default_env_vars()
+        self._get_and_set_env_pattern()
+        self._set_required_env_vars()
+        self._verify_required_env_vars()
+    
+    def _set_default_env_vars(self):
         for var, value in self._ENV_DEFAULTS.items():
             self._env_vars[var] = value
 
+    def _get_and_set_env_pattern(self):
+        env_pattern = os.getenv("ENVIRONMENT_PATTERN")
+        if env_pattern and env_pattern in ENV_PATTERNS:
+            self._env_vars.update(ENV_PATTERNS[env_pattern])
+    
+    def _set_required_env_vars(self):
         for var in self._REQUIRED_ENV_VARS:
             value = os.getenv(var)
-            if value is None:
-                missing_vars.append(var)
-            else:
+            if value is not None:
                 self._env_vars[var] = value
-        
+
+    def _verify_required_env_vars(self):
+        missing_vars = []
+
+        for var in self._REQUIRED_ENV_VARS:
+            if var not in self._env_vars:
+                missing_vars.append(var)
+
         if missing_vars:
             raise MissingEnvironmentVariableError(missing_vars)
 
