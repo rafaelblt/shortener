@@ -47,27 +47,30 @@ class UserPasswordIncorrectError(UserAccessDeniedError):
 
 
 # Name Validation Exceptions
-class NameValidationError(ValidationError): ...
+class NameValidationError(ValidationError):
+    def __init__(self, value, code, message):
+        super().__init__(value=value, field="password", code=code, message=message)
+
 class NameTooLongError(NameValidationError): 
     def __init__(self, value: str, max_length: int):
         self.value = value
         self.max_length = max_length
-        super().__init__(
-            f"Name must be at most {max_length} characters long. Got: {value}"
-        )
+        msg = f"Name must be at most {max_length} characters long."
+        super().__init__(value=value, code="", message=msg)
+    
 class NameTooShortError(NameValidationError): 
     def __init__(self, value: str, min_length: int):
         self.value = value
         self.min_length = min_length
-        super().__init__(
-            f"Name must be at least {min_length} characters long. Got: {value}"
-        )
+        msg = f"Name must be at least {min_length} characters long."
+        super().__init__(value=value, code="", message=msg)
+
 class NameInvalidPatternError(NameValidationError): 
     def __init__(self, value: str):
         self.value = value
-        super().__init__(
-            f"The name '{value}' does not match the required pattern."
-        )
+        msg = "The name does not match the required pattern."
+        super().__init__(value=value, code="", message=msg)
+
 
 class PasswordValidationError(ValidationError):
     def __init__(self, code, message):
@@ -109,7 +112,8 @@ class PasswordMissingSpecialCharError(PasswordValidationError):
 class EmailAlreadyExistsError(ValidationError):
     def __init__(self, email: str):
         self.email = email
-        super().__init__(f"The provided email '{email}' already exists.")
+        msg = f"The provided email already exists."
+        super().__init__(value=email, field="emal", code="", message=msg)
 
 
 # User Repository Exceptions
