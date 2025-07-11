@@ -4,7 +4,7 @@ from tests.fixtures import MockSendEmailService, MockAuthTokenService
 
 from shortener.domain.shared.language import Language
 from shortener.domain.shared.validator import Validator
-from shortener.domain.shared.exceptions import ValidationError
+from shortener.domain.shared.exceptions import ValidationError, MultiValidationError
 
 from shortener.domain.services.email_template import EmailTemplate
 from shortener.domain.plan import Plan
@@ -19,19 +19,19 @@ from shortener.use_cases.register_user import RegisterUserUseCase
 class MockEmailValidator(Validator):
     async def validate(self, value: Email):
         if value == "joker@gmail.com":
-            raise ValidationError("email validation error")
+            raise ValidationError(value, "email", "EMAIL_ERROR", "error message")
 
 
 class MockNameValidator(Validator):
     async def validate(self, value: Name):
         if value == "Joker":
-            raise ValidationError("name validation error")
+            raise ValidationError(value, "name", "NAME_ERROR", "error message")
         
 
 class MockPasswordValidator(Validator):
     async def validate(self, value: Name):
         if value == "joker123":
-            raise ValidationError("password validation error")
+            raise ValidationError(value, "paswsord", "PASSWORD_ERROR", "error message")
         
 
 @pytest.fixture
@@ -50,7 +50,7 @@ def use_case(
         send_email_service=mock_send_email_service,
         password_hasher=mock_password_hasher,
         email_template=mock_email_template,
-        validators={
+        validators_map={
             "email": [MockEmailValidator()],
             "name": [MockNameValidator()],
             "password": [MockPasswordValidator()]
@@ -105,7 +105,7 @@ async def test_raises_email_validation_error(
 ):
     plan = await use_case.plan_repository.add(default_plan)
     joker_email = Email("joker@gmail.com")
-    with pytest.raises(ValidationError, match="email validation error"):
+    with pytest.raises(MultiValidationError) as error:
         await use_case.execute(
             email=joker_email, 
             name=normal_user.name, 
@@ -113,6 +113,7 @@ async def test_raises_email_validation_error(
             password="Test123#",
             lang=Language.EN
         )
+    assert error.value.errors[0].code == "EMAIL_ERROR"
 
 
 @pytest.mark.asyncio
@@ -121,7 +122,7 @@ async def test_raises_name_validation_error(
 ):
     plan = await use_case.plan_repository.add(default_plan)
     joker_name = Name("Joker")
-    with pytest.raises(ValidationError, match="name validation error"):
+    with pytest.raises(MultiValidationError) as error:
         await use_case.execute(
             email=normal_user.email, 
             name=joker_name, 
@@ -129,6 +130,7 @@ async def test_raises_name_validation_error(
             password="Test123#",
             lang=Language.EN
         )
+    assert error.value.errors[0].code == "NAME_ERROR"
 
 
 @pytest.mark.asyncio
@@ -137,7 +139,7 @@ async def test_raises_password_validation_error(
 ):
     joker_pwd = "joker123"
     plan = await use_case.plan_repository.add(default_plan)
-    with pytest.raises(ValidationError, match="password validation error"):
+    with pytest.raises(MultiValidationError) as error:
         await use_case.execute(
             email=normal_user.email, 
             name=normal_user.name, 
@@ -145,6 +147,7 @@ async def test_raises_password_validation_error(
             password=joker_pwd,
             lang=Language.EN
         )
+    assert error.value.errors[0].code == "PASSWORD_ERROR"
 
 
 @pytest.mark.asyncio
