@@ -64,7 +64,7 @@ async def register(
     except Exception as error:
         exception_handler.handle(error)
 
-    return {"message": "User registered successfully."}
+    return {"message": "User registered successfully. Please check your email to verify your account."}
 
 
 @router.get("/verify-email", response_model=MessageResponse)
