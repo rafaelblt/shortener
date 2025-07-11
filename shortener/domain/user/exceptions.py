@@ -69,6 +69,42 @@ class NameInvalidPatternError(NameValidationError):
             f"The name '{value}' does not match the required pattern."
         )
 
+class PasswordValidationError(ValidationError):
+    def __init__(self, code, message):
+        super().__init__(value="***", field="password", code=code, message=message)
+
+class PasswordTooShortError(PasswordValidationError):
+    def __init__(self, min_length: int):
+        self.min_length = min_length
+        msg = f"The password must be at least {self.min_length} characters long."
+        super().__init__(code="", message=msg)
+
+class PasswordTooLongError(PasswordValidationError):
+    def __init__(self, max_length: int):
+        self.max_length = max_length
+        msg = f"The password must be at most {self.max_length} characters long."
+        super().__init__(code="", message=msg)
+
+class PasswordMissingUppercaseError(PasswordValidationError):
+    def __init__(self):
+        msg = "The password must contain at least one uppercase character."
+        super().__init__(code="", message=msg)
+
+class PasswordMissingLowercaseError(PasswordValidationError):
+    def __init__(self):
+        msg = "The password must contain at least one lowercase character."
+        super().__init__(code="", message=msg)
+
+class PasswordMissingDigitError(PasswordValidationError):
+    def __init__(self):
+        msg = "The password must contain at least one number."
+        super().__init__(code="", message=msg)
+
+class PasswordMissingSpecialCharError(PasswordValidationError):
+    def __init__(self):
+        msg = "The password must contain at least one special character."
+        super().__init__(code="", message=msg)
+
 
 class EmailAlreadyExistsError(ValidationError):
     def __init__(self, email: str):
