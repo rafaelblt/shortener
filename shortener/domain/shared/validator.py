@@ -3,13 +3,13 @@ import asyncio
 from types import CoroutineType
 from abc import ABC, abstractmethod
 
-from shortener.domain.shared.exceptions import ValidationError, FieldValidationError
+from shortener.domain.shared.exceptions import ValidationError, MultiValidationError
 
 
 class Validator(ABC):
 
     @abstractmethod
-    async def validate(self, value):
+    async def validate(self, value) -> None:
         pass
 
 
@@ -19,27 +19,25 @@ class MultiFieldValidator:
         self.validators_map = validators_map
 
     async def validate(self, **kwargs):
-        validations: list[tuple[str, CoroutineType]] = []
-
+        coros = self._get_validation_coros(**kwargs)
+        results = await asyncio.gather(*coros, return_exceptions=True)
+        errors = self._search_errors(results)
+        if errors:
+            raise MultiValidationError(errors)
+        return None
+    
+    def _get_validation_coros(self, **kwargs) -> list[CoroutineType]:
+        coros: list[CoroutineType] = []
         for key, value in kwargs.items():
             validators = self.validators_map.get(key, [])
             for validator in validators:
                 coro = validator.validate(value)
-                validation = (key, coro)
-                validations.append(validation)
+                coros.append(coro)
+        return coros
 
-        coros = [coro for _, coro in validations]
-
-        results = await asyncio.gather(*coros, return_exceptions=True)
-        
-        errors: dict[str, list[ValidationError]] = {}
-        for field in kwargs:
-            errors[field] = []
-
-        for i, result in enumerate(results):
+    def _search_errors(self, results: list) -> list[ValidationError]:
+        errors: list[ValidationError] = []
+        for result in results:
             if isinstance(result, ValidationError):
-                field = validations[i][0]
-                errors[field].append(result)
-        
-        if errors:
-            return errors
+                errors.append(result)
+        return errors
