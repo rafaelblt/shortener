@@ -1,11 +1,15 @@
 import os
 
+from dotenv import load_dotenv
 from typing import TypedDict
 
 from shortener.domain.shared.email import Email
 from shortener.domain.shared.language import Language
 
 from shortener.infra.exceptions import MissingEnvironmentVariableError
+
+
+load_dotenv()
 
 
 ENV_PATTERNS: dict[str, dict] = {
@@ -45,9 +49,6 @@ class Settings:
     ]
 
     def __init__(self):
-        from dotenv import load_dotenv
-        load_dotenv()
-
         self._env_vars: dict[str, str] = {}
 
         self._set_default_env_vars()
