@@ -1,9 +1,4 @@
-import asyncio
-
-from types import CoroutineType
-from typing import TypedDict
-
-from shortener.domain.shared.validator import Validator
+from shortener.domain.shared.validator import MultiFieldValidator, Validator
 from shortener.domain.shared.language import Language
 
 from shortener.domain.services.password_hasher import PasswordHasherService
@@ -18,12 +13,6 @@ from shortener.domain.user import User, UserRepository
 from shortener.domain.user.fields import Email, Name, HashedPassword, UserStatus
 
 
-class ValidatorsMap(TypedDict):
-    email: list[Validator]
-    name: list[Validator]
-    password: list[Validator]
-
-
 class RegisterUserUseCase:
     """Use case for registering a new user in the system."""
 
@@ -35,7 +24,7 @@ class RegisterUserUseCase:
         send_email_service: SendEmailService,
         password_hasher: PasswordHasherService,
         email_template: EmailTemplate,
-        validators: ValidatorsMap
+        validators_map: dict[str, list[Validator]]
     ):
         """
         Args:
@@ -46,7 +35,7 @@ class RegisterUserUseCase:
             send_email_service (SendEmailService): Service to send the 
                 verification email.
             password_hasher (PasswordHasherService): Service to hash the password.
-            validators (ValidatorsMap): Dictionary with validations list for 
+            validators_map (ValidatorsMap): Dictionary with validations list for 
                 each field.
         """
         self.user_repository = user_repository
@@ -55,7 +44,7 @@ class RegisterUserUseCase:
         self.send_email_service = send_email_service
         self.password_hasher = password_hasher
         self.email_template = email_template
-        self.validators = validators
+        self.validators_map = validators_map
 
     async def execute(
         self,
@@ -84,12 +73,9 @@ class RegisterUserUseCase:
             PlanNotFoundError: If the plan_id is not found in repository.
             ValidationError: If any of the data provided is invalid.
         """
-        validations_coro = self._get_validations_coro(
-            email=email, name=name, password=password
-        )
-        results = await asyncio.gather(self._get_plan(plan_id), *validations_coro)
-
-        plan = results[0]
+        multi_validator = MultiFieldValidator(self.validators_map)
+        await multi_validator.validate(email=email, name=name, password=password)
+        plan = await self._get_plan(plan_id)
         new_user = await self._create_user(email, name, password, plan)
         await self._send_verification_email(email, name, lang)
 
@@ -100,19 +86,6 @@ class RegisterUserUseCase:
         if plan is None:
             raise PlanNotFoundError(plan_id=plan_id)
         return plan
-
-    def _get_validations_coro(self, email: Email, name: Name, password: str):
-        validations: list[CoroutineType] = []
-
-        email_validators = self.validators["email"]
-        name_validators = self.validators["name"]
-        pwd_validators = self.validators["password"]
-
-        validations.extend([v.validate(email) for v in email_validators])
-        validations.extend([v.validate(name) for v in name_validators])
-        validations.extend([v.validate(password) for v in pwd_validators])
-            
-        return validations
 
     async def _create_user(
         self, email: Email, name: Name, password: str, plan: Plan
