@@ -1,4 +1,5 @@
 import os
+import tomllib
 
 from dotenv import load_dotenv
 from typing import TypedDict
@@ -10,6 +11,12 @@ from shortener.infra.exceptions import MissingEnvironmentVariableError
 
 
 load_dotenv()
+
+
+def get_project_app_version():
+    with open("pyproject.toml", "rb") as f:
+        data = tomllib.load(f)
+    return data["project"]["version"]
 
 
 ENV_PATTERNS: dict[str, dict] = {
@@ -26,10 +33,12 @@ ENV_PATTERNS: dict[str, dict] = {
 
 class StaticSettingsType(TypedDict):
     SUPPORTED_LANGUAGES: list[Language]
+    APP_VERSION: str
 
 
 class Settings:
     _STATIC_SETTINGS: StaticSettingsType = {
+        "APP_VERSION": get_project_app_version(),
         "SUPPORTED_LANGUAGES": [Language.EN, Language.PT_BR]
     }
 
@@ -84,6 +93,10 @@ class Settings:
     @property
     def APP_NAME(self):
         return self._env_vars["APP_NAME"]
+    
+    @property
+    def APP_VERSION(self):
+        return self._STATIC_SETTINGS["APP_VERSION"]
 
     @property
     def API_BASE_URL(self):
