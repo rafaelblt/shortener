@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
 from shortener.adapters.api.v1.routes import root, auth, shorturl
+from .exception_handlers import register_exception_handlers
 
 
 app = FastAPI()
@@ -14,3 +15,5 @@ app.include_router(shorturl.router)
 async def read_root():
     return {"message": "Hello World!"}
 
+
+register_exception_handlers(app)
