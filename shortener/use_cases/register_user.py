@@ -74,7 +74,9 @@ class RegisterUserUseCase:
             MultiValidationError: If any of the data provided is invalid.
         """
         multi_validator = MultiFieldValidator(self.validators_map)
-        await multi_validator.validate(email=email, name=name, password=password)
+        await multi_validator.validate(
+            email=email, name=name, password=password, plan_id=plan_id
+        )
         plan = await self._get_plan(plan_id)
         new_user = await self._create_user(email, name, password, plan)
         await self._send_verification_email(email, name, lang)
