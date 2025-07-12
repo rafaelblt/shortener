@@ -1,13 +1,16 @@
 from typing import Annotated
 
 from shortener.domain.user.fields import Email
-from shortener.adapters.api.v1.validators import validate_email
+from shortener.adapters.api.v1.validators import CustomAfterValidator
 
 from pydantic import BaseModel, AfterValidator, ConfigDict
 
 
+EmailValidator = CustomAfterValidator(Email.validate_email)
+
+
 class LoginRequest(BaseModel):
-    email: Annotated[str, AfterValidator(validate_email)]
+    email: Annotated[str, AfterValidator(EmailValidator)]
     password: str
     
     model_config = ConfigDict(
@@ -20,5 +23,4 @@ class LoginRequest(BaseModel):
     )
 
     def get_email(self) -> Email:
-        assert isinstance(self.email, Email)
-        return self.email
+        return Email(self.email)

@@ -1,5 +1,6 @@
+from shortener.adapters.api.v1.schemas.requests.auth import LoginRequest
+
 from shortener.adapters.api.v1.schemas.auth import (
-    LoginRequest,
     LoginResponse,
 )
 from shortener.adapters.api.v1.dependencies import (
