@@ -2,6 +2,7 @@ from fastapi import FastAPI
 
 from shortener.adapters.api.v1.routes import root, auth, shorturl
 from .exception_handlers import register_exception_handlers
+from .openapi import set_openapi_schema
 
 
 app = FastAPI()
@@ -17,3 +18,4 @@ async def read_root():
 
 
 register_exception_handlers(app)
+set_openapi_schema(app)
