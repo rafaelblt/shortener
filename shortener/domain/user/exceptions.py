@@ -110,10 +110,11 @@ class PasswordMissingSpecialCharError(PasswordValidationError):
 
 
 class EmailAlreadyExistsError(ValidationError):
+    code = "EMAIL_ALREADY_EXISTS"
     def __init__(self, email: str):
         self.email = email
         msg = f"The provided email already exists."
-        super().__init__(value=email, field="emal", code="", message=msg)
+        super().__init__(value=email, field="emal", code=self.code, message=msg)
 
 
 # User Repository Exceptions
