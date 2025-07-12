@@ -71,7 +71,7 @@ class RegisterUserUseCase:
         
         Raises: 
             PlanNotFoundError: If the plan_id is not found in repository.
-            ValidationError: If any of the data provided is invalid.
+            MultiValidationError: If any of the data provided is invalid.
         """
         multi_validator = MultiFieldValidator(self.validators_map)
         await multi_validator.validate(email=email, name=name, password=password)
