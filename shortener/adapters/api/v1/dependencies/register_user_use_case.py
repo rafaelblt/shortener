@@ -3,7 +3,6 @@ from typing import Annotated
 from fastapi import Depends
 
 from shortener.domain.user.validators import EmailAlreadyExistsValidator
-from shortener.domain.services.password_validator import PasswordStrengthValidator
 
 from shortener.infra.services.passlib_hasher import PasslibPasswordHasher
 from shortener.infra.services.jwt_auth_token import JwtAuthTokenService
@@ -31,11 +30,10 @@ def make_register_user_use_case(
         email_template=VerificationEmailTemplate(JinjaEnvironment()),
         validators_map={
             "email": [EmailAlreadyExistsValidator(repository=user_repository)],
-            "password": [PasswordStrengthValidator()],
+            "password": [],
             "name": []
         }
     )
-
 
 RegisterUserUseCaseDependency = Annotated[
     RegisterUserUseCase, Depends(make_register_user_use_case)
