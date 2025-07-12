@@ -1,3 +1,6 @@
+from shortener.domain.shared.exceptions import DomainError
+
+
 class PlanAttributeTypeError(TypeError):
     def __init__(self, attr: str, type_expected: str, got):
         super().__init__(
@@ -6,10 +9,12 @@ class PlanAttributeTypeError(TypeError):
         )
 
 
-class PlanNotFoundError(Exception):
+class PlanNotFoundError(DomainError):
+    code = "PLAN_NOT_FOUND"
     def __init__(self, plan_id: int):
         self.plan_id = plan_id
-        super().__init__(f"Plan with id={plan_id} not found.")
+        message = f"Plan with id={plan_id} not found."
+        super().__init__(code=self.code, message=message)
 
 
 class PlanIdIsNotIntError(ValueError):
