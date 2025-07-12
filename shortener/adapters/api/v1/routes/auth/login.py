@@ -1,33 +1,37 @@
-from shortener.adapters.api.v1.schemas.requests.auth import LoginRequest
+from shortener.domain.user.exceptions import UserNotFoundError, UserPasswordIncorrectError
 
-from shortener.adapters.api.v1.schemas.auth import (
-    LoginResponse,
-)
 from shortener.adapters.api.v1.dependencies import (
     LoginUserUseCaseDependency,
-    LoginUserExceptionHandlerDependency,
+    LanguageParserDependency
+)
+
+from shortener.adapters.api.v1.schemas.requests.auth import LoginRequest
+from shortener.adapters.api.v1.schemas.responses.auth.login import (
+    SuccessLoginResponse,
+    FailLoginResponse
 )
 
 from . import router
 
 
-@router.post("/login", response_model=LoginResponse)
+@router.post("/login")
 async def login(
     request: LoginRequest,
     use_case: LoginUserUseCaseDependency,
-    exception_handler: LoginUserExceptionHandlerDependency
+    language: LanguageParserDependency
 ): 
     email = request.get_email()
     try:
         token = await use_case.execute(
             email=email, password=request.password
         )
-    except Exception as error:
-        exception_handler.handle(error)
+    except (UserNotFoundError, UserPasswordIncorrectError):
+        return FailLoginResponse.json_response(language)
 
-    return {
-        "access_token": token,
-        "token_type": "bearer",
-        "expires_minutes": use_case.auth_token_service.expires_minutes,
-        "email": email
-    }
+    expires_minutes = use_case.auth_token_service.expires_minutes
+    return SuccessLoginResponse(
+        access_token=token,
+        token_type="bearer",
+        expires_minutes=expires_minutes,
+        email=email
+    )
