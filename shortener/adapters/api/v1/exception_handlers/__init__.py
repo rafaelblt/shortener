@@ -13,3 +13,5 @@ class ExceptionHandler(ABC):
 from .register_user import RegisterUserExceptionHandler
 from .login_user import LoginUserExceptionHandler
 from .verify_email import VerifyEmailExceptionHandler
+
+from .utils import register_exception_handlers
