@@ -8,13 +8,14 @@ from shortener.adapters.api.v1.dependencies import (
 from shortener.adapters.api.v1.schemas.requests.auth import LoginRequest
 from shortener.adapters.api.v1.schemas.responses.auth.login import (
     SuccessLoginResponse,
-    FailLoginResponse
+    FailLoginResponse,
+    LOGIN_RESPONSES
 )
 
 from . import router
 
 
-@router.post("/login")
+@router.post("/login", responses=LOGIN_RESPONSES)
 async def login(
     request: LoginRequest,
     use_case: LoginUserUseCaseDependency,
