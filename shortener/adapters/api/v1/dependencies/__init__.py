@@ -16,10 +16,6 @@ from .sqlalchemy_plan_repository import make_sqlalchemy_plan_repository
 from .sqlalchemy_user_repository import make_sqlalchemy_user_repository
 from .sqlalchemy_shorturl_repository import make_sqlalchemy_shorturl_repository
 
-from .exception_handlers import (
-    LoginUserExceptionHandlerDependency,
-    RegisterUserExceptionHandlerDependency,
-    VerifyEmailExceptionHandlerDependency
-)
+from .exception_handlers import VerifyEmailExceptionHandlerDependency
 
 from .language_parser import LanguageParserDependency
