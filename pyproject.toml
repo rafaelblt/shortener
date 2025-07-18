@@ -36,19 +36,19 @@ pytest-asyncio = "^0.25.3"
 run = 'fastapi dev shortener/adapters/api/main.py'
 
 test = 'pytest --cov=shortener -v'
-test-domain = "pytest -v tests/test_domain/"
-test-use-cases = "pytest -v tests/test_use_cases/"
-test-adapters = "pytest -v tests/test_adapters/"
-test-infra = "pytest -v tests/test_infra/"
-test-fixtures = "pytest -v tests/test_fixtures/"
-test-layers = 'task test-domain && task test-fixtures && task test-use-cases && task test-infra && task test-adapters'
+test_domain = "pytest -v tests/test_domain/"
+test_use_cases = "pytest -v tests/test_use_cases/"
+test_adapters = "pytest -v tests/test_adapters/"
+test_infra = "pytest -v tests/test_infra/"
+test_fixtures = "pytest -v tests/test_fixtures/"
+test_layers = 'task test_domain && task test_fixtures && task test_use_cases && task test_infra && task test_adapters'
 
-i18n-extract = "pybabel extract -F babel.cfg -o shortener/infra/translations/messages.pot shortener/infra/templates"
-i18n-init = "pybabel init -i messages.pot -d translations -l pt_BR"
-i18n-update = "pybabel update -i shortener/infra/translations/messages.pot -d shortener/infra/translations"
-i18n-compile = "pybabel compile -d shortener/infra/translations"
-i18n-rebuild = "task i18n-extract && task i18n-update && task i18n-compile"
-i18n-clean = "rm -f shortener/infra/translations/messages.pot"
+i18n_extract = "pybabel extract -F babel.cfg -o shortener/infra/translations/messages.pot shortener/infra/templates"
+i18n_init = "pybabel init -i messages.pot -d translations -l pt_BR"
+i18n_update = "pybabel update -i shortener/infra/translations/messages.pot -d shortener/infra/translations"
+i18n_compile = "pybabel compile -d shortener/infra/translations"
+i18n_rebuild = "task i18n_extract && task i18n_update && task i18n_compile"
+i18n_clean = "rm -f shortener/infra/translations/messages.pot"
 
 [tool.pytest.ini_options]
 asyncio_default_fixture_loop_scope = "function"
