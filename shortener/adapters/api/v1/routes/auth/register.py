@@ -1,21 +1,21 @@
 from http import HTTPStatus
 
-from shortener.domain.shared.exceptions import DomainError
-
-from shortener.infra.translations import get_translator
-
-from shortener.adapters.api.v1.schemas.requests.auth import RegisterRequest
-from shortener.adapters.api.v1.schemas.responses.auth.register import (
-    SuccessRegisterResponse,
-    PlanNotFoundResponse,
-    EmailAlreadyExistsResponse
-)
+from fastapi.responses import JSONResponse
 
 from shortener.adapters.api.v1.dependencies import (
     RegisterUserUseCaseDependency,
     LanguageParserDependency
 )
+from shortener.adapters.api.v1.schemas.entities import PublicUserSchema
+from shortener.adapters.api.v1.schemas.requests.auth import RegisterRequest
+from shortener.adapters.api.v1.schemas.responses.auth.register import SuccessRegisterResponse
+from shortener.adapters.api.v1.schemas.responses.error_response import ErrorResponse
 from shortener.adapters.api.v1.schemas.responses.types import FastAPIRouteResponses
+
+from shortener.domain.plan.exceptions import PlanNotFoundError
+from shortener.domain.user.exceptions import EmailAlreadyExistsError
+
+from shortener.infra.translations import get_translator
 
 from . import router
 
@@ -48,23 +48,30 @@ async def register(
     use_case: RegisterUserUseCaseDependency,
     language: LanguageParserDependency
 ):
+    _  = get_translator(language)
     try:
         user = await use_case.execute(
             email=request.get_email(),
             name=request.get_name(),
             plan_id=request.plan_id,
-            password=request.password,
+            password=request.get_password(),
             lang=language
         )
-    except DomainError as error:
-        _  = get_translator(language)
-        if error.code == PlanNotFoundResponse.code:
-            detail = _("No plan was found with the ID provided.")
-            return PlanNotFoundResponse.json_response(detail)
-        elif error.code == EmailAlreadyExistsResponse.code:
-            detail = _("The email provided has already been registered.")
-            return EmailAlreadyExistsResponse.json_response(detail)
-        else:
-            raise error
+    except PlanNotFoundError:
+        detail = _("No plan was found with the ID provided.")
+        return JSONResponse(
+            status_code=HTTPStatus.BAD_REQUEST,
+            content=ErrorResponse(detail=detail)
+        )
+    except EmailAlreadyExistsError:
+        detail = _("The email provided has already been registered.")
+        return JSONResponse(
+            status_code=HTTPStatus.CONFLICT,
+            content=ErrorResponse(detail=detail).model_dump()
+        )
+    
+    msg = _("User registered successfully. Please check your email to verify your account.")
+    return SuccessRegisterResponse(
+        message=msg, user=PublicUserSchema.from_domain(user)
+    )
 
-    return SuccessRegisterResponse.with_domain_user(user, lang=language)
