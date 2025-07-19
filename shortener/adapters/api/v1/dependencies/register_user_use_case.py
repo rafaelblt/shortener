@@ -29,7 +29,7 @@ def make_register_user_use_case(
         password_hasher=PasslibPasswordHasher(),
         email_template=VerificationEmailTemplate(JinjaEnvironment()),
         validators_map={
-            "email": [EmailAlreadyExistsValidator(repository=user_repository)],
+            "email": [],
             "password": [],
             "name": []
         }
