@@ -9,13 +9,26 @@ from shortener.adapters.api.v1.schemas.requests.auth import LoginRequest
 from shortener.adapters.api.v1.schemas.responses.auth.login import (
     SuccessLoginResponse,
     FailLoginResponse,
-    LOGIN_RESPONSES
 )
+from shortener.adapters.api.v1.schemas.responses.types import FastAPIRouteResponses
 
 from . import router
 
 
-@router.post("/login", responses=LOGIN_RESPONSES)
+login_responses = FastAPIRouteResponses()
+login_responses.set_response(
+    status_code=HTTPStatus.OK,
+    description="Login successfully.",
+    model=SuccessLoginResponse
+)
+login_responses.set_response(
+    status_code=HTTPStatus.UNAUTHORIZED,
+    description="Invalid credentials.",
+    model=ErrorResponse
+)
+
+
+@router.post("/login", responses=login_responses.get_responses())
 async def login(
     request: LoginRequest,
     use_case: LoginUserUseCaseDependency,

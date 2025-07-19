@@ -6,7 +6,6 @@ from shortener.infra.translations import get_translator
 
 from shortener.adapters.api.v1.schemas.requests.auth import RegisterRequest
 from shortener.adapters.api.v1.schemas.responses.auth.register import (
-    REGISTER_RESPONSES,
     SuccessRegisterResponse,
     PlanNotFoundResponse,
     EmailAlreadyExistsResponse
@@ -16,12 +15,33 @@ from shortener.adapters.api.v1.dependencies import (
     RegisterUserUseCaseDependency,
     LanguageParserDependency
 )
+from shortener.adapters.api.v1.schemas.responses.types import FastAPIRouteResponses
 
 from . import router
 
 
+register_responses = FastAPIRouteResponses()
+register_responses.set_response(
+    status_code=HTTPStatus.CREATED,
+    description="User registered.",
+    model=SuccessRegisterResponse
+)
+register_responses.set_response(
+    status_code=HTTPStatus.BAD_REQUEST,
+    description="Provided Plan ID not found.",
+    model=ErrorResponse
+)
+register_responses.set_response(
+    status_code=HTTPStatus.CONFLICT,
+    description="Provided email already exists.",
+    model=ErrorResponse
+)
+
+
 @router.post(
-    "/register", status_code=HTTPStatus.CREATED, responses=REGISTER_RESPONSES
+    "/register",
+    status_code=HTTPStatus.CREATED,
+    responses=register_responses.get_responses()
 )
 async def register(
     request: RegisterRequest,
