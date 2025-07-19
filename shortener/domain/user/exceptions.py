@@ -114,7 +114,7 @@ class EmailAlreadyExistsError(ValidationError):
     def __init__(self, email: str):
         self.email = email
         msg = f"The provided email already exists."
-        super().__init__(value=email, field="emal", code=self.code, message=msg)
+        super().__init__(value=email, field="email", code=self.code, message=msg)
 
 
 # User Repository Exceptions
