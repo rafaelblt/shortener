@@ -1,16 +1,19 @@
-from shortener.domain.user.exceptions import UserNotFoundError, UserPasswordIncorrectError
+from http import HTTPStatus
+
+from fastapi.responses import JSONResponse
 
 from shortener.adapters.api.v1.dependencies import (
     LoginUserUseCaseDependency,
     LanguageParserDependency
 )
-
 from shortener.adapters.api.v1.schemas.requests.auth import LoginRequest
-from shortener.adapters.api.v1.schemas.responses.auth.login import (
-    SuccessLoginResponse,
-    FailLoginResponse,
-)
+from shortener.adapters.api.v1.schemas.responses import ErrorResponse
 from shortener.adapters.api.v1.schemas.responses.types import FastAPIRouteResponses
+from shortener.adapters.api.v1.schemas.responses.auth.login import SuccessLoginResponse
+
+from shortener.domain.user.exceptions import UserNotFoundError, UserPasswordIncorrectError
+
+from shortener.infra.translations.i18n import get_translator
 
 from . import router
 
@@ -40,7 +43,12 @@ async def login(
             email=email, password=request.password
         )
     except (UserNotFoundError, UserPasswordIncorrectError):
-        return FailLoginResponse.json_response(language)
+        _ = get_translator(language)
+        detail = _("Invalid email or password.")
+        return JSONResponse(
+            status_code=HTTPStatus.UNAUTHORIZED,
+            content={"code": "INVALID_CREDENTIALS", "detail": detail}
+        )
 
     expires_minutes = use_case.auth_token_service.expires_minutes
     return SuccessLoginResponse(
