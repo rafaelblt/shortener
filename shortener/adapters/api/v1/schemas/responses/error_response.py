@@ -1,8 +1,8 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ErrorResponse(BaseModel):
-    code: str
+    code: str = Field(default="UNKNOWN_ERROR", description="The code error")
     detail: str
 
 
