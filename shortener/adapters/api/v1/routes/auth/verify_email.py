@@ -1,4 +1,5 @@
 from http import HTTPStatus
+
 from fastapi.responses import JSONResponse
 
 from shortener.adapters.api.v1.schemas import MessageResponse
