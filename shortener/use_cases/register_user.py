@@ -1,3 +1,5 @@
+import asyncio
+
 from shortener.domain.shared.validator import MultiFieldValidator, Validator
 from shortener.domain.shared.language import Language
 
@@ -11,6 +13,7 @@ from shortener.domain.plan.exceptions import PlanNotFoundError
 
 from shortener.domain.user import User, UserRepository
 from shortener.domain.user.fields import Email, Name, HashedPassword, UserStatus
+from shortener.domain.user.exceptions import EmailAlreadyExistsError
 
 
 class RegisterUserUseCase:
@@ -71,13 +74,16 @@ class RegisterUserUseCase:
         
         Raises: 
             PlanNotFoundError: If the plan_id is not found in repository.
+            EmailAlreadyExistsError: If there is already a user with the email provided.
             MultiValidationError: If any of the data provided is invalid.
         """
         multi_validator = MultiFieldValidator(self.validators_map)
         await multi_validator.validate(
             email=email, name=name, password=password, plan_id=plan_id
         )
-        plan = await self._get_plan(plan_id)
+        plan, _ = await asyncio.gather(
+            self._get_plan(plan_id), self._validate_email_unique(email)
+        )
         new_user = await self._create_user(email, name, password, plan)
         await self._send_verification_email(email, name, lang)
 
@@ -89,6 +95,10 @@ class RegisterUserUseCase:
             raise PlanNotFoundError(plan_id=plan_id)
         return plan
 
+    async def _validate_email_unique(self, email: Email):
+        exists = await self.user_repository.exists_by_email(email)
+        if exists:
+            raise EmailAlreadyExistsError(email)
     async def _create_user(
         self, email: Email, name: Name, password: str, plan: Plan
     ) -> User:
