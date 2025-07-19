@@ -12,8 +12,8 @@ from shortener.domain.plan import Plan, PlanRepository
 from shortener.domain.plan.exceptions import PlanNotFoundError
 
 from shortener.domain.user import User, UserRepository
-from shortener.domain.user.fields import Email, Name, HashedPassword, UserStatus
 from shortener.domain.user.exceptions import EmailAlreadyExistsError
+from shortener.domain.user.fields import Email, Name, HashedPassword, PlainPassword, UserStatus
 
 
 class RegisterUserUseCase:
@@ -54,10 +54,12 @@ class RegisterUserUseCase:
         email: Email,
         name: Name,
         plan_id: int,
-        password: str,
+        password: PlainPassword,
         lang: Language
     ) -> User:
         """
+        Creates a user with UNVERIFIED_EMAIL status and sends verification token.
+
         It performs the validations, creates the user, saves with the 
         UNVERIFIED_EMAIL status and sends the verification token to the email 
         address provided.
@@ -66,7 +68,7 @@ class RegisterUserUseCase:
             email (Email): The email of user.
             name (Name): The name of user.
             plan_id (int): Plan ID of the user.
-            password (str): Plain password of the user.
+            password (PlainPassword): Plain password of the user.
             lang (Language): The language for translation.
         
         Returns:
@@ -99,8 +101,9 @@ class RegisterUserUseCase:
         exists = await self.user_repository.exists_by_email(email)
         if exists:
             raise EmailAlreadyExistsError(email)
+
     async def _create_user(
-        self, email: Email, name: Name, password: str, plan: Plan
+        self, email: Email, name: Name, password: PlainPassword, plan: Plan
     ) -> User:
         hashed_password = HashedPassword(self.password_hasher.hash(password))
         user = User(
