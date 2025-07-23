@@ -31,7 +31,7 @@ class UserRepository(ABC):
             User: The updated entity.
         
         Raises:
-            UserNotFoundInDatabase: User not found in database.
+            UserNotFoundError: User not found in database.
         """
         pass
 
@@ -97,7 +97,7 @@ class UserRepository(ABC):
             User: The deleted entity.
         
         Raises:
-            UserNotFoundInDatabase: Id not found in database.
+            UserNotFoundError: Id not found in database.
         """
         pass
 
