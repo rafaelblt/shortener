@@ -1,13 +1,15 @@
 from abc import ABC, abstractmethod
-from datetime import timedelta
+from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Mapping, TypedDict, Optional
 
+from shortener.domain.services.exceptions import TokenInvalidError, TokenExpiredError
 
-class Payload(TypedDict):
+
+class PayloadDecoded(TypedDict):
     subject: str
     purpose: str
-    expires_in: timedelta
+    expires_at: datetime
     extra_claims: Optional[Mapping[str, Any]]
 
 
@@ -21,7 +23,7 @@ class TokenService(ABC):
     def generate_token(
         self,
         subject: str,
-        purpose: str,
+        purpose: Purpose,
         expires_in: timedelta,
         extra_claims: Mapping[str, Any] | None = None
     ) -> str:
@@ -30,7 +32,7 @@ class TokenService(ABC):
 
         Args:
             subject (str): The subject (e.g., user identifier or email).
-            purpose (str): The purpose of the token (e.g., "login", "email-verification").
+            purpose (Purpose): The purpose of the token (e.g., "login", "email-verification").
             expires_in (timedelta): The time duration until expiration.
             extra_claims (dict, optional): Any additional claims to embed.
 
@@ -40,7 +42,7 @@ class TokenService(ABC):
         pass
 
     @abstractmethod
-    def decode_token(self, token: str) -> Payload:
+    def decode_token(self, token: str) -> PayloadDecoded:
         """
         Decodes the given token and returns its payload.
 
