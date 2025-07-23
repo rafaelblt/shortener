@@ -6,7 +6,7 @@ class DomainError(Exception):
 
 
 class ValidationError(DomainError):
-    def __init__(self, value: str, field: str, code: str, message: str):
+    def __init__(self, value: str | int, field: str, code: str, message: str):
         self.value = value
         self.field = field
         self.code = code
