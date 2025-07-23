@@ -1,5 +1,5 @@
-from tests.settings import set_test_env_vars
+import os
 
-set_test_env_vars()
+os.environ.setdefault("ENVIRONMENT_PATTERN", "testing")
 
 from tests.fixtures import *
