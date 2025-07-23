@@ -1,6 +1,9 @@
 import os
 import pytest
 
+from unittest.mock import patch
+
+from shortener.infra.exceptions import MissingEnvironmentVariableError
 from shortener.infra.settings import constants, loader
 
 
@@ -96,3 +99,9 @@ def test_func_load_settings_with_env_pattern():
     retrieved = loader.load_settings()
 
     assert retrieved == expected_settings
+
+
+def test_func_load_settings_calls_validate_settings():
+    with patch.dict(os.environ, clear=True):
+        with pytest.raises(MissingEnvironmentVariableError):
+            loader.load_settings()
