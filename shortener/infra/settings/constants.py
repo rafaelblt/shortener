@@ -11,21 +11,19 @@ REQUIRED_ENV_VARS = [
     "API_BASE_URL",
     "DATABASE_URL",
     "ALEMBIC_DATABASE_URL",
-    "JWT_AUTH_SECRET_KEY",
+    "JWT_SECRET_KEY",
     "SENDGRID_API_KEY",
     "SENDGRID_FROM_EMAIL"
 ]
 
 OPTIONAL_ENV_VARS = [
     "APP_NAME",
-    "JWT_AUTH_TOKEN_ALGORITHM",
-    "JWT_AUTH_TOKEN_EXPIRES_MINUTES",
+    "JWT_ALGORITHM",
 ]
 
 ENV_DEFAULTS = {
     "APP_NAME": "Shortener",
-    "JWT_AUTH_TOKEN_ALGORITHM": "HS256",
-    "JWT_AUTH_TOKEN_EXPIRES_MINUTES": "60",
+    "JWT_ALGORITHM": "HS256",
 }
 
 ENV_PATTERNS: dict[str, dict[str, str]] = {
@@ -33,7 +31,7 @@ ENV_PATTERNS: dict[str, dict[str, str]] = {
         "API_BASE_URL": "https://devshort.com",
         "DATABASE_URL": "sqlite+aiosqlite:///default.db",
         "ALEMBIC_DATABASE_URL": "",
-        "JWT_AUTH_SECRET_KEY": "[DevShort]->S3cr3tK3y!@#$%&*()-+",
+        "JWT_SECRET_KEY": "[DevShort]->S3cr3tK3y!@#$%&*()-+",
         "SENDGRID_API_KEY": "fake-sendgrid-key",
         "SENDGRID_FROM_EMAIL": "admin@gmail.com"
     },
@@ -41,7 +39,7 @@ ENV_PATTERNS: dict[str, dict[str, str]] = {
         "API_BASE_URL": "https://testshort.com",
         "DATABASE_URL": "sqlite+aiosqlite:///:memory:",
         "ALEMBIC_DATABASE_URL": "",
-        "JWT_AUTH_SECRET_KEY": "[TestShort]->S3cr3tK3y!@#$%&*()-+",
+        "JWT_SECRET_KEY": "[TestShort]->S3cr3tK3y!@#$%&*()-+",
         "SENDGRID_API_KEY": "fake-sendgrid-key",
         "SENDGRID_FROM_EMAIL": "admin@gmail.com"
     }

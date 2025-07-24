@@ -15,9 +15,8 @@ class Settings:
     DATABASE_URL = settings_dict["DATABASE_URL"]
     ALEMBIC_DATABASE_URL = settings_dict["ALEMBIC_DATABASE_URL"]
 
-    JWT_AUTH_SECRET_KEY = settings_dict["JWT_AUTH_SECRET_KEY"]
-    JWT_AUTH_TOKEN_ALGORITHM = settings_dict["JWT_AUTH_TOKEN_ALGORITHM"]
-    JWT_AUTH_TOKEN_EXPIRES_MINUTES = settings_dict["JWT_AUTH_TOKEN_EXPIRES_MINUTES"]
+    JWT_SECRET_KEY = settings_dict["JWT_SECRET_KEY"]
+    JWT_ALGORITHM = settings_dict["JWT_TOKEN_ALGORITHM"]
 
     SENDGRID_API_KEY = settings_dict["SENDGRID_API_KEY"]
     SENDGRID_FROM_EMAIL = settings_dict["SENDGRID_FROM_EMAIL"]
