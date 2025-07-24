@@ -1,7 +1,7 @@
 from typing import Annotated
 from fastapi import Depends
 
-from shortener.infra.services.jwt_auth_token import JwtAuthTokenService
+from shortener.infra.services.jwt_token import JwtTokenService
 
 from shortener.use_cases import VerifyEmailUseCase
 
@@ -13,7 +13,7 @@ def make_verify_email_use_case(
 ):
     return VerifyEmailUseCase(
         user_repository=user_repository,
-        auth_token_service=JwtAuthTokenService()
+        token_service=JwtTokenService()
     )
 
 VerifyEmailUseCaseDependency = Annotated[
