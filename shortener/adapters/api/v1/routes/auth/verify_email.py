@@ -7,7 +7,7 @@ from shortener.adapters.api.v1.dependencies import VerifyEmailUseCaseDependency,
 from shortener.adapters.api.v1.schemas.responses.error_response import ErrorResponse
 from shortener.adapters.api.v1.schemas.responses.types import FastAPIRouteResponses
 
-from shortener.domain.services.exceptions import AuthTokenExpiredError, AuthTokenInvalidError
+from shortener.domain.services.exceptions import TokenInvalidError, TokenExpiredError
 from shortener.domain.user.exceptions import UserNotFoundError, UserStatusInvalidToVerifyEmailError
 
 from shortener.infra.translations.i18n import get_translator
@@ -48,11 +48,11 @@ async def verify_email(
     _ = get_translator(language)
     try:
         await use_case.execute(token)
-    except (AuthTokenInvalidError, UserNotFoundError):
+    except (TokenInvalidError, UserNotFoundError):
         error["status_code"] = HTTPStatus.BAD_REQUEST
         error["error_code"] = "INVALID_EMAIL_VERIFICATION_TOKEN"
         error["detail"] = _("Invalid email verification token.")
-    except AuthTokenExpiredError:
+    except TokenExpiredError:
         error["status_code"] = HTTPStatus.GONE
         error["error_code"] = "EMAIL_VERIFICATION_TOKEN_EXPIRED"
         error["detail"] = _("Email verification token has expired.")
