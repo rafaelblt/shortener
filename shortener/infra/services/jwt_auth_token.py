@@ -16,9 +16,9 @@ from shortener.domain.services.auth_token import AuthTokenService
 class JwtAuthTokenService(AuthTokenService):
     def __init__(
         self,
-        secret_key: str = settings.JWT_AUTH_SECRET_KEY,
-        algorithm: str = settings.JWT_AUTH_TOKEN_ALGORITHM,
-        expires_minutes: int = settings.JWT_AUTH_TOKEN_EXPIRES_MINUTES
+        secret_key: str = settings.JWT_SECRET_KEY,
+        algorithm: str = settings.JWT_ALGORITHM,
+        expires_minutes: int = 60
     ):
         self._secret_key = secret_key
         self._algorithm = algorithm
