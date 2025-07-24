@@ -1,6 +1,6 @@
 from shortener.domain.user.exceptions import UserNotFoundError
 
-from shortener.domain.services.auth_token import AuthTokenService
+from shortener.domain.services.token import TokenService, TokenInvalidError
 
 from shortener.domain.user import UserRepository
 
@@ -11,15 +11,15 @@ class VerifyEmailUseCase:
     def __init__(
         self,
         user_repository: UserRepository,
-        auth_token_service: AuthTokenService
+        token_service: TokenService
     ):
         """
         Args:
             user_repository: Repository to find and update the user.
-            auth_token_service: Service to decode the verify token.
+            token_service: Service to decode the verify token.
         """
         self.user_repository = user_repository
-        self.auth_token_service = auth_token_service
+        self.token_service = token_service
     
     async def execute(self, token: str):
         """
@@ -32,14 +32,18 @@ class VerifyEmailUseCase:
             None: The user is verified.
 
         Raises:
-            AuthTokenInvalidError: The token is invalid.
-            AuthTokenExpiredError: The token is expired.
+            TokenInvalidError: The token is invalid.
+            TokenExpiredError: The token is expired.
             UserNotFoundError: If the user is not found in the database.
             UserStatusInvalidToVerifyEmailError: If the user status is not 
                 UNVERIFIED_EMAIL.
         """
-        email = self.auth_token_service.decode_token(token)
+        payload = self.token_service.decode_token(token)
+
+        if not payload["purpose"] == self.token_service.Purpose.EMAIL_VERIFICATION:
+            raise TokenInvalidError()
         
+        email = payload["subject"]
         user = await self.user_repository.get_by_email(email)
         if user is None:
             raise UserNotFoundError(field="email", value=email)

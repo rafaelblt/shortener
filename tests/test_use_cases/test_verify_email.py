@@ -1,9 +1,10 @@
+from datetime import timedelta
 import pytest
 
-from shortener.domain.services.auth_token import AuthTokenService
-from shortener.domain.services.exceptions import AuthTokenInvalidError
+from shortener.domain.services.token import TokenService, TokenInvalidError, TokenExpiredError
 
 from shortener.domain.user import User
+from shortener.domain.user.rules import UserRules
 from shortener.domain.user.fields import UserStatus
 from shortener.domain.user.exceptions import (
     UserNotFoundError, UserStatusInvalidToVerifyEmailError
@@ -11,23 +12,34 @@ from shortener.domain.user.exceptions import (
 
 from shortener.use_cases import VerifyEmailUseCase
 
+from tests.fixtures import MockTokenService
+
+
+def get_email_verification_token(user: User):
+    return MockTokenService().generate_token(
+        subject=user.email,
+        purpose=TokenService.Purpose.EMAIL_VERIFICATION,
+        expires_in=timedelta(minutes=UserRules.EMAIL_VERIFICATION_EXPIRATION_MINUTES),
+    )
+
 
 @pytest.fixture
-def use_case(mock_user_repository, mock_auth_token_service):
+def use_case(mock_user_repository, mock_token_service):
     return VerifyEmailUseCase(
         user_repository=mock_user_repository,
-        auth_token_service=mock_auth_token_service
+        token_service=mock_token_service
     )
 
 
 @pytest.mark.asyncio
 async def test_if_user_status_is_updated(
-    use_case: VerifyEmailUseCase, unverified_email_user: User
+    use_case: VerifyEmailUseCase,
+    unverified_email_user: User
 ):
     user = unverified_email_user
     await use_case.user_repository.add(user)
-    token = use_case.auth_token_service.generate_token(user.email)
 
+    token = get_email_verification_token(unverified_email_user)
     retrieved = await use_case.execute(token=token)
     assert retrieved is None
 
@@ -37,9 +49,23 @@ async def test_if_user_status_is_updated(
 
 
 @pytest.mark.asyncio
-async def test_with_invalid_token(use_case: VerifyEmailUseCase):
-    with pytest.raises(AuthTokenInvalidError):
+async def test_with_invalid_token_format(use_case: VerifyEmailUseCase):
+    with pytest.raises(TokenInvalidError):
         await use_case.execute("invalid-token")
+
+
+@pytest.mark.asyncio
+async def test_with_invalid_token_purpose(
+    use_case: VerifyEmailUseCase,
+    unverified_email_user: User
+):
+    token = MockTokenService().generate_token(
+        subject=unverified_email_user.email,
+        purpose="other_purpose", # type: ignore
+        expires_in=timedelta(minutes=5),
+    )
+    with pytest.raises(TokenInvalidError):
+        await use_case.execute(token)
 
 
 @pytest.mark.asyncio
@@ -48,7 +74,7 @@ async def test_with_invalid_user_status(
 ):
     user = normal_user
     await use_case.user_repository.add(user)
-    token = use_case.auth_token_service.generate_token(user.email)
+    token = get_email_verification_token(user)
 
     with pytest.raises(UserStatusInvalidToVerifyEmailError):
         await use_case.execute(token)
@@ -58,7 +84,7 @@ async def test_with_invalid_user_status(
 async def test_with_non_existent_email(
     use_case: VerifyEmailUseCase, normal_user: User
 ):
-    token = use_case.auth_token_service.generate_token(normal_user.email)
+    token = get_email_verification_token(normal_user)
 
     with pytest.raises(UserNotFoundError) as error:
         await use_case.execute(token)
