@@ -19,6 +19,9 @@ class TokenService(ABC):
     class Purpose(str, Enum):
         EMAIL_VERIFICATION = "email_verification"
 
+        def __str__(self):
+            return self.value
+
     @abstractmethod
     def generate_token(
         self,

@@ -34,7 +34,7 @@ class MockTokenService(TokenService):
         if extra_claims is not None:
             raise NotImplementedError("extra_claims is not implemented in MockTokenService")
         expiration = utc_now() + expires_in
-        token = f"{subject}|{purpose.value}|{self._secret_key}|{expiration.timestamp()}"
+        token = f"{subject}|{purpose}|{self._secret_key}|{expiration.timestamp()}"
         self.mock_data["generated_tokens"].append(token)
         return token
 
