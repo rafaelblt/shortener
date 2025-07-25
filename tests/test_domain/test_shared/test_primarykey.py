@@ -17,6 +17,11 @@ def test_classmethod_create_pk_undefined():
     assert pk._value == ""
 
 
+def test_property_raw_value():
+    pk = PrimaryKey.create_pk_id(10)
+    assert pk.raw_value == "10"
+
+
 def test_property_pk_type():
     pk = PrimaryKey.create_pk_undefined()
     assert pk.pk_type == PkType.UNDEFINED

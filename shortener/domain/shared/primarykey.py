@@ -25,6 +25,10 @@ class PrimaryKey:
         return pk
 
     @property
+    def raw_value(self):
+        return self._value
+
+    @property
     def pk_type(self):
         return self._type
 
