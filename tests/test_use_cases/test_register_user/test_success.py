@@ -104,11 +104,10 @@ async def test_if_email_is_sent_with_token(
         lang=example_lang
     )
 
-    assert isinstance(use_case.auth_token_service, MockAuthTokenService)
     expected_context = {
         "user_name": normal_user.name,
-        "token": use_case.auth_token_service.mock_data["generated_tokens"][0],
-        "expires_minutes": use_case.auth_token_service.expires_minutes
+        "token": MockTokenService().mock_data["generated_tokens"][0],
+        "expires_minutes": EMAIL_VERIFICATION_EXPIRES_IN.seconds * 60
     }
 
     template_result = mock_email_template.render(example_lang, expected_context)

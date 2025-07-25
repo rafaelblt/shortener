@@ -1,10 +1,12 @@
 import asyncio
 
+from datetime import timedelta
+
 from shortener.domain.shared.validator import MultiFieldValidator, Validator
 from shortener.domain.shared.language import Language
 
 from shortener.domain.services.password_hasher import PasswordHasherService
-from shortener.domain.services.auth_token import AuthTokenService
+from shortener.domain.services.token import TokenService
 from shortener.domain.services.send_email import SendEmailService
 from shortener.domain.services.email_template import EmailTemplate
 
@@ -23,18 +25,20 @@ class RegisterUserUseCase:
         self,
         user_repository: UserRepository,
         plan_repository: PlanRepository,
-        auth_token_service: AuthTokenService,
         send_email_service: SendEmailService,
         password_hasher: PasswordHasherService,
         email_template: EmailTemplate,
+        token_service: TokenService,
+        email_verification_expires_in: timedelta,
         validators_map: dict[str, list[Validator]]
     ):
         self.user_repository = user_repository
         self.plan_repository = plan_repository
-        self.auth_token_service = auth_token_service
         self.send_email_service = send_email_service
         self.password_hasher = password_hasher
         self.email_template = email_template
+        self.token_service = token_service
+        self.email_verification_expires_in = email_verification_expires_in
         self.validators_map = validators_map
 
     async def execute(
@@ -106,11 +110,15 @@ class RegisterUserUseCase:
     async def _send_verification_email(
         self, email: Email, name: Name, lang: Language
     ):
-        token = self.auth_token_service.generate_token(email)
+        token = self.token_service.generate_token(
+            subject=email,
+            purpose=TokenService.Purpose.EMAIL_VERIFICATION,
+            expires_in=self.email_verification_expires_in
+        )
         context = {
             "user_name": name,
             "token": token,
-            "expires_minutes": self.auth_token_service.expires_minutes
+            "expires_minutes": self.email_verification_expires_in.seconds * 60
         }
 
         result = self.email_template.render(lang=lang, context=context)
