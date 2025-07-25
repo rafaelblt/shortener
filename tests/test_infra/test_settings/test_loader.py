@@ -18,15 +18,16 @@ def test_func_set_default_env_vars():
     assert settings == expected_settings
 
 
-def test_func_get_and_set_env_pattern():
+def test_func_get_and_set_env_template():
     settings = {"bla": "bla", "test": "abc"}
-    env_pattern = "development"
+    env_template = "development"
 
     expected_settings = settings.copy()
-    expected_settings.update(constants.ENV_PATTERNS[env_pattern])
+    expected_settings.update(constants.ENV_TEMPLATES[env_template])
 
-    os.environ["ENVIRONMENT_PATTERN"] = env_pattern
-    loader.get_and_set_env_pattern(settings)
+    with patch.dict(os.environ):
+        os.environ["ENVIRONMENT_TEMPLATE"] = env_template
+        loader.get_and_set_env_template(settings)
 
     assert settings == expected_settings
 
@@ -35,12 +36,12 @@ def test_func_set_required_env_vars():
     settings = {"bla": "bla", "test": "abc"}
     expected_settings = settings.copy()
 
-    for i, var in enumerate(constants.REQUIRED_ENV_VARS):
-        value = f"var{i}"
-        os.environ[var] = value 
-        expected_settings[var] = value
-
-    loader.set_required_env_vars(settings)
+    with patch.dict(os.environ):
+        for i, var in enumerate(constants.REQUIRED_ENV_VARS):
+            value = f"var{i}"
+            os.environ[var] = value 
+            expected_settings[var] = value
+        loader.set_required_env_vars(settings)
 
     assert settings == expected_settings
 
@@ -49,12 +50,12 @@ def test_func_set_optional_env_vars():
     settings = {"bla": "bla", "test": "abc"}
     expected_settings = settings.copy()
 
-    for i, var in enumerate(constants.OPTIONAL_ENV_VARS):
-        value = f"var{i}"
-        os.environ[var] = value 
-        expected_settings[var] = value
-
-    loader.set_optional_env_vars(settings)
+    with patch.dict(os.environ):
+        for i, var in enumerate(constants.OPTIONAL_ENV_VARS):
+            value = f"var{i}"
+            os.environ[var] = value 
+            expected_settings[var] = value
+        loader.set_optional_env_vars(settings)
 
     assert settings == expected_settings
 
@@ -70,33 +71,33 @@ def test_func_set_static_settings():
     assert settings == expected_settings
 
 
-def test_func_load_settings_without_env_pattern():
+def test_func_load_settings_without_env_template():
     expected_settings = {}
 
-    for i, var in enumerate(constants.REQUIRED_ENV_VARS):
-        value = f"required_{i}"
-        os.environ[var] = value
-        expected_settings[var] = value
-    
     expected_settings.update(constants.STATIC_SETTINGS)
     expected_settings.update(constants.ENV_DEFAULTS)
 
-    retrieved = loader.load_settings()
+    with patch.dict(os.environ):
+        for i, var in enumerate(constants.REQUIRED_ENV_VARS):
+            value = f"required_{i}"
+            os.environ[var] = value
+            expected_settings[var] = value
+        retrieved = loader.load_settings()
 
     assert retrieved == expected_settings
 
 
-def test_func_load_settings_with_env_pattern():
-    env_pattern = "testing"
+def test_func_load_settings_with_env_template():
+    env_template = "testing"
 
     expected_settings = {}
     expected_settings.update(constants.STATIC_SETTINGS)
     expected_settings.update(constants.ENV_DEFAULTS)
-    expected_settings.update(constants.ENV_PATTERNS[env_pattern])
+    expected_settings.update(constants.ENV_TEMPLATES[env_template])
 
-    os.environ["ENVIRONMENT_PATTERN"] = env_pattern
-
-    retrieved = loader.load_settings()
+    with patch.dict(os.environ):
+        os.environ["ENVIRONMENT_TEMPLATE"] = env_template
+        retrieved = loader.load_settings()
 
     assert retrieved == expected_settings
 

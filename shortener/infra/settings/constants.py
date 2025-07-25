@@ -26,7 +26,7 @@ ENV_DEFAULTS = {
     "JWT_ALGORITHM": "HS256",
 }
 
-ENV_PATTERNS: dict[str, dict[str, str]] = {
+ENV_TEMPLATES: dict[str, dict[str, str]] = {
     "development": {
         "API_BASE_URL": "https://devshort.com",
         "DATABASE_URL": "sqlite+aiosqlite:///default.db",

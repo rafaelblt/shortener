@@ -8,7 +8,7 @@ def load_settings():
     settings: dict[str, str] = {}
 
     set_default_env_vars(settings)
-    get_and_set_env_pattern(settings)
+    get_and_set_env_template(settings)
     set_required_env_vars(settings)
     set_optional_env_vars(settings)
     set_static_settings(settings)
@@ -22,10 +22,10 @@ def set_default_env_vars(settings: dict):
     settings.update(constants.ENV_DEFAULTS)
 
 
-def get_and_set_env_pattern(settings: dict):
-    env_pattern = os.getenv("ENVIRONMENT_PATTERN")
-    if env_pattern and env_pattern in constants.ENV_PATTERNS:
-        settings.update(constants.ENV_PATTERNS[env_pattern])
+def get_and_set_env_template(settings: dict):
+    env_template = os.getenv("ENVIRONMENT_TEMPLATE")
+    if env_template and env_template in constants.ENV_TEMPLATES:
+        settings.update(constants.ENV_TEMPLATES[env_template])
 
 
 def set_required_env_vars(settings: dict):
