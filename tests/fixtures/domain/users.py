@@ -1,83 +1,119 @@
 import pytest
 
+from typing import TypedDict
 from datetime import datetime, timezone
 
 from shortener.domain.plan import Plan
-
 from shortener.domain.user import User
-from shortener.domain.user.fields import Email, Name, HashedPassword, UserStatus
+from shortener.domain.user.fields import *
+
+from tests.fixtures import MockPasswordHasherService
+
+
+class UserMockData(TypedDict):
+    plain_password: PlainPassword    
+
+
+class UserFixture(User):
+    mock_data: UserMockData
+
+    def _init_mock_data(self, plain_password: PlainPassword):
+        self.mock_data = UserMockData(
+            plain_password=plain_password
+        )
 
 
 @pytest.fixture
-def normal_user(default_plan: Plan):
-    return User(
+def normal_user(default_plan: Plan, mock_password_hasher: MockPasswordHasherService):
+    password = PlainPassword("_N0rm4lP4ssw0rd$$$$")
+    user = UserFixture(
         email=Email("normal.user@gmail.com"),
         name=Name("Normal User Example"),
-        hashed_password=HashedPassword("hash"),
+        hashed_password=mock_password_hasher.hash(password),
         plan=default_plan
     )
+    user._init_mock_data(plain_password=password)
+    return user
 
 
 @pytest.fixture
-def super_user(default_plan: Plan):
-    return User(
+def super_user(default_plan: Plan, mock_password_hasher: MockPasswordHasherService):
+    password = PlainPassword("my_SUPER_password_123_@")
+    user = UserFixture(
         email=Email("i-love-superman@super.io"),
         name=Name("I Am Superman"),
-        hashed_password=HashedPassword("superhash"),
+        hashed_password=mock_password_hasher.hash(password),
         plan=default_plan
     )
+    user._init_mock_data(plain_password=password)
+    return user
 
 
 @pytest.fixture
-def old_user(default_plan: Plan):
-    return User(
+def old_user(default_plan: Plan, mock_password_hasher: MockPasswordHasherService):
+    password = PlainPassword("old_019_@!)")
+    user = UserFixture(
         email=Email("wiseoldman@outlook.com"),
         name=Name("Richard Park"),
-        hashed_password=HashedPassword("2000"),
+        hashed_password=mock_password_hasher.hash(password),
         plan=default_plan,
         created_at=datetime(year=2000, month=1, day=1, tzinfo=timezone.utc)
     )
+    user._init_mock_data(plain_password=password)
+    return user
 
 
 @pytest.fixture
-def unverified_email_user(default_plan: Plan):
-    return User(
+def unverified_email_user(default_plan: Plan, mock_password_hasher: MockPasswordHasherService):
+    password = PlainPassword("_N0rm4lP4ssw0rd$$$$")
+    user = UserFixture(
         email=Email("i-was-not-checked@gmail.com"),
         name=Name("Unverified Person"),
-        hashed_password=HashedPassword("n0t"),
+        hashed_password=mock_password_hasher.hash(password),
         plan=default_plan,
         status=UserStatus.UNVERIFIED_EMAIL
     )
+    user._init_mock_data(plain_password=password)
+    return user
 
 
 @pytest.fixture
-def banned_user(default_plan: Plan):
-    return User(
+def banned_user(default_plan: Plan, mock_password_hasher: MockPasswordHasherService):
+    password = PlainPassword("DANGER_!!!!!!!!_54145262543")
+    user = UserFixture(
         email=Email("i-was-banned@gmail.com"),
         name=Name("Banned Person"),
-        hashed_password=HashedPassword("banpass123"),
+        hashed_password=mock_password_hasher.hash(password),
         plan=default_plan,
         status=UserStatus.BANNED
     )
+    user._init_mock_data(plain_password=password)
+    return user
 
 
 @pytest.fixture
-def suspended_user(default_plan: Plan):
-    return User(
+def suspended_user(default_plan: Plan, mock_password_hasher: MockPasswordHasherService):
+    password = PlainPassword("sus 4mongUs &")
+    user = UserFixture(
         email=Email("i-was-suspended@gmail.com"),
         name=Name("Suspended Person"),
-        hashed_password=HashedPassword("sus"),
+        hashed_password=mock_password_hasher.hash(password),
         plan=default_plan,
         status=UserStatus.SUSPENDED
     )
+    user._init_mock_data(plain_password=password)
+    return user
 
 
 @pytest.fixture
-def locked_user(default_plan: Plan):
-    return User(
+def locked_user(default_plan: Plan, mock_password_hasher: MockPasswordHasherService):
+    password = PlainPassword("DANGER_!!!!!!!!_54145262543")
+    user = UserFixture(
         email=Email("i-was-locked@gmail.com"),
         name=Name("Locked Person"),
-        hashed_password=HashedPassword("belocked"),
+        hashed_password=mock_password_hasher.hash(password),
         plan=default_plan,
         status=UserStatus.LOCKED
     )
+    user._init_mock_data(plain_password=password)
+    return user
