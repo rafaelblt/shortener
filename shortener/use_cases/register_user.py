@@ -97,7 +97,7 @@ class RegisterUserUseCase:
     async def _create_user(
         self, email: Email, name: Name, password: PlainPassword, plan: Plan
     ) -> User:
-        hashed_password = HashedPassword(self.password_hasher.hash(password))
+        hashed_password = self.password_hasher.hash(password)
         user = User(
             email=email,
             name=name,

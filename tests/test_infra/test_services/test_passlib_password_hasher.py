@@ -2,6 +2,7 @@ import pytest
 
 from passlib.context import CryptContext
 
+from shortener.domain.user.fields.hashed_password import HashedPassword
 from shortener.infra.services.passlib_hasher import PasslibPasswordHasher
 
 
@@ -18,8 +19,8 @@ def test_attr_pwd_context(password_hasher: PasslibPasswordHasher):
 def test_method_hash(password_hasher: PasslibPasswordHasher):
     pw = "mypass123"
     retrieved = password_hasher.hash(pw)
-    assert isinstance(retrieved, str)
-    assert retrieved != pw
+    assert isinstance(retrieved, HashedPassword)
+    assert str(retrieved) != pw
 
 
 def test_method_verify(password_hasher: PasslibPasswordHasher):

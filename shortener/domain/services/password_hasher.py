@@ -1,10 +1,12 @@
 from abc import ABC, abstractmethod
 
+from shortener.domain.user.fields import HashedPassword
+
 
 class PasswordHasherService(ABC):
 
     @abstractmethod
-    def hash(self, plain_password: str) -> str:
+    def hash(self, plain_password: str) -> HashedPassword:
         """Returns the hash of the password."""
         pass
 
