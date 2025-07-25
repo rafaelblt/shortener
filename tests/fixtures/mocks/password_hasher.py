@@ -6,7 +6,7 @@ from shortener.domain.user.fields import HashedPassword
 
 
 class MockPasswordHasherService(PasswordHasherService):
-    def hash(self, plain_password: str) -> str:
+    def hash(self, plain_password: str) -> HashedPassword:
         return HashedPassword(f"hashed-{plain_password}")
 
     def verify(self, plain_password: str, hashed_password: str) -> bool:
