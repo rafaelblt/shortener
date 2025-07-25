@@ -29,18 +29,6 @@ class RegisterUserUseCase:
         email_template: EmailTemplate,
         validators_map: dict[str, list[Validator]]
     ):
-        """
-        Args:
-            user_repository (UserRepository): Repository to save the user.
-            plan_repository (PlanRepository): Repository to get the user plan.
-            auth_token_service (AuthTokenService): Service to generate the 
-                verification token.
-            send_email_service (SendEmailService): Service to send the 
-                verification email.
-            password_hasher (PasswordHasherService): Service to hash the password.
-            validators_map (ValidatorsMap): Dictionary with validations list for 
-                each field.
-        """
         self.user_repository = user_repository
         self.plan_repository = plan_repository
         self.auth_token_service = auth_token_service
