@@ -27,12 +27,28 @@ class RefreshToken:
         self._expires_at = expires_at
     
     @property
-    def user(self):
-        return self._user
+    def pk(self):
+        return self._pk
     
     @property
     def token(self):
         return self._token
+
+    @property
+    def user(self):
+        return self._user
+    
+    @property
+    def expires_at(self):
+        return self._expires_at
+    
+    @property
+    def created_at(self):
+        return self._created_at
+    
+    @property
+    def revoked(self):
+        return self._revoked
     
     def consume(self):
         """
@@ -60,10 +76,10 @@ class RefreshToken:
             raise RefreshTokenExpiredError()
 
     def is_revoked(self):
-        return self._revoked
+        return self.revoked
     
     def is_expired(self):
-        return self._expires_at < utc_now()
+        return self.expires_at < utc_now()
     
     def revoke(self):
         self._revoked = True
