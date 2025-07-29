@@ -1,11 +1,15 @@
 import os
 
+from dotenv import load_dotenv
+
 from shortener.infra.settings import constants
 from shortener.infra.settings import utils
 
 
 def load_settings():
     settings: dict[str, str] = {}
+
+    load_dotenv()
 
     set_default_env_vars(settings)
     get_and_set_env_template(settings)
