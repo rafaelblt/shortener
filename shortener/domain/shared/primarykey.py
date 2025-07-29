@@ -32,6 +32,9 @@ class PrimaryKey:
     def pk_type(self):
         return self._type
 
+    def is_undefined(self):
+        return self.pk_type == PkType.UNDEFINED
+
     def get_id(self):
         if self._type != PkType.ID:
             raise ValueError("The pk is not of type id")
