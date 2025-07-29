@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 
 from shortener.domain.shared import PaginatedResult
+from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.domain.user import User
 
 
@@ -46,12 +47,12 @@ class UserRepository(ABC):
         pass
 
     @abstractmethod
-    async def get_by_id(self, id: int) -> User | None:
+    async def get_by_pk(self, pk: PrimaryKey) -> User | None:
         """
-        Retrieves a User by its id.
+        Retrieves a User by its primary key.
 
         Args:
-            id (int): The User id.
+            pk (PrimaryKey): The User pk.
 
         Returns:
             Optional[User]: The entity object or None if not found.
@@ -86,12 +87,12 @@ class UserRepository(ABC):
         pass
 
     @abstractmethod
-    async def delete_by_id(self, id: int) -> User:
+    async def delete_by_pk(self, pk: PrimaryKey) -> User:
         """
         Delete a existent User from the database.
 
         Args:
-            id (int): The id of User to be deleted.
+            pk (PrimaryKey): The pk of User to be deleted.
         
         Returns:
             User: The deleted entity.

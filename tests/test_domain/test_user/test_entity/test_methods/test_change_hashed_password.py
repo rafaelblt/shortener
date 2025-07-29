@@ -12,4 +12,4 @@ def test_change_hashed_password(normal_user: User):
 
 def test_change_hashed_password_raises_validation_error(normal_user: User):
     with pytest.raises(UserAttributeTypeError):
-        normal_user.change_hashed_password("new-hashed-password")
+        normal_user.change_hashed_password("new-hashed-password") # type: ignore

@@ -1,14 +1,15 @@
 from shortener.domain.shared.pagination import PaginatedResult
 
+from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.domain.user import User, UserRepository
 from shortener.domain.user.exceptions import UserNotFoundError
 
-from .database import MockDatabase, IdManager
+from .database import MockDatabase, PkManager
 
 
 class MockUserRepository(UserRepository):
     def __init__(self):
-        self.database = MockDatabase(index_manager=IdManager())
+        self.database = MockDatabase(index_manager=PkManager())
 
     async def add(self, user: User) -> User:
         user_dict = self._to_dict(user)
@@ -16,15 +17,15 @@ class MockUserRepository(UserRepository):
         return self._to_domain(user_dict)
     
     async def update(self, user: User) -> User:
-        if not self.database.exists_by_index(user.id):
-            raise UserNotFoundError(value=user.id, field="id")
+        user_dict = self.database.get_by_index(user.pk)
 
-        user_dict = self.database.get_by_index(user.id)
+        if user_dict is None:
+            raise UserNotFoundError(value=user.pk, field="pk") 
+
         user_dict["email"] = user.email
         user_dict["name"] = user.name
         user_dict["hashed_password"] = user.hashed_password
         user_dict["plan"] = user.plan
-        user_dict["shorturls_count"] = user.shorturls_count
         user_dict["status"] = user.status
         user_dict["is_superuser"] = user.is_superuser
         user_dict["created_at"] = user.created_at
@@ -35,8 +36,8 @@ class MockUserRepository(UserRepository):
     async def get_all(self) -> list[User]:
         return [self._to_domain(entity) for entity in self.database.get_all()]
 
-    async def get_by_id(self, id: int) -> User | None:
-        user_dict = self.database.get_by_index(id)
+    async def get_by_pk(self, pk: PrimaryKey) -> User | None:
+        user_dict = self.database.get_by_index(pk)
         if user_dict:
             return self._to_domain(user_dict)
         return None
@@ -58,20 +59,19 @@ class MockUserRepository(UserRepository):
             return True
         return False
 
-    async def delete_by_id(self, id: int) -> User:
-        user_dict = self.database.delete_by_index(id)
+    async def delete_by_pk(self, pk: PrimaryKey) -> User:
+        user_dict = self.database.delete_by_index(pk)
         if user_dict:
             return self._to_domain(user_dict)
-        raise UserNotFoundError(value=id, field="id")
+        raise UserNotFoundError(value=pk, field="pk")
             
     def _to_dict(self, user: User) -> dict:
         return {
-            "pk": user.id,
+            "pk": user.pk,
             "email": user.email,
             "name": user.name,
             "hashed_password": user.hashed_password,
             "plan": user.plan,
-            "shorturls_count": user.shorturls_count,
             "status": user.status,
             "is_superuser": user.is_superuser,
             "created_at": user.created_at,
@@ -80,12 +80,11 @@ class MockUserRepository(UserRepository):
     
     def _to_domain(self, user_dict: dict) -> User:
         return User(
-            id=user_dict["pk"],
+            pk=user_dict["pk"],
             email=user_dict["email"],
             name=user_dict["name"],
             hashed_password=user_dict["hashed_password"],
             plan=user_dict["plan"],
-            shorturls_count=user_dict["shorturls_count"],
             status=user_dict["status"],
             is_superuser=user_dict["is_superuser"],
             created_at=user_dict["created_at"],

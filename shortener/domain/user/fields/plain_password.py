@@ -14,8 +14,11 @@ class PlainPassword(str):
         cls.validate_password(value)
         return super().__new__(cls, value)
 
+    def __str__(self) -> str:
+        return super().__str__()
+
     def __repr__(self):
-        return f"<PlainPassword {super().__repr__()}>"
+        return f"<PlainPassword ###>"
 
     @staticmethod
     def validate_password(value: str):

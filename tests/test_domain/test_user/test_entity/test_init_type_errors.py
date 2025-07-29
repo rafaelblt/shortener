@@ -24,14 +24,14 @@ def get_type_error_message(attr, type_expected, got):
 
 
 def test_invalid_id(required_fields):
-    invalid_id = "1"
+    invalid_pk = 1
     with pytest.raises(
         TypeError, 
         match=get_type_error_message(
-            attr="id", type_expected="int or None", got=invalid_id
+            attr="id", type_expected="int or None", got=invalid_pk
         )
     ):
-        User(**required_fields, id=invalid_id)
+        User(**required_fields, pk=invalid_pk) # type: ignore
 
 
 def test_invalid_name(required_fields):
@@ -43,7 +43,7 @@ def test_invalid_name(required_fields):
             attr="name", type_expected="Name", got=invalid_name
         )
     ):
-        User(**required_fields, name=invalid_name)
+        User(**required_fields, name=invalid_name) # type: ignore
 
 
 def test_invalid_email(required_fields):
@@ -55,7 +55,7 @@ def test_invalid_email(required_fields):
             attr="email", type_expected="Email", got=invalid_email
         )
     ):
-        User(**required_fields, email=invalid_email)
+        User(**required_fields, email=invalid_email) # type: ignore
 
 
 def test_invalid_hashed_password(required_fields):
@@ -69,30 +69,7 @@ def test_invalid_hashed_password(required_fields):
             got=invalid_hashed_password
         )
     ):
-        User(**required_fields, hashed_password=invalid_hashed_password)
-
-
-def test_invalid_shorturls_count(required_fields):
-    invalid_shorturls_count = None
-    with pytest.raises(
-        TypeError, 
-        match=get_type_error_message(
-            attr="shorturls_count", 
-            type_expected="int", 
-            got=invalid_shorturls_count
-        )
-    ):
-        User(**required_fields, shorturls_count=invalid_shorturls_count)
-
-
-def test_shorturls_count_negative(required_fields):
-    invalid_shorturls_count = -2
-    with pytest.raises(
-        ValueError, 
-        match=("The User shorturls_count must be greater than or equal to 0, "
-              f"got {invalid_shorturls_count}")
-    ):
-        User(**required_fields, shorturls_count=invalid_shorturls_count)
+        User(**required_fields, hashed_password=invalid_hashed_password) # type: ignore
 
 
 def test_invalid_status(required_fields):
@@ -103,7 +80,7 @@ def test_invalid_status(required_fields):
             attr="status", type_expected="UserStatus", got=invalid_status
         )
     ):
-        User(**required_fields, status=invalid_status)
+        User(**required_fields, status=invalid_status) # type: ignore
 
 
 def test_invalid_is_superuser(required_fields):
@@ -114,7 +91,7 @@ def test_invalid_is_superuser(required_fields):
             attr="is_superuser", type_expected="bool", got=invalid_is_superuser
         )
     ):
-        User(**required_fields, is_superuser=invalid_is_superuser)
+        User(**required_fields, is_superuser=invalid_is_superuser) # type: ignore
 
 
 def test_invalid_created_at(required_fields):
@@ -125,7 +102,7 @@ def test_invalid_created_at(required_fields):
             attr="created_at", type_expected="datetime", got=invalid_created_at
         )
     ):
-        User(**required_fields, created_at=invalid_created_at)
+        User(**required_fields, created_at=invalid_created_at) # type: ignore
 
 
 def test_invalid_created_at_timezone(required_fields):
@@ -134,7 +111,7 @@ def test_invalid_created_at_timezone(required_fields):
         ValueError, 
         match="The User created_at datetime must be in UTC timezone."
     ):
-        User(**required_fields, created_at=invalid_created_at)
+        User(**required_fields, created_at=invalid_created_at) # type: ignore
 
 
 def test_invalid_last_login(required_fields):
@@ -147,7 +124,7 @@ def test_invalid_last_login(required_fields):
             got=invalid_last_login
         )
     ):
-        User(**required_fields, last_login=invalid_last_login)
+        User(**required_fields, last_login=invalid_last_login) # type: ignore
 
 
 def test_invalid_last_login_timezone(required_fields):
@@ -156,4 +133,4 @@ def test_invalid_last_login_timezone(required_fields):
         ValueError, 
         match="The User last_login datetime must be in UTC timezone."
     ):
-        User(**required_fields, last_login=invalid_last_login)
+        User(**required_fields, last_login=invalid_last_login) # type: ignore

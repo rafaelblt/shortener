@@ -12,4 +12,4 @@ def test_change_name(normal_user: User):
 
 def test_change_name_raises_validation_error(normal_user: User):
     with pytest.raises(UserAttributeTypeError):
-        normal_user.change_name("new name")
+        normal_user.change_name("new name") # type: ignore

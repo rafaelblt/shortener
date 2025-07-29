@@ -51,7 +51,7 @@ def super_user(default_plan: Plan, mock_password_hasher: MockPasswordHasherServi
 
 @pytest.fixture
 def old_user(default_plan: Plan, mock_password_hasher: MockPasswordHasherService):
-    password = PlainPassword("old_019_@!)")
+    password = PlainPassword("IAMold_019_@!)")
     user = UserFixture(
         email=Email("wiseoldman@outlook.com"),
         name=Name("Richard Park"),
@@ -79,7 +79,7 @@ def unverified_email_user(default_plan: Plan, mock_password_hasher: MockPassword
 
 @pytest.fixture
 def banned_user(default_plan: Plan, mock_password_hasher: MockPasswordHasherService):
-    password = PlainPassword("DANGER_!!!!!!!!_54145262543")
+    password = PlainPassword("DANGER_!!hacking!!!!!!_54145262543")
     user = UserFixture(
         email=Email("i-was-banned@gmail.com"),
         name=Name("Banned Person"),
@@ -107,7 +107,7 @@ def suspended_user(default_plan: Plan, mock_password_hasher: MockPasswordHasherS
 
 @pytest.fixture
 def locked_user(default_plan: Plan, mock_password_hasher: MockPasswordHasherService):
-    password = PlainPassword("DANGER_!!!!!!!!_54145262543")
+    password = PlainPassword("DANGER_!!hacking!!!!!!_54145262543")
     user = UserFixture(
         email=Email("i-was-locked@gmail.com"),
         name=Name("Locked Person"),

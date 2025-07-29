@@ -3,6 +3,7 @@ from typing import Optional
 
 from shortener.domain.shared.datetime_utils import is_utc, utc_now
 from shortener.domain.shared.email import Email
+from shortener.domain.shared.primarykey import PrimaryKey
 
 from shortener.domain.plan import Plan
 
@@ -25,32 +26,30 @@ class User:
         name: Name,
         hashed_password: HashedPassword,
         plan: Plan,
-        id: Optional[int] = None,
-        shorturls_count: int = 0,
+        pk: Optional[PrimaryKey] = None,
         status: UserStatus = UserStatus.ACTIVE,
         is_superuser: bool = False,
         created_at: Optional[datetime] = None,
         last_login: Optional[datetime] = None
     ):
         created_at = created_at or utc_now()
+        pk = pk or PrimaryKey.create_pk_undefined()
 
-        self.validate_id(id)
+        self.validate_pk(pk)
         self.validate_name(name)
         self.validate_email(email)
         self.validate_hashed_password(hashed_password)
         self.validate_plan(plan)
-        self.validate_shorturls_count(shorturls_count)
         self.validate_status(status)
         self.validate_is_superuser(is_superuser)
         self.validate_created_at(created_at)
         self.validate_last_login(last_login)
 
-        self._id = id
+        self._pk = pk
         self._name = name
         self._email = email
         self._hashed_password = hashed_password
         self._plan = plan
-        self._shorturls_count = shorturls_count
         self._status = status
         self._is_superuser = is_superuser
         self._created_at = created_at
@@ -58,8 +57,8 @@ class User:
 
     
     @property
-    def id(self):
-        return self._id
+    def pk(self):
+        return self._pk
     
     @property
     def name(self):
@@ -76,10 +75,6 @@ class User:
     @property
     def plan(self):
         return self._plan
-    
-    @property
-    def shorturls_count(self):
-        return self._shorturls_count
     
     @property
     def status(self):
@@ -99,9 +94,9 @@ class User:
 
 
     @staticmethod
-    def validate_id(id):
-        if not isinstance(id, (int, type(None))):
-            raise AttrTypeError(attr="id", type_expected="int or None", got=id)
+    def validate_pk(pk):
+        if not isinstance(pk, PrimaryKey):
+            raise AttrTypeError(attr="pk", type_expected="PrimaryKey", got=pk)
     
     @staticmethod
     def validate_name(name):
@@ -126,18 +121,6 @@ class User:
     def validate_plan(plan):
         if not isinstance(plan, Plan):
             raise AttrTypeError(attr="plan", type_expected="Plan", got=plan)
-
-    @staticmethod
-    def validate_shorturls_count(shorturls_count):
-        if not isinstance(shorturls_count, int):
-            raise AttrTypeError(
-                attr="shorturls_count", type_expected="int", got=shorturls_count
-            )
-        if shorturls_count < 0:
-            raise ValueError(
-                ("The User shorturls_count must be greater than or equal to 0, "
-                f"got {shorturls_count}")
-            )
     
     @staticmethod
     def validate_status(status):
@@ -235,16 +218,5 @@ class User:
         self._last_login = utc_now()
 
 
-    def get_int_id(self) -> int:
-        if self.id is None:
-            raise UserIdIsNotIntError(value=self.id)
-        return self.id
-
-    def get_datetime_last_login(self):
-        if self.last_login is None:
-            raise ValueError("User last_login is None")
-        return self.last_login
-
-
     def __repr__(self):
-        return f"<User id={self.id} email={self.email} name={self.name}>"
+        return f"<User pk={self.pk} email={self.email} name={self.name}>"
