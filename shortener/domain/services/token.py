@@ -17,6 +17,8 @@ class TokenService(ABC):
     """Service for generating and decoding general-purpose tokens."""
 
     class Purpose(str, Enum):
+        LOGIN = "login"
+        REFRESH_LOGIN = "refresh_login"
         EMAIL_VERIFICATION = "email_verification"
 
         def __str__(self):
@@ -59,4 +61,11 @@ class TokenService(ABC):
             TokenInvalidError: The token is invalid.
             TokenExpiredError: The token is expired.
         """
+        pass
+
+
+class RandomTokenGenerator(ABC):
+
+    @abstractmethod
+    def generate_token(self) -> str:
         pass
