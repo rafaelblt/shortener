@@ -37,7 +37,6 @@ def upgrade() -> None:
             'ACTIVE', 'UNVERIFIED_EMAIL', 'BANNED', 'SUSPENDED', 'LOCKED', 
             name='userstatus'
         ), nullable=False),
-        sa.Column('shorturls_count', sa.Integer(), nullable=False),
         sa.Column('is_superuser', sa.Boolean(), nullable=False),
         sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
         sa.Column('last_login', sa.DateTime(timezone=True), nullable=True),

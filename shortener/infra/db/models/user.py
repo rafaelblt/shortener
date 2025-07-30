@@ -1,5 +1,8 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Enum
-from sqlalchemy.orm import relationship
+from datetime import datetime
+from typing import List
+
+from sqlalchemy import Integer, String, Boolean, DateTime, ForeignKey, Enum
+from sqlalchemy.orm import Mapped, relationship, mapped_column
 
 from shortener.domain.shared.datetime_utils import utc_now
 
@@ -15,24 +18,39 @@ from .base import Base
 class UserModel(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
-    email = Column(String, unique=True, index=True)
-    name = Column(String(NAME_MAX_LENGTH), nullable=False)
-    hashed_password = Column(String(255), nullable=False)
-    status = Column(Enum(UserStatus), default=UserStatus.ACTIVE, nullable=False)
-    shorturls_count = Column(Integer, default=0, nullable=False)
-    is_superuser = Column(Boolean, default=False, nullable=False)
-    created_at = Column(DateTime(timezone=True), default=lambda: utc_now(), nullable=False)
-    last_login = Column(DateTime(timezone=True), nullable=True)
-
-    plan_id = Column(
+    id: Mapped[int] = mapped_column(
+        Integer, primary_key=True
+    )
+    email: Mapped[str] = mapped_column(
+        String, unique=True, index=True, nullable=False
+    )
+    name: Mapped[str] = mapped_column(
+        String(NAME_MAX_LENGTH), nullable=False
+    )
+    hashed_password: Mapped[str] = mapped_column(
+        String(255), nullable=False
+    )
+    status: Mapped[UserStatus] = mapped_column(
+        Enum(UserStatus), default=UserStatus.ACTIVE, nullable=False
+    )
+    is_superuser: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: utc_now(), nullable=False
+    )
+    last_login: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    plan_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("plans.id", ondelete="SET NULL"), nullable=True
     )
-
     shorturls = relationship(
         "ShortURLModel", back_populates="owner", cascade="all, delete-orphan"
     )
-    plan = relationship("PlanModel", back_populates="users", lazy="selectin")
+    plan = relationship(
+        "PlanModel", back_populates="users", lazy="selectin"
+    )
 
 
     def get_plan(self) -> PlanModel:
@@ -41,7 +59,7 @@ class UserModel(Base):
         except:
             raise ModelRelationshipNotLoadedError(instance=self, attr="plan")
         
-    def get_shorturls(self) -> list:
+    def get_shorturls(self) -> List["ShortURLModel"]:
         try:
             return self.shorturls
         except:
@@ -53,3 +71,9 @@ class UserModel(Base):
             f"<UserModel(id={self.id}, email='{self.email}', "
             f"name='{self.name}', status={self.status})>"
         )
+
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from shortener.infra.db.models.shorturl import ShortURLModel
