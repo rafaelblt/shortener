@@ -12,7 +12,6 @@ from .fields import Name, UserStatus, HashedPassword
 from .exceptions import (
     UserAttributeTypeError as AttrTypeError,
     UserStatusInvalidToVerifyEmailError,
-    UserIdIsNotIntError,
     UserEmailNotVerifiedError,
     UserSuspendedError,
     UserBannedError,
