@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from shortener.domain.shared.datetime_utils import ensure_utc
+from shortener.domain.shared.primarykey import PrimaryKey
 
 from shortener.domain.plan import Plan
 
@@ -30,13 +31,16 @@ def map_plan_domain_to_model(domain: Plan) -> PlanModel:
 
 
 def map_user_model_to_domain(model: UserModel) -> User:
+    if model.id is None:
+        pk = PrimaryKey.create_pk_undefined()
+    else:
+        pk = PrimaryKey.create_pk_id(model.id)
     data = {
-        "id": model.id,
+        "pk": pk,
         "email": Email(model.email),
         "name": Name(model.name),
         "hashed_password": HashedPassword(model.hashed_password),
         "plan": map_plan_model_to_domain(model.get_plan()),
-        "shorturls_count": model.shorturls_count,
         "status": model.status,
         "is_superuser": model.is_superuser,
         "created_at": model.created_at,
@@ -53,13 +57,12 @@ def map_user_model_to_domain(model: UserModel) -> User:
 
 def map_user_domain_to_model(domain: User) -> UserModel:
     data = {
-        "id": domain.id,
+        "id": domain.pk.get_id() if domain.pk.is_id() else None,
         "email": domain.email,
         "name": domain.name,
         "hashed_password": domain.hashed_password,
         "status": domain.status,
         "plan_id": domain.plan.id,
-        "shorturls_count": domain.shorturls_count,
         "is_superuser": domain.is_superuser,
         "created_at": domain.created_at,
         "last_login": domain.last_login,
