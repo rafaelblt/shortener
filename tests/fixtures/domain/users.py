@@ -117,3 +117,17 @@ def locked_user(default_plan: Plan, mock_password_hasher: MockPasswordHasherServ
     )
     user._init_mock_data(plain_password=password)
     return user
+
+
+@pytest.fixture
+def poor_user(eco_plan: Plan, mock_password_hasher: MockPasswordHasherService):
+    password = PlainPassword("ch34p3stP#D")
+    user = UserFixture(
+        email=Email("cheap_email@gmail.com"),
+        name=Name("Poor Person"),
+        hashed_password=mock_password_hasher.hash(password),
+        plan=eco_plan,
+        status=UserStatus.ACTIVE
+    )
+    user._init_mock_data(plain_password=password)
+    return user
