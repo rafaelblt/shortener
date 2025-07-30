@@ -20,7 +20,7 @@ async def get_persistent_plan(session: AsyncSession, plan: Plan):
 
 async def get_persistent_user(session: AsyncSession, user: User):
     plan = user.plan
-    if plan.id is None:
+    if plan.pk.is_undefined():
         plan = await get_persistent_plan(session, plan)
     user.change_plan(plan)
 
@@ -41,32 +41,61 @@ async def get_persistent_shorturl(session: AsyncSession, shorturl: ShortURL):
 def assert_plan_fields(
     first: Plan | PlanModel,
     second: Plan | PlanModel,
-    ignore_id: bool = False
+    ignore_pk: bool = False
 ):
-    if not ignore_id:
-        assert first.id == second.id
-    assert first.name == second.name
-    assert first.max_shorturls == second.max_shorturls
+    def define_fields(entmap, instance: Plan | PlanModel):
+        entmap["name"] = instance.name
+        entmap["max_shorturls"] = instance.max_shorturls
+        if isinstance(instance, RefreshToken):
+            entmap["pk"] = None if instance.pk.is_undefined() else instance.pk.get_id()
+        elif isinstance(instance, RefreshTokenModel):
+            entmap["pk"] = instance.id if instance.id else None
+
+    first_data = {}
+    define_fields(first_data, first)
+    second_data = {}
+    define_fields(second_data, second)
+
+    if ignore_pk:
+        first_data.pop("pk")
+        second_data.pop("pk")
+    
+    assert first_data == second_data
 
 
 def assert_user_fields(
     first: User | UserModel,
     second: User | UserModel,
-    ignore_id: bool = False
+    ignore_pk: bool = False
 ):
+    def define_fields(entmap, instance: User | UserModel):
+        entmap = {}
+        entmap["email"] = instance.email
+        entmap["name"] = instance.name
+        entmap["hashed_password"] = instance.hashed_password
+        entmap["status"] = instance.status
+        entmap["is_superuser"] = instance.is_superuser
+        entmap["created_at"] = instance.created_at
+        entmap["last_login"] = instance.last_login
+        if isinstance(instance, User):
+            if instance.plan.pk.is_undefined():
+                plan_pk = None
+            else:
+                plan_pk = instance.plan.pk.get_id()
+            entmap["pk"] = None if instance.pk.is_undefined() else instance.pk.get_id()
+            entmap["plan_pk"] = plan_pk
+        elif isinstance(instance, UserModel):
+            entmap["pk"] = instance.id if instance.id else None
+            entmap["plan_pk"] = instance.plan_id
+    
     first_data = {}
-    first_data["id"] = first.id
-    first_data["email"] = first.email
-    first_data["name"] = first.name
-    first_data["hashed_password"] = first.hashed_password
-    first_data["status"] = first.status
-    first_data["is_superuser"] = first.is_superuser
-    first_data["created_at"] = first.created_at
-    first_data["last_login"] = first.last_login
-    if isinstance(first, User):
-        first_data["plan_id"] = first.plan.id
-    elif isinstance(first, UserModel):
-        first_data["plan_id"] = first.plan_id
+    define_fields(first_data, first)
+    second_data = {}
+    define_fields(second_data, second)
+
+    if ignore_pk:
+        first_data.pop("pk")
+        second_data.pop("pk")
     
     second_data = {}
     second_data["id"] = second.id
