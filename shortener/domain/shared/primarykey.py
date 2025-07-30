@@ -31,9 +31,12 @@ class PrimaryKey:
     @property
     def pk_type(self):
         return self._type
-
+    
     def is_undefined(self):
         return self.pk_type == PkType.UNDEFINED
+    
+    def is_id(self):
+        return self.pk_type == PkType.ID
 
     def get_id(self):
         if self._type != PkType.ID:
