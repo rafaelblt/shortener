@@ -6,6 +6,10 @@ from shortener.domain.shared.primarykey import PrimaryKey
 
 
 class RefreshTokenRepository(ABC):
+    EntityType = RefreshToken
+    exceptions = {
+        "entity_not_found": RefreshTokenNotFoundError
+    }
 
     @abstractmethod
     async def add(self, refresh_token: RefreshToken) -> RefreshToken:
