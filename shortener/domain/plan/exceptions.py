@@ -9,12 +9,11 @@ class PlanAttributeTypeError(TypeError):
         )
 
 
-class PlanNotFoundError(DomainError):
-    code = "PLAN_NOT_FOUND"
-    def __init__(self, plan_id: int):
-        self.plan_id = plan_id
-        message = f"Plan with id={plan_id} not found."
-        super().__init__(code=self.code, message=message)
+class PlanNotFoundError(Exception):
+    def __init__(self, value, field: str):
+        self.value = value
+        self.field = field
+        super().__init__(f"Plan with {field}={value} not found.")
 
 
 class PlanIdIsNotIntError(ValueError):

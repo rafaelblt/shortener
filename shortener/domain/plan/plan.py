@@ -1,23 +1,41 @@
 from typing import Optional
 
-from .exceptions import PlanAttributeTypeError, PlanIdIsNotIntError
+from shortener.domain.domain_entity import DomainEntity
+from shortener.domain.shared.primarykey import PrimaryKey
+
+from .exceptions import PlanAttributeTypeError
 
 
-class Plan:
+class Plan(DomainEntity):
 
-    def __init__(self, name: str, max_shorturls: int, id: Optional[int] = None):
-        self.validate_id(id)
+    @staticmethod
+    def get_fields():
+        return [
+            "name",
+            "max_shorturls",
+            "pk"
+        ]
+
+    def __init__(
+        self,
+        name: str,
+        max_shorturls: int,
+        pk: Optional[PrimaryKey] = None
+    ):
+        pk = pk or PrimaryKey.create_pk_undefined()
+
+        self.validate_pk(pk)
         self.validate_name(name)
         self.validate_maxshorturls(max_shorturls)
 
-        self._id = id
+        self._pk = pk
         self._name = name
         self._max_shorturls = max_shorturls
     
     
     @property
-    def id(self):
-        return self._id
+    def pk(self):
+        return self._pk
     
     @property
     def name(self):
@@ -29,10 +47,10 @@ class Plan:
 
 
     @staticmethod
-    def validate_id(id):
-        if not isinstance(id, (int, type(None))):
+    def validate_pk(pk):
+        if not isinstance(pk, PrimaryKey):
             raise PlanAttributeTypeError(
-                attr="id", type_expected="int or None", got=id
+                attr="pk", type_expected="PrimaryKey", got=pk
             )
 
     @staticmethod
@@ -53,9 +71,3 @@ class Plan:
                 ("The Plan max_shorturls must be greater than or equal to 0, "
                 f"got {max_shorturls}")
             )
-    
-
-    def get_int_id(self) -> int:
-        if self.id is None:
-            raise PlanIdIsNotIntError(value=self.id)
-        return self.id

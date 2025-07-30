@@ -1,9 +1,15 @@
 from abc import ABC, abstractmethod
 
 from shortener.domain.plan import Plan
+from shortener.domain.plan.exceptions import PlanNotFoundError
+from shortener.domain.shared.primarykey import PrimaryKey
 
 
 class PlanRepository(ABC):
+    EntityType = Plan
+    exceptions = {
+        "entity_not_found": PlanNotFoundError
+    }
 
     @abstractmethod
     async def add(self, plan: Plan) -> Plan:
@@ -45,12 +51,12 @@ class PlanRepository(ABC):
         pass
 
     @abstractmethod
-    async def get_by_id(self, id: int) -> Plan | None:
+    async def get_by_pk(self, pk: PrimaryKey) -> Plan | None:
         """
-        Retrieves a Plan by its id.
+        Retrieves a Plan by its pk.
 
         Args:
-            id (int): The Plan id.
+            pk (PrimaryKey): The Plan pk.
 
         Returns:
             Optional[Plan]: The entity object or None if not found.
@@ -58,12 +64,12 @@ class PlanRepository(ABC):
         pass
 
     @abstractmethod
-    async def delete_by_id(self, id: int) -> Plan:
+    async def delete_by_pk(self, pk: PrimaryKey) -> Plan:
         """
         Delete a existent Plan from the database.
 
         Args:
-            id (int): The id of Plan to be deleted.
+            pk (PrimaryKey): The pk of Plan to be deleted.
         
         Returns:
             Plan: The deleted entity.

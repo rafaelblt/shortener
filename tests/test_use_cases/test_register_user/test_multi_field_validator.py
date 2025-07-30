@@ -14,7 +14,7 @@ async def test_raises_email_validation_error(
         await use_case.execute(
             email=joker_email, 
             name=normal_user.name, 
-            plan_id=plan.get_int_id(),
+            plan_pk=plan.pk,
             password=plain_password,
             lang=Language.EN
         )
@@ -34,7 +34,7 @@ async def test_raises_name_validation_error(
         await use_case.execute(
             email=normal_user.email, 
             name=joker_name, 
-            plan_id=plan.get_int_id(),
+            plan_pk=plan.pk,
             password=plain_password,
             lang=Language.EN
         )
@@ -51,7 +51,7 @@ async def test_raises_password_validation_error(
         await use_case.execute(
             email=normal_user.email, 
             name=normal_user.name, 
-            plan_id=1,
+            plan_pk=PrimaryKey.create_pk_id(1),
             password=joker_pwd,
             lang=Language.EN
         )
@@ -59,15 +59,15 @@ async def test_raises_password_validation_error(
 
 
 @pytest.mark.asyncio
-async def test_raises_plan_id_validation_error(
+async def test_raises_plan_pk_validation_error(
     use_case: RegisterUserUseCase, normal_user: User, plain_password: PlainPassword
 ):
     with pytest.raises(MultiValidationError) as error:
         await use_case.execute(
             email=normal_user.email, 
             name=normal_user.name, 
-            plan_id=0,
+            plan_pk=PrimaryKey.create_pk_id(0),
             password=plain_password,
             lang=Language.EN
         )
-    assert error.value.errors[0].code == "PLAN_ID_ERROR"
+    assert error.value.errors[0].code == "PLAN_PK_ERROR"

@@ -6,6 +6,7 @@ from shortener.domain.plan.exceptions import PlanNotFoundError
 
 from shortener.domain.services.email_template import EmailTemplate
 from shortener.domain.shared.email import Email
+from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.domain.shared.language import Language
 from shortener.domain.shared.exceptions import ValidationError, MultiValidationError
 from shortener.domain.shared.validator import Validator
@@ -37,10 +38,10 @@ class MockPasswordValidator(Validator):
             raise ValidationError(value, "paswsord", "PASSWORD_ERROR", "error message")
         
 
-class MockPlanIdValidator(Validator):
-    async def validate(self, value: int):
-        if value == 0:
-            raise ValidationError(value, "paswsord", "PLAN_ID_ERROR", "error message")
+class MockPlanPkValidator(Validator):
+    async def validate(self, value: PrimaryKey):
+        if value.raw_value == "0":
+            raise ValidationError(value.raw_value, "plan_pk", "PLAN_PK_ERROR", "error message")
 
 
 @pytest.fixture
@@ -72,6 +73,6 @@ def use_case(
             "email": [MockEmailValidator()],
             "name": [MockNameValidator()],
             "password": [MockPasswordValidator()],
-            "plan_id": [MockPlanIdValidator()]
+            "plan_pk": [MockPlanPkValidator()]
         }
     )

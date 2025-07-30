@@ -5,15 +5,17 @@ from . import *
 async def test_raises_plan_not_found(
     use_case: RegisterUserUseCase, normal_user: User, plain_password: PlainPassword
 ):
+    pk = PrimaryKey.create_pk_id(1)
     with pytest.raises(PlanNotFoundError) as error:
         await use_case.execute(
             email=normal_user.email, 
             name=normal_user.name, 
-            plan_id=1,
+            plan_pk=pk,
             password=plain_password,
             lang=Language.EN
         )
-    assert error.value.plan_id == 1
+    assert error.value.field == "pk"
+    assert error.value.value == pk
 
 
 @pytest.mark.asyncio
@@ -28,7 +30,7 @@ async def test_raises_email_already_exists(
     await use_case.execute(
         email=normal_user.email, 
         name=normal_user.name, 
-        plan_id=plan.get_int_id(),
+        plan_pk=plan.pk,
         password=plain_password,
         lang=Language.EN
     )
@@ -37,7 +39,7 @@ async def test_raises_email_already_exists(
         await use_case.execute(
             email=normal_user.email, 
             name=normal_user.name, 
-            plan_id=1,
+            plan_pk=PrimaryKey.create_pk_id(1),
             password=plain_password,
             lang=Language.EN
         )

@@ -13,7 +13,7 @@ async def test_instance_retrieved(
     retrieved = await use_case.execute(
         email=normal_user.email, 
         name=normal_user.name, 
-        plan_id=plan.get_int_id(),
+        plan_pk=plan.pk,
         password=plain_password,
         lang=Language.EN
     )
@@ -33,14 +33,14 @@ async def test_created_user_attributes(
     user = await use_case.execute(
         email=normal_user.email, 
         name=normal_user.name, 
-        plan_id=plan.get_int_id(),
+        plan_pk=plan.pk,
         password=plain_password,
         lang=Language.EN
     )
 
     assert user.email == normal_user.email
     assert user.name == normal_user.name
-    assert user.plan.id == plan.id
+    assert user.plan.pk == plan.pk
     assert user.status == UserStatus.UNVERIFIED_EMAIL
     assert isinstance(user.hashed_password, HashedPassword)
 
@@ -57,7 +57,7 @@ async def test_hashed_password(
     user = await use_case.execute(
         email=normal_user.email, 
         name=normal_user.name, 
-        plan_id=plan.get_int_id(),
+        plan_pk=plan.pk,
         password=plain_password,
         lang=Language.EN
     )
@@ -77,7 +77,7 @@ async def test_if_user_is_saved_in_repository(
     await use_case.execute(
         email=normal_user.email, 
         name=normal_user.name, 
-        plan_id=plan.get_int_id(),
+        plan_pk=plan.pk,
         password=plain_password,
         lang=Language.EN
     )
@@ -99,7 +99,7 @@ async def test_if_email_is_sent_with_token(
     await use_case.execute(
         email=normal_user.email, 
         name=normal_user.name, 
-        plan_id=plan.get_int_id(),
+        plan_pk=plan.pk,
         password=plain_password,
         lang=example_lang
     )
