@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import Integer, String, Boolean, DateTime, ForeignKey
+from sqlalchemy.exc import MissingGreenlet
 from sqlalchemy.orm import Mapped, relationship, mapped_column
 
 from shortener.domain.shared.datetime_utils import utc_now
@@ -33,14 +34,14 @@ class RefreshTokenModel(Base):
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True
     )
     user = relationship(
-        "UserModel", back_populates="refresh_tokens"
+        "UserModel", back_populates="refresh_tokens", lazy="selectin"
     )
 
 
     def get_user(self) -> UserModel:
         try:
             return self.user
-        except Exception as e:
+        except MissingGreenlet as e:
             raise ModelRelationshipNotLoadedError(instance=self, attr="user")
 
 
