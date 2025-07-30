@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
+from shortener.domain.domain_entity import DomainEntity
 from shortener.domain.shared.datetime_utils import is_utc, utc_now
 from shortener.domain.shared.email import Email
 from shortener.domain.shared.primarykey import PrimaryKey
@@ -19,7 +20,22 @@ from .exceptions import (
 )
 
 
-class User:
+class User(DomainEntity):
+
+    @staticmethod
+    def get_fields() -> list[str]:
+        return [
+            "pk",
+            "email",
+            "name",
+            "hashed_password",
+            "plan",
+            "status",
+            "is_superuser",
+            "created_at",
+            "last_login"
+        ]
+
     def __init__(
         self,
         email: Email,
