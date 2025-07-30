@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from shortener.domain.domain_entity import DomainEntity
 from shortener.domain.shared.datetime_utils import utc_now
 from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.domain.user.user import User
@@ -9,7 +10,7 @@ from shortener.domain.refresh_token.exceptions import (
 )
 
 
-class RefreshToken:
+class RefreshToken(DomainEntity):
     def __init__(
         self,
         pk: PrimaryKey,
@@ -25,6 +26,17 @@ class RefreshToken:
         self._revoked = revoked
         self._created_at = created_at
         self._expires_at = expires_at
+
+    @staticmethod
+    def get_fields() -> list[str]:
+        return [
+            "pk",
+            "token",
+            "user",
+            "expires_at",
+            "created_at",
+            "revoked",
+        ]
     
     @property
     def pk(self):
