@@ -15,8 +15,12 @@ from shortener.infra.db.models import UserModel, ShortURLModel, PlanModel
     
 
 def map_plan_model_to_domain(model: PlanModel) -> Plan:
+    if model.id is None:
+        pk = PrimaryKey.create_pk_undefined()
+    else:
+        pk = PrimaryKey.create_pk_id(model.id)
     return Plan(
-        id=model.id,
+        pk=pk,
         name=model.name,
         max_shorturls=model.max_shorturls
     )
@@ -24,7 +28,7 @@ def map_plan_model_to_domain(model: PlanModel) -> Plan:
 
 def map_plan_domain_to_model(domain: Plan) -> PlanModel:
     return PlanModel(
-        id=domain.id,
+        id=domain.pk.get_id() if domain.pk.is_id() else None,
         name=domain.name,
         max_shorturls=domain.max_shorturls
     )
