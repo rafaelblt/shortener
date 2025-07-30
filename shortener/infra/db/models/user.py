@@ -51,6 +51,12 @@ class UserModel(Base):
     plan = relationship(
         "PlanModel", back_populates="users", lazy="selectin"
     )
+    refresh_tokens = relationship(
+        "RefreshTokenModel",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
 
 
     def get_plan(self) -> PlanModel:
@@ -65,6 +71,12 @@ class UserModel(Base):
         except:
             raise ModelRelationshipNotLoadedError(instance=self, attr="shorturls")
 
+    def get_refresh_tokens(self) -> List["RefreshTokenModel"]:
+        try:
+            return self.shorturls
+        except Exception as e:
+            raise ModelRelationshipNotLoadedError(instance=self, attr="refresh_tokens")
+
 
     def __repr__(self):
         return (
@@ -77,3 +89,4 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from shortener.infra.db.models.shorturl import ShortURLModel
+    from shortener.infra.db.models.refresh_token import RefreshTokenModel
