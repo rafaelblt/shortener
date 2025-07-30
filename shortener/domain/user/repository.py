@@ -2,10 +2,16 @@ from abc import ABC, abstractmethod
 
 from shortener.domain.shared import PaginatedResult
 from shortener.domain.shared.primarykey import PrimaryKey
+
 from shortener.domain.user import User
+from shortener.domain.user.exceptions import UserNotFoundError
 
 
 class UserRepository(ABC):
+    EntityType = User
+    exceptions = {
+        "entity_not_found": UserNotFoundError
+    }
 
     @abstractmethod
     async def add(self, user: User) -> User:
