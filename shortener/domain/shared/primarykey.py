@@ -12,6 +12,8 @@ class PrimaryKey:
     
     @classmethod
     def create_pk_id(cls, id: int):
+        if not isinstance(id, int):
+            raise TypeError("PrimaryKey ID must be int")
         pk = cls()
         pk._value = str(id)
         pk._type = PkType.ID
