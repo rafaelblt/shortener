@@ -5,7 +5,7 @@ from shortener.infra.services.jwt_token import JwtTokenService
 
 from shortener.use_cases import VerifyEmailUseCase
 
-from .sqlalchemy_user_repository import make_sqlalchemy_user_repository
+from . import make_sqlalchemy_user_repository
 
 
 def make_verify_email_use_case(

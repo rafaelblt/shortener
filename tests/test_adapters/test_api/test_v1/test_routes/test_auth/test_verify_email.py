@@ -10,7 +10,7 @@ from shortener.domain.user.fields import UserStatus
 
 from shortener.infra.db.models import UserModel
 from shortener.infra.db.mappers import map_user_model_to_domain
-from shortener.infra.services.jwt_auth_token import JwtAuthTokenService
+from shortener.infra.services.jwt_token import JwtTokenService
 
 from tests.utils.entity_helpers import get_persistent_user
 
@@ -29,7 +29,7 @@ async def test_success_with_valid_token(
 ):
     user = await get_persistent_user(db_session, unverified_email_user)
 
-    auth_token = JwtAuthTokenService()
+    auth_token = JwtTokenService()
     token = auth_token.generate_token(user.email)
     
     response = client.get(f"{route}/verify-email?token={token}")

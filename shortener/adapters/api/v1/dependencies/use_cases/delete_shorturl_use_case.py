@@ -1,6 +1,6 @@
 from fastapi import Depends
 
-from .sqlalchemy_shorturl_repository import make_sqlalchemy_shorturl_repository
+from . import make_sqlalchemy_shorturl_repository
 
 from shortener.use_cases import DeleteShortURLUseCase
 

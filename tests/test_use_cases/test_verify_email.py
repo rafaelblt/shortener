@@ -1,10 +1,10 @@
-from datetime import timedelta
 import pytest
+
+from datetime import timedelta
 
 from shortener.domain.services.token import TokenService, TokenInvalidError, TokenExpiredError
 
 from shortener.domain.user import User
-from shortener.domain.user.rules import UserRules
 from shortener.domain.user.fields import UserStatus
 from shortener.domain.user.exceptions import (
     UserNotFoundError, UserStatusInvalidToVerifyEmailError
@@ -19,7 +19,7 @@ def get_email_verification_token(user: User):
     return MockTokenService().generate_token(
         subject=user.email,
         purpose=TokenService.Purpose.EMAIL_VERIFICATION,
-        expires_in=timedelta(minutes=UserRules.EMAIL_VERIFICATION_EXPIRATION_MINUTES),
+        expires_in=timedelta(minutes=10),
     )
 
 

@@ -8,7 +8,7 @@ from shortener.domain.user import User
 from shortener.domain.user.fields import HashedPassword
 
 from shortener.infra.services.passlib_hasher import PasslibPasswordHasher
-from shortener.infra.services.jwt_auth_token import JwtAuthTokenService
+from shortener.infra.services.jwt_token import JwtTokenService
 
 from tests.utils.entity_helpers import get_persistent_user
 

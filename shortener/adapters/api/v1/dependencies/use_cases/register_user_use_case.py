@@ -11,9 +11,11 @@ from shortener.infra.templates.jinja.auth import VerificationEmailTemplate
 
 from shortener.use_cases import RegisterUserUseCase
 
-from .sqlalchemy_user_repository import make_sqlalchemy_user_repository
-from .sqlalchemy_plan_repository import make_sqlalchemy_plan_repository
-from .sendgrid_email_service import make_sendgrid_email_service
+from . import (
+    make_sqlalchemy_user_repository,
+    make_sqlalchemy_plan_repository,
+    make_sendgrid_email_service
+)
 
 
 def make_register_user_use_case(

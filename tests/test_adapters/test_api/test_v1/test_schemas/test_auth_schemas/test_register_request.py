@@ -6,7 +6,7 @@ from shortener.domain.user import User
 from shortener.domain.user.fields import Email, Name
 from shortener.domain.user.fields.name import NAME_MIN_LENGTH
 
-from shortener.adapters.api.v1.schemas.auth import RegisterRequest
+from shortener.adapters.api.v1.schemas.requests.auth import RegisterRequest
 
 
 @pytest.fixture

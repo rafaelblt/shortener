@@ -3,7 +3,7 @@ import pytest
 from pydantic import BaseModel, ValidationError
 
 from shortener.domain.user.fields import Email
-from shortener.adapters.api.v1.schemas.auth import LoginRequest
+from shortener.adapters.api.v1.schemas.requests.auth import LoginRequest
 
 
 @pytest.fixture
