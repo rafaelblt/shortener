@@ -7,9 +7,10 @@ from shortener.domain.shared.pagination import PaginatedResult
 
 from shortener.domain.plan import Plan
 
+from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.domain.user import User
 from shortener.domain.user.fields import Email, Name, HashedPassword, UserStatus
-from shortener.domain.user.exceptions import UserNotFoundError, UserIdIsNotIntError
+from shortener.domain.user.exceptions import UserNotFoundError
 
 from shortener.infra.db.repositories import SQLAlchemyUserRepository
 
@@ -30,12 +31,12 @@ async def test_add(repository: SQLAlchemyUserRepository, normal_user: User):
 
     retrieved = await repository.add(normal_user)
     assert isinstance(retrieved, User)
-    assert retrieved.id == 1
-    assert_user_fields(retrieved, normal_user, ignore_id=True)
+    assert retrieved.pk.get_id() == 1
+    assert_user_fields(retrieved, normal_user, ignore_pk=True)
 
 
 @pytest.mark.asyncio
-async def test_get_by_id(
+async def test_get_by_pk(
     repository: SQLAlchemyUserRepository, normal_user: User
 ):
     saved_plan = await get_persistent_plan(
@@ -44,7 +45,7 @@ async def test_get_by_id(
     normal_user.change_plan(saved_plan)
     saved_user = await repository.add(normal_user)
 
-    retrieved = await repository.get_by_id(saved_user.get_int_id())
+    retrieved = await repository.get_by_pk(saved_user.pk)
 
     assert isinstance(retrieved, User)
     assert_user_fields(retrieved, saved_user)
@@ -63,22 +64,21 @@ async def test_update(
 
     saved_user = await repository.add(normal_user)
 
-    plan = await get_persistent_plan(session=repository.session, plan=eco_plan)
+    other_plan = await get_persistent_plan(session=repository.session, plan=eco_plan)
     saved_user._email = Email("test.updated.email@email.com")
-    saved_user._name = Name("Test Updated Name")
-    saved_user._hashed_password = HashedPassword("test!new@hashed#password")
-    saved_user._plan = plan
+    saved_user.change_name(Name("Test Updated Name"))
+    saved_user.change_hashed_password(HashedPassword("test!new@hashed#password"))
+    saved_user.change_plan(other_plan)
     saved_user._status = UserStatus.SUSPENDED
     saved_user._is_superuser = True
     saved_user._created_at = datetime(3000, month=5, day=29, tzinfo=timezone.utc)
     saved_user._last_login = datetime(3000, month=5, day=29, tzinfo=timezone.utc)
 
     retrieved = await repository.update(saved_user)
-
     assert isinstance(retrieved, User)
     assert_user_fields(retrieved, saved_user)
 
-    updated_user = await repository.get_by_id(saved_user.get_int_id())
+    updated_user = await repository.get_by_pk(saved_user.pk)
     assert isinstance(updated_user, User)
     assert_user_fields(updated_user, saved_user)
 
@@ -87,20 +87,19 @@ async def test_update(
 async def test_update_user_without_id_raises_error(
     repository: SQLAlchemyUserRepository, normal_user: User
 ):
-    with pytest.raises(UserIdIsNotIntError) as error:
+    with pytest.raises(ValueError, match="The pk is not of type id"):
         await repository.update(normal_user)
-    assert error.value.value == normal_user.id
 
 
 @pytest.mark.asyncio
 async def test_update_user_non_existent_raises_error(
     repository: SQLAlchemyUserRepository, normal_user: User
 ):
-    normal_user._id = 1
+    normal_user._pk = PrimaryKey.create_pk_id(1)
     with pytest.raises(UserNotFoundError) as error:
         await repository.update(normal_user)
-    assert error.value.value == 1
-    assert error.value.field == "id"
+    assert error.value.value == normal_user.pk
+    assert error.value.field == "pk"
 
 
 @pytest.mark.asyncio
@@ -132,7 +131,7 @@ async def test_get_all_with_users(
     for i in range(len(retrieved)):
         expected_id = i + 1
         assert isinstance(retrieved[i], User)
-        assert retrieved[i].id == expected_id
+        assert retrieved[i].pk.get_id() == expected_id
     assert retrieved[0].email == normal_user.email
     assert retrieved[1].email == old_user.email
 
@@ -206,7 +205,7 @@ async def test_exists_by_email_false(
 
 
 @pytest.mark.asyncio
-async def test_delete_by_id(
+async def test_delete_by_pk(
     repository: SQLAlchemyUserRepository, normal_user: User
 ):
     saved_plan = await get_persistent_plan(
@@ -215,17 +214,18 @@ async def test_delete_by_id(
     normal_user.change_plan(saved_plan)
     saved_user = await repository.add(normal_user)
 
-    retrieved = await repository.delete_by_id(saved_user.get_int_id())
+    retrieved = await repository.delete_by_pk(saved_user.pk)
 
     assert isinstance(retrieved, User)
     assert_user_fields(retrieved, saved_user)
 
 
 @pytest.mark.asyncio
-async def test_delete_by_id_with_non_existent_id_raises_error(
+async def test_delete_by_pk_with_non_existent_id_raises_error(
     repository: SQLAlchemyUserRepository
 ):
+    pk = PrimaryKey.create_pk_id(1)
     with pytest.raises(UserNotFoundError) as error:
-        await repository.delete_by_id(1)
-    assert error.value.value == 1
-    assert error.value.field == "id"
+        await repository.delete_by_pk(pk)
+    assert error.value.value == pk
+    assert error.value.field == "pk"

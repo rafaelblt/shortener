@@ -4,6 +4,7 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shortener.domain.shared import PaginatedResult
+from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.domain.user import User, UserRepository
 from shortener.domain.user.exceptions import UserNotFoundError
 
@@ -31,16 +32,16 @@ class SQLAlchemyUserRepository(UserRepository):
         return self._to_domain(model)
 
     async def update(self, user: User) -> User:
-        user_id = user.get_int_id()
+        user_id = user.pk.get_id()
 
         existing_model = await self._get_model_by_id(user_id)
         if existing_model is None:
-            raise UserNotFoundError(value=user_id, field="id")
+            raise UserNotFoundError(value=user.pk, field="pk")
 
         existing_model.email = user.email
         existing_model.name = user.name
         existing_model.hashed_password = user.hashed_password
-        existing_model.plan_id = user.plan.id
+        existing_model.plan_id = user.plan.pk.get_id()
         existing_model.status = user.status
         existing_model.is_superuser = user.is_superuser
         existing_model.created_at = user.created_at
@@ -55,7 +56,10 @@ class SQLAlchemyUserRepository(UserRepository):
         models = await self._get_all_models()
         return [self._to_domain(model) for model in models]
 
-    async def get_by_id(self, id: int) -> User | None:
+    async def get_by_pk(self, pk: PrimaryKey) -> User | None:
+        if not pk.is_id():
+            return None
+        id = pk.get_id()
         model = await self._get_model_by_id(id)
         return self._to_domain(model) if model else None
 
@@ -67,6 +71,7 @@ class SQLAlchemyUserRepository(UserRepository):
         total = await self.session.scalar(
             select(func.count()).select_from(UserModel)
         )
+        total = total or 0
         rows = await self.session.scalars(
             select(UserModel)
             .offset(offset)
@@ -79,10 +84,10 @@ class SQLAlchemyUserRepository(UserRepository):
         model = await self._get_model_by_email(email)
         return model is not None
 
-    async def delete_by_id(self, id: int) -> User:
-        model = await self._get_model_by_id(id)
+    async def delete_by_pk(self, pk: PrimaryKey) -> User:
+        model = await self._get_model_by_id(pk.get_id())
         if model is None:
-            raise UserNotFoundError(value=id, field="id")
+            raise UserNotFoundError(value=pk, field="pk")
 
         domain = self._to_domain(model)
 
