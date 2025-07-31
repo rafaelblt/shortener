@@ -15,11 +15,13 @@ from shortener.domain.services.token import TokenService, RandomTokenGenerator
 
 from shortener.domain.shared.datetime_utils import utc_now
 from shortener.domain.shared.primarykey import PrimaryKey
+from shortener.domain.user.user import User
 
 
 class LoginReturnType(TypedDict):
     access_token: str
-    refresh_token: str
+    refresh_token: RefreshToken
+    user: User
 
 
 class LoginUserUseCase:
@@ -87,8 +89,10 @@ class LoginUserUseCase:
         await self.refresh_token_repository.add(refresh_token)
 
         user.update_last_login()
-        await self.user_repository.update(user)
+        user = await self.user_repository.update(user)
 
         return LoginReturnType(
-            access_token=access_token, refresh_token=refresh_token.token
+            access_token=access_token,
+            refresh_token=refresh_token,
+            user=user
         )

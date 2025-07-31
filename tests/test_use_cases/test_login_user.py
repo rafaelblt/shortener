@@ -2,6 +2,7 @@ import pytest
 
 from datetime import timedelta
 
+from shortener.domain.refresh_token.entity import RefreshToken
 from shortener.domain.services.token import TokenService
 from shortener.domain.services.token import RandomTokenGenerator
 from shortener.domain.shared.datetime_utils import utc_now
@@ -75,14 +76,30 @@ async def test_retrieved_refresh_token(
         password=normal_user.mock_data["plain_password"]
     )
 
-    token = retrieved["refresh_token"]
-    refresh_token = await use_case.refresh_token_repository.get_by_token(token)
-    assert refresh_token is not None
-    assert refresh_token.user.pk == user.pk
+    retrieved_token = retrieved["refresh_token"]
+    assert isinstance(retrieved_token, RefreshToken)
+    assert retrieved_token.user.pk.get_id() == user.pk.get_id()
     assert_datetime(
-        refresh_token.expires_at, utc_now() + REFRESH_TOKEN_EXPIRES_IN,
+        retrieved_token.expires_at, utc_now() + REFRESH_TOKEN_EXPIRES_IN,
         year=True, month=True, day=True, hour=True, minute=True
     )
+    saved_token = await use_case.refresh_token_repository.get_by_token(retrieved_token.token)
+    assert saved_token is not None
+
+
+@pytest.mark.asyncio
+async def test_retrieved_user(
+    use_case: LoginUserUseCase, normal_user: UserFixture
+):
+    await use_case.user_repository.add(normal_user)
+    retrieved = await use_case.execute(
+        email=normal_user.email, 
+        password=normal_user.mock_data["plain_password"]
+    )
+
+    user = retrieved["user"]
+    assert isinstance(user, User)
+    assert user.email == normal_user.email
 
 
 @pytest.mark.asyncio
