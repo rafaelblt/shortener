@@ -1,5 +1,3 @@
-from typing import Optional
-
 from pydantic import BaseModel
 from datetime import datetime
 
@@ -16,9 +14,9 @@ class PublicUserSchema(BaseModel):
     @staticmethod
     def from_domain(user: User):
         return PublicUserSchema(
-            id=user.get_int_id(),
+            id=user.pk.get_id(),
             name=user.name,
             email=user.email,
-            plan_id=user.plan.get_int_id(),
+            plan_id=user.plan.pk.get_id(),
             created_at=user.created_at
         )
