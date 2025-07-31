@@ -4,7 +4,10 @@ import pytest_asyncio
 from shortener.domain.plan import Plan
 from shortener.domain.plan.exceptions import PlanNotFoundError, PlanIdIsNotIntError
 
+from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.infra.db.repositories import SQLAlchemyPlanRepository
+
+from tests.utils.entity_helpers import assert_plan_fields
 
 
 @pytest_asyncio.fixture
@@ -16,40 +19,55 @@ async def repository(sqlalchemy_plan_repository):
 async def test_add(repository: SQLAlchemyPlanRepository, default_plan: Plan):
     retrieved = await repository.add(default_plan)
     assert isinstance(retrieved, Plan)
-    assert retrieved.id == 1
+    assert retrieved.pk.get_id() == 1
     assert retrieved.name == default_plan.name
 
 
 @pytest.mark.asyncio
-async def test_update(repository: SQLAlchemyPlanRepository, default_plan: Plan):
-    plan = await repository.add(default_plan)
-    plan._name = "Test New Name"
-    plan._max_shorturls = 100
+async def test_get_by_pk(
+    repository: SQLAlchemyPlanRepository, default_plan: Plan
+):
+    saved_plan = await repository.add(default_plan)
 
-    retrieved = await repository.update(plan)
+    retrieved = await repository.get_by_pk(saved_plan.pk)
 
     assert isinstance(retrieved, Plan)
-    assert retrieved.name == plan.name
-    assert retrieved.max_shorturls == plan.max_shorturls
+    assert_plan_fields(retrieved, saved_plan)
+
+
+@pytest.mark.asyncio
+async def test_update(repository: SQLAlchemyPlanRepository, default_plan: Plan):
+    saved_plan = await repository.add(default_plan)
+
+    saved_plan._name = "Test New Name"
+    saved_plan._max_shorturls = 100
+
+    retrieved = await repository.update(saved_plan)
+    assert isinstance(retrieved, Plan)
+    assert_plan_fields(retrieved, saved_plan)
+
+    updated_plan = await repository.get_by_pk(saved_plan.pk)
+    assert isinstance(updated_plan, Plan)
+    assert_plan_fields(updated_plan, saved_plan)
 
 
 @pytest.mark.asyncio
 async def test_update_plan_without_id_raises_error(
     repository: SQLAlchemyPlanRepository, default_plan: Plan
 ):
-    with pytest.raises(PlanIdIsNotIntError) as error:
+    with pytest.raises(ValueError, match="The pk is not of type id"):
         await repository.update(default_plan)
-    assert error.value.value == None
 
 
 @pytest.mark.asyncio
 async def test_update_plan_with_id_non_existent_raises_error(
     repository: SQLAlchemyPlanRepository, default_plan: Plan
 ):
-    default_plan._id = 1
+    default_plan._pk = PrimaryKey.create_pk_id(1)
     with pytest.raises(PlanNotFoundError) as error:
         await repository.update(default_plan)
-    assert error.value.plan_id == default_plan.id
+    assert error.value.field == "pk"
+    assert error.value.value == default_plan.pk
 
 
 @pytest.mark.asyncio
@@ -63,55 +81,47 @@ async def test_get_all_with_no_plans(repository: SQLAlchemyPlanRepository):
 async def test_get_all_with_plans(
     repository: SQLAlchemyPlanRepository, 
     default_plan: Plan,
+    eco_plan: Plan
 ):
     other_plan = Plan(name="other test plan", max_shorturls=10)
 
     await repository.add(default_plan)
+    await repository.add(eco_plan)
     await repository.add(other_plan)
 
     retrieved = await repository.get_all()
 
     assert isinstance(retrieved, list)
-    assert len(retrieved) == 2
+    assert len(retrieved) == 3
     for i in range(len(retrieved)):
         expected_id = i + 1
         assert isinstance(retrieved[i], Plan)
-        assert retrieved[i].id == expected_id
+        assert retrieved[i].pk.get_id() == expected_id
     assert retrieved[0].name == default_plan.name
-    assert retrieved[1].name == other_plan.name
+    assert retrieved[1].name == eco_plan.name
+    assert retrieved[2].name == other_plan.name
 
 
 @pytest.mark.asyncio
-async def test_get_by_id(
+async def test_delete_by_pk(
     repository: SQLAlchemyPlanRepository, default_plan: Plan
 ):
-    await repository.add(default_plan)
+    saved_plan = await repository.add(default_plan)
 
-    retrieved = await repository.get_by_id(1)
+    retrieved = await repository.delete_by_pk(saved_plan.pk)
 
     assert isinstance(retrieved, Plan)
-    assert retrieved.id == 1
+    assert retrieved.pk.get_id() == 1
     assert retrieved.name == default_plan.name
+    assert await repository.get_by_pk(saved_plan.pk) is None
 
 
 @pytest.mark.asyncio
-async def test_delete_by_id(
-    repository: SQLAlchemyPlanRepository, default_plan: Plan
-):
-    await repository.add(default_plan)
-
-    retrieved = await repository.delete_by_id(1)
-
-    assert isinstance(retrieved, Plan)
-    assert retrieved.id == 1
-    assert retrieved.name == default_plan.name
-    assert await repository.get_by_id(1) is None
-
-
-@pytest.mark.asyncio
-async def test_delete_by_id_non_existent_plan_raises_error(
+async def test_delete_by_pk_non_existent_plan_raises_error(
     repository: SQLAlchemyPlanRepository
 ):
+    pk = PrimaryKey.create_pk_id(1)
     with pytest.raises(PlanNotFoundError) as error:
-        await repository.delete_by_id(1)
-    assert error.value.plan_id == 1
+        await repository.delete_by_pk(pk)
+    assert error.value.value == pk
+    assert error.value.field == "pk"

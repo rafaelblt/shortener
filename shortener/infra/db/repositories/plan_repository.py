@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from shortener.domain.plan import Plan, PlanRepository
 from shortener.domain.plan.exceptions import PlanNotFoundError
 
+from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.infra.db.mappers import (
     map_plan_model_to_domain, map_plan_domain_to_model
 )
@@ -31,11 +32,11 @@ class SQLAlchemyPlanRepository(PlanRepository):
         return self._to_domain(model)
 
     async def update(self, plan: Plan) -> Plan:
-        plan_id = plan.get_int_id()
+        plan_id = plan.pk.get_id()
         
         existing_model = await self._get_model_by_id(plan_id)
         if existing_model is None:
-            raise PlanNotFoundError(plan_id=plan_id)
+            raise PlanNotFoundError(field="pk", value=plan.pk)
 
         existing_model.name = plan.name
         existing_model.max_shorturls = plan.max_shorturls
@@ -49,14 +50,14 @@ class SQLAlchemyPlanRepository(PlanRepository):
         models = await self._get_all_models()
         return [self._to_domain(model) for model in models]
 
-    async def get_by_id(self, id: int) -> Plan | None:
-        model = await self._get_model_by_id(id)
+    async def get_by_pk(self, pk: PrimaryKey) -> Plan | None:
+        model = await self._get_model_by_id(pk.get_id())
         return self._to_domain(model) if model else None
 
-    async def delete_by_id(self, id: int) -> Plan:
-        model = await self._get_model_by_id(id)
+    async def delete_by_pk(self, pk: PrimaryKey) -> Plan:
+        model = await self._get_model_by_id(pk.get_id())
         if model is None:
-            raise PlanNotFoundError(plan_id=id)
+            raise PlanNotFoundError(field="pk", value=pk)
 
         await self.session.delete(model)
         await self.session.commit()
