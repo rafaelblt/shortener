@@ -39,7 +39,7 @@ def test_method_get_email(schema: LoginRequest, valid_email: str):
 def test_email_after_validator():
     with pytest.raises(ValidationError) as error:
         LoginRequest(email="invalid_email", password="123")
-    assert error.value.errors()[0]["type"] == "invalid_email"
+    assert error.value.errors()[0]["type"] == "INVALID_EMAIL"
 
 
 def test_json_schema_example(schema: LoginRequest):
