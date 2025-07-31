@@ -2,6 +2,7 @@ import asyncio
 
 from datetime import timedelta
 
+from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.domain.shared.validator import MultiFieldValidator, Validator
 from shortener.domain.shared.language import Language
 
@@ -15,7 +16,7 @@ from shortener.domain.plan.exceptions import PlanNotFoundError
 
 from shortener.domain.user import User, UserRepository
 from shortener.domain.user.exceptions import EmailAlreadyExistsError
-from shortener.domain.user.fields import Email, Name, HashedPassword, PlainPassword, UserStatus
+from shortener.domain.user.fields import Email, Name, PlainPassword, UserStatus
 
 
 class RegisterUserUseCase:
@@ -45,7 +46,7 @@ class RegisterUserUseCase:
         self,
         email: Email,
         name: Name,
-        plan_id: int,
+        plan_pk: PrimaryKey,
         password: PlainPassword,
         lang: Language
     ) -> User:
@@ -59,7 +60,7 @@ class RegisterUserUseCase:
         Args:
             email (Email): The email of user.
             name (Name): The name of user.
-            plan_id (int): Plan ID of the user.
+            plan_pk (PrimaryKey): The Plan pk of the user.
             password (PlainPassword): Plain password of the user.
             lang (Language): The language for translation.
         
@@ -67,26 +68,26 @@ class RegisterUserUseCase:
             User: The object created.
         
         Raises: 
-            PlanNotFoundError: If the plan_id is not found in repository.
+            PlanNotFoundError: If the plan_pk is not found in repository.
             EmailAlreadyExistsError: If there is already a user with the email provided.
             MultiValidationError: If any of the data provided is invalid.
         """
         multi_validator = MultiFieldValidator(self.validators_map)
         await multi_validator.validate(
-            email=email, name=name, password=password, plan_id=plan_id
+            email=email, name=name, password=password, plan_pk=plan_pk
         )
         plan, _ = await asyncio.gather(
-            self._get_plan(plan_id), self._validate_email_unique(email)
+            self._get_plan(plan_pk), self._validate_email_unique(email)
         )
         new_user = await self._create_user(email, name, password, plan)
         await self._send_verification_email(email, name, lang)
 
         return new_user
 
-    async def _get_plan(self, plan_id: int) -> Plan:
-        plan = await self.plan_repository.get_by_id(plan_id)
+    async def _get_plan(self, pk: PrimaryKey) -> Plan:
+        plan = await self.plan_repository.get_by_pk(pk)
         if plan is None:
-            raise PlanNotFoundError(plan_id=plan_id)
+            raise PlanNotFoundError(field="pk", value=pk)
         return plan
 
     async def _validate_email_unique(self, email: Email):
