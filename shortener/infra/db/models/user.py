@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import List
 
 from sqlalchemy import Integer, String, Boolean, DateTime, ForeignKey, Enum
+from sqlalchemy.exc import MissingGreenlet
 from sqlalchemy.orm import Mapped, relationship, mapped_column
 
 from shortener.domain.shared.datetime_utils import utc_now
@@ -62,19 +63,19 @@ class UserModel(Base):
     def get_plan(self) -> PlanModel:
         try:
             return self.plan
-        except:
+        except MissingGreenlet:
             raise ModelRelationshipNotLoadedError(instance=self, attr="plan")
         
     def get_shorturls(self) -> List["ShortURLModel"]:
         try:
             return self.shorturls
-        except:
+        except MissingGreenlet:
             raise ModelRelationshipNotLoadedError(instance=self, attr="shorturls")
 
     def get_refresh_tokens(self) -> List["RefreshTokenModel"]:
         try:
             return self.shorturls
-        except Exception as e:
+        except MissingGreenlet:
             raise ModelRelationshipNotLoadedError(instance=self, attr="refresh_tokens")
 
 
