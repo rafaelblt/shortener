@@ -53,7 +53,7 @@ async def register(
         user = await use_case.execute(
             email=request.get_email(),
             name=request.get_name(),
-            plan_id=request.plan_id,
+            plan_pk=request.get_plan_pk(),
             password=request.get_password(),
             lang=language
         )

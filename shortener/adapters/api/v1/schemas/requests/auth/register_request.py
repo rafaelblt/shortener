@@ -1,5 +1,6 @@
 from typing import Annotated
 
+from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.domain.user.fields import Email, Name, PlainPassword
 from shortener.adapters.api.v1.validators import CustomAfterValidator
 
@@ -36,3 +37,6 @@ class RegisterRequest(BaseModel):
     
     def get_password(self) -> PlainPassword:
         return PlainPassword(self.password)
+    
+    def get_plan_pk(self) -> PrimaryKey:
+        return PrimaryKey.create_pk_id(self.plan_id)
