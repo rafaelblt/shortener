@@ -51,25 +51,28 @@ class NameValidationError(ValidationError):
     def __init__(self, value, code, message):
         super().__init__(value=value, field="password", code=code, message=message)
 
-class NameTooLongError(NameValidationError): 
+class NameTooLongError(NameValidationError):
+    code = "USER_NAME_TOO_LONG"
     def __init__(self, value: str, max_length: int):
         self.value = value
         self.max_length = max_length
         msg = f"Name must be at most {max_length} characters long."
-        super().__init__(value=value, code="", message=msg)
+        super().__init__(value=value, code=self.code, message=msg)
     
-class NameTooShortError(NameValidationError): 
+class NameTooShortError(NameValidationError):
+    code = "USER_NAME_TOO_SHORT"
     def __init__(self, value: str, min_length: int):
         self.value = value
         self.min_length = min_length
         msg = f"Name must be at least {min_length} characters long."
-        super().__init__(value=value, code="", message=msg)
+        super().__init__(value=value, code=self.code, message=msg)
 
-class NameInvalidPatternError(NameValidationError): 
+class NameInvalidPatternError(NameValidationError):
+    code = "USER_NAME_INVALID_PATTERN"
     def __init__(self, value: str):
         self.value = value
         msg = "The name does not match the required pattern."
-        super().__init__(value=value, code="", message=msg)
+        super().__init__(value=value, code=self.code, message=msg)
 
 
 class PasswordValidationError(ValidationError):
@@ -77,36 +80,42 @@ class PasswordValidationError(ValidationError):
         super().__init__(value="***", field="password", code=code, message=message)
 
 class PasswordTooShortError(PasswordValidationError):
+    code = "USER_PASSWORD_TOO_SHORT"
     def __init__(self, min_length: int):
         self.min_length = min_length
         msg = f"The password must be at least {self.min_length} characters long."
-        super().__init__(code="", message=msg)
+        super().__init__(code=self.code, message=msg)
 
 class PasswordTooLongError(PasswordValidationError):
+    code = "USER_PASSWORD_TOO_LONG"
     def __init__(self, max_length: int):
         self.max_length = max_length
         msg = f"The password must be at most {self.max_length} characters long."
-        super().__init__(code="", message=msg)
+        super().__init__(code=self.code, message=msg)
 
 class PasswordMissingUppercaseError(PasswordValidationError):
+    code = "USER_PASSWORD_MISSING_UPPERCASE"
     def __init__(self):
         msg = "The password must contain at least one uppercase character."
-        super().__init__(code="", message=msg)
+        super().__init__(code=self.code, message=msg)
 
 class PasswordMissingLowercaseError(PasswordValidationError):
+    code = "USER_PASSWORD_MISSING_LOWERCASE"
     def __init__(self):
         msg = "The password must contain at least one lowercase character."
-        super().__init__(code="", message=msg)
+        super().__init__(code=self.code, message=msg)
 
 class PasswordMissingDigitError(PasswordValidationError):
+    code = "USER_PASSWORD_MISSING_DIGIT"
     def __init__(self):
         msg = "The password must contain at least one number."
-        super().__init__(code="", message=msg)
+        super().__init__(code=self.code, message=msg)
 
 class PasswordMissingSpecialCharError(PasswordValidationError):
+    code = "USER_PASSWORD_MISSING_SPECIAL_CHAR"
     def __init__(self):
         msg = "The password must contain at least one special character."
-        super().__init__(code="", message=msg)
+        super().__init__(code=self.code, message=msg)
 
 
 class EmailAlreadyExistsError(ValidationError):
