@@ -39,7 +39,7 @@ async def login(
 ): 
     email = request.get_email()
     try:
-        token = await use_case.execute(
+        retrieved = await use_case.execute(
             email=email, password=request.password
         )
     except (UserNotFoundError, UserPasswordIncorrectError):
@@ -50,10 +50,11 @@ async def login(
             content={"code": "INVALID_CREDENTIALS", "detail": detail}
         )
 
-    expires_minutes = use_case.auth_token_service.expires_minutes
-    return SuccessLoginResponse(
-        access_token=token,
-        token_type="bearer",
-        expires_minutes=expires_minutes,
-        email=email
+    return SuccessLoginResponse.make_response(
+        access_token=retrieved["access_token"],
+        access_token_type="bearer",
+        access_token_expires_in=use_case.access_token_expires_in,
+        refresh_token=retrieved["refresh_token"].token,
+        refresh_token_expires_in=use_case.refresh_token_expires_in,
+        user=retrieved["user"]
     )
