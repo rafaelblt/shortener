@@ -8,11 +8,14 @@ from shortener.domain.plan import Plan
 from shortener.domain.user import User
 from shortener.domain.user.fields import Email, Name, HashedPassword
 
+from shortener.domain.refresh_token import RefreshToken
+
 from shortener.domain.shorturl import ShortURL
 from shortener.domain.shorturl.fields import Slug, URL
 
 from shortener.infra.db.models import UserModel, ShortURLModel, PlanModel
-    
+from shortener.infra.db.models.refresh_token import RefreshTokenModel
+
 
 def map_plan_model_to_domain(model: PlanModel) -> Plan:
     if model.id is None:
@@ -76,6 +79,35 @@ def map_user_domain_to_model(domain: User) -> UserModel:
         raise TypeError("User needs a Plan with ID to be converted to UserModel.")
     
     return UserModel(**data)
+
+
+def map_refresh_token_model_to_domain(model: RefreshTokenModel):
+    data = {
+        "pk": PrimaryKey.create_pk_id(model.id),
+        "token": model.token,
+        "revoked": model.revoked,
+        "expires_at": model.expires_at,
+        "created_at": model.created_at,
+        "user": map_user_model_to_domain(model.get_user())
+    }
+
+    data["created_at"] = ensure_utc(data["created_at"])
+    data["expires_at"] = ensure_utc(data["expires_at"])
+
+    return RefreshToken(**data)
+
+
+def map_refresh_token_domain_to_model(domain: RefreshToken) -> RefreshTokenModel:
+    data = {
+        "id": domain.pk.get_id() if domain.pk.is_id() else None,
+        "token": domain.token,
+        "revoked": domain.revoked,
+        "expires_at": domain.expires_at,
+        "created_at": domain.created_at,
+        "user_id": domain.user.pk.get_id()
+    }
+    
+    return RefreshTokenModel(**data)
 
 
 def map_shorturl_model_to_domain(model: ShortURLModel) -> ShortURL:

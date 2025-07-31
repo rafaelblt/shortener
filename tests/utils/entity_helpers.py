@@ -3,8 +3,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from shortener.domain.plan import Plan
 from shortener.domain.user import User
 from shortener.domain.shorturl import ShortURL
+from shortener.domain.refresh_token import RefreshToken
 
-from shortener.infra.db.models import PlanModel, UserModel, ShortURLModel
+from shortener.infra.db.models import PlanModel, UserModel, ShortURLModel, RefreshTokenModel
 
 from shortener.infra.db.repositories import (
     SQLAlchemyPlanRepository,
@@ -97,23 +98,34 @@ def assert_user_fields(
         first_data.pop("pk")
         second_data.pop("pk")
     
-    second_data = {}
-    second_data["id"] = second.id
-    second_data["email"] = second.email
-    second_data["name"] = second.name
-    second_data["hashed_password"] = second.hashed_password
-    second_data["status"] = second.status
-    second_data["is_superuser"] = second.is_superuser
-    second_data["created_at"] = second.created_at
-    second_data["last_login"] = second.last_login
-    if isinstance(second, User):
-        second_data["plan_id"] = second.plan.id
-    elif isinstance(second, UserModel):
-        second_data["plan_id"] = second.plan_id
+    assert first_data == second_data
 
-    if ignore_id:
-        first_data.pop("id")
-        second_data.pop("id")
+
+def assert_refresh_token_fields(
+    first: RefreshToken | RefreshTokenModel,
+    second: RefreshToken | RefreshTokenModel,
+    ignore_pk: bool = False
+):
+    def define_fields(entmap, instance):
+        entmap["token"] = instance.token
+        entmap["expires_at"] = instance.expires_at
+        entmap["created_at"] = instance.created_at
+        entmap["revoked"] = instance.revoked
+        if isinstance(instance, RefreshToken):
+            entmap["pk"] = None if instance.pk.is_undefined() else instance.pk.get_id()
+            entmap["user_pk"] = instance.user.pk.raw_value
+        elif isinstance(instance, RefreshTokenModel):
+            entmap["pk"] = instance.id if instance.id else None
+            entmap["user_pk"] = str(instance.user_id)
+
+    first_data = {}
+    define_fields(first_data, first)
+    second_data = {}
+    define_fields(second_data, second)
+
+    if ignore_pk:
+        first_data.pop("pk")
+        second_data.pop("pk")
     
     assert first_data == second_data
 

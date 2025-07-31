@@ -1,7 +1,13 @@
 import pytest
 
+from shortener.domain.refresh_token.entity import RefreshToken
+from shortener.domain.shared.primarykey import PrimaryKey
+from shortener.infra.db.models.refresh_token import RefreshTokenModel
 from tests.utils.entity_helpers import (
-    assert_plan_fields, assert_user_fields, assert_shorturl_fields
+    assert_plan_fields,
+    assert_user_fields,
+    assert_shorturl_fields,
+    assert_refresh_token_fields
 )
 
 from shortener.domain.plan import Plan
@@ -13,7 +19,8 @@ from shortener.infra.db.models import PlanModel, UserModel, ShortURLModel
 from shortener.infra.db.mappers import (
     map_plan_model_to_domain, map_plan_domain_to_model,
     map_user_model_to_domain, map_user_domain_to_model,
-    map_shorturl_model_to_domain, map_shorturl_domain_to_model
+    map_shorturl_model_to_domain, map_shorturl_domain_to_model,
+    map_refresh_token_model_to_domain, map_refresh_token_domain_to_model
 )
 
 
@@ -50,6 +57,31 @@ def test_map_user_model_to_domain(normal_user: User, default_plan: Plan):
 
     assert isinstance(retrieved, User)
     assert_user_fields(retrieved, normal_user)
+
+
+@pytest.mark.asyncio
+async def test_map_refresh_token_domain_to_model(active_refresh_token: RefreshToken):
+    active_refresh_token.user._pk = PrimaryKey.create_pk_id(1)
+    retrieved = map_refresh_token_domain_to_model(active_refresh_token)
+    assert isinstance(retrieved, RefreshTokenModel)
+    retrieved.user_id = 1
+    assert_refresh_token_fields(retrieved, active_refresh_token)
+
+
+def test_map_refresh_token_model_to_domain(
+    active_refresh_token: RefreshToken, normal_user: User
+):
+    active_refresh_token.user._pk = PrimaryKey.create_pk_id(1)
+    token_model = map_refresh_token_domain_to_model(active_refresh_token)
+
+    normal_user.plan._id = 1
+    user_model = map_user_domain_to_model(normal_user)
+    token_model.user = user_model
+
+    retrieved = map_user_model_to_domain(user_model)
+
+    assert isinstance(retrieved, RefreshToken)
+    assert_refresh_token_fields(retrieved, active_refresh_token)
 
 
 @pytest.mark.asyncio
