@@ -12,8 +12,8 @@ def get_project_app_version():
 
 def validate_settings(settings: dict[str, str]):
     missing_vars = []
-    for var in constants.REQUIRED_ENV_VARS:
-        if var not in settings:
-            missing_vars.append(var)
+    for item in constants.REQUIRED_ENV_VARS:
+        if item["settings_var"] not in settings:
+            missing_vars.append(item["env_var"])
     if missing_vars:
         raise MissingEnvironmentVariableError(missing_vars)

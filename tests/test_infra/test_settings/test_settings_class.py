@@ -13,7 +13,7 @@ def test_instance():
     assert isinstance(settings, settings_class.Settings)
 
 
-def test_attributes(settings_dict: dict[str, str]):
+def test_attributes(settings_dict):
     settings = settings_class.settings
     assert settings.APP_NAME == settings_dict["APP_NAME"]
     assert settings.APP_VERSION == settings_dict["APP_VERSION"]
@@ -28,7 +28,9 @@ def test_attributes(settings_dict: dict[str, str]):
     assert settings.SENDGRID_API_KEY == settings_dict["SENDGRID_API_KEY"]
     assert settings.SENDGRID_FROM_EMAIL == settings_dict["SENDGRID_FROM_EMAIL"]
 
-    assert settings.EMAIL_VERIFICATION_EXPIRATION_MINUTES == settings_dict["EMAIL_VERIFICATION_EXPIRATION_MINUTES"]
+    assert settings.ACCESS_TOKEN_EXPIRATION == settings_dict["ACCESS_TOKEN_EXPIRATION"]
+    assert settings.REFRESH_TOKEN_EXPIRATION == settings_dict["REFRESH_TOKEN_EXPIRATION"]
+    assert settings.EMAIL_VERIFICATION_EXPIRATION == settings_dict["EMAIL_VERIFICATION_EXPIRATION"]
 
     assert settings.SUPPORTED_LANGUAGES == settings_dict["SUPPORTED_LANGUAGES"]
 
