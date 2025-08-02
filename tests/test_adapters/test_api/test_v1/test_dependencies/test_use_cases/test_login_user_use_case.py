@@ -1,7 +1,9 @@
+from datetime import timedelta
 import pytest
 
 from fastapi.params import Depends
 
+from shortener.infra.services.urlsafe_token import URLSafeTokenGenerator
 from shortener.infra.settings import settings
 
 from shortener.infra.services.passlib_hasher import PasslibPasswordHasher
@@ -12,6 +14,7 @@ from shortener.use_cases import LoginUserUseCase
 from shortener.adapters.api.v1.dependencies import (
     make_login_user_use_case,
     make_sqlalchemy_user_repository,
+    make_sqlalchemy_refresh_token_repository,
     LoginUserUseCaseDependency
 )
 
@@ -32,15 +35,33 @@ def test_attr_user_repository(use_case: LoginUserUseCase):
     assert use_case.user_repository.dependency == make_sqlalchemy_user_repository
 
 
+def test_attr_refresh_token_repository(use_case: LoginUserUseCase):
+    assert isinstance(use_case.refresh_token_repository, Depends)
+    assert use_case.refresh_token_repository.dependency == make_sqlalchemy_refresh_token_repository
+
+
 def test_attr_password_hasher(use_case: LoginUserUseCase):
     assert isinstance(use_case.password_hasher, PasslibPasswordHasher)
 
 
-def test_attr_auth_token_service(use_case: LoginUserUseCase):
-    assert isinstance(use_case.auth_token_service, JwtAuthTokenService)
-    assert use_case.auth_token_service._secret_key == settings.JWT_AUTH_SECRET_KEY
-    assert use_case.auth_token_service._algorithm == settings.JWT_AUTH_TOKEN_ALGORITHM
-    assert use_case.auth_token_service.expires_minutes == settings.JWT_AUTH_TOKEN_EXPIRES_MINUTES
+def test_attr_access_token_service(use_case: LoginUserUseCase):
+    assert isinstance(use_case.access_token_service, JwtTokenService)
+    assert use_case.access_token_service._secret_key == settings.JWT_SECRET_KEY
+    assert use_case.access_token_service._algorithm == settings.JWT_ALGORITHM
+
+
+def test_attr_access_token_expires_in(use_case: LoginUserUseCase):
+    assert isinstance(use_case.access_token_expires_in, timedelta)
+    assert use_case.access_token_expires_in == settings.ACCESS_TOKEN_EXPIRATION
+
+
+def test_attr_refresh_token_generator(use_case: LoginUserUseCase):
+    assert isinstance(use_case.refresh_token_generator, URLSafeTokenGenerator)
+
+
+def test_attr_refresh_token_expires_in(use_case: LoginUserUseCase):
+    assert isinstance(use_case.refresh_token_expires_in, timedelta)
+    assert use_case.refresh_token_expires_in == settings.REFRESH_TOKEN_EXPIRATION
 
 
 def test_dependency():
