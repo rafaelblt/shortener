@@ -69,13 +69,13 @@ def map_user_domain_to_model(domain: User) -> UserModel:
         "name": domain.name,
         "hashed_password": domain.hashed_password,
         "status": domain.status,
-        "plan_id": domain.plan.id,
+        "plan_id": domain.plan.pk.get_id() if domain.plan.pk.is_id() else None,
         "is_superuser": domain.is_superuser,
         "created_at": domain.created_at,
         "last_login": domain.last_login,
     }
 
-    if not isinstance(data["plan_id"], int):
+    if data["plan_id"] is None:
         raise TypeError("User needs a Plan with ID to be converted to UserModel.")
     
     return UserModel(**data)
