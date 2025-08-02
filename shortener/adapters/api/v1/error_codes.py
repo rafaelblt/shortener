@@ -1,0 +1,9 @@
+from enum import Enum
+
+
+class ApiErrorCode(str, Enum):
+    ITEM_NOT_FOUND = "ITEM_NOT_FOUND"
+    INVALID_ITEM = "INVALID_ITEM"
+    ITEM_EXPIRED = "ITEM_EXPIRED"
+    ALREADY_PROCESSED = "ALREADY_PROCESSED"
+
