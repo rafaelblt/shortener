@@ -61,13 +61,13 @@ async def register(
         detail = _("No plan was found with the ID provided.")
         return JSONResponse(
             status_code=HTTPStatus.BAD_REQUEST,
-            content=ErrorResponse(detail=detail)
+            content=ErrorResponse(code="PLAN_NOT_FOUND", detail=detail).model_dump()
         )
     except EmailAlreadyExistsError:
         detail = _("The email provided has already been registered.")
         return JSONResponse(
             status_code=HTTPStatus.CONFLICT,
-            content=ErrorResponse(detail=detail).model_dump()
+            content=ErrorResponse(code="EMAIL_ALREADY_EXISTS", detail=detail).model_dump()
         )
     
     msg = _("User registered successfully. Please check your email to verify your account.")
