@@ -57,8 +57,8 @@ def test_attr_password_hasher(use_case: RegisterUserUseCase):
 def test_attr_email_verification_expires_in(use_case: RegisterUserUseCase):
     assert isinstance(use_case.email_verification_expires_in, timedelta)
     assert (
-        use_case.email_verification_expires_in.seconds * 60 == 
-        int(settings.EMAIL_VERIFICATION_EXPIRATION_MINUTES)
+        use_case.email_verification_expires_in == 
+        settings.EMAIL_VERIFICATION_EXPIRATION
     )
 
 
