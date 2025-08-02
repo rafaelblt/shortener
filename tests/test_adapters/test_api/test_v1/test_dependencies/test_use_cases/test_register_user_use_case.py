@@ -16,6 +16,7 @@ from shortener.adapters.api.v1.dependencies import (
     make_register_user_use_case,
     make_sqlalchemy_user_repository,
     make_sqlalchemy_plan_repository,
+    make_sendgrid_email_service,
     RegisterUserUseCaseDependency
 )
 
@@ -47,7 +48,7 @@ def test_attr_token_service(use_case: RegisterUserUseCase):
 
 def test_attr_send_email_service(use_case: RegisterUserUseCase):
     assert isinstance(use_case.send_email_service, Depends)
-    assert use_case.send_email_service.dependency == SendGridEmailService
+    assert use_case.send_email_service.dependency == make_sendgrid_email_service
 
 
 def test_attr_password_hasher(use_case: RegisterUserUseCase):
