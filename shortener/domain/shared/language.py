@@ -6,6 +6,9 @@ class Language(str, Enum):
     PT_BR = "pt_br"
     FR = "fr"
 
+    def __str__(self):
+        return self.value.upper()
+
     @classmethod
     def default(cls) -> "Language":
         return cls.EN
