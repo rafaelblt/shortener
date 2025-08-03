@@ -34,6 +34,15 @@ class RefreshLoginUseCase:
 
     async def execute(self, refresh_token: str) -> RefreshLoginReturnType:
         """
+        Consumes the provided token and generates a new access token and a new
+        refresh token.
+
+        Args:
+            refresh_token(str): The token of RefreshToken.
+
+        Returns:
+            dict[str]: A dict with keys "access_token", "refresh_token" and "user".
+
         Raises:
             RefreshTokenNotFoundError: The token is not found.
             RefreshTokenRevokedError: The token is revoked.
@@ -46,6 +55,8 @@ class RefreshLoginUseCase:
         token = await self.refresh_token_repository.get_by_token(refresh_token)
         if token is None:
             raise RefreshTokenNotFoundError(value=refresh_token, field="token")
+
+        token.consume()
 
         access_token = self.access_token_service.generate_token(
             subject=token.user.email,
@@ -60,9 +71,8 @@ class RefreshLoginUseCase:
             expires_at=utc_now() + self.refresh_token_expires_in
         )
 
-        token.consume()
-        await self.refresh_token_repository.update(token)
         new_refresh_token = await self.refresh_token_repository.add(new_refresh_token)
+        await self.refresh_token_repository.update(token)
 
         return RefreshLoginReturnType(
             access_token=access_token,
