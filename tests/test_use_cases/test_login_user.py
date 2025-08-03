@@ -104,14 +104,14 @@ async def test_retrieved_user(
 
 @pytest.mark.asyncio
 async def test_use_case_calls_ensure_user_can_login(
-    use_case: LoginUserUseCase, unverified_email_user: User
+    use_case: LoginUserUseCase, unverified_email_user: UserFixture
 ):
     await use_case.user_repository.add(unverified_email_user)
 
     with pytest.raises(UserEmailNotVerifiedError):
         await use_case.execute(
             email=unverified_email_user.email,
-            password="unnecessary"
+            password=unverified_email_user.mock_data["plain_password"]
         )
 
 

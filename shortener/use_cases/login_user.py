@@ -52,7 +52,7 @@ class LoginUserUseCase:
             password (str): The user password.
         
         Returns:
-            dict[str]: A dict with keys "access_token" and "refresh_token".
+            dict[str]: A dict with keys "access_token", "refresh_token" and "user".
         
         Raises:
             UserNotFoundError: If the email doesn't exist in database.
@@ -65,14 +65,14 @@ class LoginUserUseCase:
         user = await self.user_repository.get_by_email(email)
         if user is None:
             raise UserNotFoundError(value=email, field="email")
-        
-        user.ensure_can_login()
 
         password_match = self.password_hasher.verify(
             plain_password=password, hashed_password=user.hashed_password
         )
         if not password_match:
             raise UserPasswordIncorrectError()
+        
+        user.ensure_can_login()
         
         access_token = self.access_token_service.generate_token(
             subject=user.email,
