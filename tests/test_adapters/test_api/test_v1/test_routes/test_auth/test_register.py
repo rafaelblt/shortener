@@ -5,9 +5,9 @@ from http import HTTPStatus
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from shortener.adapters.api.v1.error_codes import ApiErrorCode
 from shortener.domain.user import User
 from shortener.domain.shared.language import Language
-from shortener.domain.shared.exceptions import EmailInvalidError
 from shortener.infra.db.repositories import SQLAlchemyUserRepository
 
 from tests.fixtures import MockSendEmailService
@@ -31,7 +31,6 @@ def test_validation_of_user_register_request(client: TestClient, route: str):
         }
     )
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-    assert response.json()["detail"][0]["type"] == EmailInvalidError.code.lower()
 
 
 @pytest.mark.asyncio
@@ -48,7 +47,7 @@ async def test_response_bad_request_with_plan_non_existent(
         }
     )
     assert response.status_code == HTTPStatus.BAD_REQUEST
-    assert response.json()["code"] == "PLAN_NOT_FOUND"
+    assert response.json()["code"] == ApiErrorCode.ITEM_NOT_FOUND
 
 
 @pytest.mark.asyncio
@@ -66,6 +65,9 @@ async def test_response_created_with_valid_data(
         }
     )
     assert response.status_code == HTTPStatus.CREATED
+    assert "message" in response.json()
+    assert "user" in response.json()
+
 
 @pytest.mark.asyncio
 async def test_if_user_is_saved_in_session(

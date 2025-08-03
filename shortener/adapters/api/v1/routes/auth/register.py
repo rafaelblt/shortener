@@ -6,6 +6,7 @@ from shortener.adapters.api.v1.dependencies import (
     RegisterUserUseCaseDependency,
     LanguageParserDependency
 )
+from shortener.adapters.api.v1.error_codes import ApiErrorCode
 from shortener.adapters.api.v1.schemas.entities import PublicUserSchema
 from shortener.adapters.api.v1.schemas.requests.auth import RegisterRequest
 from shortener.adapters.api.v1.schemas.responses.auth.register import SuccessRegisterResponse
@@ -26,15 +27,15 @@ register_responses.set_response(
     description="User registered.",
     model=SuccessRegisterResponse
 )
-register_responses.set_response(
+register_responses.set_error_response(
     status_code=HTTPStatus.BAD_REQUEST,
     description="Provided Plan ID not found.",
-    model=ErrorResponse
+    example_code=ApiErrorCode.ITEM_NOT_FOUND
 )
-register_responses.set_response(
+register_responses.set_error_response(
     status_code=HTTPStatus.CONFLICT,
     description="Provided email already exists.",
-    model=ErrorResponse
+    example_code=ApiErrorCode.ALREADY_PROCESSED
 )
 
 
@@ -59,19 +60,20 @@ async def register(
         )
     except PlanNotFoundError:
         detail = _("No plan was found with the ID provided.")
+        error_code = ApiErrorCode.ITEM_NOT_FOUND
         return JSONResponse(
             status_code=HTTPStatus.BAD_REQUEST,
-            content=ErrorResponse(code="PLAN_NOT_FOUND", detail=detail).model_dump()
+            content=ErrorResponse(code=error_code, detail=detail).model_dump()
         )
     except EmailAlreadyExistsError:
         detail = _("The email provided has already been registered.")
+        error_code = ApiErrorCode.ALREADY_PROCESSED
         return JSONResponse(
             status_code=HTTPStatus.CONFLICT,
-            content=ErrorResponse(code="EMAIL_ALREADY_EXISTS", detail=detail).model_dump()
+            content=ErrorResponse(code=error_code, detail=detail).model_dump()
         )
     
     msg = _("User registered successfully. Please check your email to verify your account.")
     return SuccessRegisterResponse(
         message=msg, user=PublicUserSchema.from_domain(user)
     )
-
