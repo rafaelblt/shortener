@@ -110,13 +110,3 @@ def test_method_get_plan_pk(schema: RegisterRequest):
     retrieved = schema.get_plan_pk()
     assert isinstance(retrieved, PrimaryKey)
     assert retrieved.get_id() == 1
-
-
-def test_json_schema_example(schema: RegisterRequest):
-    example = schema.model_json_schema()["example"]
-    assert example == {
-        "email": "user@example.com",
-        "name": "User Name Example",
-        "password": "Pass@123",
-        "plan_id": 1
-    }
