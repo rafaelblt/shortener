@@ -1,6 +1,7 @@
 from http import HTTPStatus
 
 from fastapi.responses import JSONResponse
+from fastapi import Response
 
 from shortener.adapters.api.v1.error_codes import ApiErrorCode
 from shortener.adapters.api.v1.schemas import MessageResponse
@@ -25,21 +26,21 @@ responses.set_response(
 responses.set_error_response(
     status_code=HTTPStatus.BAD_REQUEST,
     description="Invalid email verification token.",
-    example_code=ApiErrorCode.INVALID_ITEM,
+    error_code=ApiErrorCode.INVALID_ITEM,
 )
 responses.set_error_response(
     status_code=HTTPStatus.GONE,
     description="Email verification token has expired.",
-    example_code=ApiErrorCode.ITEM_EXPIRED,
+    error_code=ApiErrorCode.ITEM_EXPIRED,
 )
 responses.set_error_response(
     status_code=HTTPStatus.CONFLICT,
     description="The user does not have pending email verification.",
-    example_code=ApiErrorCode.ALREADY_PROCESSED,
+    error_code=ApiErrorCode.ALREADY_PROCESSED,
 )
 
 
-@router.get("/verify-email", responses=responses.get_responses())
+@router.get("/verify-email", responses=responses.get_schema())
 async def verify_email(
     token: str,
     use_case: VerifyEmailUseCaseDependency,
@@ -49,28 +50,19 @@ async def verify_email(
     try:
         await use_case.execute(token)
     except (TokenInvalidError, UserNotFoundError):
-        status_code = HTTPStatus.BAD_REQUEST
-        error_code = ApiErrorCode.INVALID_ITEM
         detail = _("Invalid email verification token.")
-        return JSONResponse(
-            status_code=status_code,
-            content=ErrorResponse(code=error_code, detail=detail).model_dump()
+        return responses.get_json_response_by_status_code(
+            HTTPStatus.BAD_REQUEST, {"detail": detail}
         )
     except TokenExpiredError:
-        status_code = HTTPStatus.GONE
-        error_code = ApiErrorCode.ITEM_EXPIRED
         detail = _("Email verification token has expired.")
-        return JSONResponse(
-            status_code=status_code,
-            content=ErrorResponse(code=error_code, detail=detail).model_dump()
+        return responses.get_json_response_by_status_code(
+            HTTPStatus.GONE, {"detail": detail}
         )
     except UserStatusInvalidToVerifyEmailError:
-        status_code = HTTPStatus.CONFLICT
-        error_code = ApiErrorCode.ALREADY_PROCESSED
         detail = _("The user does not have pending email verification.")
-        return JSONResponse(
-            status_code=status_code,
-            content=ErrorResponse(code=error_code, detail=detail).model_dump()
+        return responses.get_json_response_by_status_code(
+            HTTPStatus.CONFLICT, {"detail": detail}
         )
 
     return {"message": "Email successfully verified."}

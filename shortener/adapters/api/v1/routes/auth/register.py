@@ -1,7 +1,5 @@
 from http import HTTPStatus
 
-from fastapi.responses import JSONResponse
-
 from shortener.adapters.api.v1.dependencies import (
     RegisterUserUseCaseDependency,
     LanguageParserDependency
@@ -9,8 +7,7 @@ from shortener.adapters.api.v1.dependencies import (
 from shortener.adapters.api.v1.error_codes import ApiErrorCode
 from shortener.adapters.api.v1.schemas.entities import PublicUserSchema
 from shortener.adapters.api.v1.schemas.requests.auth import RegisterRequest
-from shortener.adapters.api.v1.schemas.responses.auth.register import SuccessRegisterResponse
-from shortener.adapters.api.v1.schemas.responses.error_response import ErrorResponse
+from shortener.adapters.api.v1.schemas.responses.auth import SuccessRegisterResponse
 from shortener.adapters.api.v1.schemas.responses.types import FastAPIRouteResponses
 
 from shortener.domain.plan.exceptions import PlanNotFoundError
@@ -30,19 +27,19 @@ register_responses.set_response(
 register_responses.set_error_response(
     status_code=HTTPStatus.BAD_REQUEST,
     description="Provided Plan ID not found.",
-    example_code=ApiErrorCode.ITEM_NOT_FOUND
+    error_code=ApiErrorCode.ITEM_NOT_FOUND
 )
 register_responses.set_error_response(
     status_code=HTTPStatus.CONFLICT,
     description="Provided email already exists.",
-    example_code=ApiErrorCode.ALREADY_PROCESSED
+    error_code=ApiErrorCode.ALREADY_PROCESSED
 )
 
 
 @router.post(
     "/register",
     status_code=HTTPStatus.CREATED,
-    responses=register_responses.get_responses()
+    responses=register_responses.get_schema()
 )
 async def register(
     request: RegisterRequest,
@@ -60,17 +57,13 @@ async def register(
         )
     except PlanNotFoundError:
         detail = _("No plan was found with the ID provided.")
-        error_code = ApiErrorCode.ITEM_NOT_FOUND
-        return JSONResponse(
-            status_code=HTTPStatus.BAD_REQUEST,
-            content=ErrorResponse(code=error_code, detail=detail).model_dump()
+        return register_responses.get_json_response_by_status_code(
+            HTTPStatus.BAD_REQUEST, {"detail": detail}
         )
     except EmailAlreadyExistsError:
         detail = _("The email provided has already been registered.")
-        error_code = ApiErrorCode.ALREADY_PROCESSED
-        return JSONResponse(
-            status_code=HTTPStatus.CONFLICT,
-            content=ErrorResponse(code=error_code, detail=detail).model_dump()
+        return register_responses.get_json_response_by_status_code(
+            HTTPStatus.CONFLICT, {"detail": detail}
         )
     
     msg = _("User registered successfully. Please check your email to verify your account.")

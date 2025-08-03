@@ -1,12 +1,29 @@
 from http import HTTPStatus
-from typing import Any, Optional
+from typing import Any, TypedDict
+
+from fastapi.responses import JSONResponse
 
 from shortener.adapters.api.v1.schemas.responses.error_response import ErrorResponse
 
 
+class ResponseData(TypedDict):
+    content: dict[str, Any]
+
+
+class ResponseSchema(TypedDict):
+    description: str
+    model: Any
+    content: dict
+
+
+class StatusData(TypedDict):
+    schema: ResponseSchema
+    response: ResponseData
+
+
 class FastAPIRouteResponses:
     def __init__(self):
-        self._data = {}
+        self._data: dict[HTTPStatus, StatusData] = {}
 
     def set_response(
         self,
@@ -15,31 +32,57 @@ class FastAPIRouteResponses:
         model: Any,
     ):
         self._data[status_code] = {
-            "description": description,
-            "model": model,
+            "schema": {
+                "description": description,
+                "model": model,
+                "content": {},
+            },
+            "response": {
+                "content": {}
+            }
         }
 
     def set_error_response(
         self,
         status_code: HTTPStatus,
         description: str,
-        example_code: Optional[str] = None,
-        example_detail: Optional[str] = None
+        error_code: str,
     ):
-        example_code = example_code or "EXAMPLE_ERROR_CODE"
-        example_detail = example_detail or "Example detail."
         self._data[status_code] = {
-            "description": description,
-            "model": ErrorResponse,
-            "content": {
-                "application/json": {
-                    "example": {
-                        "code": example_code,
-                        "detail": example_detail
+            "schema": {
+                "description": description,
+                "model": ErrorResponse,
+                "content": {
+                    "application/json": {
+                        "example": {
+                            "code": error_code,
+                            "detail": "The error detail"
+                        }
                     }
+                }
+            },
+            "response": {
+                "content": {
+                    "code": error_code, "detail": ""
                 }
             }
         }
 
-    def get_responses(self) -> dict[int | str, dict[str, Any]]:
-        return self._data
+    def get_schema(self) -> dict[int | str, dict[str, Any]]:
+        schema = {}
+        for status_code, response in self._data.items():
+            schema[status_code] = response["schema"]
+        return schema
+
+    def get_responses(self):
+        return self.get_schema()
+    
+    def get_json_response_by_status_code(
+        self, status_code: HTTPStatus, over_content: dict[str, Any] = {}
+    ):
+        content = self._data[status_code]["response"]["content"]
+        content.update(over_content)
+        return JSONResponse(
+            status_code=status_code,
+            content=content
+        )
