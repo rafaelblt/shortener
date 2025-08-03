@@ -6,6 +6,7 @@ from shortener.adapters.api.v1.dependencies import (
     LoginUserUseCaseDependency,
     LanguageParserDependency
 )
+from shortener.adapters.api.v1.error_codes import ApiErrorCode
 from shortener.adapters.api.v1.schemas.requests.auth import LoginRequest
 from shortener.adapters.api.v1.schemas.responses import ErrorResponse
 from shortener.adapters.api.v1.schemas.responses.types import FastAPIRouteResponses
@@ -24,10 +25,10 @@ login_responses.set_response(
     description="Login successfully.",
     model=SuccessLoginResponse
 )
-login_responses.set_response(
+login_responses.set_error_response(
     status_code=HTTPStatus.UNAUTHORIZED,
     description="Invalid credentials.",
-    model=ErrorResponse
+    example_code=ApiErrorCode.INVALID_CREDENTIALS
 )
 
 
@@ -45,9 +46,10 @@ async def login(
     except (UserNotFoundError, UserPasswordIncorrectError):
         _ = get_translator(language)
         detail = _("Invalid email or password.")
+        error_code = ApiErrorCode.INVALID_CREDENTIALS
         return JSONResponse(
             status_code=HTTPStatus.UNAUTHORIZED,
-            content={"code": "INVALID_CREDENTIALS", "detail": detail}
+            content=ErrorResponse(code=error_code, detail=detail).model_dump()
         )
 
     return SuccessLoginResponse.make_response(

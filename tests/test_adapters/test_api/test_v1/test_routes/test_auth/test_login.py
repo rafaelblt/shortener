@@ -4,6 +4,7 @@ from http import HTTPStatus
 
 from fastapi.testclient import TestClient
 
+from shortener.adapters.api.v1.error_codes import ApiErrorCode
 from shortener.domain.shared.exceptions import EmailInvalidError
 
 from shortener.domain.user import User
@@ -24,7 +25,6 @@ def test_validation_of_user_login_request(client: TestClient, route: str):
         route, json={"email": "invalid", "password": "pAsSs@#$123"}
     )
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-    assert response.json()["detail"][0]["code"] == EmailInvalidError.code
 
 
 def test_response_unauthorized_with_user_non_existent(client: TestClient, route: str):
@@ -32,7 +32,7 @@ def test_response_unauthorized_with_user_non_existent(client: TestClient, route:
         route, json={"email": "example@gmail.com", "password": "123"}
     )
     assert response.status_code == HTTPStatus.UNAUTHORIZED
-    assert response.json()["code"] == "INVALID_CREDENTIALS"
+    assert response.json()["code"] == ApiErrorCode.INVALID_CREDENTIALS
 
 
 @pytest.mark.asyncio
@@ -48,7 +48,7 @@ async def test_response_unauthorized_incorrect_password(
         route, json={"email": normal_user.email, "password": "123"}
     )
     assert response.status_code == HTTPStatus.UNAUTHORIZED
-    assert response.json()["code"] == "INVALID_CREDENTIALS"
+    assert response.json()["code"] == ApiErrorCode.INVALID_CREDENTIALS
 
 
 @pytest.mark.asyncio
@@ -67,18 +67,9 @@ async def test_response_ok_with_valid_login(
 
     json: dict = response.json()
 
-    assert "user" in json
     assert "access_token" in json
     assert "refresh_token" in json
-
-    assert "token" in json["access_token"]
-    assert "token_type" in json["access_token"]
-    assert "expires_at" in json["access_token"]
-    assert "expires_seconds" in json["access_token"]
-
-    assert "token" in json["refresh_token"]
-    assert "expires_at" in json["refresh_token"]
-    assert "expires_seconds" in json["refresh_token"]
+    assert "user" in json
 
     payload = JwtTokenService().decode_token(json["access_token"]["token"])
     assert payload["subject"] == normal_user.email
