@@ -52,6 +52,22 @@ async def test_response_unauthorized_incorrect_password(
 
 
 @pytest.mark.asyncio
+async def test_response_forbidden_with_user_banned(
+    client: TestClient, route: str, db_session, banned_user: User
+):
+    banned_user.change_hashed_password(
+        PasslibPasswordHasher().hash("strong-password")
+    )
+    await get_persistent_user(db_session, banned_user)
+
+    response = client.post(
+        route, json={"email": banned_user.email, "password": "strong-password"}
+    )
+    assert response.status_code == HTTPStatus.FORBIDDEN
+    assert response.json()["code"] == ApiErrorCode.ITEM_NOT_ALLOWED
+
+
+@pytest.mark.asyncio
 async def test_response_ok_with_valid_login(
     client: TestClient, route: str, db_session, normal_user: User
 ):
