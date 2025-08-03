@@ -53,7 +53,7 @@ async def login(
         )
     except UserAccessDeniedError:
         _ = get_translator(language)
-        detail = _("The user cannot be logged in.")
+        detail = _("The user cannot be authenticated.")
         return responses.get_json_response_by_status_code(
             HTTPStatus.FORBIDDEN, {"detail": detail}
         )
