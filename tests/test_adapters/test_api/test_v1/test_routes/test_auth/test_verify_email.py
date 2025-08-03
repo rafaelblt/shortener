@@ -1,7 +1,6 @@
 import pytest
 
 from datetime import timedelta
-
 from http import HTTPStatus
 
 from fastapi.testclient import TestClient
