@@ -24,7 +24,7 @@ class EmailValidationError(ValidationError):
         super().__init__(value=value, field="email", code=code, message=message)
 
 class EmailInvalidError(EmailValidationError):
-    code = "EMAIL_INVALID"
+    code = "INVALID_EMAIL"
 
     def __init__(self, email: str):
         msg = "The provided email is invalid."
