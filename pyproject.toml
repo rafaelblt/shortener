@@ -50,5 +50,8 @@ i18n_compile = "pybabel compile -d shortener/infra/translations"
 i18n_rebuild = "task i18n_extract && task i18n_update && task i18n_compile"
 i18n_clean = "rm -f shortener/infra/translations/messages.pot"
 
+alembic_upgrade = "alembic upgrade +1"
+alembic_downgrade = "alembic downgrade -1"
+
 [tool.pytest.ini_options]
 asyncio_default_fixture_loop_scope = "function"
