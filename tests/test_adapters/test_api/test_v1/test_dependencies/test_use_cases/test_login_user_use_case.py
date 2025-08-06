@@ -15,6 +15,7 @@ from shortener.adapters.api.v1.dependencies import (
     make_login_user_use_case,
     make_sqlalchemy_user_repository,
     make_sqlalchemy_refresh_token_repository,
+    make_passlib_password_hasher,
     LoginUserUseCaseDependency
 )
 
@@ -41,7 +42,9 @@ def test_attr_refresh_token_repository(use_case: LoginUserUseCase):
 
 
 def test_attr_password_hasher(use_case: LoginUserUseCase):
-    assert isinstance(use_case.password_hasher, PasslibPasswordHasher)
+    attr = use_case.password_hasher
+    assert isinstance(attr, Depends)
+    assert attr.dependency == make_passlib_password_hasher
 
 
 def test_attr_access_token_service(use_case: LoginUserUseCase):

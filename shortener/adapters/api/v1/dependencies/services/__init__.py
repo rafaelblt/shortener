@@ -1,1 +1,2 @@
 from .sendgrid_email_service import make_sendgrid_email_service
+from .passlib_hasher import make_passlib_password_hasher

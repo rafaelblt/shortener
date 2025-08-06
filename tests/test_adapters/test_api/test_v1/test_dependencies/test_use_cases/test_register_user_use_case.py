@@ -17,6 +17,7 @@ from shortener.adapters.api.v1.dependencies import (
     make_sqlalchemy_user_repository,
     make_sqlalchemy_plan_repository,
     make_sendgrid_email_service,
+    make_passlib_password_hasher,
     RegisterUserUseCaseDependency
 )
 
@@ -52,7 +53,9 @@ def test_attr_send_email_service(use_case: RegisterUserUseCase):
 
 
 def test_attr_password_hasher(use_case: RegisterUserUseCase):
-    assert isinstance(use_case.password_hasher, PasslibPasswordHasher)
+    attr = use_case.password_hasher
+    assert isinstance(attr, Depends)
+    assert attr.dependency == make_passlib_password_hasher
 
 
 def test_attr_email_verification_expires_in(use_case: RegisterUserUseCase):
