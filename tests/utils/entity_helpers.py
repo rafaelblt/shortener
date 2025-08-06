@@ -5,12 +5,18 @@ from shortener.domain.user import User
 from shortener.domain.shorturl import ShortURL
 from shortener.domain.refresh_token import RefreshToken
 
-from shortener.infra.db.models import PlanModel, UserModel, ShortURLModel, RefreshTokenModel
+from shortener.infra.db.models import (
+    PlanModel,
+    UserModel,
+    ShortURLModel,
+    RefreshTokenModel
+)
 
 from shortener.infra.db.repositories import (
     SQLAlchemyPlanRepository,
     SQLAlchemyUserRepository,
-    SQLAlchemyShortURLRepository
+    SQLAlchemyShortURLRepository,
+    SQLAlchemyRefreshTokenRepository
 )
 
 
@@ -27,6 +33,15 @@ async def get_persistent_user(session: AsyncSession, user: User):
 
     repository = SQLAlchemyUserRepository(session=session)
     return await repository.add(user)
+
+
+async def get_persistent_refresh_Token(session: AsyncSession, token: RefreshToken):
+    user = token.user
+    if user.pk.is_undefined():
+        user = await get_persistent_user(session, user)
+    token._user = user
+    repository = SQLAlchemyRefreshTokenRepository(session=session)
+    return await repository.add(token)
 
 
 async def get_persistent_shorturl(session: AsyncSession, shorturl: ShortURL):
