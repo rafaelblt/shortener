@@ -2,7 +2,9 @@ from abc import ABC, abstractmethod
 
 from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.domain.shared.pagination import PaginatedResult
+
 from shortener.domain.shorturl import ShortURL
+from shortener.domain.shorturl.exceptions import ShortURLNotFoundError
 
 
 class ShortURLRepository(ABC):
@@ -32,7 +34,7 @@ class ShortURLRepository(ABC):
         
         Raises:
             ShortURLInvalidToUpdateError: ShortURL without id.
-            ShortURLNotFoundInDatabaseError: ShortURL not found in database.
+            ShortURLNotFoundError: ShortURL not found in database.
         """
         pass
 
@@ -98,7 +100,7 @@ class ShortURLRepository(ABC):
             ShortURL: The deleted entity.
         
         Raises:
-            ShortURLNotFoundInDatabaseError: ShortURL not found in database.
+            ShortURLNotFoundError: ShortURL not found in database.
         """
         pass
 
