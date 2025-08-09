@@ -3,9 +3,10 @@ from typing import Sequence
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from shortener.domain.shared import PaginatedResult
+from shortener.domain.shared.pagination import PaginatedResult
+from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.domain.shorturl import ShortURL, ShortURLRepository
-from shortener.domain.shorturl.exceptions import ShortURLNotFoundInDatabaseError
+from shortener.domain.shorturl.exceptions import ShortURLNotFoundError
 
 from shortener.infra.db.mappers import (
     map_shorturl_model_to_domain, map_shorturl_domain_to_model
@@ -31,15 +32,12 @@ class SQLAlchemyShortURLRepository(ShortURLRepository):
         return self._to_domain(shorturl_model)
     
     async def update(self, shorturl: ShortURL) -> ShortURL:
-        existing_model = await self._get_model_by_id(shorturl.id)
+        existing_model = await self._get_model_by_id(shorturl.pk.get_id())
         if existing_model is None:
-            raise ShortURLNotFoundInDatabaseError(
-                f"ShortURL with id={shorturl.id} not found in database."
-            )
+            raise ShortURLNotFoundError(field="pk", value=shorturl.pk)
 
         existing_model.slug = shorturl.slug
         existing_model.original_url = shorturl.original_url
-        existing_model.owner_id = shorturl.owner.id
         existing_model.status = shorturl.status
         existing_model.visit_count = shorturl.visit_count
         existing_model.created_at = shorturl.created_at
@@ -55,8 +53,8 @@ class SQLAlchemyShortURLRepository(ShortURLRepository):
         models = await self._get_all_models()
         return [self._to_domain(model) for model in models]
 
-    async def get_by_id(self, id: int) -> ShortURL | None:
-        model = await self._get_model_by_id(id)
+    async def get_by_pk(self, pk: PrimaryKey) -> ShortURL | None:
+        model = await self._get_model_by_id(pk.get_id())
         return self._to_domain(model) if model else None
 
     async def get_by_slug(self, slug: str) -> ShortURL | None:
@@ -79,12 +77,10 @@ class SQLAlchemyShortURLRepository(ShortURLRepository):
         model = await self._get_model_by_slug(slug)
         return model is not None
 
-    async def delete_by_id(self, id: int) -> ShortURL:
-        model = await self._get_model_by_id(id)
+    async def delete_by_pk(self, pk: PrimaryKey) -> ShortURL:
+        model = await self._get_model_by_id(pk.get_id())
         if model is None:
-            raise ShortURLNotFoundInDatabaseError(
-                f"ShortURL with id={id} not found in database."
-            )
+            raise ShortURLNotFoundError(field="pk", value=pk)
         
         domain = self._to_domain(model)
         
