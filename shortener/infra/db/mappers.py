@@ -54,8 +54,7 @@ def map_user_model_to_domain(model: UserModel) -> User:
         "last_login": model.last_login,
     }
 
-    if isinstance(data["created_at"], datetime):
-        data["created_at"] = ensure_utc(data["created_at"])
+    data["created_at"] = ensure_utc(data["created_at"])
     if isinstance(data["last_login"], datetime):
         data["last_login"] = ensure_utc(data["last_login"])
     
@@ -112,10 +111,9 @@ def map_refresh_token_domain_to_model(domain: RefreshToken) -> RefreshTokenModel
 
 def map_shorturl_model_to_domain(model: ShortURLModel) -> ShortURL:
     data = {
-        "id": model.id,
+        "pk": model.id,
         "slug": Slug(model.slug),
         "original_url": URL(model.original_url),
-        "owner": map_user_model_to_domain(model.get_owner()),
         "status": model.status,
         "visit_count": model.visit_count,
         "created_at": model.created_at,
@@ -123,8 +121,7 @@ def map_shorturl_model_to_domain(model: ShortURLModel) -> ShortURL:
         "last_accessed_at": model.last_accessed_at,
     }
 
-    if isinstance(data["created_at"], datetime):
-        data["created_at"] = ensure_utc(data["created_at"])
+    data["created_at"] = ensure_utc(data["created_at"])
     if isinstance(data["expires_at"], datetime):
         data["expires_at"] = ensure_utc(data["expires_at"])
     if isinstance(data["last_accessed_at"], datetime):
@@ -135,10 +132,9 @@ def map_shorturl_model_to_domain(model: ShortURLModel) -> ShortURL:
 
 def map_shorturl_domain_to_model(domain: ShortURL) -> ShortURLModel:
     data = {
-        "id": domain.id,
+        "id": None if domain.pk.is_undefined() else domain.pk.get_id(),
         "slug": domain.slug,
         "original_url": domain.original_url,
-        "owner_id": domain.owner.id,
         "status": domain.status,
         "visit_count": domain.visit_count,
         "created_at": domain.created_at,
@@ -146,9 +142,4 @@ def map_shorturl_domain_to_model(domain: ShortURL) -> ShortURLModel:
         "last_accessed_at": domain.last_accessed_at,
     }
 
-    if not isinstance(data["owner_id"], int):
-        raise TypeError(
-            "ShortURL needs a User with ID to be converted to ShortURLModel."
-        )
-    
     return ShortURLModel(**data)

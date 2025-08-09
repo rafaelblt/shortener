@@ -86,27 +86,13 @@ def test_map_refresh_token_model_to_domain(
 
 @pytest.mark.asyncio
 async def test_map_shorturl_domain_to_model(normal_shorturl: ShortURL):
-    normal_shorturl.owner._id = 1
     retrieved = map_shorturl_domain_to_model(normal_shorturl)
     assert isinstance(retrieved, ShortURLModel)
-    retrieved.owner_id = normal_shorturl.owner.id
     assert_shorturl_fields(retrieved, normal_shorturl)
 
 
-def test_map_shorturl_model_to_domain(
-    normal_shorturl: ShortURL,
-    normal_user: User,
-    default_plan: Plan
-):
-    plan_model = map_plan_domain_to_model(default_plan)
-
-    normal_user.plan._id = 1
-    user_model = map_user_domain_to_model(normal_user)
-    user_model.plan = plan_model
-    
-    normal_shorturl.owner._id = 1
+def test_map_shorturl_model_to_domain(normal_shorturl: ShortURL):
     shorturl_model = map_shorturl_domain_to_model(normal_shorturl)
-    shorturl_model.owner = user_model
 
     retrieved = map_shorturl_model_to_domain(shorturl_model)
 
