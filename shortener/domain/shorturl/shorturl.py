@@ -30,28 +30,6 @@ class ShortURL:
         expires_at: Optional[datetime] = None,
         last_accessed_at: Optional[datetime] = None,
     ):
-        """
-        Args:
-            id (Optional[int]): The unique identifier of the ShortURL. 
-                Defaults to None.
-            original_url (URL): The original URL being shortened.
-            slug (Slug): The slug used to shorten the URL.
-            owner (User): The instance of the owner of the ShortURL.
-            status (ShortURLStatus): Indicates the ShortURL status. Defaults to 
-                ACTIVE.
-            visit_count (int): The number of times the ShortURL has been visited.
-                Defaults to 0.
-            created_at (Optional[datetime]): The timestamp when the ShortURL was
-                created. Defaults to the current UTC time.
-            expires_at (Optional[datetime]): The timestamp when the ShortURL
-                will expire. Defaults to None.
-            last_accessed_at (Optional[datetime]): The timestamp when the ShortURL
-                was last accessed. Defaults to None.
-        
-        Raises:
-            TypeError: If any field has invalid type.
-            ValueError: If any field has invalid value.
-        """
         created_at = created_at or datetime.now(tz=timezone.utc)
 
         self.validate_id(id)
