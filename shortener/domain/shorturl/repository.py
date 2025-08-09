@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 
-from shortener.domain.shared import PaginatedResult
+from shortener.domain.shared.primarykey import PrimaryKey
+from shortener.domain.shared.pagination import PaginatedResult
 from shortener.domain.shorturl import ShortURL
 
 
@@ -46,12 +47,12 @@ class ShortURLRepository(ABC):
         pass
 
     @abstractmethod
-    async def get_by_id(self, id: int) -> ShortURL | None:
+    async def get_by_pk(self, pk: PrimaryKey) -> ShortURL | None:
         """
-        Retrieves a ShortURL by its id.
+        Retrieves a ShortURL by its pk.
 
         Args:
-            id (int): The ShortURL id.
+            pk (PrimaryKey): The ShortURL pk.
 
         Returns:
             Optional[ShortURL]: The entity object or None if not found.
@@ -86,18 +87,18 @@ class ShortURLRepository(ABC):
         pass
 
     @abstractmethod
-    async def delete_by_id(self, id: int) -> ShortURL:
+    async def delete_by_pk(self, pk: PrimaryKey) -> ShortURL:
         """
         Delete a existent ShortURL from the database.
 
         Args:
-            id (int): The id of ShortURL to be deleted.
+            pk (PrimaryKey): The pk of ShortURL to be deleted.
         
         Returns:
             ShortURL: The deleted entity.
         
         Raises:
-            ShortURLNotFoundInDatabaseError: Id not found in database.
+            ShortURLNotFoundInDatabaseError: ShortURL not found in database.
         """
         pass
 

@@ -148,38 +148,29 @@ def assert_refresh_token_fields(
 def assert_shorturl_fields(
     first: ShortURL | ShortURLModel,
     second: ShortURL | ShortURLModel,
-    ignore_id: bool = False
+    ignore_pk: bool = False
 ):
-    first_data = {}
-    first_data["id"] = first.id
-    first_data["slug"] = first.slug
-    first_data["original_url"] = first.original_url
-    first_data["status"] = first.status
-    first_data["visit_count"] = first.visit_count
-    first_data["created_at"] = first.created_at
-    first_data["expires_at"] = first.expires_at
-    first_data["last_accessed_at"] = first.last_accessed_at
-    if isinstance(first, User):
-        first_data["owner_id"] = first.owner.id
-    elif isinstance(first, UserModel):
-        first_data["owner_id"] = first.owner_id
-    
-    second_data = {}
-    second_data["id"] = second.id
-    second_data["slug"] = second.slug
-    second_data["original_url"] = second.original_url
-    second_data["status"] = second.status
-    second_data["visit_count"] = second.visit_count
-    second_data["created_at"] = second.created_at
-    second_data["expires_at"] = second.expires_at
-    second_data["last_accessed_at"] = second.last_accessed_at
-    if isinstance(second, User):
-        second_data["owner_id"] = second.owner.id
-    elif isinstance(second, UserModel):
-        second_data["owner_id"] = second.owner_id
+    def define_fields(entmap, instance):
+        entmap["pk"] = instance.pk
+        entmap["slug"] = instance.slug
+        entmap["original_url"] = instance.original_url
+        entmap["status"] = instance.status
+        entmap["visit_count"] = instance.visit_count
+        entmap["created_at"] = instance.created_at
+        entmap["expires_at"] = instance.created_at
+        entmap["last_accessed_at"] = instance.last_accessed_at
+        if isinstance(instance, ShortURL):
+            entmap["pk"] = None if instance.pk.is_undefined() else instance.pk.get_id()
+        elif isinstance(instance, ShortURLModel):
+            entmap["pk"] = instance.id if instance.id else None
 
-    if ignore_id:
-        first_data.pop("id")
-        second_data.pop("id")
+    first_data = {}
+    define_fields(first_data, first)
+    second_data = {}
+    define_fields(second_data, second)
+
+    if ignore_pk:
+        first_data.pop("pk")
+        second_data.pop("pk")
     
     assert first_data == second_data

@@ -1,5 +1,6 @@
 from typing import Optional
 
+from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.domain.shorturl import (
     ShortURL, ShortURLRepository, ShortURLValidator
 )
@@ -25,7 +26,7 @@ class UpdateShortURLUseCase:
 
     async def execute(
         self,
-        id: int,
+        pk: PrimaryKey,
         slug: Optional[Slug] = None,
         original_url: Optional[URL] = None
     ) -> ShortURL:
@@ -33,7 +34,7 @@ class UpdateShortURLUseCase:
         Executes the Use Case with the provided data.
 
         Args:
-            id (int): The ShortURL id to be updated.
+            pk (PrimaryKey): The ShortURL pk to be updated.
             slug (Optional[Slug]): The updated slug.
             original_url (Optional[URL)]: The updated original_url.
 
@@ -43,10 +44,10 @@ class UpdateShortURLUseCase:
         Raises:
             ShortURLValidationError: If any part of ShortURL is invalid.
         """
-        shorturl = await self.repository.get_by_id(id)
+        shorturl = await self.repository.get_by_pk(pk)
         if shorturl is None:
             raise ShortURLValidationError(
-                f"There is no shorturl in the database with the given id: {id}"
+                f"There is no shorturl in the database with the given pk: {pk}"
             )
 
         shorturl.slug = slug or shorturl.slug

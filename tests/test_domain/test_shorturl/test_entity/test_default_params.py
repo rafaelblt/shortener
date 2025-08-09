@@ -14,8 +14,8 @@ def test_instance(shorturl: ShortURL):
     assert isinstance(shorturl, ShortURL)
 
 
-def test_id(shorturl: ShortURL):
-    assert shorturl.id == None
+def test_pk(shorturl: ShortURL):
+    assert shorturl.pk.is_undefined()
 
 
 def test_slug(shorturl: ShortURL):

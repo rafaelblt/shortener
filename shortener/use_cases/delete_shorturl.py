@@ -1,3 +1,4 @@
+from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.domain.shorturl import ShortURL, ShortURLRepository
 from shortener.domain.shorturl.exceptions import ShortURLDeletionNotFoundError
 
@@ -15,12 +16,12 @@ class DeleteShortURLUseCase:
         """
         self.repository = repository
 
-    async def delete_by_id(self, id: int) -> ShortURL:
+    async def delete_by_pk(self, pk: PrimaryKey) -> ShortURL:
         """
-        Deletes a ShortURL by its ID.
+        Deletes a ShortURL by its PrimaryKey.
 
         Args:
-            id (int): The ID of the ShortURL to delete.
+            pk (PrimaryKey): The primarykey of the ShortURL to delete.
 
         Returns:
             ShortURL: The ShortURL object that was deleted, or None if not found.
@@ -29,14 +30,14 @@ class DeleteShortURLUseCase:
             ShortURLDeletionNotFoundError: If the ShortURL to be deleted is not 
                 found.
         """
-        shorturl = await self.repository.get_by_id(id)
+        shorturl = await self.repository.get_by_pk(pk)
 
         # TODO: future validations for deletion
 
         if shorturl:
-            await self.repository.delete_by_id(id)
+            await self.repository.delete_by_pk(pk)
             return shorturl
         
         raise ShortURLDeletionNotFoundError(
-            f"ShortURL with id {id} not found for deletion."
+            f"ShortURL with pk {pk} not found for deletion."
         )

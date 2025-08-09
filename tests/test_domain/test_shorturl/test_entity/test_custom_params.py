@@ -1,6 +1,7 @@
 import pytest
 from datetime import datetime, timezone
 
+from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.domain.shorturl import ShortURL
 from shortener.domain.shorturl.fields import Slug, URL, ShortURLStatus
 
@@ -10,7 +11,7 @@ from shortener.domain.user import User
 @pytest.fixture
 def shorturl(normal_user: User):
     return ShortURL(
-        id=1,
+        pk=PrimaryKey.create_pk_id(1),
         slug=Slug("i-am-slug"),
         original_url=URL("https://google.com"),
         owner=normal_user,
@@ -26,8 +27,8 @@ def test_instance(shorturl: ShortURL):
     assert isinstance(shorturl, ShortURL)
 
 
-def test_id(shorturl: ShortURL):
-    assert shorturl.id == 1
+def test_pk(shorturl: ShortURL):
+    assert shorturl.pk.get_id() == 1
 
 
 def test_slug(shorturl: ShortURL):

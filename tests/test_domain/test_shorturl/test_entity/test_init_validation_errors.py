@@ -35,7 +35,7 @@ def test_slug_invalid(required_fields: dict):
     slug = {"slug": "test-slug"}
     e = get_type_error_message(attr="slug", type_expected="Slug", got=slug)
     with pytest.raises(TypeError, match=e):
-        ShortURL(**required_fields, slug=slug)      
+        ShortURL(**required_fields, slug=slug) # type: ignore
 
 
 def test_original_url_invalid(required_fields: dict):
@@ -43,14 +43,14 @@ def test_original_url_invalid(required_fields: dict):
     url = "https://github.com"
     e = get_type_error_message(attr="original_url", type_expected="URL", got=url)
     with pytest.raises(TypeError, match=e):
-        ShortURL(**required_fields, original_url=url)
+        ShortURL(**required_fields, original_url=url) # type: ignore
     
 
-def test_id_invalid(required_fields: dict):
-    id = "1"
-    e = get_type_error_message(attr="id", type_expected="int or None", got=id)
+def test_pk_invalid(required_fields: dict):
+    pk = 1
+    e = get_type_error_message(attr="pk", type_expected="PrimaryKey", got=pk)
     with pytest.raises(TypeError, match=e):
-        ShortURL(**required_fields, id=id)
+        ShortURL(**required_fields, pk=pk) # type: ignore
     
 
 def test_owner_invalid(required_fields: dict):
@@ -60,7 +60,7 @@ def test_owner_invalid(required_fields: dict):
         attr="owner", type_expected="User", got=owner
     )
     with pytest.raises(TypeError, match=e):
-        ShortURL(**required_fields, owner=owner)
+        ShortURL(**required_fields, owner=owner) # type: ignore
 
 
 def test_status_invalid(required_fields: dict): 
@@ -69,7 +69,7 @@ def test_status_invalid(required_fields: dict):
         attr="status", type_expected="ShortURLStatus", got=status
     )
     with pytest.raises(TypeError, match=e):
-        ShortURL(**required_fields, status=status)
+        ShortURL(**required_fields, status=status) # type: ignore
 
 
 def test_visit_count_invalid(required_fields: dict): 
@@ -78,7 +78,7 @@ def test_visit_count_invalid(required_fields: dict):
         attr="visit_count", type_expected="int", got=visit_count
     )
     with pytest.raises(TypeError, match=e):
-        ShortURL(**required_fields, visit_count=visit_count)
+        ShortURL(**required_fields, visit_count=visit_count) # type: ignore
 
 
 def test_created_at_invalid(required_fields: dict): 
@@ -87,7 +87,7 @@ def test_created_at_invalid(required_fields: dict):
         attr="created_at", type_expected="datetime", got=created_at
     )
     with pytest.raises(TypeError, match=e):
-        ShortURL(**required_fields, created_at=created_at)
+        ShortURL(**required_fields, created_at=created_at) # type: ignore
 
 
 def test_expires_at_invalid(required_fields: dict): 
@@ -96,7 +96,7 @@ def test_expires_at_invalid(required_fields: dict):
         attr="expires_at", type_expected="datetime or None", got=expires_at
     )
     with pytest.raises(TypeError, match=e):
-        ShortURL(**required_fields, expires_at=expires_at)
+        ShortURL(**required_fields, expires_at=expires_at) # type: ignore
 
 
 def test_last_accessed_at_invalid(required_fields: dict): 
@@ -107,7 +107,7 @@ def test_last_accessed_at_invalid(required_fields: dict):
         got=last_accessed_at
     )
     with pytest.raises(TypeError, match=e):
-        ShortURL(**required_fields, last_accessed_at=last_accessed_at)
+        ShortURL(**required_fields, last_accessed_at=last_accessed_at) # type: ignore
 
 
 def test_visist_count_lower_than_0(required_fields: dict):

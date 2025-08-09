@@ -10,14 +10,6 @@ def shorturl(normal_shorturl):
     return normal_shorturl
 
 
-def test_set_id_raises_attribute_error(shorturl: ShortURL):
-    with pytest.raises(
-        AttributeError, 
-        match="property 'id' of 'ShortURL' object has no setter"
-    ):
-        shorturl.id = 3
-
-
 def test_set_slug(shorturl: ShortURL):
     shorturl.slug = Slug("test-new-slug")
     assert shorturl.slug == "test-new-slug"

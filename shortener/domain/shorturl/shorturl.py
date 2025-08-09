@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 
 from typing import Optional
 
+from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.domain.shared.datetime_utils import is_utc
 from shortener.domain.user import User
 
@@ -23,16 +24,17 @@ class ShortURL:
         original_url: URL,
         slug: Slug,
         owner: User = None,
-        id: Optional[int] = None,
+        pk: Optional[PrimaryKey] = None,
         status: ShortURLStatus = ShortURLStatus.ACTIVE,
         visit_count: int = 0,
         created_at: Optional[datetime] = None,
         expires_at: Optional[datetime] = None,
         last_accessed_at: Optional[datetime] = None,
     ):
+        pk = pk or PrimaryKey.create_pk_undefined()
         created_at = created_at or datetime.now(tz=timezone.utc)
 
-        self.validate_id(id)
+        self.validate_pk(pk)
         self.validate_slug(slug)
         self.validate_original_url(original_url)
         self.validate_owner(owner)
@@ -42,7 +44,7 @@ class ShortURL:
         self.validate_expires_at(expires_at)
         self.validate_last_accessed_at(last_accessed_at)
 
-        self._id = id
+        self._pk = pk
         self._slug = slug
         self._original_url = original_url
         self._owner = owner
@@ -56,8 +58,8 @@ class ShortURL:
 
 
     @property
-    def id(self):
-        return self._id
+    def pk(self):
+        return self._pk
 
     @property
     def slug(self):
@@ -109,7 +111,7 @@ class ShortURL:
 
 
     def validate_all(self):
-        self.validate_id(self._id)
+        self.validate_pk(self._pk)
         self.validate_slug(self._slug)
         self.validate_original_url(self._original_url)
         self.validate_owner(self._owner)
@@ -120,10 +122,10 @@ class ShortURL:
         self.validate_last_accessed_at(self._last_accessed_at)
 
     @staticmethod
-    def validate_id(id):
-        if not isinstance(id, (int, type(None))):
+    def validate_pk(pk):
+        if not isinstance(pk, PrimaryKey):
             raise ShortURLAttributeTypeError(
-                attr="id", type_expected="int or None", got=id
+                attr="pk", type_expected="PrimaryKey", got=pk
             )
 
     @staticmethod
@@ -274,8 +276,5 @@ class ShortURL:
 
     def __repr__(self):
         return (
-            f"<ShortURL(id={self.id}, slug={self.slug}, original_url={self.original_url}, "
-            f"owner={self.owner}, status={self.status}, visit_count={self.visit_count}, "
-            f"created_at={self.created_at}, expires_at={self.expires_at}, "
-            f"last_accessed_at={self.last_accessed_at})>"
+            f"<ShortURL pk={self.pk}, slug={self.slug}, original_url={self.original_url}>"
         )

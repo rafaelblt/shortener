@@ -1,6 +1,7 @@
 import pytest
 import pytest_asyncio
 
+from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.domain.shorturl import ShortURL
 from shortener.use_cases import GetShortURLUseCase
 
@@ -11,18 +12,18 @@ async def use_case(mock_shorturl_repository):
 
 
 @pytest.mark.asyncio
-async def test_get_by_id(
+async def test_get_by_pk(
     use_case: GetShortURLUseCase, normal_shorturl: ShortURL
 ):
     shorturl = await use_case.repository.add(normal_shorturl)
-    retrieved = await use_case.get_by_id(shorturl.id)
+    retrieved = await use_case.get_by_pk(shorturl.pk)
     assert isinstance(retrieved, ShortURL)
     assert retrieved.slug == normal_shorturl.slug
 
 
 @pytest.mark.asyncio
-async def test_get_by_id_non_existent(use_case: GetShortURLUseCase):
-    retrieved = await use_case.get_by_id(14514352)
+async def test_get_by_pk_non_existent(use_case: GetShortURLUseCase):
+    retrieved = await use_case.get_by_pk(PrimaryKey.create_pk_id(1))
     assert retrieved is None
 
 

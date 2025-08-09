@@ -33,7 +33,7 @@ async def test_instance_retrieved(
         custom_slug=normal_shorturl.slug
     )
     assert isinstance(retrieved, ShortURL)
-    assert retrieved.id == 1
+    assert retrieved.pk.get_id() == 1
     assert retrieved.original_url == normal_shorturl.original_url
     assert retrieved.owner.id == owner.id
     assert retrieved.slug == normal_shorturl.slug
