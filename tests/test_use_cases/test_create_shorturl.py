@@ -26,26 +26,22 @@ def use_case(mock_shorturl_repository, mock_user_repository):
 async def test_instance_retrieved(
     use_case: CreateShortURLUseCase, normal_shorturl: ShortURL
 ):
-    owner = await use_case.user_repository.add(normal_shorturl.owner)
     retrieved = await use_case.execute(
         original_url=normal_shorturl.original_url,
-        owner_id=owner.id,
         custom_slug=normal_shorturl.slug
     )
     assert isinstance(retrieved, ShortURL)
     assert retrieved.pk.get_id() == 1
     assert retrieved.original_url == normal_shorturl.original_url
-    assert retrieved.owner.id == owner.id
     assert retrieved.slug == normal_shorturl.slug
 
 
 @pytest.mark.asyncio
-async def test_slug_generated(
+async def test_slug_generator(
     use_case: CreateShortURLUseCase, normal_shorturl: ShortURL
 ):
-    owner = await use_case.user_repository.add(normal_shorturl.owner)
     shorturl = await use_case.execute(
-        original_url=normal_shorturl.original_url, owner_id=owner.id
+        original_url=normal_shorturl.original_url
     )
     assert len(shorturl.slug) == DEFAULT_RANDOM_SLUG_LENGTH
 
@@ -54,11 +50,9 @@ async def test_slug_generated(
 async def test_shorturl_is_saved_in_repository(
     use_case: CreateShortURLUseCase, normal_shorturl: ShortURL
 ):
-    owner = await use_case.user_repository.add(normal_shorturl.owner)
     await use_case.execute(
         original_url=normal_shorturl.original_url,
-        custom_slug=normal_shorturl.slug,
-        owner_id=owner.id
+        custom_slug=normal_shorturl.slug
     )
     assert await use_case.shorturl_repository.exists_by_slug(normal_shorturl.slug)
 
@@ -67,10 +61,8 @@ async def test_shorturl_is_saved_in_repository(
 async def test_shorturl_validation_is_called(
     use_case: CreateShortURLUseCase, normal_shorturl: ShortURL
 ):
-    owner = await use_case.user_repository.add(normal_shorturl.owner)
     with pytest.raises(ValueError, match="The provided slug is joker."):
         await use_case.execute(
             original_url=normal_shorturl.original_url,
-            owner_id=owner.id,
             custom_slug=Slug("joker")
         )

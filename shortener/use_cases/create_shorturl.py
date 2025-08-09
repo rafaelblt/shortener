@@ -35,7 +35,6 @@ class CreateShortURLUseCase:
     async def execute(
         self, 
         original_url: URL,
-        owner_id: int,
         custom_slug: Optional[Slug] = None,
     ) -> ShortURL:
         """
@@ -53,18 +52,11 @@ class CreateShortURLUseCase:
         Raises:
             ShortURLValidationError: If any part of ShortURL is invalid.
         """
-        owner = await self.user_repository.get_by_id(owner_id)
-        if owner is None:
-            raise ShortURLValidationError(
-                "There is no user in the database with the given owner_id."
-            )
-
         slug = custom_slug or await generate_unique_slug(self.shorturl_repository)
 
         shorturl = ShortURL(
             slug=slug,
             original_url=original_url,
-            owner=owner,
         )
 
         await self.validator.validate(shorturl)

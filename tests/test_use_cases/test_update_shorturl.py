@@ -40,6 +40,7 @@ async def test_instance_retrieved(
     use_case: UpdateShortURLUseCase, normal_shorturl: ShortURL
 ):
     shorturl = await use_case.repository.add(normal_shorturl)
+    
     new_slug = Slug("test-updated-slug")
     new_url = URL("https://newurl.com")
 
@@ -50,7 +51,7 @@ async def test_instance_retrieved(
     )
 
     assert isinstance(retrieved, ShortURL)
-    assert retrieved.pk == 1
+    assert retrieved.pk.get_id() == 1
 
     normal_shorturl.slug = new_slug
     normal_shorturl.original_url = new_url

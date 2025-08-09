@@ -5,7 +5,6 @@ from datetime import datetime, timezone
 from shortener.domain.domain_entity import DomainEntity
 from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.domain.shared.datetime_utils import is_utc
-from shortener.domain.user import User
 
 from .fields import Slug, URL, ShortURLStatus
 from .exceptions import (
@@ -37,7 +36,6 @@ class ShortURL(DomainEntity):
         self,
         original_url: URL,
         slug: Slug,
-        owner: User = None,
         pk: Optional[PrimaryKey] = None,
         status: ShortURLStatus = ShortURLStatus.ACTIVE,
         visit_count: int = 0,
@@ -51,7 +49,6 @@ class ShortURL(DomainEntity):
         self.validate_pk(pk)
         self.validate_slug(slug)
         self.validate_original_url(original_url)
-        self.validate_owner(owner)
         self.validate_status(status)
         self.validate_visit_count(visit_count)
         self.validate_created_at(created_at)
@@ -61,7 +58,6 @@ class ShortURL(DomainEntity):
         self._pk = pk
         self._slug = slug
         self._original_url = original_url
-        self._owner = owner
         self._status = status
         self._visit_count = visit_count
         self._created_at = created_at
@@ -94,10 +90,6 @@ class ShortURL(DomainEntity):
         self._original_url = original_url
 
     @property
-    def owner(self):
-        return self._owner
-
-    @property
     def status(self):
         return self._status
 
@@ -128,7 +120,6 @@ class ShortURL(DomainEntity):
         self.validate_pk(self._pk)
         self.validate_slug(self._slug)
         self.validate_original_url(self._original_url)
-        self.validate_owner(self._owner)
         self.validate_status(self._status)
         self.validate_visit_count(self._visit_count)
         self.validate_created_at(self._created_at)
@@ -154,13 +145,6 @@ class ShortURL(DomainEntity):
         if not isinstance(original_url, URL):
             raise ShortURLAttributeTypeError(
                 attr="original_url", type_expected="URL", got=original_url
-            )
-    
-    @staticmethod
-    def validate_owner(owner):
-        if not isinstance(owner, User):
-            raise ShortURLAttributeTypeError(
-                attr="owner", type_expected="User", got=owner
             )
     
     @staticmethod
@@ -217,10 +201,6 @@ class ShortURL(DomainEntity):
                 "The ShortURL last_accessed_at must be in UTC timezone."
             )
 
-
-    def change_owner(self, new_owner: User):
-        self.validate_owner(new_owner)
-        self._owner = new_owner
 
     def record_visit(self):
         """
