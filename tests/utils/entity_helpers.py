@@ -151,7 +151,6 @@ def assert_shorturl_fields(
     ignore_pk: bool = False
 ):
     def define_fields(entmap, instance):
-        entmap["pk"] = instance.pk
         entmap["slug"] = instance.slug
         entmap["original_url"] = instance.original_url
         entmap["status"] = instance.status
