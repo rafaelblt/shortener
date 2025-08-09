@@ -1,7 +1,8 @@
-from datetime import datetime, timezone
-
 from typing import Optional
 
+from datetime import datetime, timezone
+
+from shortener.domain.domain_entity import DomainEntity
 from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.domain.shared.datetime_utils import is_utc
 from shortener.domain.user import User
@@ -17,7 +18,20 @@ from .exceptions import (
 )
 
 
-class ShortURL:
+class ShortURL(DomainEntity):
+
+    @staticmethod
+    def get_fields() -> list[str]:
+        return [
+            "pk",
+            "slug",
+            "original_url",
+            "status",
+            "visit_count",
+            "created_at",
+            "expires_at",
+            "last_accessed_at",
+        ]
 
     def __init__(
         self,
