@@ -8,6 +8,10 @@ from shortener.domain.shorturl.exceptions import ShortURLNotFoundError
 
 
 class ShortURLRepository(ABC):
+    EntityType = ShortURL
+    exceptions = {
+        "entity_not_found": ShortURLNotFoundError
+    }
 
     @abstractmethod
     async def add(self, shorturl: ShortURL) -> ShortURL:
