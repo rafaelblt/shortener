@@ -5,16 +5,13 @@ from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.domain.shorturl import ShortURL
 from shortener.domain.shorturl.fields import Slug, URL, ShortURLStatus
 
-from shortener.domain.user import User
-
 
 @pytest.fixture
-def shorturl(normal_user: User):
+def shorturl():
     return ShortURL(
         pk=PrimaryKey.create_pk_id(1),
         slug=Slug("i-am-slug"),
         original_url=URL("https://google.com"),
-        owner=normal_user,
         status=ShortURLStatus.SUSPENDED,
         visit_count=5,
         created_at=datetime(year=2002, month=2, day=2, tzinfo=timezone.utc),
@@ -39,10 +36,6 @@ def test_slug(shorturl: ShortURL):
 def test_original_url(shorturl: ShortURL):
     assert isinstance(shorturl.original_url, URL)
     assert shorturl.original_url == "https://google.com"
-
-
-def test_owner(shorturl: ShortURL):
-    assert isinstance(shorturl.owner, User)
 
 
 def test_status(shorturl: ShortURL):

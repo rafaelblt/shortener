@@ -26,10 +26,6 @@ def test_original_url(shorturl: ShortURL):
     assert shorturl.original_url == "https://lorem.makeyoursite.com"
 
 
-def test_owner(shorturl: ShortURL, normal_user):
-    assert shorturl.owner == normal_user
-
-
 def test_status(shorturl: ShortURL):
     assert shorturl.status == ShortURLStatus.ACTIVE
 

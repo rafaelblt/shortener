@@ -15,6 +15,7 @@ def test_record_visit(normal_shorturl: ShortURL):
 
     normal_shorturl.record_visit()
 
+    assert normal_shorturl.last_accessed_at is not None
     assert normal_shorturl.visit_count == expected_visit_count
     assert (
         normal_shorturl.last_accessed_at.strftime(strftime) == 

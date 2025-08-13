@@ -18,8 +18,7 @@ def valid_url():
 def required_fields(normal_shorturl):
     return {
         "slug": normal_shorturl.slug,
-        "original_url": normal_shorturl.original_url,
-        "owner": normal_shorturl.owner
+        "original_url": normal_shorturl.original_url
     }
 
 
@@ -51,16 +50,6 @@ def test_pk_invalid(required_fields: dict):
     e = get_type_error_message(attr="pk", type_expected="PrimaryKey", got=pk)
     with pytest.raises(TypeError, match=e):
         ShortURL(**required_fields, pk=pk) # type: ignore
-    
-
-def test_owner_invalid(required_fields: dict):
-    required_fields.pop("owner")
-    owner = 1
-    e = get_type_error_message(
-        attr="owner", type_expected="User", got=owner
-    )
-    with pytest.raises(TypeError, match=e):
-        ShortURL(**required_fields, owner=owner) # type: ignore
 
 
 def test_status_invalid(required_fields: dict): 
