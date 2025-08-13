@@ -43,11 +43,11 @@ class UserModel(Base):
     last_login: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-    plan_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("plans.id", ondelete="SET NULL"), nullable=True
+    plan_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("plans.id", ondelete="RESTRICT"), nullable=False
     )
     shorturls = relationship(
-        "ShortURLModel", back_populates="owner", cascade="all, delete-orphan"
+        "ShortURLModel", back_populates="owner", cascade="all"
     )
     plan = relationship(
         "PlanModel", back_populates="users", lazy="selectin"
