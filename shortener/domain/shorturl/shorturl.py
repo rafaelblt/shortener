@@ -75,19 +75,9 @@ class ShortURL(DomainEntity):
     def slug(self):
         return self._slug
 
-    @slug.setter
-    def slug(self, slug):
-        self.validate_slug(slug)
-        self._slug = slug
-
     @property
     def original_url(self):
         return self._original_url
-    
-    @original_url.setter
-    def original_url(self, original_url):
-        self.validate_original_url(original_url)
-        self._original_url = original_url
 
     @property
     def status(self):
