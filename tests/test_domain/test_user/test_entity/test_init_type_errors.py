@@ -23,12 +23,12 @@ def get_type_error_message(attr, type_expected, got):
     )
 
 
-def test_invalid_id(required_fields):
+def test_invalid_pk(required_fields):
     invalid_pk = 1
     with pytest.raises(
         TypeError, 
         match=get_type_error_message(
-            attr="id", type_expected="int or None", got=invalid_pk
+            attr="pk", type_expected="PrimaryKey", got=invalid_pk
         )
     ):
         User(**required_fields, pk=invalid_pk) # type: ignore
