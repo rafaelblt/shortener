@@ -1,24 +1,22 @@
 import pytest
-import pytest_asyncio
 
 from datetime import datetime, timezone
 
-from tests.utils.entity_helpers import get_persistent_user, assert_shorturl_fields
-
+from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.domain.shared import PaginatedResult
-
-from shortener.domain.user import User
 
 from shortener.domain.shorturl import ShortURL
 from shortener.domain.shorturl.fields import Slug, URL, ShortURLStatus
-from shortener.domain.shorturl.exceptions import ShortURLNotFoundInDatabaseError
+from shortener.domain.shorturl.exceptions import ShortURLNotFoundError
 
 from shortener.infra.db.models import ShortURLModel
 from shortener.infra.db.repositories import SQLAlchemyShortURLRepository
 
+from tests.utils.entity_helpers import get_persistent_user, assert_shorturl_fields
 
-@pytest_asyncio.fixture
-async def repository(sqlalchemy_shorturl_repository):
+
+@pytest.fixture
+def repository(sqlalchemy_shorturl_repository):
     return sqlalchemy_shorturl_repository
 
 
@@ -26,35 +24,25 @@ async def repository(sqlalchemy_shorturl_repository):
 async def test_add(
     repository: SQLAlchemyShortURLRepository, normal_shorturl: ShortURL
 ):
-    owner = await get_persistent_user(repository.session, normal_shorturl.owner)
-    normal_shorturl.change_owner(owner)
-
     retrieved = await repository.add(normal_shorturl)
 
     assert isinstance(retrieved, ShortURL)
-    assert retrieved.id == 1
-    assert_shorturl_fields(retrieved, normal_shorturl, ignore_id=True)
+    assert retrieved.pk.get_id() == 1
+    assert_shorturl_fields(retrieved, normal_shorturl, ignore_pk=True)
 
-    saved_model = await repository.session.get(ShortURLModel, retrieved.id)
+    saved_model = await repository.session.get(ShortURLModel, retrieved.pk.get_id())
+    assert saved_model is not None
     assert saved_model.slug == normal_shorturl.slug
 
 
 @pytest.mark.asyncio
 async def test_update(
-    repository: SQLAlchemyShortURLRepository,
-    normal_shorturl: ShortURL,
-    old_user: User
-):
-    owner = await get_persistent_user(repository.session, normal_shorturl.owner)
-    normal_shorturl.change_owner(owner)
-    
+    repository: SQLAlchemyShortURLRepository, normal_shorturl: ShortURL
+):  
     saved_shorturl = await repository.add(normal_shorturl)
 
-    old_user.change_plan(owner.plan)
-    old_user = await get_persistent_user(repository.session, old_user)
     saved_shorturl._slug = Slug("test-new-updated-slug")
     saved_shorturl._original_url = URL("https://target.com")
-    saved_shorturl._owner = old_user
     saved_shorturl._status = ShortURLStatus.BANNED
     saved_shorturl._visit_count = 5
     saved_shorturl._created_at = datetime(2000, 1, 1, tzinfo=timezone.utc)
@@ -65,30 +53,17 @@ async def test_update(
 
     assert isinstance(updated_shorturl, ShortURL)
     assert_shorturl_fields(updated_shorturl, saved_shorturl)
-    
-
-@pytest.mark.asyncio
-async def test_update_shorturl_without_id_raises_error(
-    repository: SQLAlchemyShortURLRepository, normal_shorturl: ShortURL
-):
-    with pytest.raises(
-        ShortURLNotFoundInDatabaseError,
-        match=f"ShortURL with id={normal_shorturl.id} not found in database."
-    ):
-        await repository.update(normal_shorturl)
 
 
 @pytest.mark.asyncio
 async def test_update_shorturl_non_existent_raises_error(
     repository: SQLAlchemyShortURLRepository, normal_shorturl: ShortURL
 ):
-    normal_shorturl._id = 1
-
-    with pytest.raises(
-        ShortURLNotFoundInDatabaseError, 
-        match=f"ShortURL with id={normal_shorturl.id} not found in database."
-    ):
+    normal_shorturl._pk = PrimaryKey.create_pk_id(1)
+    with pytest.raises(ShortURLNotFoundError) as error:
         await repository.update(normal_shorturl)
+    assert error.value.field == "pk"
+    assert error.value.value == normal_shorturl.pk
 
 
 @pytest.mark.asyncio
@@ -106,10 +81,6 @@ async def test_get_all_with_shorturls(
     normal_shorturl: ShortURL,
     other_shorturl: ShortURL
 ):
-    owner = await get_persistent_user(repository.session, normal_shorturl.owner)
-    normal_shorturl.change_owner(owner)
-    other_shorturl.change_owner(owner)
-
     await repository.add(normal_shorturl)
     await repository.add(other_shorturl)
 
@@ -120,41 +91,35 @@ async def test_get_all_with_shorturls(
     for i in range(len(retrieved)):
         expected_id = i + 1
         assert isinstance(retrieved[i], ShortURL)
-        assert retrieved[i].id == expected_id
-    assert_shorturl_fields(retrieved[0], normal_shorturl, ignore_id=True)
-    assert_shorturl_fields(retrieved[1], other_shorturl, ignore_id=True)
+        assert retrieved[i].pk.get_id() == expected_id
+    assert_shorturl_fields(retrieved[0], normal_shorturl, ignore_pk=True)
+    assert_shorturl_fields(retrieved[1], other_shorturl, ignore_pk=True)
 
 
 @pytest.mark.asyncio
-async def test_get_by_id(
+async def test_get_by_pk(
     repository: SQLAlchemyShortURLRepository, normal_shorturl: ShortURL
-):
-    owner = await get_persistent_user(repository.session, normal_shorturl.owner)
-    normal_shorturl.change_owner(owner)
-    
-    await repository.add(normal_shorturl)
+):  
+    shorturl = await repository.add(normal_shorturl)
 
-    retrieved = await repository.get_by_id(1)
+    retrieved = await repository.get_by_pk(shorturl.pk)
 
     assert isinstance(retrieved, ShortURL)
-    assert retrieved.id == 1
-    assert_shorturl_fields(retrieved, normal_shorturl, ignore_id=True)
+    assert retrieved.pk.get_id() == 1
+    assert_shorturl_fields(retrieved, normal_shorturl, ignore_pk=True)
 
 
 @pytest.mark.asyncio
 async def test_get_by_slug(
     repository: SQLAlchemyShortURLRepository, normal_shorturl: ShortURL
-):
-    owner = await get_persistent_user(repository.session, normal_shorturl.owner)
-    normal_shorturl.change_owner(owner)
-    
+):  
     await repository.add(normal_shorturl)
 
     retrieved = await repository.get_by_slug(normal_shorturl.slug)
 
     assert isinstance(retrieved, ShortURL)
-    assert retrieved.id == 1
-    assert_shorturl_fields(retrieved, normal_shorturl, ignore_id=True)
+    assert retrieved.pk.get_id() == 1
+    assert_shorturl_fields(retrieved, normal_shorturl, ignore_pk=True)
 
 
 @pytest.mark.asyncio
@@ -164,12 +129,6 @@ async def test_list_paginated(
     other_shorturl: ShortURL,
     old_shorturl: ShortURL
 ):
-    owner = await get_persistent_user(repository.session, normal_shorturl.owner)
-
-    normal_shorturl.change_owner(owner)
-    other_shorturl.change_owner(owner)
-    old_shorturl.change_owner(owner)
-
     await repository.add(normal_shorturl)
     await repository.add(other_shorturl)
     await repository.add(old_shorturl)
@@ -190,11 +149,7 @@ async def test_list_paginated(
 async def test_exists_by_slug_true(
     repository: SQLAlchemyShortURLRepository, normal_shorturl: ShortURL
 ):
-    owner = await get_persistent_user(repository.session, normal_shorturl.owner)
-    normal_shorturl.change_owner(owner)
-
     await repository.add(normal_shorturl)
-
     retrieved = await repository.exists_by_slug(normal_shorturl.slug)
     assert retrieved == True
 
@@ -208,19 +163,16 @@ async def test_exists_by_slug_false(
 
 
 @pytest.mark.asyncio
-async def test_delete_by_id(
+async def test_delete_by_pk(
     repository: SQLAlchemyShortURLRepository, normal_shorturl: ShortURL
 ):
-    owner = await get_persistent_user(repository.session, normal_shorturl.owner)
-    normal_shorturl.change_owner(owner)
+    shorturl = await repository.add(normal_shorturl)
 
-    await repository.add(normal_shorturl)
-
-    retrieved = await repository.delete_by_id(1)
+    retrieved = await repository.delete_by_pk(shorturl.pk)
 
     assert isinstance(retrieved, ShortURL)
-    assert retrieved.id == 1
-    assert_shorturl_fields(retrieved, normal_shorturl, ignore_id=True)
+    assert retrieved.pk.get_id() == 1
+    assert_shorturl_fields(retrieved, normal_shorturl, ignore_pk=True)
     assert await repository.exists_by_slug(normal_shorturl.slug) == False
 
 
@@ -228,8 +180,8 @@ async def test_delete_by_id(
 async def test_delete_by_id_non_existent_shorturl(
     repository: SQLAlchemyShortURLRepository
 ):
-    with pytest.raises(
-        ShortURLNotFoundInDatabaseError, 
-        match=f"ShortURL with id=1 not found in database."
-    ):
-        await repository.delete_by_id(1)
+    pk = PrimaryKey.create_pk_id(1)
+    with pytest.raises(ShortURLNotFoundError) as error:
+        await repository.delete_by_pk(pk)
+    assert error.value.field == "pk"
+    assert error.value.value == pk
