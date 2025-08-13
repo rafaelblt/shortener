@@ -53,8 +53,8 @@ async def test_instance_retrieved(
     assert isinstance(retrieved, ShortURL)
     assert retrieved.pk.get_id() == 1
 
-    normal_shorturl.slug = new_slug
-    normal_shorturl.original_url = new_url
+    normal_shorturl.change_slug(new_slug)
+    normal_shorturl.change_original_url(new_url)
 
     assert_shorturl_fields(retrieved, normal_shorturl, ignore_pk=True)
     

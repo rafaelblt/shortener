@@ -49,10 +49,12 @@ class UpdateShortURLUseCase:
             raise ShortURLValidationError(
                 f"There is no shorturl in the database with the given pk: {pk}"
             )
-
-        shorturl.slug = slug or shorturl.slug
-        shorturl.original_url = original_url or shorturl.original_url
+        
+        new_slug = slug or shorturl.slug
+        new_original_url = original_url or shorturl.original_url
+        shorturl.change_slug(new_slug)        
+        shorturl.change_original_url(new_original_url)
 
         await self.validator.validate(shorturl)
-        
+
         return await self.repository.update(shorturl)

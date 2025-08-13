@@ -192,6 +192,15 @@ class ShortURL(DomainEntity):
             )
 
 
+    def change_slug(self, new_slug: Slug):
+        self.validate_slug(new_slug)
+        self._slug = new_slug
+
+    def change_original_url(self, new_url: URL):
+        self.validate_slug(new_url)
+        self._original_url = new_url
+
+
     def record_visit(self):
         """
         Registers a new visit to the ShortURL.
