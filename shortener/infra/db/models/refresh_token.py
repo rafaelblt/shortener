@@ -21,7 +21,7 @@ class RefreshTokenModel(Base):
     token: Mapped[str] = mapped_column(
         String, unique=True, index=True
     )
-    revoked: Mapped[str] = mapped_column(
+    revoked: Mapped[bool] = mapped_column(
         Boolean, default=False, nullable=False
     )
     expires_at: Mapped[datetime] = mapped_column(
