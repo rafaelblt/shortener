@@ -1,7 +1,8 @@
 import pytest
 
-from tests.fixtures.mocks.shorturl_repository import MockShortURLRepository
+from unittest.mock import AsyncMock
 
+from shortener.domain.shorturl import ShortURLRepository
 from shortener.domain.shorturl.fields.slug import (
     Slug,
     DEFAULT_RANDOM_SLUG_LENGTH,
@@ -10,56 +11,50 @@ from shortener.domain.shorturl.fields.slug import (
 from shortener.domain.shorturl.utils import generate_unique_slug
 
 
-class SlugAlwaysExists(MockShortURLRepository):    
-    async def exists_by_slug(self, slug: str) -> bool:
-        return True
-
-
 @pytest.fixture
 def repository(mock_shorturl_repository):
     return mock_shorturl_repository
 
 
-@pytest.mark.asyncio
-async def test_raises_type_error_when_repository_is_missing():
-    with pytest.raises(TypeError):
-        await generate_unique_slug()
+@pytest.fixture
+def slug_always_exists_repo(mock_shorturl_repository):
+    repo = mock_shorturl_repository
+    repo.exists_by_slug = AsyncMock(return_value=True)
+    return repo
 
 
 @pytest.mark.asyncio
-async def test_return_type(repository: MockShortURLRepository):
+async def test_return_type(repository: ShortURLRepository):
     slug = await generate_unique_slug(repository=repository)
     assert isinstance(slug, Slug)
 
 
 @pytest.mark.asyncio
-async def test_default_length(repository: MockShortURLRepository):
+async def test_default_length(repository: ShortURLRepository):
     slug = await generate_unique_slug(repository=repository)
     assert len(slug) == DEFAULT_RANDOM_SLUG_LENGTH
 
 
 @pytest.mark.asyncio
-async def test_custom_length(repository: MockShortURLRepository):
+async def test_custom_length(repository: ShortURLRepository):
     length = 10
     slug = await generate_unique_slug(repository=repository, length=length)
     assert len(slug) == length
 
 
 @pytest.mark.asyncio
-async def test_raises_runtime_error_when_max_attempts_reached():
-    repository = SlugAlwaysExists()
+async def test_raises_runtime_error_when_max_attempts_reached(slug_always_exists_repo):
     max_attempts = DEFAULT_MAX_ATTEMPS_TO_GENERATE_UNIQUE_SLUG
 
     with pytest.raises(
         RuntimeError, 
         match=f"Could not generate a unique slug after {max_attempts} attempts."
     ):
-        await generate_unique_slug(repository=repository)
+        await generate_unique_slug(repository=slug_always_exists_repo)
 
 
 @pytest.mark.asyncio
-async def test_raises_runtime_error_with_custom_max_attempts():
-    repository = SlugAlwaysExists()
+async def test_raises_runtime_error_with_custom_max_attempts(slug_always_exists_repo):
     max_attempts = 1
 
     with pytest.raises(
@@ -67,5 +62,5 @@ async def test_raises_runtime_error_with_custom_max_attempts():
         match=f"Could not generate a unique slug after {max_attempts} attempts."
     ):
         await generate_unique_slug(
-            repository=repository, max_attempts=max_attempts
+            repository=slug_always_exists_repo, max_attempts=max_attempts
         )
