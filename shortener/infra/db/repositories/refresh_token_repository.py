@@ -33,6 +33,12 @@ class SQLAlchemyRefreshTokenRepository(RefreshTokenRepository):
         existing_model = await self._get_model_by_id(refresh_token_id)
         if existing_model is None:
             raise RefreshTokenNotFoundError(value=refresh_token.pk, field="pk")
+        
+        existing_model.token = refresh_token.token
+        existing_model.user_id = refresh_token.user.pk.get_id()
+        existing_model.expires_at = refresh_token.expires_at
+        existing_model.created_at = refresh_token.created_at
+        existing_model.revoked = refresh_token.revoked
 
         await self.session.commit()
         await self.session.refresh(existing_model)

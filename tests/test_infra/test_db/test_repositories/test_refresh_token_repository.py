@@ -85,10 +85,6 @@ async def test_update(
     assert isinstance(retrieved, RefreshToken)
     assert_refresh_token_fields(retrieved, saved_token)
 
-    updated_token = await repository.get_by_pk(saved_user.pk)
-    assert isinstance(updated_token, RefreshToken)
-    assert_refresh_token_fields(updated_token, saved_token)
-
 
 @pytest.mark.asyncio
 async def test_update_entity_without_id_raises_error(
