@@ -1,6 +1,9 @@
-from email_validator import validate_email as lib_validate_email
+import re
 
 from .exceptions import EmailInvalidError
+
+
+EMAIl_REGEX = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
 
 
 class Email(str):
@@ -15,7 +18,5 @@ class Email(str):
 
     @staticmethod
     def validate_email(value: str):
-        try:
-            lib_validate_email(value)
-        except Exception:
-            raise EmailInvalidError(email=value)
+        if not re.match(EMAIl_REGEX, value):
+            raise EmailInvalidError(email=value)            

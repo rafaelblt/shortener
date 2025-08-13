@@ -17,7 +17,7 @@ def test_email_repr():
 
 def test_new_email_raises_type_error():
     with pytest.raises(TypeError, match="Email value arg must be a str."):
-        Email(1)
+        Email(1) # type: ignore
 
 
 def test_new_email_raises_validation_error():
