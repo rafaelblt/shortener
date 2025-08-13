@@ -197,7 +197,7 @@ class ShortURL(DomainEntity):
         self._slug = new_slug
 
     def change_original_url(self, new_url: URL):
-        self.validate_slug(new_url)
+        self.validate_original_url(new_url)
         self._original_url = new_url
 
 
