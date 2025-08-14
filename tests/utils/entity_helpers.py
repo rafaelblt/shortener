@@ -76,7 +76,7 @@ def assert_plan_fields(
         first_data.pop("pk")
         second_data.pop("pk")
     
-    assert first_data == second_data
+    assert first_data == second_data, f"{first_data} != {second_data}"
 
 
 def assert_user_fields(
@@ -85,7 +85,6 @@ def assert_user_fields(
     ignore_pk: bool = False
 ):
     def define_fields(entmap, instance: User | UserModel):
-        entmap = {}
         entmap["email"] = instance.email
         entmap["name"] = instance.name
         entmap["hashed_password"] = instance.hashed_password
@@ -94,8 +93,8 @@ def assert_user_fields(
         entmap["created_at"] = instance.created_at
         entmap["last_login"] = instance.last_login
         if isinstance(instance, User):
-            entmap["pk"] = None if instance.pk.is_undefined() else instance.pk.get_id()
-            entmap["plan_pk"] = None if instance.plan.pk.is_undefined() else instance.plan.pk.get_id()
+            entmap["pk"] = instance.pk.get_id() if instance.pk.is_id() else None
+            entmap["plan_pk"] = instance.plan.pk.get_id() if instance.plan.pk.is_id() else None
         elif isinstance(instance, UserModel):
             entmap["pk"] = instance.id if instance.id else None
             entmap["plan_pk"] = instance.plan_id
@@ -109,7 +108,7 @@ def assert_user_fields(
         first_data.pop("pk")
         second_data.pop("pk")
     
-    assert first_data == second_data
+    assert first_data == second_data, f"{first_data} != {second_data}"
 
 
 def assert_refresh_token_fields(
@@ -138,7 +137,7 @@ def assert_refresh_token_fields(
         first_data.pop("pk")
         second_data.pop("pk")
     
-    assert first_data == second_data
+    assert first_data == second_data, f"{first_data} != {second_data}"
 
 
 def assert_shorturl_fields(
@@ -168,4 +167,4 @@ def assert_shorturl_fields(
         first_data.pop("pk")
         second_data.pop("pk")
     
-    assert first_data == second_data
+    assert first_data == second_data, f"{first_data} != {second_data}"
