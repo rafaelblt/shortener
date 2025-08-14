@@ -21,9 +21,10 @@ def test_map_user_domain_to_model(normal_user: User):
 
 
 def test_map_user_model_to_domain(normal_user: User):
+    normal_user._pk = PrimaryKey.create_pk_id(1)
     normal_user.plan._pk = PrimaryKey.create_pk_id(1)
+
     user_model = map_user_domain_to_model(normal_user)
-    user_model.id = 1
     plan_model = map_plan_domain_to_model(normal_user.plan)
     user_model.plan = plan_model
 
