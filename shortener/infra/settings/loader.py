@@ -9,10 +9,11 @@ from shortener.infra import exceptions
 from shortener.infra.settings.converters import ConversionError
 
 
+load_dotenv()
+
+
 def load_settings():
     settings: dict[str, Any] = {}
-
-    load_dotenv()
 
     set_default_settings(settings)
     get_and_set_env_template(settings)
