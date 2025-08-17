@@ -42,14 +42,14 @@ class Slug(str):
 
     def __new__(cls, value: str):
         value = str(value)
-        cls._validate_slug(value)
+        cls.validate_slug(value)
         return super().__new__(cls, value)
 
     def __repr__(self):
         return f"<Slug({super().__repr__()})>"
     
     @staticmethod
-    def _validate_slug(value: str):
+    def validate_slug(value: str):
         """
         Validate the Slug value.
 
@@ -66,24 +66,16 @@ class Slug(str):
             ShortURLSlugTooShortError: The slug is shorther than min length.
         """
         if not SLUG_PATTERN.match(value):
-            raise ShortURLInvalidSlugError(
-                "Slug contains invalid characters. Allowed: a-z, A-Z, 0-9, _, -"
-            )
+            raise ShortURLInvalidSlugError(slug=value)
 
         if value.lower() in FORBIDDEN_SLUGS:
-            raise ShortURLForbiddenSlugError(
-                "The provided slug is forbidden."
-            )
+            raise ShortURLForbiddenSlugError(value)
 
         if len(value) < SLUG_MIN_LENGTH:
-            raise ShortURLSlugTooShortError(
-                f"Slug must be at least {SLUG_MIN_LENGTH} characters long."
-            )
+            raise ShortURLSlugTooShortError(slug=value, min_length=SLUG_MIN_LENGTH)
         
         if len(value) > SLUG_MAX_LENGTH:
-            raise ShortURLSlugTooLongError(
-                f"Slug must be at most {SLUG_MAX_LENGTH} characters long."
-            )
+            raise ShortURLSlugTooLongError(slug=value, max_length=SLUG_MAX_LENGTH)
 
     @classmethod
     def generate_random(
