@@ -1,9 +1,10 @@
 from shortener.adapters.api.v1.schemas.entities import PublicUserSchema
+
 from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.domain.user.user import User
 
 
-def test_from_domain(normal_user: User):
+def test_public_user_from_domain(normal_user: User):
     normal_user._pk = PrimaryKey.create_pk_id(1)
     normal_user.plan._pk = PrimaryKey.create_pk_id(1)
 
