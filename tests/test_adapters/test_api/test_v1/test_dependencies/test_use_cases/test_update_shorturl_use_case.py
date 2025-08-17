@@ -21,18 +21,13 @@ def test_instance(use_case: UpdateShortURLUseCase):
     assert isinstance(use_case, UpdateShortURLUseCase)
 
 
-def test_attr_repository(use_case: UpdateShortURLUseCase):
-    assert isinstance(use_case.repository, Depends)
+def test_attr_shorturl_repository(use_case: UpdateShortURLUseCase):
+    assert isinstance(use_case.shorturl_repository, Depends)
     assert (
-        use_case.repository.dependency == 
+        use_case.shorturl_repository.dependency == 
         make_sqlalchemy_shorturl_repository
     )
 
 
-def test_attr_validator(use_case: UpdateShortURLUseCase):
-    assert isinstance(use_case.validator, ShortURLUpdateValidator)
-    assert isinstance(use_case.validator.repository, Depends)
-    assert (
-        use_case.validator.repository.dependency == 
-        make_sqlalchemy_shorturl_repository
-    )
+def test_attr_validators_map(use_case: UpdateShortURLUseCase):
+    assert use_case.validators_map == {}

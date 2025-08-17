@@ -1,11 +1,13 @@
 from typing import Optional
 
 from shortener.domain.shared.primarykey import PrimaryKey
-from shortener.domain.shorturl import (
-    ShortURL, ShortURLRepository, ShortURLValidator
-)
-from shortener.domain.shorturl.exceptions import ShortURLValidationError
+from shortener.domain.shared.validator import MultiFieldValidator
+
+from shortener.domain.shorturl import ShortURL, ShortURLRepository
+from shortener.domain.shorturl.exceptions import ShortURLNotFoundError, ShortURLSlugAlreadyExistsError
 from shortener.domain.shorturl.fields import URL, Slug
+
+from .types import ValidatorsMapType
 
 
 class UpdateShortURLUseCase:
@@ -13,16 +15,15 @@ class UpdateShortURLUseCase:
 
     def __init__(
             self, 
-            repository: ShortURLRepository,
-            validator: ShortURLValidator
+            shorturl_repository: ShortURLRepository,
+            validators_map: ValidatorsMapType
         ):
         """
         Args:
-            repository (ShortURLRepository): Repository to save the ShortURL object.
-            validator (ShortURLValidator): Validator to validate the ShortURL data.
+            shorturl_repository (ShortURLRepository): Repository to save the ShortURL object.
         """
-        self.repository = repository
-        self.validator = validator
+        self.shorturl_repository = shorturl_repository
+        self.validators_map = validators_map
 
     async def execute(
         self,
@@ -42,19 +43,21 @@ class UpdateShortURLUseCase:
             ShortURL: The ShortURL object updated.
 
         Raises:
-            ShortURLValidationError: If any part of ShortURL is invalid.
+            ShortURLNotFoundError: If shorturl with the given pk does not exist.
         """
-        shorturl = await self.repository.get_by_pk(pk)
+        multi_validator = MultiFieldValidator(self.validators_map)
+        await multi_validator.validate(slug=slug, original_url=original_url)
+
+        if slug and await self.shorturl_repository.exists_by_slug(slug):
+            raise ShortURLSlugAlreadyExistsError(slug)
+
+        shorturl = await self.shorturl_repository.get_by_pk(pk)
         if shorturl is None:
-            raise ShortURLValidationError(
-                f"There is no shorturl in the database with the given pk: {pk}"
-            )
+            raise ShortURLNotFoundError(field="pk", value=pk)
         
         new_slug = slug or shorturl.slug
         new_original_url = original_url or shorturl.original_url
         shorturl.change_slug(new_slug)        
         shorturl.change_original_url(new_original_url)
 
-        await self.validator.validate(shorturl)
-
-        return await self.repository.update(shorturl)
+        return await self.shorturl_repository.update(shorturl)
