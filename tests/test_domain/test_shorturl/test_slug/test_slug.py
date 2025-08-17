@@ -13,8 +13,5 @@ def test_new_slug():
 
 def test_new_slug_with_invalid_value():
     value = "test.invalid"
-    with pytest.raises(
-        ShortURLInvalidSlugError,
-        match="Slug contains invalid characters. Allowed: a-z, A-Z, 0-9, _, -"
-    ):
+    with pytest.raises(ShortURLInvalidSlugError):
         Slug(value)

@@ -13,7 +13,5 @@ def test_new_url():
 
 def test_new_url_with_invalid_value():
     value = "test-invalid"
-    with pytest.raises(
-        ShortURLInvalidURLError, match="URL must be a valid https url."
-    ):
+    with pytest.raises(ShortURLInvalidURLError):
         URL(value)

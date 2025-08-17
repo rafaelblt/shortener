@@ -28,10 +28,10 @@ class ShortURLSlugAlreadyExistsError(ShortURLValidationError):
         msg = f"The provided slug already exists."
         super().__init__(value=slug, field="slug", code=self.code, message=msg)
 class ShortURLInvalidSlugError(ShortURLValidationError):
-    code = "SLUG_ALREADY_EXISTS"
+    code = "SLUG_INVALID"
     def __init__(self, slug: str):
         self.slug = slug
-        msg = "The provided slug is forbidden."
+        msg = "Slug contains invalid characters. Allowed: a-z, A-Z, 0-9, _, -"
         super().__init__(value=slug, field="slug", code=self.code, message=msg)
 class ShortURLForbiddenSlugError(ShortURLValidationError):
     code = "SLUG_FORBIDDEN"
@@ -52,11 +52,11 @@ class ShortURLSlugTooShortError(ShortURLValidationError):
         msg = f"Slug must be at most {min_length} characters long."
         super().__init__(value=slug, field="slug", code=self.code, message=msg)
 class ShortURLInvalidURLError(ShortURLValidationError):
-    code = "SLUG_INVALID"
-    def __init__(self, slug: str):
-        self.slug = slug
-        msg = "Slug contains invalid characters. Allowed: a-z, A-Z, 0-9, _, -"
-        super().__init__(value=slug, field="slug", code=self.code, message=msg)
+    code = "URL_INVALID"
+    def __init__(self, url: str):
+        self.url = url
+        msg = "URL must be a valid https url."
+        super().__init__(value=url, field="original_url", code=self.code, message=msg)
 
 
 # - REPOSITORY EXCEPTIONS

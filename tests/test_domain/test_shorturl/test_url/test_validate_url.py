@@ -11,7 +11,6 @@ def test_valid_url():
 
 def test_invalid_url():
     invalid_url = "invalid-url"
-    with pytest.raises(
-        ShortURLInvalidURLError, match="URL must be a valid https url."
-    ):
+    with pytest.raises(ShortURLInvalidURLError) as error:
         URL.validate_url(invalid_url)
+    assert error.value.value == invalid_url

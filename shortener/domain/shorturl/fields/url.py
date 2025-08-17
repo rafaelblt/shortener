@@ -16,7 +16,7 @@ class URL(str):
     @classmethod
     def validate_url(cls, value: str):
         if not cls.is_valid_https_url(value):
-            raise ShortURLInvalidURLError("URL must be a valid https url.")
+            raise ShortURLInvalidURLError(value)
 
     @staticmethod
     def is_valid_https_url(url: str) -> bool:
