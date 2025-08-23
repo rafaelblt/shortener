@@ -3,7 +3,7 @@ import pytest
 from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.domain.shorturl.fields.slug import Slug
 from shortener.domain.shorturl.shorturl import ShortURL
-from shortener.domain.user.shorturl_collection import ShortURLCollection
+from shortener.domain.user.fields import ShortURLCollection
 
 
 class MockShortURLCollection(ShortURLCollection):
