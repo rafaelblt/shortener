@@ -227,6 +227,15 @@ class User(DomainEntity):
             raise UserBannedError()
 
 
+    async def add_shorturl(self, shorturl: ShortURL):
+        if await self._shorturls.count() >= self.plan.max_shorturls:
+            raise UserShortURLLimitReachedError(self.plan.max_shorturls)
+        await self._shorturls.add(shorturl)
+
+    async def get_shorturls(self):
+        return await self._shorturls.get_all()
+
+
     def change_name(self, new_name: Name):
         self.validate_name(new_name)
         self._name = new_name

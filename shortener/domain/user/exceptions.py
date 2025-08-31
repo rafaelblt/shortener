@@ -46,6 +46,15 @@ class UserPasswordIncorrectError(UserAccessDeniedError):
         super().__init__("The provided password doesn't match.")
 
 
+#
+class UserShortURLLimitReachedError(Exception):
+    def __init__(self, max_shorturls: int) -> None:
+        self.max_shorturls = max_shorturls
+        super().__init__(
+            f"The maximum number of shorturls ({max_shorturls}) has been reached."
+        )
+
+
 # Name Validation Exceptions
 class NameValidationError(ValidationError):
     def __init__(self, value, code, message):

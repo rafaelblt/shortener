@@ -1,9 +1,11 @@
 import pytest
+import pytest_asyncio
 
 from typing import TypedDict
 from datetime import datetime, timezone
 
 from shortener.domain.plan import Plan
+from shortener.domain.shorturl.shorturl import ShortURL
 from shortener.domain.user import User
 from shortener.domain.user.fields import *
 
@@ -23,8 +25,12 @@ class UserFixture(User):
         )
 
 
-@pytest.fixture
-def normal_user(default_plan: Plan, mock_password_hasher: MockPasswordHasherService):
+@pytest_asyncio.fixture
+async def normal_user(
+    default_plan: Plan,
+    normal_shorturl: ShortURL,
+    mock_password_hasher: MockPasswordHasherService
+):
     password = PlainPassword("_N0rm4lP4ssw0rd$$$$")
     user = UserFixture(
         email=Email("normal.user@gmail.com"),
@@ -32,6 +38,7 @@ def normal_user(default_plan: Plan, mock_password_hasher: MockPasswordHasherServ
         hashed_password=mock_password_hasher.hash(password),
         plan=default_plan
     )
+    await user.add_shorturl(normal_shorturl)
     user._init_mock_data(plain_password=password)
     return user
 
@@ -49,8 +56,12 @@ def super_user(default_plan: Plan, mock_password_hasher: MockPasswordHasherServi
     return user
 
 
-@pytest.fixture
-def old_user(default_plan: Plan, mock_password_hasher: MockPasswordHasherService):
+@pytest_asyncio.fixture
+async def old_user(
+    default_plan: Plan,
+    old_shorturl: ShortURL,
+    mock_password_hasher: MockPasswordHasherService
+):
     password = PlainPassword("IAMold_019_@!)")
     user = UserFixture(
         email=Email("wiseoldman@outlook.com"),
@@ -59,6 +70,7 @@ def old_user(default_plan: Plan, mock_password_hasher: MockPasswordHasherService
         plan=default_plan,
         created_at=datetime(year=2000, month=1, day=1, tzinfo=timezone.utc)
     )
+    await user.add_shorturl(old_shorturl)
     user._init_mock_data(plain_password=password)
     return user
 
