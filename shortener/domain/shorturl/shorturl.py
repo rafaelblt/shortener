@@ -206,6 +206,10 @@ class ShortURL(DomainEntity):
         self.validate_original_url(new_url)
         self._original_url = new_url
 
+    def change_owner_pk(self, new_owner_pk: PrimaryKey):
+        self.validate_owner_pk(new_owner_pk)
+        self._owner_pk = new_owner_pk
+
 
     def record_visit(self):
         """
