@@ -25,6 +25,7 @@ class ShortURL(DomainEntity):
             "pk",
             "slug",
             "original_url",
+            "owner_pk",
             "status",
             "visit_count",
             "created_at",
@@ -37,6 +38,7 @@ class ShortURL(DomainEntity):
         original_url: URL,
         slug: Slug,
         pk: Optional[PrimaryKey] = None,
+        owner_pk: Optional[PrimaryKey] = None,
         status: ShortURLStatus = ShortURLStatus.ACTIVE,
         visit_count: int = 0,
         created_at: Optional[datetime] = None,
@@ -44,11 +46,13 @@ class ShortURL(DomainEntity):
         last_accessed_at: Optional[datetime] = None,
     ):
         pk = pk or PrimaryKey.create_pk_undefined()
+        owner_pk = owner_pk or PrimaryKey.create_pk_undefined()
         created_at = created_at or datetime.now(tz=timezone.utc)
 
         self.validate_pk(pk)
         self.validate_slug(slug)
         self.validate_original_url(original_url)
+        self.validate_owner_pk(owner_pk)
         self.validate_status(status)
         self.validate_visit_count(visit_count)
         self.validate_created_at(created_at)
@@ -58,6 +62,7 @@ class ShortURL(DomainEntity):
         self._pk = pk
         self._slug = slug
         self._original_url = original_url
+        self._owner_pk = owner_pk
         self._status = status
         self._visit_count = visit_count
         self._created_at = created_at
@@ -78,6 +83,10 @@ class ShortURL(DomainEntity):
     @property
     def original_url(self):
         return self._original_url
+
+    @property
+    def owner_pk(self):
+        return self._owner_pk
 
     @property
     def status(self):
@@ -106,16 +115,6 @@ class ShortURL(DomainEntity):
         return self.status == ShortURLStatus.ACTIVE
 
 
-    def validate_all(self):
-        self.validate_pk(self._pk)
-        self.validate_slug(self._slug)
-        self.validate_original_url(self._original_url)
-        self.validate_status(self._status)
-        self.validate_visit_count(self._visit_count)
-        self.validate_created_at(self._created_at)
-        self.validate_expires_at(self._expires_at)
-        self.validate_last_accessed_at(self._last_accessed_at)
-
     @staticmethod
     def validate_pk(pk):
         if not isinstance(pk, PrimaryKey):
@@ -135,6 +134,13 @@ class ShortURL(DomainEntity):
         if not isinstance(original_url, URL):
             raise ShortURLAttributeTypeError(
                 attr="original_url", type_expected="URL", got=original_url
+            )
+
+    @staticmethod
+    def validate_owner_pk(owner_pk):
+        if not isinstance(owner_pk, PrimaryKey):
+            raise ShortURLAttributeTypeError(
+                attr="owner_pk", type_expected="PrimaryKey", got=owner_pk
             )
 
     @staticmethod
