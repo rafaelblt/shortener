@@ -44,3 +44,6 @@ class PrimaryKey:
         if self._type != PkType.ID:
             raise ValueError("The pk is not of type id")
         return int(self._value)
+    
+    def __str__(self) -> str:
+        return self.raw_value or "None"
