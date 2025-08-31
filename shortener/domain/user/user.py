@@ -1,22 +1,18 @@
-from datetime import datetime
 from typing import Optional
+from datetime import datetime
 
 from shortener.domain.domain_entity import DomainEntity
+
 from shortener.domain.shared.datetime_utils import is_utc, utc_now
 from shortener.domain.shared.email import Email
 from shortener.domain.shared.primarykey import PrimaryKey
 
 from shortener.domain.plan import Plan
+from shortener.domain.shorturl.shorturl import ShortURL
 
-from .fields import Name, UserStatus, HashedPassword
-from .exceptions import (
-    UserAttributeTypeError as AttrTypeError,
-    UserStatusInvalidToVerifyEmailError,
-    UserEmailNotVerifiedError,
-    UserSuspendedError,
-    UserBannedError,
-    UserLockedError,
-)
+from .fields import Name, UserStatus, HashedPassword, InMemoryShortURLCollection, ShortURLCollection
+from .exceptions import UserAttributeTypeError as AttrTypeError
+from .exceptions import *
 
 
 class User(DomainEntity):
@@ -29,6 +25,7 @@ class User(DomainEntity):
             "name",
             "hashed_password",
             "plan",
+            "shorturls",
             "status",
             "is_superuser",
             "created_at",
@@ -42,19 +39,22 @@ class User(DomainEntity):
         hashed_password: HashedPassword,
         plan: Plan,
         pk: Optional[PrimaryKey] = None,
+        shorturls: Optional[ShortURLCollection] = None,
         status: UserStatus = UserStatus.ACTIVE,
         is_superuser: bool = False,
         created_at: Optional[datetime] = None,
         last_login: Optional[datetime] = None
     ):
-        created_at = created_at or utc_now()
         pk = pk or PrimaryKey.create_pk_undefined()
+        shorturls = shorturls or InMemoryShortURLCollection()
+        created_at = created_at or utc_now()
 
         self.validate_pk(pk)
         self.validate_name(name)
         self.validate_email(email)
         self.validate_hashed_password(hashed_password)
         self.validate_plan(plan)
+        self.validate_shorturls(shorturls)
         self.validate_status(status)
         self.validate_is_superuser(is_superuser)
         self.validate_created_at(created_at)
@@ -65,6 +65,7 @@ class User(DomainEntity):
         self._email = email
         self._hashed_password = hashed_password
         self._plan = plan
+        self._shorturls = shorturls
         self._status = status
         self._is_superuser = is_superuser
         self._created_at = created_at
@@ -90,6 +91,10 @@ class User(DomainEntity):
     @property
     def plan(self):
         return self._plan
+    
+    @property
+    def shorturls_collection(self) -> ShortURLCollection:
+        return self._shorturls
     
     @property
     def status(self):
@@ -136,6 +141,13 @@ class User(DomainEntity):
     def validate_plan(plan):
         if not isinstance(plan, Plan):
             raise AttrTypeError(attr="plan", type_expected="Plan", got=plan)
+        
+    @staticmethod
+    def validate_shorturls(shorturls):
+        if not isinstance(shorturls, ShortURLCollection):
+            raise AttrTypeError(
+                attr="shorturls", type_expected="ShortURLCollection", got=shorturls
+            )
     
     @staticmethod
     def validate_status(status):
