@@ -129,21 +129,21 @@ class ShortURL(DomainEntity):
             raise ShortURLAttributeTypeError(
                 attr="slug", type_expected="Slug", got=slug
             )
-        
+
     @staticmethod
     def validate_original_url(original_url):
         if not isinstance(original_url, URL):
             raise ShortURLAttributeTypeError(
                 attr="original_url", type_expected="URL", got=original_url
             )
-    
+
     @staticmethod
     def validate_status(status):
         if not isinstance(status, ShortURLStatus):
             raise ShortURLAttributeTypeError(
                 attr="status", type_expected="ShortURLStatus", got=status
             )
-    
+
     @staticmethod
     def validate_visit_count(visit_count):
         if not isinstance(visit_count, int):
@@ -230,7 +230,7 @@ class ShortURL(DomainEntity):
         elif self.status == ShortURLStatus.BANNED:
             raise ShortURLBannedError()
         else:
-            ShortURLAvailabilityError()
+            raise ShortURLAvailabilityError()
 
     def enable(self):
         if self.status == ShortURLStatus.DEACTIVATED:
@@ -271,3 +271,9 @@ class ShortURL(DomainEntity):
         return (
             f"<ShortURL pk={self.pk}, slug={self.slug}, original_url={self.original_url}>"
         )
+
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from shortener.domain.user import User
