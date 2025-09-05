@@ -43,8 +43,11 @@ async def normal_user(
     return user
 
 
-@pytest.fixture
-def super_user(default_plan: Plan, mock_password_hasher: MockPasswordHasherService):
+@pytest_asyncio.fixture
+async def super_user(
+    default_plan: Plan,
+    mock_password_hasher: MockPasswordHasherService
+):
     password = PlainPassword("my_SUPER_password_123_@")
     user = UserFixture(
         email=Email("i-love-superman@super.io"),
@@ -141,5 +144,24 @@ def poor_user(eco_plan: Plan, mock_password_hasher: MockPasswordHasherService):
         plan=eco_plan,
         status=UserStatus.ACTIVE
     )
+    user._init_mock_data(plain_password=password)
+    return user
+
+
+@pytest_asyncio.fixture
+async def rich_user(
+    prime_plan,
+    biggest_shorturl,
+    mock_password_hasher: MockPasswordHasherService
+):
+    password = PlainPassword("H!b123i4uf6!*oP!ç1234")
+    user = UserFixture(
+        email=Email("fortune@gmail.com"),
+        name=Name("Rich Person"),
+        hashed_password=mock_password_hasher.hash(password),
+        plan=prime_plan,
+        status=UserStatus.ACTIVE
+    )
+    await user.add_shorturl(biggest_shorturl)
     user._init_mock_data(plain_password=password)
     return user
