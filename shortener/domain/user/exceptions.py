@@ -1,5 +1,6 @@
 from shortener.domain.shared.exceptions import ValidationError
 
+from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.domain.user.fields.status import UserStatus
 
 
@@ -47,11 +48,17 @@ class UserPasswordIncorrectError(UserAccessDeniedError):
 
 
 #
-class UserShortURLLimitReachedError(Exception):
+class ShortURLLimitReachedError(Exception):
     def __init__(self, max_shorturls: int) -> None:
         self.max_shorturls = max_shorturls
         super().__init__(
             f"The maximum number of shorturls ({max_shorturls}) has been reached."
+        )
+class ShortURLAlreadyOwnedError(Exception):
+    def __init__(self, owner_pk: PrimaryKey) -> None:
+        self.owner_pk = owner_pk
+        super().__init__(
+            f"The ShortURL already has an owner (User pk={owner_pk})."
         )
 
 

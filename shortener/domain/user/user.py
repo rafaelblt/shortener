@@ -228,9 +228,12 @@ class User(DomainEntity):
 
 
     async def add_shorturl(self, shorturl: ShortURL):
+        if not shorturl.owner_pk.is_undefined():
+            raise ShortURLAlreadyOwnedError(shorturl.pk)
         if await self._shorturls.count() >= self.plan.max_shorturls:
-            raise UserShortURLLimitReachedError(self.plan.max_shorturls)
+            raise ShortURLLimitReachedError(self.plan.max_shorturls)
         await self._shorturls.add(shorturl)
+        shorturl.change_owner_pk(self.pk)
 
     async def get_shorturls(self):
         return await self._shorturls.get_all()
