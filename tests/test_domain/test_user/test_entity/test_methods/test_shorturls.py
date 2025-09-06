@@ -1,5 +1,6 @@
 import pytest
 
+from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.domain.user import User
 from shortener.domain.user import exceptions
 
@@ -18,10 +19,11 @@ async def test_add_shorturl(poor_user: User, normal_shorturl):
 
 
 @pytest.mark.asyncio
-async def test_add_shorturls_raises_already_owned(persistent_normal_user: User):
-    shorturls = await persistent_normal_user.get_shorturls()
+async def test_add_shorturls_raises_already_owned(normal_user: User):
+    shorturls = await normal_user.get_shorturls()
+    shorturls[0]._owner_pk = PrimaryKey.create_pk_id(1)
     with pytest.raises(exceptions.ShortURLAlreadyOwnedError) as error:
-        await persistent_normal_user.add_shorturl(shorturls[0])
+        await normal_user.add_shorturl(shorturls[0])
     assert error.value.owner_pk.get_id() == shorturls[0].owner_pk.get_id()
 
 

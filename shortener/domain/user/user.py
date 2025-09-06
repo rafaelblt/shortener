@@ -227,9 +227,9 @@ class User(DomainEntity):
             raise UserBannedError()
 
 
-    async def add_shorturl(self, shorturl: ShortURL):
+    async def add_shorturl(self, shorturl: ShortURL) -> None:
         if not shorturl.owner_pk.is_undefined():
-            raise ShortURLAlreadyOwnedError(shorturl.pk)
+            raise ShortURLAlreadyOwnedError(shorturl.owner_pk)
         if await self._shorturls.count() >= self.plan.max_shorturls:
             raise ShortURLLimitReachedError(self.plan.max_shorturls)
         await self._shorturls.add(shorturl)
