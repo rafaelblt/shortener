@@ -1,16 +1,10 @@
 import pytest
 
-from shortener.domain.shorturl import ShortURL, ShortURLValidator
-from shortener.domain.shorturl.fields import Slug, URL
+from shortener.domain.shorturl import ShortURL
 from shortener.domain.shorturl.fields.slug import DEFAULT_RANDOM_SLUG_LENGTH
 
+from shortener.domain.user.user import User
 from shortener.use_cases import CreateShortURLUseCase
-
-
-class MockValidator(ShortURLValidator):
-    async def validate(self, shorturl: ShortURL):
-        if shorturl.slug == "joker":
-            raise ValueError("The provided slug is joker.")
 
 
 @pytest.fixture
@@ -18,12 +12,11 @@ def use_case(mock_shorturl_repository, mock_user_repository):
     return CreateShortURLUseCase(
         shorturl_repository=mock_shorturl_repository,
         user_repository=mock_user_repository,
-        validator=MockValidator(),
     )
 
 
 @pytest.mark.asyncio
-async def test_instance_retrieved(
+async def test_instance_retrieved_without_owner(
     use_case: CreateShortURLUseCase, normal_shorturl: ShortURL
 ):
     retrieved = await use_case.execute(
@@ -34,6 +27,24 @@ async def test_instance_retrieved(
     assert retrieved.pk.get_id() == 1
     assert retrieved.original_url == normal_shorturl.original_url
     assert retrieved.slug == normal_shorturl.slug
+    assert retrieved.owner_pk.is_undefined()
+
+
+@pytest.mark.asyncio
+async def test_instance_retrieved_with_owner(
+    use_case: CreateShortURLUseCase, other_shorturl: ShortURL, poor_user: User
+):
+    poor_user = await use_case.user_repository.add(poor_user)
+    retrieved = await use_case.execute(
+        original_url=other_shorturl.original_url,
+        custom_slug=other_shorturl.slug,
+        owner_pk=poor_user.pk,
+    )
+    assert isinstance(retrieved, ShortURL)
+    assert retrieved.pk.get_id() == 1
+    assert retrieved.original_url == other_shorturl.original_url
+    assert retrieved.slug == other_shorturl.slug
+    assert retrieved.owner_pk == poor_user.pk
 
 
 @pytest.mark.asyncio
@@ -55,14 +66,3 @@ async def test_shorturl_is_saved_in_repository(
         custom_slug=normal_shorturl.slug
     )
     assert await use_case.shorturl_repository.exists_by_slug(normal_shorturl.slug)
-
-
-@pytest.mark.asyncio
-async def test_shorturl_validation_is_called(
-    use_case: CreateShortURLUseCase, normal_shorturl: ShortURL
-):
-    with pytest.raises(ValueError, match="The provided slug is joker."):
-        await use_case.execute(
-            original_url=normal_shorturl.original_url,
-            custom_slug=Slug("joker")
-        )
