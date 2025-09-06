@@ -93,7 +93,7 @@ class User(DomainEntity):
         return self._plan
     
     @property
-    def shorturls_collection(self) -> ShortURLCollection:
+    def shorturls(self) -> ShortURLCollection:
         return self._shorturls
     
     @property

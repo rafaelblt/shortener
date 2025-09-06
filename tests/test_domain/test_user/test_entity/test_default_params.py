@@ -8,6 +8,7 @@ from shortener.domain.plan import Plan
 
 from shortener.domain.user import User
 from shortener.domain.user.fields import Name, Email, HashedPassword, UserStatus
+from shortener.domain.user.fields.shorturl_collection import InMemoryShortURLCollection
 from tests.utils.date_helpers import assert_datetime
 
 
@@ -39,6 +40,10 @@ def test_hashed_password(user: User):
 
 def test_plan(user: User):
     assert isinstance(user.plan, Plan)
+
+
+def test_shorturls(user: User):
+    assert isinstance(user.shorturls, InMemoryShortURLCollection)
 
 
 def test_status(user: User):

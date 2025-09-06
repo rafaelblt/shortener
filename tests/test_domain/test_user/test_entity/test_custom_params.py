@@ -5,9 +5,29 @@ from datetime import datetime, timezone
 from shortener.domain.plan import Plan
 
 from shortener.domain.shared.primarykey import PrimaryKey
+
+from shortener.domain.shorturl import ShortURL
+from shortener.domain.shorturl.fields import Slug
+
 from shortener.domain.user import User
-from shortener.domain.user.fields import Name, Email, HashedPassword, UserStatus
+from shortener.domain.user.fields import Name, Email, HashedPassword, UserStatus, ShortURLCollection
+
 from tests.utils.date_helpers import assert_datetime
+
+
+class JokerShortURLCollection(ShortURLCollection):
+    async def get_all(self) -> list[ShortURL]:
+        return []
+    async def get_by_pk(self, pk: PrimaryKey) -> ShortURL | None:
+        return None
+    async def get_by_slug(self, slug: Slug) -> ShortURL | None:
+        return None
+    async def add(self, shorturl: ShortURL) -> None:
+        return None
+    async def remove_by_pk(self, pk: PrimaryKey) -> ShortURL | None:
+        return None
+    async def count(self) -> int: 
+        return 0
 
 
 @pytest.fixture
@@ -18,6 +38,7 @@ def user(default_plan):
         email=Email("user-user@outlook.com"),
         hashed_password=HashedPassword("hash#@$%12356788"),
         plan=default_plan,
+        shorturls=JokerShortURLCollection(),
         status=UserStatus.BANNED,
         is_superuser=True,
         created_at=datetime(year=2010, month=5, day=22, tzinfo=timezone.utc),
@@ -43,6 +64,10 @@ def test_hashed_password(user: User):
 
 def test_plan(user: User):
     assert isinstance(user.plan, Plan)
+
+
+def test_shorturls(user: User):
+    assert isinstance(user.shorturls, JokerShortURLCollection)
 
 
 def test_status(user: User):

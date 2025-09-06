@@ -72,6 +72,17 @@ def test_invalid_hashed_password(required_fields):
         User(**required_fields, hashed_password=invalid_hashed_password) # type: ignore
 
 
+def test_invalid_shorturls(required_fields):
+    invalid_shorturls = 1
+    with pytest.raises(
+        TypeError, 
+        match=get_type_error_message(
+            attr="shorturls", type_expected="ShortURLCollection", got=invalid_shorturls
+        )
+    ):
+        User(**required_fields, shorturls=invalid_shorturls) # type: ignore
+
+
 def test_invalid_status(required_fields):
     invalid_status = None
     with pytest.raises(
