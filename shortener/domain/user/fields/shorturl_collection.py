@@ -51,14 +51,14 @@ class InMemoryShortURLCollection(ShortURLCollection):
     
     async def remove_by_pk(self, pk: PrimaryKey) -> ShortURL | None:
         if pk.is_undefined():
-            return None
+            raise ValueError("The provided PK is undefined.")
         found = None
         position = None
         for i, item in enumerate(self._shorturls):
             if item.pk.raw_value == pk.raw_value:
                 found = item
                 position = i
-        if found and position:
+        if found and position is not None:
             self._shorturls.pop(position)
             return found
         return None
