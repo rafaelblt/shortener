@@ -34,3 +34,22 @@ async def test_add_shorturls_raises_limit_reached(poor_user: User, normal_shortu
     with pytest.raises(exceptions.ShortURLLimitReachedError) as error:
         await poor_user.add_shorturl(other_shorturl)
     assert error.value.max_shorturls == 1
+
+
+@pytest.mark.asyncio
+async def test_remove_shorturl(normal_user: User):
+    shorturls = await normal_user.get_shorturls()
+    shorturl = shorturls[0]
+    shorturl._pk = PrimaryKey.create_pk_id(1)
+
+    retrieved = await normal_user.remove_shorturl(shorturl)
+
+    assert retrieved is not None
+    assert retrieved == shorturl
+
+
+@pytest.mark.asyncio
+async def test_remove_shorturl_non_existent(normal_user: User, old_shorturl):
+    old_shorturl._pk = PrimaryKey.create_pk_id(1)
+    retrieved = await normal_user.remove_shorturl(old_shorturl)
+    assert retrieved is None

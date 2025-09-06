@@ -235,6 +235,10 @@ class User(DomainEntity):
         await self._shorturls.add(shorturl)
         shorturl.change_owner_pk(self.pk)
 
+    async def remove_shorturl(self, shorturl: ShortURL):
+        return await self._shorturls.remove_by_pk(shorturl.pk)
+
+
     async def get_shorturls(self):
         return await self._shorturls.get_all()
 
