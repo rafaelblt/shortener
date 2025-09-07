@@ -22,6 +22,7 @@ async def persistent_eco_plan(eco_plan, db_session):
 @pytest_asyncio.fixture
 async def persistent_normal_user(
     persistent_default_plan,
+    persistent_normal_shorturl,
     normal_user: User,
     db_session
 ):
@@ -29,11 +30,7 @@ async def persistent_normal_user(
     normal_user.change_plan(persistent_default_plan)
     persistent_user = await user_repo.add(normal_user)
 
-    shorturl_repo = SQLAlchemyShortURLRepository(db_session)
-    user_shorturls = await normal_user.get_shorturls()
-    for sh in user_shorturls:
-        persistent_sh = await shorturl_repo.add(sh)
-        await persistent_user.add_shorturl(persistent_sh)
+    await persistent_user.add_shorturl(persistent_normal_shorturl)
 
     return persistent_user
 
