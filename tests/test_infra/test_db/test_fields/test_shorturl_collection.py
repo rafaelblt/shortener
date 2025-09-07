@@ -39,7 +39,7 @@ async def test_get_by_slug(persistent_normal_user: User, persistent_normal_short
         persistent_normal_shorturl.slug
     )
     assert retrieved is not None
-    assert retrieved.pk == persistent_normal_shorturl.pk
+    assert retrieved.pk.get_id() == persistent_normal_shorturl.pk.get_id()
 
 
 @pytest.mark.asyncio
