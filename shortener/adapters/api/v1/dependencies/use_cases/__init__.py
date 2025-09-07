@@ -7,6 +7,7 @@ from .verify_email_use_case import make_verify_email_use_case, VerifyEmailUseCas
 from .refresh_login import make_refresh_login_use_case, RefreshLoginUseCaseDependency
 
 from .create_shorturl_use_case import make_create_shorturl_use_case, CreateShortURLUseCaseDependency
+from .create_shorturl_for_user import make_create_shorturl_for_user_use_case, CreateShortURLForUserUseCaseDependency
 from .delete_shorturl_use_case import make_delete_shorturl_use_case
 from .get_shorturl_use_case import make_get_shorturl_use_case
 from .list_shorturl_use_case import make_list_shorturl_use_case
