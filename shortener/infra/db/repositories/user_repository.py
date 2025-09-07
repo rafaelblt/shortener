@@ -8,9 +8,7 @@ from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.domain.user import User, UserRepository
 from shortener.domain.user.exceptions import UserNotFoundError
 
-from shortener.infra.db.mappers import (
-    map_user_model_to_domain, map_user_domain_to_model
-)
+from shortener.infra.db.mappers import UserMapper
 from shortener.infra.db.models import UserModel
 
 
@@ -23,13 +21,14 @@ class SQLAlchemyUserRepository(UserRepository):
             session (Session): SQLAlchemy Async Session instance.
         """
         self.session = session
+        self.mapper = UserMapper(session)
 
     async def add(self, user: User) -> User:
-        model = self._to_model(user)
+        model = await self._to_model(user)
         self.session.add(model)
         await self.session.commit()
         await self.session.refresh(model)
-        return self._to_domain(model)
+        return await self._to_domain(model)
 
     async def update(self, user: User) -> User:
         user_id = user.pk.get_id()
@@ -50,22 +49,22 @@ class SQLAlchemyUserRepository(UserRepository):
         await self.session.commit()
         await self.session.refresh(existing_model)
 
-        return self._to_domain(existing_model)
+        return await self._to_domain(existing_model)
 
     async def get_all(self) -> list[User]:
         models = await self._get_all_models()
-        return [self._to_domain(model) for model in models]
+        return [await self._to_domain(model) for model in models]
 
     async def get_by_pk(self, pk: PrimaryKey) -> User | None:
         if not pk.is_id():
             return None
         id = pk.get_id()
         model = await self._get_model_by_id(id)
-        return self._to_domain(model) if model else None
+        return await self._to_domain(model) if model else None
 
     async def get_by_email(self, email: str) -> User | None:
         model = await self._get_model_by_email(email)
-        return self._to_domain(model) if model else None
+        return await self._to_domain(model) if model else None
 
     async def list_paginated(self, offset: int, limit: int):
         total = await self.session.scalar(
@@ -77,7 +76,7 @@ class SQLAlchemyUserRepository(UserRepository):
             .offset(offset)
             .limit(limit)
         )
-        entities = [self._to_domain(m) for m in rows.all()]
+        entities = [await self._to_domain(m) for m in rows.all()]
         return PaginatedResult(entities, total, offset, limit)
 
     async def exists_by_email(self, email: str) -> bool:
@@ -89,7 +88,7 @@ class SQLAlchemyUserRepository(UserRepository):
         if model is None:
             raise UserNotFoundError(value=pk, field="pk")
 
-        domain = self._to_domain(model)
+        domain = await self._to_domain(model)
 
         await self.session.delete(model)
         await self.session.commit()
@@ -127,10 +126,10 @@ class SQLAlchemyUserRepository(UserRepository):
         )
         return model
 
-    def _to_domain(self, model: UserModel) -> User:
+    async def _to_domain(self, model: UserModel) -> User:
         """Converts a SQLAlchemy model instance to a domain entity."""
-        return map_user_model_to_domain(model)
+        return await self.mapper.model_to_domain(model)
 
-    def _to_model(self, entity: User) -> UserModel:
+    async def _to_model(self, entity: User) -> UserModel:
         """Converts a domain entity to a SQLAlchemy model instance."""
-        return map_user_domain_to_model(entity)
+        return await self.mapper.domain_to_model(entity)
