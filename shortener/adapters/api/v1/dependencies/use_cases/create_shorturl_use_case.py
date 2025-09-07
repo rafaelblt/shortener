@@ -1,6 +1,5 @@
+from typing import Annotated
 from fastapi import Depends
-
-from shortener.infra.validators.shorturl_validators.shorturl_create_validator import ShortURLCreateValidator
 
 from shortener.use_cases import CreateShortURLUseCase
 
@@ -14,5 +13,9 @@ def make_create_shorturl_use_case(
     return CreateShortURLUseCase(
         shorturl_repository=shorturl_repository,
         user_repository=user_repository,
-        validator=ShortURLCreateValidator(repository=shorturl_repository)
     )
+
+
+CreateShortURLUseCaseDependency = Annotated[
+    CreateShortURLUseCase, Depends(make_create_shorturl_use_case)
+]
