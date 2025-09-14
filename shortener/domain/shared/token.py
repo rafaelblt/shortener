@@ -30,5 +30,7 @@ class Token:
 class TokenDecoded(TypedDict):
     subject: str
     purpose: str
+    created_at: datetime
+    expires_at: datetime
     extra_claims: Optional[ExtraClaims]
 

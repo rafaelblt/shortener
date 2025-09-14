@@ -4,8 +4,12 @@ from typing import Any, Mapping, Optional
 from datetime import datetime, timedelta, timezone
 
 from shortener.domain.shared.datetime_utils import utc_now
-from shortener.domain.services.token import TokenService, PayloadDecoded
+from shortener.domain.shared.primarykey import PrimaryKey
+
+from shortener.domain.services.token import TokenService, AuthTokenService, Token, TokenDecoded
 from shortener.domain.services.exceptions import TokenInvalidError, TokenExpiredError
+
+from shortener.domain.user import User, UserRepository
 
 from shortener.infra.settings import settings
 
@@ -22,21 +26,30 @@ class JwtTokenService(TokenService):
     def generate_token(
         self,
         subject: str,
-        purpose: TokenService.Purpose,
+        purpose: str,
         expires_in: timedelta,
         extra_claims:  Mapping[str, Any] | None = None
-    ) -> str:
-        expiration = utc_now() + expires_in
+    ) -> Token:
+        now = utc_now().replace(microsecond=0)
+        expiration = now + expires_in
         extra_claims = extra_claims or {}
 
         payload = {
             "sub": subject,
             "purpose": purpose,
             "exp": expiration,
+            "iat": now.timestamp(),
             **extra_claims
         }
-        return jwt.encode(
+        token = jwt.encode(
             payload=payload, key=self._secret_key, algorithm=self._algorithm
+        )
+
+        return Token(
+            value=token,
+            purpose=purpose,
+            created_at=now,
+            expires_at=expiration,
         )
 
     def decode_token(self, token: str):
@@ -45,9 +58,11 @@ class JwtTokenService(TokenService):
                 jwt=token, key=self._secret_key, algorithms=[self._algorithm]
             )
             exp = jwt_payload.pop("exp")
-            return PayloadDecoded(
+            iat = jwt_payload.pop("iat")
+            return TokenDecoded(
                 subject=jwt_payload.pop("sub"),
                 purpose=jwt_payload.pop("purpose"),
+                created_at=datetime.fromtimestamp(iat, timezone.utc),
                 expires_at=datetime.fromtimestamp(exp, timezone.utc),
                 extra_claims=jwt_payload
             )
