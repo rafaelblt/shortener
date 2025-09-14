@@ -1,78 +1,95 @@
 import pytest
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
-from shortener.domain.services.auth_token import AuthTokenService
-from shortener.domain.services.exceptions import (
-    AuthTokenInvalidError,
-    AuthTokenExpiredError
-)
+from shortener.domain.services.exceptions import TokenExpiredError, TokenInvalidError
+from shortener.domain.services.token import AuthTokenService
+from shortener.domain.shared.primarykey import PrimaryKey
+from shortener.domain.shared.token import Token
+from shortener.domain.shared.datetime_utils import truncate, utc_now
+from shortener.domain.user import User
 
 from tests.fixtures import MockAuthTokenService
+from tests.utils.date_helpers import assert_datetime
+
+
+PURPOSE = "mock_purpose"
+EXPIRES_IN = timedelta(days=1)
 
 
 @pytest.fixture
-def service(mock_auth_token_service):
-    return mock_auth_token_service
+def service(mock_user_repository):
+    return MockAuthTokenService(
+        purpose=PURPOSE,
+        expires_in=EXPIRES_IN,
+        user_repository=mock_user_repository,
+    )
 
 
 def test_inheritance(service: MockAuthTokenService):
     assert isinstance(service, AuthTokenService)
 
 
-def test_singleton(service: MockAuthTokenService):
-    other_instance = MockAuthTokenService()
-    assert other_instance == service
+@pytest.mark.asyncio
+async def test_generate_token(service: MockAuthTokenService, normal_user: User):
+    token = await service.generate_token(normal_user)
+    assert isinstance(token, Token)
+    assert isinstance(token.value, str)
+    assert token.purpose == PURPOSE
+    assert token.created_at.replace(microsecond=0) == utc_now().replace(microsecond=0)
 
 
-def test_generate_token(service: MockAuthTokenService):
-    subject = "user123"
-    token = service.generate_token(subject=subject)
-    assert isinstance(token, str)
-    token_split = token.split("|")
-    assert len(token_split) == 3
-    assert token_split[0] == subject
-    assert token_split[1] == service.secret_key
-    assert datetime.fromtimestamp(float(token_split[2]))
+@pytest.mark.asyncio
+async def test_decode_token(service: MockAuthTokenService, normal_user: User):
+    normal_user = await service._user_repo.add(normal_user)
+    token = await service.generate_token(normal_user)
+
+    retrieved = await service.decode_token(token.value)
+    assert retrieved.email == normal_user.email
 
 
-def test_decode_token(service: MockAuthTokenService):
-    subject = "user123"
-    token = service.generate_token(subject=subject)
-
-    decoded = service.decode_token(token)
-    assert decoded == subject
+@pytest.mark.asyncio
+async def test_decode_random_token_raises_invalid_error(service: MockAuthTokenService):
+    with pytest.raises(TokenInvalidError):
+        await service.decode_token("random")
 
 
-def test_decode_token_raises_invalid_error(service: MockAuthTokenService):
-    subject = "user123"
-    token = service.generate_token(subject)
-    
-    with pytest.raises(AuthTokenInvalidError):
-        invalid_token_format = str(token.split("|"))
-        service.decode_token(invalid_token_format)
-    with pytest.raises(AuthTokenInvalidError):
-        token_split = token.split("|")
-        token_split[1] = "new_secret_key"
-        invalid_token_key = "|".join(token_split)
-        service.decode_token(invalid_token_key)
+@pytest.mark.asyncio
+async def test_decode_token_user_non_existent_raises_invalid_error(
+    service: MockAuthTokenService, normal_user: User
+):
+    normal_user._pk = PrimaryKey.create_pk_id(1)
+    token = await service.generate_token(normal_user)
+    with pytest.raises(TokenInvalidError):
+        await service.decode_token(token.value)
 
 
-def test_decode_token_raises_expired_error():
-    subject = "user123"
-    short_token_service = MockAuthTokenService(expires_minutes=0)
+@pytest.mark.asyncio
+async def test_decode_token_with_different_purpose_raises_invalid_error(
+    service: MockAuthTokenService, normal_user: User
+):
+    normal_user = await service._user_repo.add(normal_user)
+    token = await service.generate_token(normal_user)
+    service._purpose = "different_purpose"
+    with pytest.raises(TokenInvalidError):
+        await service.decode_token(token.value)
 
-    token = short_token_service.generate_token(subject)
 
-    with pytest.raises(AuthTokenExpiredError):
-        short_token_service.decode_token(token)
+@pytest.mark.asyncio
+async def test_decode_token_raises_expired_error(
+    service: MockAuthTokenService, normal_user: User
+):
+    service._expires_in = timedelta(microseconds=1)
+    token = await service.generate_token(normal_user)
+    with pytest.raises(TokenExpiredError):
+        await service.decode_token(token.value)
 
 
-def test_mock_data(service: MockAuthTokenService):
+@pytest.mark.asyncio
+async def test_mock_data(service: MockAuthTokenService, normal_user: User):
     assert len(service.mock_data["generated_tokens"]) == 0
 
-    subject = "user123"
-    token = service.generate_token(subject=subject)
+    token = await service.generate_token(normal_user)
     
     assert len(service.mock_data["generated_tokens"]) == 1
     assert service.mock_data["generated_tokens"][0] == token

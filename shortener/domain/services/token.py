@@ -1,43 +1,30 @@
 from abc import ABC, abstractmethod
-from datetime import datetime, timedelta
-from enum import Enum
-from typing import Any, Mapping, TypedDict, Optional
+from datetime import timedelta
+from typing import Any, Mapping
 
+from shortener.domain.user import User
 from shortener.domain.services.exceptions import TokenInvalidError, TokenExpiredError
 
-
-class PayloadDecoded(TypedDict):
-    subject: str
-    purpose: str
-    expires_at: datetime
-    extra_claims: Optional[Mapping[str, Any]]
+from shortener.domain.shared.token import Token, TokenDecoded
 
 
 class TokenService(ABC):
     """Service for generating and decoding general-purpose tokens."""
 
-    class Purpose(str, Enum):
-        LOGIN = "login"
-        REFRESH_LOGIN = "refresh_login"
-        EMAIL_VERIFICATION = "email_verification"
-
-        def __str__(self):
-            return self.value
-
     @abstractmethod
     def generate_token(
         self,
         subject: str,
-        purpose: Purpose,
+        purpose: str,
         expires_in: timedelta,
         extra_claims: Mapping[str, Any] | None = None
-    ) -> str:
+    ) -> Token:
         """
         Generates a token for the given subject and purpose.
 
         Args:
             subject (str): The subject (e.g., user identifier or email).
-            purpose (Purpose): The purpose of the token (e.g., "login", "email-verification").
+            purpose (str): The purpose of the token (e.g., "login", "email-verification").
             expires_in (timedelta): The time duration until expiration.
             extra_claims (dict, optional): Any additional claims to embed.
 
@@ -47,7 +34,7 @@ class TokenService(ABC):
         pass
 
     @abstractmethod
-    def decode_token(self, token: str) -> PayloadDecoded:
+    def decode_token(self, token: str) -> TokenDecoded:
         """
         Decodes the given token and returns its payload.
 
@@ -64,8 +51,35 @@ class TokenService(ABC):
         pass
 
 
-class RandomTokenGenerator(ABC):
+class AuthTokenService(ABC):
+    """Service for generating and decoding authentication tokens."""
 
     @abstractmethod
-    def generate_token(self) -> str:
+    async def generate_token(self, user: User) -> Token:
+        """
+        Generates a token for the given user.
+
+        Args:
+            user (User): The user for whom to generate the token.
+
+        Returns:
+            Token: The generated token.
+        """
+        pass
+
+    @abstractmethod
+    async def decode_token(self, token: str) -> User:
+        """
+        Decodes the given token and returns the User.
+
+        Args:
+            token (str): The token to decode.
+
+        Returns:
+            User: The user extracted from the token.
+
+        Raises:
+            TokenInvalidError: The token is invalid.
+            TokenExpiredError: The token is expired.
+        """
         pass
