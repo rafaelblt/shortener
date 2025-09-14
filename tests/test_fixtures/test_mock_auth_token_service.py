@@ -92,4 +92,4 @@ async def test_mock_data(service: MockAuthTokenService, normal_user: User):
     token = await service.generate_token(normal_user)
     
     assert len(service.mock_data["generated_tokens"]) == 1
-    assert service.mock_data["generated_tokens"][0] == token
+    assert service.mock_data["generated_tokens"][0]["token"] == token.value

@@ -1,3 +1,4 @@
+import secrets
 import pytest
 
 from typing import Any, Mapping, TypedDict
@@ -11,8 +12,17 @@ from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.domain.user import User, UserRepository
 
 
+class MockDataToken(TypedDict):
+    token: str
+    subject: str
+    purpose: str
+    secret_key: str
+    created_at: datetime
+    expires_at: datetime
+
+
 class MockDataType(TypedDict):
-    generated_tokens: list[Token]
+    generated_tokens: list[MockDataToken]
 
 
 class MockTokenService(TokenService):
@@ -39,36 +49,55 @@ class MockTokenService(TokenService):
             raise NotImplementedError("extra_claims is not implemented in MockTokenService")
         now = utc_now()
         expires_at = now + expires_in
-        token_value = f"{subject}|{purpose}|{self._secret_key}|{expires_at.timestamp()}"
-        token = Token(
+
+        token_value = secrets.token_urlsafe(32)
+        while token_value in [t["token"] for t in self.mock_data["generated_tokens"]]:
+            token_value = secrets.token_urlsafe(32)
+
+        self.mock_data["generated_tokens"].append(
+            MockDataToken(
+                token=token_value,
+                subject=subject,
+                purpose=purpose,
+                secret_key=self._secret_key,
+                created_at=now,
+                expires_at=expires_at
+            )
+        )
+
+        return Token(
             value=token_value,
             purpose=purpose,
             created_at=now,
             expires_at=expires_at,
             extra_claims=None
         )
-        self.mock_data["generated_tokens"].append(token)
-        return token
 
     def decode_token(self, token: str):
-        token_split = token.split("|")
+        token_found = None
+        for t in self.mock_data["generated_tokens"]:
+            if t["token"] == token:
+                token_found = t
+                break
 
-        if len(token_split) != 4:
+        if token_found is None:
             raise TokenInvalidError()
 
-        subject = token_split[0]
-        purpose = token_split[1]
-        key = token_split[2]
-        expiration = datetime.fromtimestamp(float(token_split[3]), tz=timezone.utc)
+        subject = token_found["subject"]
+        purpose = token_found["purpose"]
+        key = token_found["secret_key"]
+        expires_at = token_found["expires_at"]
         
         if key != self._secret_key:
             raise TokenInvalidError()
-        if utc_now() > expiration:
+        if utc_now() > expires_at:
             raise TokenExpiredError()
         
         return TokenDecoded(
             subject=subject,
             purpose=purpose,
+            created_at=token_found["created_at"],
+            expires_at=token_found["expires_at"],
             extra_claims=None
         )
     
@@ -114,7 +143,16 @@ class MockAuthTokenService(AuthTokenService):
             expires_at=expires_at,
             extra_claims=None
         )
-        self.mock_data["generated_tokens"].append(token)
+        self.mock_data["generated_tokens"].append(
+            MockDataToken(
+                token=token_value,
+                subject=user.pk.raw_value,
+                purpose=self._purpose,
+                secret_key=self._secret_key,
+                created_at=now,
+                expires_at=expires_at
+            )
+        )
         return token
     
     async def decode_token(self, token: str) -> User:
