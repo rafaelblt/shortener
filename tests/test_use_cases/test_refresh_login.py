@@ -2,148 +2,102 @@ import pytest
 
 from datetime import timedelta
 
-from shortener.domain.refresh_token.entity import RefreshToken
-from shortener.domain.refresh_token.exceptions import (
-    RefreshTokenExpiredError, RefreshTokenRevokedError
-)
+from shortener.domain.services.token import Token, TokenInvalidError, TokenExpiredError
 
-from shortener.domain.services.token import TokenService
-from shortener.domain.services.token import RandomTokenGenerator
-from shortener.domain.shared.datetime_utils import utc_now
-
+from shortener.domain.user.repository import UserRepository
 from shortener.domain.user.user import User
 from shortener.use_cases import RefreshLoginUseCase
 
-from tests.utils.date_helpers import assert_datetime
-
-
-ACCESS_TOKEN_EXPIRES_IN = timedelta(minutes=10)
-REFRESH_TOKEN_EXPIRES_IN = timedelta(hours=24)
+from tests.fixtures.mocks.token import MockAuthTokenService
 
 
 @pytest.fixture
-def use_case(
-    mock_refresh_token_repository,
-    mock_token_service
-):
-    class Generator(RandomTokenGenerator):
-        def generate_token(self) -> str:
-            return "random"
-
+def use_case(mock_user_repository):
+    access_token_service = MockAuthTokenService(
+        purpose="access",
+        expires_in=timedelta(minutes=10),
+        user_repository=mock_user_repository
+    )
+    refresh_token_service = MockAuthTokenService(
+        purpose="refresh",
+        expires_in=timedelta(days=7),
+        user_repository=mock_user_repository,
+    )
     return RefreshLoginUseCase(
-        refresh_token_repository=mock_refresh_token_repository,
-        access_token_service=mock_token_service,
-        access_token_expires_in=ACCESS_TOKEN_EXPIRES_IN,
-        refresh_token_generator=Generator(),
-        refresh_token_expires_in=REFRESH_TOKEN_EXPIRES_IN
+        access_token_service=access_token_service,
+        refresh_token_service=refresh_token_service
     )
 
 
 @pytest.mark.asyncio
 async def test_retrieved_access_token(
     use_case: RefreshLoginUseCase,
-    active_refresh_token: RefreshToken
+    normal_user: User,
+    mock_user_repository: UserRepository
 ):
-    await use_case.refresh_token_repository.add(active_refresh_token)
+    normal_user = await mock_user_repository.add(normal_user)
+    token = await use_case.refresh_token_service.generate_token(normal_user)
 
-    retrieved = await use_case.execute(active_refresh_token.token)
+    retrieved = await use_case.execute(token.value)
 
     access_token = retrieved["access_token"]
+    assert isinstance(access_token, Token)
 
-    payload = use_case.access_token_service.decode_token(access_token)
-    
-    assert payload["subject"] == active_refresh_token.user.email
-    assert payload["purpose"] == TokenService.Purpose.LOGIN
-    assert_datetime(
-        payload["expires_at"], utc_now() + ACCESS_TOKEN_EXPIRES_IN,
-        year=True, month=True, day=True, hour=True, minute=True
-    )
+    user = await use_case.access_token_service.decode_token(access_token.value)
+    assert user.email == normal_user.email
 
 
 @pytest.mark.asyncio
-async def test_retrieved_new_refresh_token(
+async def test_retrieved_refresh_token(
     use_case: RefreshLoginUseCase,
-    active_refresh_token: RefreshToken
+    normal_user: User,
+    mock_user_repository: UserRepository
 ):
-    await use_case.refresh_token_repository.add(active_refresh_token)
-    
-    retrieved = await use_case.execute(active_refresh_token.token)
+    normal_user = await mock_user_repository.add(normal_user)
+    token = await use_case.refresh_token_service.generate_token(normal_user)
+
+    retrieved = await use_case.execute(token.value)
 
     refresh_token = retrieved["refresh_token"]
-    assert isinstance(refresh_token, RefreshToken)
-    assert refresh_token.user.email == active_refresh_token.user.email
-    assert_datetime(
-        refresh_token.expires_at, utc_now() + REFRESH_TOKEN_EXPIRES_IN,
-        year=True, month=True, day=True, hour=True, minute=True
-    )
+    assert isinstance(refresh_token, Token)
 
-
-@pytest.mark.asyncio
-async def test_if_used_refresh_token_is_consumed(
-    use_case: RefreshLoginUseCase,
-    active_refresh_token: RefreshToken
-):
-    await use_case.refresh_token_repository.add(active_refresh_token)
-    
-    await use_case.execute(active_refresh_token.token)
-    
-    refresh_token = await use_case.refresh_token_repository.get_by_token(
-        active_refresh_token.token
-    )
-
-    assert refresh_token is not None
-    assert refresh_token.is_revoked()
-
-
-@pytest.mark.asyncio
-async def test_if_new_refresh_token_is_saved(
-    use_case: RefreshLoginUseCase,
-    active_refresh_token: RefreshToken
-):
-    await use_case.refresh_token_repository.add(active_refresh_token)
-    
-    retrieved = await use_case.execute(active_refresh_token.token)
-    refresh_token = retrieved["refresh_token"]
-
-    saved_token = await use_case.refresh_token_repository.get_by_token(
-        refresh_token.token
-    )
-    assert saved_token is not None
-    assert saved_token.pk.get_id() == refresh_token.pk.get_id()
-    assert saved_token.user.email == active_refresh_token.user.email
+    user = await use_case.refresh_token_service.decode_token(refresh_token.value)
+    assert user.email == normal_user.email
 
 
 @pytest.mark.asyncio
 async def test_retrieved_user(
     use_case: RefreshLoginUseCase,
-    active_refresh_token: RefreshToken
+    normal_user: User,
+    mock_user_repository: UserRepository
 ):
-    await use_case.refresh_token_repository.add(active_refresh_token)
+    normal_user = await mock_user_repository.add(normal_user)
+    token = await use_case.refresh_token_service.generate_token(normal_user)
 
-    retrieved = await use_case.execute(active_refresh_token.token)
+    retrieved = await use_case.execute(token.value)
 
     user = retrieved["user"]
     assert isinstance(user, User)
-    assert user.email == active_refresh_token.user.email
+    assert user.email == normal_user.email
 
 
 @pytest.mark.asyncio
-async def test_with_refresh_token_revoked(
-    use_case: RefreshLoginUseCase,
-    revoked_refresh_token: RefreshToken
-):
-    await use_case.refresh_token_repository.add(revoked_refresh_token)
-
-    with pytest.raises(RefreshTokenRevokedError):
-        await use_case.execute(revoked_refresh_token.token)
+async def test_with_refresh_token_invalid(use_case: RefreshLoginUseCase):
+    with pytest.raises(TokenInvalidError):
+        await use_case.execute("random")
 
 
 @pytest.mark.asyncio
 async def test_with_refresh_token_expired(
     use_case: RefreshLoginUseCase,
-    expired_refresh_token: RefreshToken
+    normal_user: User,
+    mock_user_repository: UserRepository
 ):
-    await use_case.refresh_token_repository.add(expired_refresh_token)
+    assert isinstance(use_case.refresh_token_service, MockAuthTokenService)
+    use_case.refresh_token_service._expires_in = timedelta(microseconds=1)
 
-    with pytest.raises(RefreshTokenExpiredError):
-        await use_case.execute(expired_refresh_token.token)
+    normal_user = await mock_user_repository.add(normal_user)
+    token = await use_case.refresh_token_service.generate_token(normal_user)
+
+    with pytest.raises(TokenExpiredError):
+        await use_case.execute(token.value)

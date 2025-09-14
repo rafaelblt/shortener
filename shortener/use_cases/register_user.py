@@ -3,11 +3,10 @@ import asyncio
 from datetime import timedelta
 
 from shortener.domain.shared.primarykey import PrimaryKey
-from shortener.domain.shared.validator import MultiFieldValidator, Validator
 from shortener.domain.shared.language import Language
 
 from shortener.domain.services.password_hasher import PasswordHasherService
-from shortener.domain.services.token import TokenService
+from shortener.domain.services.token import AuthTokenService
 from shortener.domain.services.send_email import SendEmailService
 from shortener.domain.services.email_template import EmailTemplate
 
@@ -29,9 +28,7 @@ class RegisterUserUseCase:
         send_email_service: SendEmailService,
         password_hasher: PasswordHasherService,
         email_template: EmailTemplate,
-        token_service: TokenService,
-        email_verification_expires_in: timedelta,
-        validators_map: dict[str, list[Validator]]
+        token_service: AuthTokenService,
     ):
         self.user_repository = user_repository
         self.plan_repository = plan_repository
@@ -39,8 +36,6 @@ class RegisterUserUseCase:
         self.password_hasher = password_hasher
         self.email_template = email_template
         self.token_service = token_service
-        self.email_verification_expires_in = email_verification_expires_in
-        self.validators_map = validators_map
 
     async def execute(
         self,
@@ -72,15 +67,11 @@ class RegisterUserUseCase:
             EmailAlreadyExistsError: If there is already a user with the email provided.
             MultiValidationError: If any of the data provided is invalid.
         """
-        multi_validator = MultiFieldValidator(self.validators_map)
-        await multi_validator.validate(
-            email=email, name=name, password=password, plan_pk=plan_pk
-        )
         plan, _ = await asyncio.gather(
             self._get_plan(plan_pk), self._validate_email_unique(email)
         )
         new_user = await self._create_user(email, name, password, plan)
-        await self._send_verification_email(email, name, lang)
+        await self._send_verification_email(new_user, lang)
 
         return new_user
 
@@ -108,24 +99,20 @@ class RegisterUserUseCase:
         )
         return await self.user_repository.add(user)
 
-    async def _send_verification_email(
-        self, email: Email, name: Name, lang: Language
-    ):
-        token = self.token_service.generate_token(
-            subject=email,
-            purpose=TokenService.Purpose.EMAIL_VERIFICATION,
-            expires_in=self.email_verification_expires_in
-        )
+    async def _send_verification_email(self, user: User, lang: Language):
+        token = await self.token_service.generate_token(user)
+        
+        expires_minutes = (token.expires_at - token.created_at).seconds * 60
         context = {
-            "user_name": name,
-            "token": token,
-            "expires_minutes": self.email_verification_expires_in.seconds * 60
+            "user_name": user.name,
+            "token": token.value,
+            "expires_minutes": expires_minutes
         }
 
         result = self.email_template.render(lang=lang, context=context)
 
         await self.send_email_service.send_email(
-            to=email,
+            to=user.email,
             subject=result["subject"],
             plain_body=result["plain_body"],
             html_body=result["html_body"]

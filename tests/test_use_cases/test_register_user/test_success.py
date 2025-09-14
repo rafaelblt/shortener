@@ -104,10 +104,12 @@ async def test_if_email_is_sent_with_token(
         lang=example_lang
     )
 
+    mock_token_service = use_case.token_service
+    assert isinstance(mock_token_service, MockAuthTokenService)
     expected_context = {
         "user_name": normal_user.name,
-        "token": MockTokenService().mock_data["generated_tokens"][0],
-        "expires_minutes": EMAIL_VERIFICATION_EXPIRES_IN.seconds * 60
+        "token": mock_token_service.mock_data["generated_tokens"][0]["token"],
+        "expires_minutes": mock_token_service._expires_in.seconds * 60
     }
 
     template_result = mock_email_template.render(example_lang, expected_context)
@@ -120,3 +122,28 @@ async def test_if_email_is_sent_with_token(
 
     email_log = MockSendEmailService().mock_logs[0]
     assert email_log == expected_email_log
+
+
+@pytest.mark.asyncio
+async def test_token_generated(
+    use_case: RegisterUserUseCase,
+    normal_user: User,
+    default_plan: Plan,
+    plain_password: PlainPassword,
+):
+    example_lang = Language.PT_BR
+    plan = await use_case.plan_repository.add(default_plan)
+    
+    new_user = await use_case.execute(
+        email=normal_user.email, 
+        name=normal_user.name, 
+        plan_pk=plan.pk,
+        password=plain_password,
+        lang=example_lang
+    )
+
+    mock_token_service = use_case.token_service
+    assert isinstance(mock_token_service, MockAuthTokenService)
+    token = mock_token_service.mock_data["generated_tokens"][0]["token"]
+    user_decoded = await mock_token_service.decode_token(token)
+    assert new_user.email == user_decoded.email

@@ -2,9 +2,7 @@ import pytest
 
 from datetime import timedelta
 
-from shortener.domain.refresh_token.entity import RefreshToken
-from shortener.domain.services.token import TokenService
-from shortener.domain.services.token import RandomTokenGenerator
+from shortener.domain.services.token import Token
 from shortener.domain.shared.datetime_utils import utc_now
 from shortener.domain.user.exceptions import (
     UserEmailNotVerifiedError, UserNotFoundError, UserPasswordIncorrectError
@@ -13,33 +11,29 @@ from shortener.domain.user.exceptions import (
 from shortener.domain.user.user import User
 from shortener.use_cases.login_user import LoginUserUseCase
 
-from tests.fixtures import UserFixture
-from tests.utils.date_helpers import assert_datetime
-
-
-ACCESS_TOKEN_EXPIRES_IN = timedelta(minutes=10)
-REFRESH_TOKEN_EXPIRES_IN = timedelta(hours=24)
+from tests.fixtures import UserFixture, MockAuthTokenService
 
 
 @pytest.fixture
 def use_case(
     mock_user_repository,
-    mock_refresh_token_repository,
     mock_password_hasher,
-    mock_token_service
 ):
-    class Generator(RandomTokenGenerator):
-        def generate_token(self) -> str:
-            return "random"
-
+    access_token_service = MockAuthTokenService(
+        purpose="access",
+        expires_in=timedelta(minutes=10),
+        user_repository=mock_user_repository
+    )
+    refresh_token_service = MockAuthTokenService(
+        purpose="refresh",
+        expires_in=timedelta(days=7),
+        user_repository=mock_user_repository,
+    )
     return LoginUserUseCase(
         user_repository=mock_user_repository,
-        refresh_token_repository=mock_refresh_token_repository,
         password_hasher=mock_password_hasher,
-        access_token_service=mock_token_service,
-        access_token_expires_in=ACCESS_TOKEN_EXPIRES_IN,
-        refresh_token_generator=Generator(),
-        refresh_token_expires_in=REFRESH_TOKEN_EXPIRES_IN
+        access_token_service=access_token_service,
+        refresh_token_service=refresh_token_service
     )
 
 
@@ -54,15 +48,10 @@ async def test_retrieved_access_token(
     )
 
     access_token = retrieved["access_token"]
+    assert isinstance(access_token, Token)
 
-    payload = use_case.access_token_service.decode_token(access_token)
-    
-    assert payload["subject"] == normal_user.email
-    assert payload["purpose"] == TokenService.Purpose.LOGIN
-    assert_datetime(
-        payload["expires_at"], utc_now() + ACCESS_TOKEN_EXPIRES_IN,
-        year=True, month=True, day=True, hour=True, minute=True
-    )
+    user = await use_case.access_token_service.decode_token(access_token.value)
+    assert user.email == normal_user.email
 
 
 @pytest.mark.asyncio
@@ -76,15 +65,11 @@ async def test_retrieved_refresh_token(
         password=normal_user.mock_data["plain_password"]
     )
 
-    retrieved_token = retrieved["refresh_token"]
-    assert isinstance(retrieved_token, RefreshToken)
-    assert retrieved_token.user.pk.get_id() == user.pk.get_id()
-    assert_datetime(
-        retrieved_token.expires_at, utc_now() + REFRESH_TOKEN_EXPIRES_IN,
-        year=True, month=True, day=True, hour=True, minute=True
-    )
-    saved_token = await use_case.refresh_token_repository.get_by_token(retrieved_token.token)
-    assert saved_token is not None
+    refresh_token = retrieved["refresh_token"]
+    assert isinstance(refresh_token, Token)
+    
+    user = await use_case.refresh_token_service.decode_token(refresh_token.value)
+    assert user.email == normal_user.email
 
 
 @pytest.mark.asyncio
@@ -116,7 +101,7 @@ async def test_use_case_calls_ensure_user_can_login(
 
 
 @pytest.mark.asyncio
-async def test_raises_user_not_found_in_database(
+async def test_raises_user_not_found_error(
     use_case: LoginUserUseCase, normal_user: UserFixture
 ):
     with pytest.raises(UserNotFoundError) as error:
@@ -155,7 +140,7 @@ async def test_user_last_login(
     updated_user = await use_case.user_repository.get_by_email(normal_user.email)
     assert updated_user is not None
     assert updated_user.last_login is not None
-    assert_datetime(
-        updated_user.last_login, utc_now(),
-        year=True, month=True, day=True, hour=True, minute=True
+    assert (
+        updated_user.last_login.replace(microsecond=0) ==
+        utc_now().replace(microsecond=0)
     )
