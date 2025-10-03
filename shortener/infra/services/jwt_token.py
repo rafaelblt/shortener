@@ -70,3 +70,42 @@ class JwtTokenService(TokenService):
             raise TokenExpiredError()
         except jwt.InvalidTokenError:
             raise TokenInvalidError()
+
+
+class JwtAuthTokenService(AuthTokenService):
+    def __init__(
+        self,
+        user_repository: UserRepository,
+        purpose: str,
+        expires_in: timedelta,
+        secret_key: Optional[str] = None,
+        algorithm: Optional[str] = None,
+    ):
+        self._user_repo = user_repository
+        self._purpose = purpose
+        self._expires_in = expires_in
+        self._jwt_service = JwtTokenService(secret_key, algorithm)
+
+    async def generate_token(self, user: User) -> Token:
+        return self._jwt_service.generate_token(
+            subject=user.pk.raw_value,
+            purpose=self._purpose,
+            expires_in=self._expires_in
+        )
+    
+    async def decode_token(self, token: str) -> User:
+        payload = self._jwt_service.decode_token(token)
+
+        try:
+            pk = PrimaryKey.create_pk_id(int(payload["subject"]))
+        except (ValueError, TypeError):
+            raise TokenInvalidError()
+        
+        if payload["purpose"] != self._purpose:
+            raise TokenInvalidError()
+
+        user = await self._user_repo.get_by_pk(pk)
+        if user is None:
+            raise TokenInvalidError()
+        
+        return user

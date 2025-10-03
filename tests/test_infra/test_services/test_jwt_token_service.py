@@ -1,9 +1,11 @@
-from datetime import timedelta
 import pytest
+
+from datetime import timedelta
 
 from shortener.domain.services.exceptions import TokenInvalidError
 from shortener.domain.services.token import Token, TokenService, TokenExpiredError
 from shortener.domain.shared.datetime_utils import utc_now
+
 from shortener.infra.services.jwt_token import JwtTokenService
 
 
