@@ -18,7 +18,7 @@ def test_env_default_translator():
 
 
 def test_attr_default_context():
-    expected_ctx = {"app_name": settings.APP_NAME}
+    expected_ctx = {"app_name": settings.app_name}
     assert JinjaEnvironment.DEFAULT_CONTEXT == expected_ctx
 
 

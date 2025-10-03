@@ -10,7 +10,7 @@ class LanguageParser:
     def __call__(self, accept_language: Optional[str] = Header(None)) -> Language:
         if accept_language:
             lang = self._get_first_lang(accept_language)
-            if lang and lang in settings.SUPPORTED_LANGUAGES:
+            if lang and lang in settings.supported_languages:
                 return lang
         return Language.default()
 

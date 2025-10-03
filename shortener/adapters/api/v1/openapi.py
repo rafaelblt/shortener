@@ -11,8 +11,8 @@ def set_openapi_schema(app: FastAPI):
         return
     
     openapi_schema = get_openapi(
-        title=f"{settings.APP_NAME} API",
-        version=settings.APP_VERSION,
+        title=f"{settings.app_name} API",
+        version=settings.app_version,
         description="description",
         routes=app.routes,
     )

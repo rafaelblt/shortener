@@ -44,7 +44,7 @@ def test_template_in_jinja_env(template: VerificationEmailTemplate):
 def test_method_get_verification_link(template: VerificationEmailTemplate):
     token = "token"
     retrieved = template.get_verification_link(token)
-    expected = f"{settings.API_BASE_URL}/auth/verify-email?token={token}"
+    expected = f"{settings.api_base_url}/auth/verify-email?token={token}"
     assert retrieved == expected
 
 
@@ -83,7 +83,7 @@ def test_method_render(
     plain_body = result["plain_body"]
     html_body = result["html_body"]
 
-    assert subject == f"Verification Email - {settings.APP_NAME}"
+    assert subject == f"Verification Email - {settings.app_name}"
     assert html_body is None
 
     jinja_env = JinjaEnvironment()._env
@@ -104,7 +104,7 @@ def test_method_render_with_language_ptbr(
     plain_body = result["plain_body"]
     html_body = result["html_body"]
 
-    assert subject == f"Verificação de Email - {settings.APP_NAME}"
+    assert subject == f"Verificação de Email - {settings.app_name}"
     assert html_body is None
 
     jinja_env = JinjaEnvironment()._env

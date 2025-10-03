@@ -20,8 +20,8 @@ class JwtTokenService(TokenService):
         secret_key: Optional[str] = None,
         algorithm: Optional[str] = None,
     ):
-        self._secret_key = secret_key or settings.JWT_SECRET_KEY
-        self._algorithm = algorithm or settings.JWT_ALGORITHM
+        self._secret_key = secret_key or settings.jwt_secret_key
+        self._algorithm = algorithm or settings.jwt_algorithm
 
     def generate_token(
         self,

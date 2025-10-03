@@ -11,7 +11,7 @@ ConverterFunc = Callable[[str], Any]
 class ConversionError(Exception): ...
 
 
-def convert_str_minutes_to_timedelta(input: str):
+def str_minutes_to_timedelta(input: str):
     try:
         minutes = int(input)
     except (ValueError, TypeError):
@@ -21,7 +21,7 @@ def convert_str_minutes_to_timedelta(input: str):
     return timedelta(minutes=minutes)
 
 
-def convert_str_to_email(input: str):
+def str_to_email(input: str):
     try:
         email = Email(input)
     except EmailInvalidError:

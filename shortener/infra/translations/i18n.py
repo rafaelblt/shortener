@@ -15,7 +15,7 @@ def default_translator(message: str) -> str:
 
 
 def get_translator(lang: Language):
-    if lang not in settings.SUPPORTED_LANGUAGES:
+    if lang not in settings.supported_languages:
         raise NotSupportedLanguageError(lang=lang)
     
     if lang == Language.EN:

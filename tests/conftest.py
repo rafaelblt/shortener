@@ -1,5 +1,15 @@
 import os
 
-os.environ.setdefault("ENVIRONMENT_TEMPLATE", "testing")
+environment = {
+    "API_BASE_URL": "https://testshort.com",
+    "DATABASE_URL": "sqlite+aiosqlite:///:memory:",
+    "ALEMBIC_DATABASE_URL": "",
+    "JWT_SECRET_KEY": "[TestShort]->S3cr3tK3y!@#$%&*()-+",
+    "SENDGRID_API_KEY": "fake-sendgrid-key",
+    "SENDGRID_FROM_EMAIL": "admin@gmail.com"
+}
+
+for var, value in environment.items():
+    os.environ.setdefault(var, value)
 
 from tests.fixtures import *

@@ -13,8 +13,8 @@ class SendGridEmailService(SendEmailService):
 
     def __init__(
         self,
-        from_email = Email(settings.SENDGRID_FROM_EMAIL),
-        client = SendGridAPIClient(settings.SENDGRID_API_KEY)
+        from_email = Email(settings.sendgrid_from_email),
+        client = SendGridAPIClient(settings.sendgrid_api_key)
     ):
         """
         Args:

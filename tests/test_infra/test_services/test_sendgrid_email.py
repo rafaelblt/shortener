@@ -42,13 +42,13 @@ def test_inheritance(service: SendGridEmailService):
 def test_default_attr_from_email(service: SendGridEmailService):
     from_email = service._from_email
     assert isinstance(from_email, Email)
-    assert from_email == settings.SENDGRID_FROM_EMAIL
+    assert from_email == settings.sendgrid_from_email
 
 
 def test_default_attr_client(service: SendGridEmailService):
     client = service._client
     assert isinstance(client, SendGridAPIClient)
-    assert client.api_key == settings.SENDGRID_API_KEY
+    assert client.api_key == settings.sendgrid_api_key
 
 
 def test_custom_attr_from_email():
@@ -79,7 +79,7 @@ async def test_method_send_email_with_mock_client(normal_user):
     )
     assert isinstance(service._client, MockAPIClient)
     assert service._client.mock_logs[0] == {
-        "from_email": settings.SENDGRID_FROM_EMAIL,
+        "from_email": settings.sendgrid_from_email,
         "to_emails": normal_user.email,
         "subject": "Subject Example",
         "plain_body": "Plain Content",

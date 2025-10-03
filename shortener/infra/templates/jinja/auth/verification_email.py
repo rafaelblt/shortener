@@ -6,7 +6,7 @@ from shortener.infra.templates.jinja import JinjaEnvironment
 from shortener.infra.translations.i18n import get_translator
 
 
-APP_NAME = settings.APP_NAME
+APP_NAME = settings.app_name
 
 
 class VerificationEmailTemplate(EmailTemplate):
@@ -39,4 +39,4 @@ class VerificationEmailTemplate(EmailTemplate):
         return ctx
 
     def get_verification_link(self, token: str):
-        return f"{settings.API_BASE_URL}/auth/verify-email?token={token}"
+        return f"{settings.api_base_url}/auth/verify-email?token={token}"

@@ -9,7 +9,7 @@ from shortener.infra.settings import settings
 class JinjaEnvironment:
     TEMPLATES_DIR = os.path.dirname(__file__)
     DEFAULT_CONTEXT = {
-        "app_name": settings.APP_NAME
+        "app_name": settings.app_name
     }
 
     def __init__(self):
