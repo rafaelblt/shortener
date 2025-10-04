@@ -1,10 +1,12 @@
-from dataclasses import fields
 import os
 import pytest
 
+from dataclasses import fields
 from unittest.mock import patch
 
-from shortener.infra.settings.settings_class import get_project_app_version, get_settings, Settings
+from shortener.infra.settings.settings_class import (
+    get_project_app_version, get_settings, reload_settings, Settings
+)
 from shortener.infra.exceptions import MissingEnvironmentVariableError
 
 
@@ -46,6 +48,7 @@ def test_attributes():
         os.environ["PASSWORD_HASHER_SERVICE_IMPL"] = "test_PASSWORD_HASHER_SERVICE_IMPL"
         os.environ["SEND_EMAIL_SERVICE_IMPL"] = "test_SEND_EMAIL_SERVICE_IMPL"
 
+        reload_settings()
         settings = get_settings()
 
         assert settings.app_name == os.environ["APP_NAME"]
@@ -82,5 +85,5 @@ def test_missing_required_env_vars():
             expected_missing_vars.append(field.name)
     with patch.dict(os.environ, clear=True):
         with pytest.raises(MissingEnvironmentVariableError) as e:
-            get_settings()
+            reload_settings()
     assert e.value.missing_vars == expected_missing_vars

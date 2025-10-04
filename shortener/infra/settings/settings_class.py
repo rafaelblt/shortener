@@ -142,8 +142,13 @@ class Settings:
             raise exceptions.MissingEnvironmentVariableError(missing_required_vars)
 
 
-def get_settings():
-    return Settings.load()
-
-
 settings = Settings.load()
+
+
+def get_settings():
+    return settings
+
+
+def reload_settings():
+    global settings
+    settings = Settings.load()
