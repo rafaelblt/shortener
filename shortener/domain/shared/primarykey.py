@@ -45,5 +45,13 @@ class PrimaryKey:
             raise ValueError("The pk is not of type id")
         return int(self._value)
     
+    def __eq__(self, other_obj: object) -> bool:
+        if not isinstance(other_obj, PrimaryKey):
+            return NotImplemented
+        return (self.raw_value, self.pk_type) == (other_obj.raw_value, other_obj.pk_type)
+    
     def __str__(self) -> str:
         return self.raw_value or "None"
+
+    def __repr__(self) -> str:
+        return f"<PrimaryKey Raw={self.raw_value} PkType={self.pk_type}>"
