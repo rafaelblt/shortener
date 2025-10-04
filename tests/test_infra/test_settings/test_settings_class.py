@@ -8,12 +8,12 @@ from shortener.infra.settings.settings_class import get_project_app_version, get
 from shortener.infra.exceptions import MissingEnvironmentVariableError
 
 
-def test_get_session_instance():
+def test_get_settings_instance():
     settings = get_settings()
     assert isinstance(settings, Settings)
 
 
-def test_session_instance():
+def test_settings_instance():
     from shortener.infra.settings import settings
     assert isinstance(settings, Settings)
 
