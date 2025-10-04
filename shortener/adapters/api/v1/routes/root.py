@@ -1,10 +1,9 @@
 from http import HTTPStatus
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from fastapi.responses import RedirectResponse, Response
 
-from shortener.use_cases import ResolveShortURLUseCase
-from shortener.adapters.api.v1.dependencies import make_resolve_shorturl_use_case
+from shortener.adapters.api.v1.dependencies import ResolveShortURLUseCaseDependency
 
 
 router = APIRouter()
@@ -13,7 +12,7 @@ router = APIRouter()
 @router.get("/{slug}")
 def resolve_shorturl(
     slug: str,
-    use_case: ResolveShortURLUseCase = Depends(make_resolve_shorturl_use_case)
+    use_case: ResolveShortURLUseCaseDependency
 ):
     url = use_case.resolve_slug(slug)
 
