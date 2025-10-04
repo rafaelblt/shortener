@@ -6,7 +6,7 @@ from shortener.domain.services.exceptions import TokenExpiredError, TokenInvalid
 from shortener.domain.services.token import AuthTokenService
 from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.domain.shared.token import Token
-from shortener.domain.shared.datetime_utils import truncate, utc_now
+from shortener.domain.shared.datetime_utils import utc_now
 from shortener.domain.user import User
 
 from tests.fixtures import MockAuthTokenService
