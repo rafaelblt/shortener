@@ -1,7 +1,6 @@
 from typing import Optional
 
 from shortener.domain.shared.primarykey import PrimaryKey
-from shortener.domain.shared.validator import MultiFieldValidator
 
 from shortener.domain.shorturl import ShortURL, ShortURLRepository
 from shortener.domain.shorturl.exceptions import ShortURLNotFoundError, ShortURLSlugAlreadyExistsError
@@ -16,14 +15,8 @@ class UpdateShortURLUseCase:
     def __init__(
             self, 
             shorturl_repository: ShortURLRepository,
-            validators_map: ValidatorsMapType
         ):
-        """
-        Args:
-            shorturl_repository (ShortURLRepository): Repository to save the ShortURL object.
-        """
         self.shorturl_repository = shorturl_repository
-        self.validators_map = validators_map
 
     async def execute(
         self,
@@ -45,9 +38,6 @@ class UpdateShortURLUseCase:
         Raises:
             ShortURLNotFoundError: If shorturl with the given pk does not exist.
         """
-        multi_validator = MultiFieldValidator(self.validators_map)
-        await multi_validator.validate(slug=slug, original_url=original_url)
-
         if slug and await self.shorturl_repository.exists_by_slug(slug):
             raise ShortURLSlugAlreadyExistsError(slug)
 

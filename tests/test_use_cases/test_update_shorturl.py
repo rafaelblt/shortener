@@ -1,8 +1,6 @@
 import pytest
 
-from shortener.domain.shared.exceptions import MultiValidationError, ValidationError
 from shortener.domain.shared.primarykey import PrimaryKey
-from shortener.domain.shared.validator import Validator
 
 from shortener.domain.shorturl import ShortURL
 from shortener.domain.shorturl.fields import Slug, URL
@@ -13,51 +11,11 @@ from shortener.use_cases.update_shorturl import UpdateShortURLUseCase
 from tests.utils.entity_helpers import assert_shorturl_fields
 
 
-class MockSlugValidator(Validator):
-    async def validate(self, value: str):
-        if value == "joker-joker-joker":
-            raise ValidationError(value, "slug", "SLUG_ERROR", "error message")
-
-
-class MockOriginalURLValidator(Validator):
-    async def validate(self, value: str):
-        if value == "https://joker.com":
-            raise ValidationError(value, "original_url", "URL_ERROR", "error message")
-
-
 @pytest.fixture
 def use_case(mock_shorturl_repository):
     return UpdateShortURLUseCase(
         shorturl_repository=mock_shorturl_repository,
-        validators_map={
-            "slug": [MockSlugValidator()],
-            "original_url": [MockOriginalURLValidator()]
-        }
     )
-
-
-@pytest.mark.asyncio
-async def test_raises_slug_validation_error(
-    use_case: UpdateShortURLUseCase, normal_shorturl: ShortURL
-):
-    shorturl = await use_case.shorturl_repository.add(normal_shorturl)
-    new_slug = Slug("joker-joker-joker")
-
-    with pytest.raises(MultiValidationError) as error:
-        await use_case.execute(pk=shorturl.pk, slug=new_slug)
-    assert error.value.errors[0].code == "SLUG_ERROR"
-
-
-@pytest.mark.asyncio
-async def test_raises_original_url_validation_error(
-    use_case: UpdateShortURLUseCase, normal_shorturl: ShortURL
-):
-    shorturl = await use_case.shorturl_repository.add(normal_shorturl)
-    new_url = URL("https://joker.com")
-
-    with pytest.raises(MultiValidationError) as error:
-        await use_case.execute(pk=shorturl.pk, original_url=new_url)
-    assert error.value.errors[0].code == "URL_ERROR"
 
 
 @pytest.mark.asyncio
