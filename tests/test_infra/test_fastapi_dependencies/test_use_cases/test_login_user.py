@@ -1,6 +1,6 @@
 from fastapi.params import Depends
 
-from shortener.infra.dependencies.fastapi.repositories import get_user_repository
+from shortener.infra.dependencies.fastapi.db.repositories import get_user_repository
 from shortener.infra.dependencies.fastapi.services import (
     get_password_hasher_service,
     get_access_auth_token_service,

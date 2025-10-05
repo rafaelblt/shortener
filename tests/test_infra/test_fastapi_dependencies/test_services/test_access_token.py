@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from fastapi.params import Depends
 
-from shortener.infra.dependencies.fastapi.repositories import get_user_repository
+from shortener.infra.dependencies.fastapi.db.repositories import get_user_repository
 from shortener.infra.dependencies.fastapi.services.access_token import (
     make_jwt_access_auth_token_service,
     get_access_auth_token_service,

@@ -7,7 +7,7 @@ from fastapi.params import Depends
 
 from shortener.infra.settings import reload_settings
 from shortener.infra.db.repositories import SQLAlchemyPlanRepository
-from shortener.infra.dependencies.fastapi.repositories.plan import (
+from shortener.infra.dependencies.fastapi.db.repositories.plan import (
     get_plan_repository, make_sqlalchemy_plan_repository
 )
 

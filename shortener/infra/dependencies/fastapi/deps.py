@@ -25,7 +25,7 @@ from shortener.use_cases import (
     VerifyEmailUseCase
 )
 
-from .repositories import (
+from .db.repositories import (
     get_plan_repository, get_shorturl_repository, get_user_repository
 )
 from .services import (

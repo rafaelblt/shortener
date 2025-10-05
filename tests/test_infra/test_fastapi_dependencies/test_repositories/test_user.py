@@ -7,7 +7,7 @@ from fastapi.params import Depends
 
 from shortener.infra.settings import reload_settings
 from shortener.infra.db.repositories import SQLAlchemyUserRepository
-from shortener.infra.dependencies.fastapi.repositories.user import (
+from shortener.infra.dependencies.fastapi.db.repositories.user import (
     get_user_repository, make_sqlalchemy_user_repository
 )
 

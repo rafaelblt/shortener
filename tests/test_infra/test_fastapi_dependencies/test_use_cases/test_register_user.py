@@ -1,6 +1,6 @@
 from fastapi.params import Depends
 
-from shortener.infra.dependencies.fastapi.repositories import (
+from shortener.infra.dependencies.fastapi.db.repositories import (
     get_user_repository,
     get_plan_repository,
 )

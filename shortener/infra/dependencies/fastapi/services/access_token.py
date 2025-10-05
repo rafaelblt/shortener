@@ -1,7 +1,7 @@
 from fastapi import Depends
 
 from shortener.infra.services.jwt_token import JwtAuthTokenService
-from shortener.infra.dependencies.fastapi.repositories import get_user_repository
+from shortener.infra.dependencies.fastapi.db.repositories import get_user_repository
 
 from shortener.infra.settings import get_settings
 

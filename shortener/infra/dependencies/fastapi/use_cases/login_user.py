@@ -3,7 +3,7 @@ from shortener.infra.dependencies.fastapi.services import (
     get_refresh_auth_token_service,
     get_password_hasher_service
 )
-from shortener.infra.dependencies.fastapi.repositories import get_user_repository
+from shortener.infra.dependencies.fastapi.db.repositories import get_user_repository
 from shortener.use_cases import LoginUserUseCase
 
 

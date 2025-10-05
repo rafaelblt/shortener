@@ -3,7 +3,7 @@ from shortener.infra.dependencies.fastapi.services import (
     get_send_email_service,
     get_password_hasher_service
 )
-from shortener.infra.dependencies.fastapi.repositories import (
+from shortener.infra.dependencies.fastapi.db.repositories import (
     get_user_repository,
     get_plan_repository
 )

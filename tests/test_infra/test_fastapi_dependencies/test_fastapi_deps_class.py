@@ -1,6 +1,6 @@
 from shortener.infra.dependencies import fastapi_deps
 
-from shortener.infra.dependencies.fastapi.repositories import (
+from shortener.infra.dependencies.fastapi.db.repositories import (
     get_plan_repository, get_shorturl_repository, get_user_repository
 )
 from shortener.infra.dependencies.fastapi.services import (
