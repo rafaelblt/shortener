@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from shortener.domain.shared.email import Email
 from shortener.domain.shared.language import Language
 
+from shortener.domain.shared.valueobjects.url import URL
 from shortener.infra import exceptions
 
 from . import converters
@@ -66,9 +67,15 @@ class Settings:
     app_name: str = field(**optional_env_var(var_name="APP_NAME", default="Shortener"))
     app_version: str = field(**static_var(value=get_project_app_version()))
 
-    api_base_url: str = field(**required_env_var(var_name="API_BASE_URL"))
-    database_url: str = field(**required_env_var(var_name="DATABASE_URL"))
-    alembic_database_url: str = field(**required_env_var(var_name="ALEMBIC_DATABASE_URL"))
+    api_base_url: URL = field(**required_env_var(
+        var_name="API_BASE_URL", converter=converters.str_to_url
+    ))
+    database_url: str = field(**required_env_var(
+        var_name="DATABASE_URL"
+    ))
+    alembic_database_url: URL = field(**required_env_var(
+        var_name="ALEMBIC_DATABASE_URL", converter=converters.str_to_url
+    ))
 
     jwt_secret_key: str = field(**required_env_var(var_name="JWT_SECRET_KEY"))
     jwt_algorithm: str = field(**optional_env_var(var_name="JWT_ALGORITHM", default="HS256"))

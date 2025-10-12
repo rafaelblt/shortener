@@ -2,6 +2,7 @@ from typing import Any, Callable
 from datetime import timedelta
 
 from shortener.domain.shared.email import Email
+from shortener.domain.shared.valueobjects.url import URL, InvalidURLError
 from shortener.domain.shared.exceptions import EmailInvalidError
 
 
@@ -29,3 +30,11 @@ def str_to_email(input: str):
             f"The value '{input}' is not a valid email address."
         )
     return email
+
+
+def str_to_url(input: str) -> URL:
+    try:
+        url = URL(input)
+    except InvalidURLError:
+        raise ConversionError(f"The value '{input}' is not a valid URL.")
+    return url

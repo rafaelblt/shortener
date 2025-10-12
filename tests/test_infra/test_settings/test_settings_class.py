@@ -27,7 +27,7 @@ def test_attributes():
 
         os.environ["API_BASE_URL"] = "https://testshort.com"
         os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
-        os.environ["ALEMBIC_DATABASE_URL"] = "alembic_url"
+        os.environ["ALEMBIC_DATABASE_URL"] = "http://alembic_url"
 
         os.environ["JWT_SECRET_KEY"] = "[TestShort]->S3cr3tK3y!@#$%&*()-+"
         os.environ["JWT_ALGORITHM"] = "super_algo"
