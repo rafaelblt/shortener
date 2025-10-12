@@ -4,7 +4,7 @@ from shortener.domain.shared.datetime_utils import ensure_utc
 from shortener.domain.shared.primarykey import PrimaryKey
 
 from shortener.domain.shorturl import ShortURL
-from shortener.domain.shorturl.fields import Slug, URL
+from shortener.domain.shorturl.fields import Slug, OriginalURL
 
 from shortener.infra.db.models import ShortURLModel
 
@@ -28,7 +28,7 @@ def map_shorturl_model_to_domain(model: ShortURLModel) -> ShortURL:
     data = {
         "pk": PrimaryKey.create_pk_id(model.id),
         "slug": Slug(model.slug),
-        "original_url": URL(model.original_url),
+        "original_url": OriginalURL(model.original_url),
         "owner_pk": PrimaryKey.create_pk_id(model.owner_id) if model.owner_id else None,
         "status": model.status,
         "visit_count": model.visit_count,

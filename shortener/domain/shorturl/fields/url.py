@@ -1,27 +1,27 @@
-from urllib.parse import urlparse
-
+from shortener.domain.shared.valueobjects.url import URL, InvalidURLError
 from shortener.domain.shorturl.exceptions import ShortURLInvalidURLError
 
 
-class URL(str):
-    """A custom string class representing a URL for ShortURL"""
+class OriginalURL(URL):
+    """A custom string class representing the original_url of ShortURL"""
 
     def __new__(cls, value: str):
-        cls.validate_url(value)
-        return super().__new__(cls, value)
+        try:
+            original_url = super().__new__(cls, value)
+        except InvalidURLError as e:
+            raise ShortURLInvalidURLError(e.url)
+        if not original_url.is_https():
+            raise ShortURLInvalidURLError(original_url)
+        return original_url
 
     def __repr__(self):
-        return f"<URL({super().__repr__()})>"
+        return f"<OriginalURL({super().__str__()})>"
 
     @classmethod
-    def validate_url(cls, value: str):
-        if not cls.is_valid_https_url(value):
-            raise ShortURLInvalidURLError(value)
-
-    @staticmethod
-    def is_valid_https_url(url: str) -> bool:
+    def validate(cls, value: str):
         try:
-            parsed_url = urlparse(url)
-            return parsed_url.scheme == "https" and bool(parsed_url.netloc)
-        except:
-            return False
+            url = URL(value)
+        except InvalidURLError as e:
+            raise ShortURLInvalidURLError(e.url)
+        if not url.is_https():
+            raise ShortURLInvalidURLError(url)

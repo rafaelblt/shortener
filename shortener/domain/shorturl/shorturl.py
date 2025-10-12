@@ -5,8 +5,9 @@ from datetime import datetime, timezone
 from shortener.domain.domain_entity import DomainEntity
 from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.domain.shared.datetime_utils import is_utc
+from shortener.domain.shared.valueobjects.url import URL
 
-from .fields import Slug, URL, ShortURLStatus
+from .fields import Slug, OriginalURL, ShortURLStatus
 from .exceptions import (
     ShortURLAvailabilityError,
     ShortURLExpiredError,
@@ -35,7 +36,7 @@ class ShortURL(DomainEntity):
 
     def __init__(
         self,
-        original_url: URL,
+        original_url: OriginalURL,
         slug: Slug,
         pk: Optional[PrimaryKey] = None,
         owner_pk: Optional[PrimaryKey] = None,
@@ -131,9 +132,9 @@ class ShortURL(DomainEntity):
 
     @staticmethod
     def validate_original_url(original_url):
-        if not isinstance(original_url, URL):
+        if not isinstance(original_url, OriginalURL):
             raise ShortURLAttributeTypeError(
-                attr="original_url", type_expected="URL", got=original_url
+                attr="original_url", type_expected="OriginalURL", got=original_url
             )
 
     @staticmethod
@@ -202,7 +203,7 @@ class ShortURL(DomainEntity):
         self.validate_slug(new_slug)
         self._slug = new_slug
 
-    def change_original_url(self, new_url: URL):
+    def change_original_url(self, new_url: OriginalURL):
         self.validate_original_url(new_url)
         self._original_url = new_url
 

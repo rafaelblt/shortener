@@ -6,7 +6,7 @@ from shortener.domain.user import User, UserRepository
 
 from shortener.domain.shorturl import ShortURL, ShortURLRepository
 from shortener.domain.shorturl.exceptions import ShortURLSlugAlreadyExistsError
-from shortener.domain.shorturl.fields import Slug, URL
+from shortener.domain.shorturl.fields import Slug, OriginalURL
 from shortener.domain.shorturl.utils import generate_unique_slug
 from shortener.domain.user.exceptions import UserNotFoundError
 
@@ -24,7 +24,7 @@ class CreateShortURLForUserUseCase:
 
     async def execute(
         self, 
-        original_url: URL,
+        original_url: OriginalURL,
         owner_pk: PrimaryKey,
         custom_slug: Optional[Slug] = None,
     ) -> ShortURL:
@@ -32,7 +32,7 @@ class CreateShortURLForUserUseCase:
         Executes the Use Case with the provided data.
 
         Args:
-            original_url (URL): The original_url to be shortened.
+            original_url (OriginalURL): The original_url to be shortened.
             owner_pk (PrimaryKey): Owner PK of the ShortURL.
             custom_slug (Optional[Slug]): Custom slug of the ShortURL. Will be 
                 generated if not provided.

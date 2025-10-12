@@ -1,3 +1,3 @@
 from .slug import Slug
-from .url import URL
+from .url import OriginalURL
 from .status import ShortURLStatus

@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 
 from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.domain.shorturl import ShortURL
-from shortener.domain.shorturl.fields import Slug, URL, ShortURLStatus
+from shortener.domain.shorturl.fields import Slug, OriginalURL, ShortURLStatus
 
 
 @pytest.fixture
@@ -11,7 +11,7 @@ def shorturl():
     return ShortURL(
         pk=PrimaryKey.create_pk_id(1),
         slug=Slug("i-am-slug"),
-        original_url=URL("https://google.com"),
+        original_url=OriginalURL("https://google.com"),
         status=ShortURLStatus.SUSPENDED,
         visit_count=5,
         created_at=datetime(year=2002, month=2, day=2, tzinfo=timezone.utc),
@@ -34,7 +34,7 @@ def test_slug(shorturl: ShortURL):
 
 
 def test_original_url(shorturl: ShortURL):
-    assert isinstance(shorturl.original_url, URL)
+    assert isinstance(shorturl.original_url, OriginalURL)
     assert shorturl.original_url == "https://google.com"
 
 

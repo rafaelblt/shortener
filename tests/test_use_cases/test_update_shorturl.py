@@ -3,7 +3,7 @@ import pytest
 from shortener.domain.shared.primarykey import PrimaryKey
 
 from shortener.domain.shorturl import ShortURL
-from shortener.domain.shorturl.fields import Slug, URL
+from shortener.domain.shorturl.fields import Slug, OriginalURL
 from shortener.domain.shorturl.exceptions import ShortURLNotFoundError
 
 from shortener.use_cases.update_shorturl import UpdateShortURLUseCase
@@ -23,7 +23,7 @@ async def test_with_non_existent_shorturl(use_case: UpdateShortURLUseCase):
     pk = PrimaryKey.create_pk_id(1)
     with pytest.raises(ShortURLNotFoundError) as error:
         await use_case.execute(
-            pk=pk, slug=Slug("test"), original_url=URL("https://test.com")
+            pk=pk, slug=Slug("test"), original_url=OriginalURL("https://test.com")
         )
     assert error.value.value == pk
     assert error.value.field == "pk"
@@ -36,7 +36,7 @@ async def test_instance_retrieved(
     shorturl = await use_case.shorturl_repository.add(normal_shorturl)
     
     new_slug = Slug("test-updated-slug")
-    new_url = URL("https://newurl.com")
+    new_url = OriginalURL("https://newurl.com")
 
     retrieved = await use_case.execute(
         pk=shorturl.pk,

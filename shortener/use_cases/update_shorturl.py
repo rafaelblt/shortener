@@ -4,7 +4,7 @@ from shortener.domain.shared.primarykey import PrimaryKey
 
 from shortener.domain.shorturl import ShortURL, ShortURLRepository
 from shortener.domain.shorturl.exceptions import ShortURLNotFoundError, ShortURLSlugAlreadyExistsError
-from shortener.domain.shorturl.fields import URL, Slug
+from shortener.domain.shorturl.fields import OriginalURL, Slug
 
 from .types import ValidatorsMapType
 
@@ -22,7 +22,7 @@ class UpdateShortURLUseCase:
         self,
         pk: PrimaryKey,
         slug: Optional[Slug] = None,
-        original_url: Optional[URL] = None
+        original_url: Optional[OriginalURL] = None
     ) -> ShortURL:
         """
         Executes the Use Case with the provided data.
@@ -30,7 +30,7 @@ class UpdateShortURLUseCase:
         Args:
             pk (PrimaryKey): The ShortURL pk to be updated.
             slug (Optional[Slug]): The updated slug.
-            original_url (Optional[URL)]: The updated original_url.
+            original_url (Optional[OriginalURL)]: The updated original_url.
 
         Returns:
             ShortURL: The ShortURL object updated.
