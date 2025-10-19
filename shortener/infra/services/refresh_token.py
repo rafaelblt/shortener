@@ -32,7 +32,7 @@ class SQLAlchemyRefreshAuthTokenService(AuthTokenService):
             expires_at=expires_at,
         )
         self.session.add(model)
-        await self.session.commit()
+        await self.session.flush()
         return Token(
             value=token,
             purpose="",
@@ -52,6 +52,6 @@ class SQLAlchemyRefreshAuthTokenService(AuthTokenService):
         if user_model is None:
             raise TokenInvalidError()
         refresh_token.revoked = True
-        await self.session.commit()
+        await self.session.flush()
         await self.session.refresh(user_model)
         return await UserMapper(self.session).model_to_domain(user_model)

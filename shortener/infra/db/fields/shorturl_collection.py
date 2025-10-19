@@ -47,14 +47,14 @@ class SQLAlchemyShortURLCollection(ShortURLCollection):
         if shorturl_model is None:
             raise ValueError(f"ShortURL with pk={shorturl.pk} was not found")
         shorturl_model.owner_id = self._user_id
-        await self._session.commit()
+        await self._session.flush()
 
     async def remove_by_pk(self, pk: PrimaryKey) -> ShortURL | None:
         shorturl_model = await self._get_user_shorturl_by_id(pk.get_id())
         if shorturl_model is None:
             return None
         shorturl_model.owner_id = None
-        await self._session.commit()
+        await self._session.flush()
         await self._session.refresh(shorturl_model)
         return map_shorturl_model_to_domain(shorturl_model)
     

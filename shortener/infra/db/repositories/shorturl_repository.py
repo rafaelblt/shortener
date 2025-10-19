@@ -18,16 +18,12 @@ class SQLAlchemyShortURLRepository(ShortURLRepository):
     """SQLAlchemy implementation of ShortURLRepository."""
 
     def __init__(self, session: AsyncSession):
-        """
-        Args:
-            session (Session): SQLAlchemy Async Session instance.
-        """
         self.session = session
 
     async def add(self, shorturl: ShortURL) -> ShortURL:
         shorturl_model = self._to_model(shorturl)
         self.session.add(shorturl_model)
-        await self.session.commit()
+        await self.session.flush()
         await self.session.refresh(shorturl_model)
         return self._to_domain(shorturl_model)
     
@@ -44,7 +40,7 @@ class SQLAlchemyShortURLRepository(ShortURLRepository):
         existing_model.expires_at = shorturl.expires_at
         existing_model.last_accessed_at = shorturl.last_accessed_at
 
-        await self.session.commit()
+        await self.session.flush()
         await self.session.refresh(existing_model)
 
         return self._to_domain(existing_model)
@@ -65,6 +61,7 @@ class SQLAlchemyShortURLRepository(ShortURLRepository):
         total = await self.session.scalar(
             select(func.count()).select_from(ShortURLModel)
         )
+        total = total or 0
         rows = await self.session.scalars(
             select(ShortURLModel)
             .offset(offset)
@@ -85,7 +82,7 @@ class SQLAlchemyShortURLRepository(ShortURLRepository):
         domain = self._to_domain(model)
         
         await self.session.delete(model)
-        await self.session.commit()
+        await self.session.flush()
         return domain
 
     async def _get_all_models(self) -> Sequence[ShortURLModel]:

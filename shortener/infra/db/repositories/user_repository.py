@@ -26,7 +26,7 @@ class SQLAlchemyUserRepository(UserRepository):
     async def add(self, user: User) -> User:
         model = await self._to_model(user)
         self.session.add(model)
-        await self.session.commit()
+        await self.session.flush()
         await self.session.refresh(model)
         return await self._to_domain(model)
 
@@ -46,7 +46,7 @@ class SQLAlchemyUserRepository(UserRepository):
         existing_model.created_at = user.created_at
         existing_model.last_login = user.last_login
 
-        await self.session.commit()
+        await self.session.flush()
         await self.session.refresh(existing_model)
 
         return await self._to_domain(existing_model)
@@ -91,7 +91,7 @@ class SQLAlchemyUserRepository(UserRepository):
         domain = await self._to_domain(model)
 
         await self.session.delete(model)
-        await self.session.commit()
+        await self.session.flush()
         return domain
 
     async def _get_all_models(self) -> Sequence[UserModel]:
@@ -108,7 +108,10 @@ class SQLAlchemyUserRepository(UserRepository):
         Returns:
             Optional[UserModel]: The model object or None if not found.
         """
-        model = await self.session.get(UserModel, id)
+        model = await self.session.scalar(
+            select(UserModel).where(UserModel.id == id)
+        )
+        #model = await self.session.get(UserModel, id)
         return model
 
     async def _get_model_by_email(self, email: str) -> UserModel | None:

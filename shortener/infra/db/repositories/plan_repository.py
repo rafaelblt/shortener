@@ -27,7 +27,7 @@ class SQLAlchemyPlanRepository(PlanRepository):
     async def add(self, plan: Plan) -> Plan:
         model = self._to_model(plan)
         self.session.add(model)
-        await self.session.commit()
+        await self.session.flush()
         await self.session.refresh(model)
         return self._to_domain(model)
 
@@ -41,7 +41,7 @@ class SQLAlchemyPlanRepository(PlanRepository):
         existing_model.name = plan.name
         existing_model.max_shorturls = plan.max_shorturls
 
-        await self.session.commit()
+        await self.session.flush()
         await self.session.refresh(existing_model)
 
         return self._to_domain(existing_model)
@@ -60,7 +60,7 @@ class SQLAlchemyPlanRepository(PlanRepository):
             raise PlanNotFoundError(field="pk", value=pk)
 
         await self.session.delete(model)
-        await self.session.commit()
+        await self.session.flush()
         return self._to_domain(model)
 
     async def _get_all_models(self) -> Sequence[PlanModel]:
