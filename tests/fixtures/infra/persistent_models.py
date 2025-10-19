@@ -5,18 +5,29 @@ from shortener.domain.user.user import User
 from shortener.infra.db.repositories import (
     SQLAlchemyUserRepository, SQLAlchemyPlanRepository, SQLAlchemyShortURLRepository
 )
+from shortener.infra.db.sqlalchemy_uow import SQLAlchemyUnitOfWork
 
 
 @pytest_asyncio.fixture
-async def persistent_default_plan(default_plan, db_session):
-    plan_repo = SQLAlchemyPlanRepository(db_session)
-    return await plan_repo.add(default_plan)
+async def persistent_default_plan(
+    default_plan,
+    sqlalchemy_plan_repository: SQLAlchemyPlanRepository,
+    sqlalchemy_uow: SQLAlchemyUnitOfWork
+):
+    async with sqlalchemy_uow.transaction():
+        persistent_plan = await sqlalchemy_plan_repository.add(default_plan)
+    return persistent_plan
 
 
 @pytest_asyncio.fixture
-async def persistent_eco_plan(eco_plan, db_session):
-    plan_repo = SQLAlchemyPlanRepository(db_session)
-    return await plan_repo.add(eco_plan)
+async def persistent_eco_plan(
+    eco_plan,
+    sqlalchemy_plan_repository: SQLAlchemyPlanRepository,
+    sqlalchemy_uow: SQLAlchemyUnitOfWork,
+):
+    async with sqlalchemy_uow.transaction():
+        persistent_plan = await sqlalchemy_plan_repository.add(eco_plan)
+    return persistent_plan
 
 
 @pytest_asyncio.fixture
@@ -24,25 +35,36 @@ async def persistent_normal_user(
     persistent_default_plan,
     persistent_normal_shorturl,
     normal_user: User,
-    db_session
+    sqlalchemy_user_repository: SQLAlchemyUserRepository,
+    sqlalchemy_uow: SQLAlchemyUnitOfWork,
 ):
-    user_repo = SQLAlchemyUserRepository(db_session)
     normal_user.change_plan(persistent_default_plan)
-    persistent_user = await user_repo.add(normal_user)
-
-    await persistent_user.add_shorturl(persistent_normal_shorturl)
+    async with sqlalchemy_uow.transaction():
+        persistent_user = await sqlalchemy_user_repository.add(normal_user)
+        await persistent_user.add_shorturl(persistent_normal_shorturl)
 
     return persistent_user
 
 
 @pytest_asyncio.fixture
-async def persistent_poor_user(persistent_eco_plan, poor_user, db_session):
-    user_repo = SQLAlchemyUserRepository(db_session)
+async def persistent_poor_user(
+    persistent_eco_plan,
+    poor_user,
+    sqlalchemy_uow: SQLAlchemyUnitOfWork,
+    sqlalchemy_user_repository: SQLAlchemyUserRepository
+):
     poor_user.change_plan(persistent_eco_plan)
-    return await user_repo.add(poor_user)
+    async with sqlalchemy_uow.transaction():
+        persistent_user = await sqlalchemy_user_repository.add(poor_user)
+    return persistent_user
 
 
 @pytest_asyncio.fixture
-async def persistent_normal_shorturl(normal_shorturl, db_session):
-    shorturl_repo = SQLAlchemyShortURLRepository(db_session)
-    return await shorturl_repo.add(normal_shorturl)
+async def persistent_normal_shorturl(
+    normal_shorturl,
+    sqlalchemy_shorturl_repository: SQLAlchemyShortURLRepository,
+    sqlalchemy_uow: SQLAlchemyUnitOfWork
+):
+    async with sqlalchemy_uow.transaction():
+        persistent_shorturl = await sqlalchemy_shorturl_repository.add(normal_shorturl)
+    return persistent_shorturl
