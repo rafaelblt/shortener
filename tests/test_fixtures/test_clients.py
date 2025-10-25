@@ -20,7 +20,7 @@ def test_client(client):
 
 
 @pytest.mark.asyncio
-async def test_normal_user_client(normal_user_client, normal_user: User, access_token_service: AuthTokenService):
+async def test_normal_user_client(normal_user_client):
     assert isinstance(normal_user_client, AuthenticatedTestClient)
 
 
