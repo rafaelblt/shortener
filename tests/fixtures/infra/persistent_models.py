@@ -1,11 +1,15 @@
 import pytest
 import pytest_asyncio
 
-from shortener.domain.user.user import User
+from shortener.domain.plan import Plan
+from shortener.domain.user import User
+
 from shortener.infra.db.repositories import (
     SQLAlchemyUserRepository, SQLAlchemyPlanRepository, SQLAlchemyShortURLRepository
 )
+from shortener.infra.services.refresh_token import SQLAlchemyRefreshAuthTokenService
 from shortener.infra.db.sqlalchemy_uow import SQLAlchemyUnitOfWork
+
 
 
 @pytest_asyncio.fixture
@@ -60,6 +64,19 @@ async def persistent_poor_user(
 
 
 @pytest_asyncio.fixture
+async def persistent_banned_user(
+    persistent_default_plan: Plan,
+    banned_user: User,
+    sqlalchemy_uow: SQLAlchemyUnitOfWork,
+    sqlalchemy_user_repository: SQLAlchemyUserRepository
+):
+    banned_user.change_plan(persistent_default_plan)
+    async with sqlalchemy_uow.transaction():
+        persistent_user = await sqlalchemy_user_repository.add(banned_user)
+    return persistent_user
+
+
+@pytest_asyncio.fixture
 async def persistent_normal_shorturl(
     normal_shorturl,
     sqlalchemy_shorturl_repository: SQLAlchemyShortURLRepository,
@@ -68,3 +85,6 @@ async def persistent_normal_shorturl(
     async with sqlalchemy_uow.transaction():
         persistent_shorturl = await sqlalchemy_shorturl_repository.add(normal_shorturl)
     return persistent_shorturl
+
+
+

@@ -69,6 +69,20 @@ async def test_persistent_poor_user(
     ) is not None
 
 
+
+@pytest.mark.asyncio
+async def test_persistent_banned_user(
+    banned_user: User,
+    persistent_banned_user: User,
+    sqlalchemy_session: AsyncSession
+):
+    assert isinstance(persistent_banned_user, User)
+    assert persistent_banned_user.name == banned_user.name
+    assert await sqlalchemy_session.get(
+        UserModel, persistent_banned_user.pk.get_id()
+    ) is not None
+
+
 @pytest.mark.asyncio
 async def test_persistent_normal_shorturl(
     normal_shorturl: ShortURL,
