@@ -20,7 +20,7 @@ class Token:
         self.purpose = purpose
         self.created_at = created_at
         self.expires_at = expires_at
-        self.extra_claims = extra_claims
+        self.extra_claims = extra_claims or {}
 
     @property
     def time_remaining(self) -> timedelta:
@@ -33,4 +33,3 @@ class TokenDecoded(TypedDict):
     created_at: datetime
     expires_at: datetime
     extra_claims: Optional[ExtraClaims]
-

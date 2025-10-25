@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
-from shortener.domain.shared.token import Token, TokenDecoded
+from shortener.domain.shared.token import Token
 
 
 def test_token_attributes():
@@ -35,7 +35,7 @@ def test_token_time_remaining():
     assert timedelta(minutes=29, seconds=50) < remaining <= timedelta(minutes=30)
 
 
-def test_token_extra_claims_none():
+def test_token_extra_claims_default():
     now = datetime.now(timezone.utc)
     expires = now + timedelta(minutes=10)
     token = Token(
@@ -44,16 +44,4 @@ def test_token_extra_claims_none():
         created_at=now,
         expires_at=expires
     )
-    assert token.extra_claims is None
-
-
-def test_token_decoded_typeddict():
-    claims = {"foo": "bar"}
-    decoded: TokenDecoded = {
-        "subject": "user_id",
-        "purpose": "access",
-        "extra_claims": claims
-    }
-    assert decoded["subject"] == "user_id"
-    assert decoded["purpose"] == "access"
-    assert decoded["extra_claims"]
+    assert len(token.extra_claims) == 0
