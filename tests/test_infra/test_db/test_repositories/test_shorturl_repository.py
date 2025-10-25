@@ -6,7 +6,7 @@ from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.domain.shared import PaginatedResult
 
 from shortener.domain.shorturl import ShortURL
-from shortener.domain.shorturl.fields import Slug, URL, ShortURLStatus
+from shortener.domain.shorturl.fields import Slug, OriginalURL, ShortURLStatus
 from shortener.domain.shorturl.exceptions import ShortURLNotFoundError
 
 from shortener.infra.db.models import ShortURLModel
@@ -42,7 +42,7 @@ async def test_update(
     saved_shorturl = await repository.add(normal_shorturl)
 
     saved_shorturl._slug = Slug("test-new-updated-slug")
-    saved_shorturl._original_url = URL("https://target.com")
+    saved_shorturl._original_url = OriginalURL("https://target.com")
     saved_shorturl._status = ShortURLStatus.BANNED
     saved_shorturl._visit_count = 5
     saved_shorturl._created_at = datetime(2000, 1, 1, tzinfo=timezone.utc)
