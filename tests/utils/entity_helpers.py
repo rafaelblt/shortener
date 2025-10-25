@@ -18,7 +18,6 @@ from shortener.infra.db.repositories import (
     SQLAlchemyPlanRepository,
     SQLAlchemyUserRepository,
     SQLAlchemyShortURLRepository,
-    SQLAlchemyRefreshTokenRepository
 )
 
 
@@ -37,16 +36,6 @@ async def get_persistent_user(session: AsyncSession, user: User):
 
     repository = SQLAlchemyUserRepository(session=session)
     return await repository.add(user)
-
-
-@deprecated_func("use pesistent refresh token fixtures instead")
-async def get_persistent_refresh_Token(session: AsyncSession, token: RefreshToken):
-    user = token.user
-    if user.pk.is_undefined():
-        user = await get_persistent_user(session, user)
-    token._user = user
-    repository = SQLAlchemyRefreshTokenRepository(session=session)
-    return await repository.add(token)
 
 
 @deprecated_func("use pesistent shorturls fixtures instead")
