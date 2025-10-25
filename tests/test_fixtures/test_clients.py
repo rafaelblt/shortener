@@ -7,7 +7,7 @@ from shortener.domain.user import User
 
 from shortener.infra.dependencies import fastapi_deps
 
-from tests.fixtures.adapters.client import AuthenticatedTestClient
+from tests.fixtures.adapters.clients import AuthenticatedTestClient
 
 
 @pytest.fixture

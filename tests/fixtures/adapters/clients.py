@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from shortener.adapters.api import app
 
 from shortener.domain.services.token import AuthTokenService
-from shortener.domain.user import User, UserRepository
+from shortener.domain.user import User
 
 from shortener.infra.dependencies import fastapi_deps
 
