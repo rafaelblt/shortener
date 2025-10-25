@@ -25,6 +25,7 @@ from shortener.use_cases import (
     VerifyEmailUseCase
 )
 
+from .db.uow import get_unit_of_work
 from .db.repositories import (
     get_plan_repository, get_shorturl_repository, get_user_repository
 )
@@ -58,6 +59,8 @@ def wrap_with_depends(func: Callable):
 
 @dataclass(frozen=True)
 class FastApiDependencies:
+    unit_of_work: DependsClass = field(default_factory=get_unit_of_work)
+
     plan_repository: DependsClass = field(default_factory=get_plan_repository)
     shorturl_repository: DependsClass = field(default_factory=get_shorturl_repository)
     user_repository: DependsClass = field(default_factory=get_user_repository)
