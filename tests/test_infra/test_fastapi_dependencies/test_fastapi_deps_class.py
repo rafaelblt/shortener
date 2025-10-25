@@ -1,5 +1,5 @@
 from shortener.infra.dependencies import fastapi_deps
-
+from shortener.infra.dependencies.fastapi.db.uow import get_unit_of_work
 from shortener.infra.dependencies.fastapi.db.repositories import (
     get_plan_repository, get_shorturl_repository, get_user_repository
 )
@@ -26,6 +26,8 @@ from shortener.infra.dependencies.fastapi.use_cases import (
 
 
 def test_fastapi_deps_attributes():
+    assert fastapi_deps.unit_of_work.dependency == get_unit_of_work().dependency
+
     assert fastapi_deps.plan_repository.dependency == get_plan_repository().dependency
     assert fastapi_deps.shorturl_repository.dependency == get_shorturl_repository().dependency
     assert fastapi_deps.user_repository.dependency == get_user_repository().dependency
