@@ -4,26 +4,19 @@ from shortener.infra.db.repositories import (
     SQLAlchemyShortURLRepository,
     SQLAlchemyUserRepository,
     SQLAlchemyPlanRepository,
-    SQLAlchemyRefreshTokenRepository
 )
 
 
 @pytest_asyncio.fixture
-async def sqlalchemy_shorturl_repository(db_session):
-    return SQLAlchemyShortURLRepository(db_session)
+async def sqlalchemy_shorturl_repository(sqlalchemy_session):
+    return SQLAlchemyShortURLRepository(sqlalchemy_session)
 
 
 @pytest_asyncio.fixture
-async def sqlalchemy_user_repository(db_session):
-    return SQLAlchemyUserRepository(db_session)
+async def sqlalchemy_user_repository(sqlalchemy_session):
+    return SQLAlchemyUserRepository(sqlalchemy_session)
 
 
 @pytest_asyncio.fixture
-async def sqlalchemy_plan_repository(db_session):
-    return SQLAlchemyPlanRepository(db_session)
-
-
-@pytest_asyncio.fixture
-async def sqlalchemy_refresh_token_repository(db_session):
-    return SQLAlchemyRefreshTokenRepository(db_session)
-
+async def sqlalchemy_plan_repository(sqlalchemy_session):
+    return SQLAlchemyPlanRepository(sqlalchemy_session)
