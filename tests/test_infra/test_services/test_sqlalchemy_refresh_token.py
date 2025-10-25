@@ -16,14 +16,14 @@ TOKEN_SERVICE_EXPIRES_IN = timedelta(days=30)
 
 
 @pytest.fixture
-def token_service(db_session):
+def token_service(sqlalchemy_session):
     return SQLAlchemyRefreshAuthTokenService(
-        session=db_session, expires_in=TOKEN_SERVICE_EXPIRES_IN
+        session=sqlalchemy_session, expires_in=TOKEN_SERVICE_EXPIRES_IN
     )
 
 
-def test_class_init(token_service, db_session):
-    assert token_service.session == db_session
+def test_class_init(token_service, sqlalchemy_session):
+    assert token_service.session == sqlalchemy_session
     assert token_service.expires_in == TOKEN_SERVICE_EXPIRES_IN
 
 
@@ -31,7 +31,7 @@ def test_class_init(token_service, db_session):
 async def test_generate_token(
     token_service: SQLAlchemyRefreshAuthTokenService,
     persistent_normal_user: User,
-    db_session: AsyncSession,
+    sqlalchemy_session: AsyncSession,
 ):
     retrieved = await token_service.generate_token(persistent_normal_user)
     assert isinstance(retrieved.value, str)
@@ -42,7 +42,7 @@ async def test_generate_token(
     )
     assert retrieved.expires_at == retrieved.created_at + TOKEN_SERVICE_EXPIRES_IN
 
-    token_saved = await db_session.get(RefreshTokenModel, 1)
+    token_saved = await sqlalchemy_session.get(RefreshTokenModel, 1)
     assert token_saved is not None
     assert token_saved.token == retrieved.value
     assert token_saved.created_at == retrieved.created_at.replace(tzinfo=None)
@@ -85,14 +85,14 @@ async def test_decode_token_raises_token_invalid_with_revoked_token(
 async def test_decode_token_raises_token_invalid_with_user_not_found(
     token_service: SQLAlchemyRefreshAuthTokenService,
     persistent_normal_user: User,
-    db_session: AsyncSession
+    sqlalchemy_session: AsyncSession
 ):
     refresh_token = await token_service.generate_token(persistent_normal_user)
     await token_service.decode_token(refresh_token.value)
-    user_model = await db_session.get(UserModel, persistent_normal_user.pk.get_id())
+    user_model = await sqlalchemy_session.get(UserModel, persistent_normal_user.pk.get_id())
     assert user_model is not None
-    await db_session.delete(user_model)
-    await db_session.commit()
+    await sqlalchemy_session.delete(user_model)
+    await sqlalchemy_session.commit()
 
     with pytest.raises(TokenInvalidError):
         await token_service.decode_token(refresh_token.value)
@@ -101,10 +101,10 @@ async def test_decode_token_raises_token_invalid_with_user_not_found(
 @pytest.mark.asyncio
 async def test_decode_token_raises_token_expired(
     persistent_normal_user: User,
-    db_session: AsyncSession
+    sqlalchemy_session: AsyncSession
 ):
     token_service = SQLAlchemyRefreshAuthTokenService(
-        session=db_session, expires_in=timedelta(microseconds=1)
+        session=sqlalchemy_session, expires_in=timedelta(microseconds=1)
     )
     refresh_token = await token_service.generate_token(persistent_normal_user)
 
