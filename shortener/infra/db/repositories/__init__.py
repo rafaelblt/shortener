@@ -1,4 +1,3 @@
 from .shorturl_repository import SQLAlchemyShortURLRepository
 from .user_repository import SQLAlchemyUserRepository
 from .plan_repository import SQLAlchemyPlanRepository
-from .refresh_token_repository import SQLAlchemyRefreshTokenRepository
