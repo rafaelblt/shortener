@@ -53,6 +53,7 @@ async def super_user(
         email=Email("i-love-superman@super.io"),
         name=Name("I Am Superman"),
         hashed_password=mock_password_hasher.hash(password),
+        is_superuser=True,
         plan=default_plan
     )
     user._init_mock_data(plain_password=password)
