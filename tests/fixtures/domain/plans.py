@@ -11,3 +11,8 @@ def default_plan():
 @pytest.fixture
 def eco_plan():
     return Plan(name="Eco", max_shorturls=10)
+
+
+@pytest.fixture
+def prime_plan():
+    return Plan(name="Prime", max_shorturls=50)
