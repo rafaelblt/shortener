@@ -1,4 +1,5 @@
 from .language_parser import LanguageParserDependency
+from .current_user import CurrentUserDependency
 from .use_cases import (
     CreateShortURLForUserUseCaseDependency,
     CreateShortURLUseCaseDependency,
