@@ -1,0 +1,1 @@
+from .success_create import CreateShortURLSuccess
