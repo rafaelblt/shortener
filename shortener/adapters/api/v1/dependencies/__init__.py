@@ -1,5 +1,7 @@
 from .language_parser import LanguageParserDependency
 from .current_user import CurrentUserDependency
+from .services import AccessTokenServiceDependency
+from .uow import UnitOfWorkDependency
 from .use_cases import (
     CreateShortURLForUserUseCaseDependency,
     CreateShortURLUseCaseDependency,
