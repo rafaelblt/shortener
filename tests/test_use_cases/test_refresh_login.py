@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from shortener.domain.services.token import Token, TokenInvalidError, TokenExpiredError
 
+from shortener.domain.user.exceptions import UserAccessDeniedError
 from shortener.domain.user.repository import UserRepository
 from shortener.domain.user.user import User
 from shortener.use_cases import RefreshLoginUseCase
@@ -100,4 +101,17 @@ async def test_with_refresh_token_expired(
     token = await use_case.refresh_token_service.generate_token(normal_user)
 
     with pytest.raises(TokenExpiredError):
+        await use_case.execute(token.value)
+
+
+@pytest.mark.asyncio
+async def test_with_user_banned(
+    use_case: RefreshLoginUseCase,
+    banned_user: User,
+    mock_user_repository: UserRepository
+):
+    banned_user = await mock_user_repository.add(banned_user)
+    token = await use_case.refresh_token_service.generate_token(banned_user)
+
+    with pytest.raises(UserAccessDeniedError):
         await use_case.execute(token.value)

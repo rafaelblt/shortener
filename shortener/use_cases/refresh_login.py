@@ -35,8 +35,13 @@ class RefreshLoginUseCase:
         Raises:
             TokenInvalidError: The token is invalid.
             TokenExpiredError: The token is expired.
+            UserEmailNotVerifiedError: The user email has not been verified.
+            UserSuspendedError: The user of token has been suspended.
+            UserLockedError: The user of token has been locked.
+            UserBannedError: The user of token has been banned.
         """
         user = await self.refresh_token_service.decode_token(token)
+        user.ensure_can_login()
         access_token, refresh_token = await asyncio.gather(
             self.access_token_service.generate_token(user),
             self.refresh_token_service.generate_token(user)
