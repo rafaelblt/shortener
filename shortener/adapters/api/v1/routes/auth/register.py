@@ -15,7 +15,7 @@ from shortener.domain.user.exceptions import EmailAlreadyExistsError
 
 from shortener.infra.translations import get_translator
 
-from . import router
+from .api_router import router
 
 
 register_responses = FastAPIRouteResponses()

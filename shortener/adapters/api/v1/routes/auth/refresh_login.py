@@ -13,7 +13,7 @@ from shortener.domain.user.exceptions import UserAccessDeniedError
 
 from shortener.infra.translations.i18n import get_translator
 
-from . import router
+from .api_router import router
 
 
 responses = FastAPIRouteResponses()
