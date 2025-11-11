@@ -9,8 +9,6 @@ from shortener.adapters.api.v1.schemas.responses.types import FastAPIRouteRespon
 from shortener.domain.shorturl.exceptions import ShortURLSlugAlreadyExistsError
 from shortener.domain.user.exceptions import ShortURLLimitReachedError, UserNotFoundError
 
-from shortener.infra.translations.i18n import get_translator
-
 from .api_router import router
 
 
@@ -43,11 +41,9 @@ responses.set_error_response(
 async def create_shorturl(
     payload: CreateShortURLPayload,
     use_case: dependencies.CreateShortURLForUserUseCaseDependency,
-    language: dependencies.LanguageParserDependency,
     uow: dependencies.UnitOfWorkDependency,
     user: dependencies.CurrentUserDependency
-): 
-    _  = get_translator(language)
+):
     try:
         async with uow.transaction():
             shorturl = await use_case.execute(
@@ -56,17 +52,17 @@ async def create_shorturl(
                 owner_pk=user.pk
             )
     except ShortURLSlugAlreadyExistsError:
-        detail = _("The slug provided already exists.")
+        detail = "The slug provided already exists."
         return responses.get_json_response_by_status_code(
             HTTPStatus.CONFLICT, {"detail": detail}
         )
     except UserNotFoundError:
-        detail = _("The owner_id provided was not found.")
+        detail = "The owner_id provided was not found."
         return responses.get_json_response_by_status_code(
             HTTPStatus.BAD_REQUEST, {"detail": detail}
         )
     except ShortURLLimitReachedError:
-        detail = _("The owner has reached the limit for ShortURLs in their plan.")
+        detail = "The owner has reached the limit for ShortURLs in their plan."
         return responses.get_json_response_by_status_code(
             HTTPStatus.FORBIDDEN, {"detail": detail}
         )
