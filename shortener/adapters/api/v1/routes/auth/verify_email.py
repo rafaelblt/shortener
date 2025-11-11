@@ -1,12 +1,8 @@
 from http import HTTPStatus
 
-from fastapi.responses import JSONResponse
-from fastapi import Response
-
 from shortener.adapters.api.v1.error_codes import ApiErrorCode
 from shortener.adapters.api.v1.schemas import MessageResponse
 from shortener.adapters.api.v1.dependencies import VerifyEmailUseCaseDependency, LanguageParserDependency
-from shortener.adapters.api.v1.schemas.responses.error_response import ErrorResponse
 from shortener.adapters.api.v1.schemas.responses.types import FastAPIRouteResponses
 
 from shortener.domain.services.exceptions import TokenInvalidError, TokenExpiredError
