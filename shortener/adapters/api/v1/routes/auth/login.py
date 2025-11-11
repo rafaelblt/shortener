@@ -1,9 +1,6 @@
 from http import HTTPStatus
 
-from shortener.adapters.api.v1.dependencies import (
-    LoginUserUseCaseDependency,
-    LanguageParserDependency
-)
+from shortener.adapters.api.v1.dependencies import LoginUserUseCaseDependency
 from shortener.adapters.api.v1.error_codes import ApiErrorCode
 from shortener.adapters.api.v1.schemas.requests.auth import LoginRequest
 from shortener.adapters.api.v1.schemas.responses.types import FastAPIRouteResponses
@@ -12,8 +9,6 @@ from shortener.adapters.api.v1.schemas.responses.auth import SuccessLoginRespons
 from shortener.domain.user.exceptions import (
     UserAccessDeniedError, UserNotFoundError, UserPasswordIncorrectError
 )
-
-from shortener.infra.translations.i18n import get_translator
 
 from .api_router import router
 
@@ -40,7 +35,6 @@ responses.set_error_response(
 async def login(
     request: LoginRequest,
     use_case: LoginUserUseCaseDependency,
-    language: LanguageParserDependency
 ): 
     email = request.get_email()
     try:
@@ -48,14 +42,12 @@ async def login(
             email=email, password=request.password
         )
     except (UserNotFoundError, UserPasswordIncorrectError):
-        _ = get_translator(language)
-        detail = _("Invalid email or password.")
+        detail = "Invalid email or password."
         return responses.get_json_response_by_status_code(
             HTTPStatus.UNAUTHORIZED, {"detail": detail}
         )
     except UserAccessDeniedError:
-        _ = get_translator(language)
-        detail = _("The user cannot be authenticated.")
+        detail = "The user cannot be authenticated."
         return responses.get_json_response_by_status_code(
             HTTPStatus.FORBIDDEN, {"detail": detail}
         )
