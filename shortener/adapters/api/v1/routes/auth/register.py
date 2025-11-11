@@ -5,15 +5,12 @@ from shortener.adapters.api.v1.dependencies import (
     LanguageParserDependency
 )
 from shortener.adapters.api.v1.error_codes import ApiErrorCode
-from shortener.adapters.api.v1.schemas.entities import PublicUserSchema
 from shortener.adapters.api.v1.schemas.requests.auth import RegisterRequest
 from shortener.adapters.api.v1.schemas.responses.auth import SuccessRegisterResponse
 from shortener.adapters.api.v1.schemas.responses.types import FastAPIRouteResponses
 
 from shortener.domain.plan.exceptions import PlanNotFoundError
 from shortener.domain.user.exceptions import EmailAlreadyExistsError
-
-from shortener.infra.translations import get_translator
 
 from .api_router import router
 
@@ -46,7 +43,6 @@ async def register(
     use_case: RegisterUserUseCaseDependency,
     language: LanguageParserDependency
 ):
-    _  = get_translator(language)
     try:
         user = await use_case.execute(
             email=request.get_email(),
@@ -56,17 +52,14 @@ async def register(
             lang=language
         )
     except PlanNotFoundError:
-        detail = _("No plan was found with the ID provided.")
+        detail = "No plan was found with the ID provided."
         return register_responses.get_json_response_by_status_code(
             HTTPStatus.BAD_REQUEST, {"detail": detail}
         )
     except EmailAlreadyExistsError:
-        detail = _("The email provided has already been registered.")
+        detail = "The email provided has already been registered."
         return register_responses.get_json_response_by_status_code(
             HTTPStatus.CONFLICT, {"detail": detail}
         )
     
-    msg = _("User registered successfully. Please check your email to verify your account.")
-    return SuccessRegisterResponse(
-        message=msg, user=PublicUserSchema.from_domain(user)
-    )
+    return SuccessRegisterResponse.with_domain_user(user)
