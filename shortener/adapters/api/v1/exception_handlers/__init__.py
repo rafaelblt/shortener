@@ -8,5 +8,3 @@ class ExceptionHandler(ABC):
     @abstractmethod
     def handle(error: Exception) -> NoReturn:
         raise error
-
-from .utils import register_exception_handlers
