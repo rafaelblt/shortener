@@ -8,10 +8,9 @@ from shortener.adapters.api.v1.error_codes import ApiErrorCode
 from shortener.adapters.api.v1.schemas.responses.types import FastAPIRouteResponses
 from shortener.adapters.api.v1.schemas.responses.auth import SuccessLoginResponse
 
-from shortener.domain.refresh_token.exceptions import (
-    RefreshTokenNotFoundError, RefreshTokenExpiredError, RefreshTokenRevokedError
-)
+from shortener.domain.services.exceptions import TokenExpiredError, TokenInvalidError
 from shortener.domain.user.exceptions import UserAccessDeniedError
+
 from shortener.infra.translations.i18n import get_translator
 
 from . import router
@@ -44,7 +43,7 @@ async def refresh_login(
     _ = get_translator(lang)
     try:
         retrieved = await use_case.execute(refresh_token)
-    except (RefreshTokenNotFoundError, RefreshTokenExpiredError, RefreshTokenRevokedError):
+    except (TokenInvalidError, TokenExpiredError):
         detail = _("The refresh token is invalid.")
         return responses.get_json_response_by_status_code(
             HTTPStatus.UNAUTHORIZED, {"detail": detail}
@@ -57,9 +56,6 @@ async def refresh_login(
 
     return SuccessLoginResponse.make_response(
         access_token=retrieved["access_token"],
-        access_token_type="bearer",
-        access_token_expires_in=use_case.access_token_expires_in,
-        refresh_token=retrieved["refresh_token"].token,
-        refresh_token_expires_in=use_case.refresh_token_expires_in,
+        refresh_token=retrieved["refresh_token"],
         user=retrieved["user"]
     )

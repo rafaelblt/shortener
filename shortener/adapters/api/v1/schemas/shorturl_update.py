@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from shortener.domain.shorturl.fields import Slug, URL
+from shortener.domain.shorturl.fields import Slug, OriginalURL
 from shortener.domain.shorturl.exceptions import ShortURLValidationError
 
 from pydantic import BaseModel, ConfigDict, AfterValidator
@@ -13,7 +13,7 @@ def validate_slug(value: str) -> Slug:
         raise ValueError(str(e))
     
 
-def validate_url(value: str) -> URL:
+def validate_url(value: str) -> OriginalURL:
     try:
         return URL(value)
     except ShortURLValidationError as e:

@@ -60,9 +60,6 @@ async def login(
 
     return SuccessLoginResponse.make_response(
         access_token=retrieved["access_token"],
-        access_token_type="bearer",
-        access_token_expires_in=use_case.access_token_expires_in,
-        refresh_token=retrieved["refresh_token"].token,
-        refresh_token_expires_in=use_case.refresh_token_expires_in,
+        refresh_token=retrieved["refresh_token"],
         user=retrieved["user"]
     )

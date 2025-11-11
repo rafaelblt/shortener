@@ -1,6 +1,6 @@
 import pytest
 
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 
 from shortener.domain.services.token import Token, TokenService, TokenInvalidError, TokenExpiredError
 from shortener.domain.shared.datetime_utils import utc_now

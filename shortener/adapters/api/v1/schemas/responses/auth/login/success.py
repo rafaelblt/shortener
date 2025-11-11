@@ -3,13 +3,14 @@ from pydantic import BaseModel, Field
 from datetime import datetime, timedelta
 
 from shortener.adapters.api.v1.schemas.entities.user import PublicUserSchema
+from shortener.domain.services.token import Token
 from shortener.domain.shared.datetime_utils import utc_now
 from shortener.domain.user.user import User
 
 
 class AccessTokenField(BaseModel):
     token: str = Field(..., description="JWT access token")
-    token_type: Literal["bearer"] = Field(..., description="Token type (usually 'bearer')")
+    token_type: str = Field(..., description="Token type (usually 'bearer')")
     expires_at: datetime = Field(..., description="Token expiration timestamp")
     expires_seconds: int = Field(..., description="Token expiration time in seconds")
 
@@ -28,24 +29,21 @@ class SuccessLoginResponse(BaseModel):
     @classmethod
     def make_response(
         cls,
-        access_token: str,
-        access_token_type: str,
-        access_token_expires_in: timedelta,
-        refresh_token: str,
-        refresh_token_expires_in: timedelta,
+        access_token: Token,
+        refresh_token: Token,
         user: User
     ):
         access_token_field = AccessTokenField(
-            token=access_token,
+            token=access_token.value,
             token_type="bearer",
-            expires_at=utc_now() + access_token_expires_in,
-            expires_seconds=access_token_expires_in.seconds
+            expires_at=access_token.expires_at,
+            expires_seconds=access_token.time_remaining.seconds
         )
 
         refresh_token_field = RefreshTokenField(
-            token=refresh_token,
-            expires_at=utc_now() + refresh_token_expires_in,
-            expires_seconds=refresh_token_expires_in.seconds
+            token=refresh_token.value,
+            expires_at=refresh_token.expires_at,
+            expires_seconds=refresh_token.time_remaining.seconds
         )
 
         return cls(

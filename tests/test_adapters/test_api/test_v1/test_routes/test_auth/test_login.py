@@ -88,4 +88,4 @@ async def test_response_ok_with_valid_login(
     assert "user" in json
 
     payload = JwtTokenService().decode_token(json["access_token"]["token"])
-    assert payload["subject"] == normal_user.email
+    assert payload["subject"] == str(json["user"]["id"])

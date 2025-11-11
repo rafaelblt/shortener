@@ -98,7 +98,7 @@ class MockTokenService(TokenService):
             purpose=purpose,
             created_at=token_found["created_at"],
             expires_at=token_found["expires_at"],
-            extra_claims=None
+            extra_claims={}
         )
     
     @staticmethod
@@ -177,3 +177,13 @@ class MockAuthTokenService(AuthTokenService):
             raise TokenInvalidError()
         
         return user
+
+
+@pytest.fixture
+def mock_auth_token_service(mock_user_repository):
+    service = MockAuthTokenService(
+        purpose="auth",
+        expires_in=timedelta(hours=1),
+        user_repository=mock_user_repository
+    )
+    return service

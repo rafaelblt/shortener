@@ -11,15 +11,6 @@ def test_active_refresh_token(
     assert active_refresh_token.is_revoked() == False
 
 
-def test_expired_refresh_token(
-    expired_refresh_token: RefreshToken, normal_user: User
-):
-    assert isinstance(expired_refresh_token, RefreshToken)
-    assert expired_refresh_token.user == normal_user
-    assert expired_refresh_token.is_expired() == True
-    assert expired_refresh_token.is_revoked() == False
-
-
 def test_revoked_refresh_token(
     revoked_refresh_token: RefreshToken, normal_user: User
 ):

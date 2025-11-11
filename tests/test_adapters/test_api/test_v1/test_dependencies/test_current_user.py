@@ -42,9 +42,7 @@ async def test_get_current_user_from_request_state_returns_user_instance(
 
 
 @pytest.mark.asyncio
-async def test_get_current_user_from_request_state_raises_value_error(
-    normal_user: User
-):
+async def test_get_current_user_from_request_state_raises_value_error():
     req = DummyRequest(None)
     with pytest.raises(
         ValueError,
@@ -90,7 +88,6 @@ async def test_require_authenticated_user_raises_exception_with_token_invalid(
     assert exc.value.status_code == HTTPStatus.UNAUTHORIZED
     assert exc.value.detail == "Access token invalid."
     
-
 
 @pytest.mark.asyncio
 async def test_require_authenticated_user_raises_exception_with_token_expired(

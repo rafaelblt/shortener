@@ -1,7 +1,5 @@
 import pytest
 
-from datetime import datetime, timezone
-
 from shortener.domain.plan import Plan
 from shortener.domain.shorturl import ShortURL
 from shortener.domain.user import User
@@ -135,17 +133,17 @@ async def test_banned_user(
 @pytest.mark.asyncio
 async def test_suspended_user(
     default_plan: Plan,
-    suspendend_user: User,
+    suspended_user: User,
     mock_password_hasher: MockPasswordHasherService
 ):
-    assert isinstance(suspendend_user, UserFixture)
-    assert suspendend_user.status == UserStatus.SUSPENDED
-    assert suspendend_user.plan == default_plan
-    assert await suspendend_user.shorturls.count() == 0
-    assert suspendend_user.mock_data["plain_password"]
+    assert isinstance(suspended_user, UserFixture)
+    assert suspended_user.status == UserStatus.SUSPENDED
+    assert suspended_user.plan == default_plan
+    assert await suspended_user.shorturls.count() == 0
+    assert suspended_user.mock_data["plain_password"]
     assert (
-        mock_password_hasher.hash(suspendend_user.mock_data["plain_password"]) ==
-        suspendend_user.hashed_password
+        mock_password_hasher.hash(suspended_user.mock_data["plain_password"]) ==
+        suspended_user.hashed_password
     )
 
 
