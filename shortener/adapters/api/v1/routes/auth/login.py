@@ -9,7 +9,9 @@ from shortener.adapters.api.v1.schemas.requests.auth import LoginRequest
 from shortener.adapters.api.v1.schemas.responses.types import FastAPIRouteResponses
 from shortener.adapters.api.v1.schemas.responses.auth import SuccessLoginResponse
 
-from shortener.domain.user.exceptions import UserAccessDeniedError, UserNotFoundError, UserPasswordIncorrectError
+from shortener.domain.user.exceptions import (
+    UserAccessDeniedError, UserNotFoundError, UserPasswordIncorrectError
+)
 
 from shortener.infra.translations.i18n import get_translator
 
