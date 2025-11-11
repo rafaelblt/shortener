@@ -3,15 +3,13 @@ from typing import Annotated
 
 from fastapi import Body
 
-from shortener.adapters.api.v1.dependencies import RefreshLoginUseCaseDependency, LanguageParserDependency
+from shortener.adapters.api.v1.dependencies import RefreshLoginUseCaseDependency
 from shortener.adapters.api.v1.error_codes import ApiErrorCode
 from shortener.adapters.api.v1.schemas.responses.types import FastAPIRouteResponses
 from shortener.adapters.api.v1.schemas.responses.auth import SuccessLoginResponse
 
 from shortener.domain.services.exceptions import TokenExpiredError, TokenInvalidError
 from shortener.domain.user.exceptions import UserAccessDeniedError
-
-from shortener.infra.translations.i18n import get_translator
 
 from .api_router import router
 
@@ -37,19 +35,17 @@ responses.set_error_response(
 @router.post("/refresh-login", responses=responses.get_schema())
 async def refresh_login(
     refresh_token: Annotated[str, Body(..., embed=True)],
-    use_case: RefreshLoginUseCaseDependency,
-    lang: LanguageParserDependency
+    use_case: RefreshLoginUseCaseDependency
 ):
-    _ = get_translator(lang)
     try:
         retrieved = await use_case.execute(refresh_token)
     except (TokenInvalidError, TokenExpiredError):
-        detail = _("The refresh token is invalid.")
+        detail = "The refresh token is invalid."
         return responses.get_json_response_by_status_code(
             HTTPStatus.UNAUTHORIZED, {"detail": detail}
         )
     except UserAccessDeniedError:
-        detail = _("The user cannot be authenticated.")
+        detail = "The user cannot be authenticated."
         return responses.get_json_response_by_status_code(
             HTTPStatus.FORBIDDEN, {"detail": detail}
         )
