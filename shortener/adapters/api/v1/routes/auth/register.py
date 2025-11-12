@@ -6,7 +6,7 @@ from shortener.adapters.api.v1.dependencies import (
 )
 from shortener.adapters.api.v1.error_codes import ApiErrorCode
 from shortener.adapters.api.v1.schemas.requests.auth import RegisterRequest
-from shortener.adapters.api.v1.schemas.responses.auth import SuccessRegisterResponse
+from shortener.adapters.api.v1.schemas.responses.auth import RegisterSuccessResponse
 from shortener.adapters.api.v1.schemas.responses.types import FastAPIRouteResponses
 
 from shortener.domain.plan.exceptions import PlanNotFoundError
@@ -19,7 +19,7 @@ register_responses = FastAPIRouteResponses()
 register_responses.set_response(
     status_code=HTTPStatus.CREATED,
     description="User registered.",
-    model=SuccessRegisterResponse
+    model=RegisterSuccessResponse
 )
 register_responses.set_error_response(
     status_code=HTTPStatus.BAD_REQUEST,
@@ -62,4 +62,4 @@ async def register(
             HTTPStatus.CONFLICT, {"detail": detail}
         )
     
-    return SuccessRegisterResponse.with_domain_user(user)
+    return RegisterSuccessResponse.with_domain_user(user)

@@ -1,1 +1,1 @@
-from .success_response import SuccessRegisterResponse
+from .success_response import RegisterSuccessResponse

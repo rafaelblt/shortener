@@ -1,2 +1,2 @@
 from .login import SuccessLoginResponse
-from .register import SuccessRegisterResponse
+from .register import RegisterSuccessResponse
