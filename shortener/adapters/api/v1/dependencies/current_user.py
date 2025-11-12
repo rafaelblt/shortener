@@ -5,12 +5,10 @@ from fastapi import Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordBearer
 
 from shortener.domain.services.exceptions import TokenExpiredError, TokenInvalidError
-from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.domain.user import User
 from shortener.infra.services.jwt_token import JwtTokenService
 
 from .uow import UnitOfWorkDependency
-from .repositories import UserRepositoryDependency
 from .services import AccessTokenServiceDependency
 
 
