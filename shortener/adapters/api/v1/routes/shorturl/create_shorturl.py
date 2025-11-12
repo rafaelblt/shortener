@@ -3,7 +3,7 @@ from http import HTTPStatus
 from shortener.adapters.api.v1 import dependencies
 from shortener.adapters.api.v1.error_codes import ApiErrorCode
 from shortener.adapters.api.v1.schemas.payloads.shorturl import CreateShortURLPayload
-from shortener.adapters.api.v1.schemas.responses.shorturl import CreateShortURLSuccess
+from shortener.adapters.api.v1.schemas.responses.shorturl import CreateShortURLSuccessResponse
 from shortener.adapters.api.v1.schemas.responses.types import FastAPIRouteResponses
 
 from shortener.domain.shorturl.exceptions import ShortURLSlugAlreadyExistsError
@@ -16,7 +16,7 @@ responses = FastAPIRouteResponses()
 responses.set_response(
     status_code=HTTPStatus.CREATED,
     description="ShortURL created.",
-    model=CreateShortURLSuccess
+    model=CreateShortURLSuccessResponse
 )
 responses.set_error_response(
     status_code=HTTPStatus.BAD_REQUEST,
@@ -67,4 +67,4 @@ async def create_shorturl(
             HTTPStatus.FORBIDDEN, {"detail": detail}
         )
 
-    return CreateShortURLSuccess.with_shorturl(shorturl)
+    return CreateShortURLSuccessResponse.with_shorturl(shorturl)

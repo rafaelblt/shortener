@@ -1,1 +1,1 @@
-from .success_create import CreateShortURLSuccess
+from .success_create import CreateShortURLSuccessResponse
