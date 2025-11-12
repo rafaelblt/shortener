@@ -1,7 +1,7 @@
 from http import HTTPStatus
 
 from shortener.adapters.api.v1.error_codes import ApiErrorCode
-from shortener.adapters.api.v1.schemas import MessageResponse
+from shortener.adapters.api.v1.schemas.responses import MessageResponse
 from shortener.adapters.api.v1.dependencies import VerifyEmailUseCaseDependency
 from shortener.adapters.api.v1.schemas.responses.types import FastAPIRouteResponses
 
