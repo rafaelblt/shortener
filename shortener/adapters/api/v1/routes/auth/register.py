@@ -5,7 +5,7 @@ from shortener.adapters.api.v1.dependencies import (
     LanguageParserDependency
 )
 from shortener.adapters.api.v1.error_codes import ApiErrorCode
-from shortener.adapters.api.v1.schemas.requests.auth import RegisterRequest
+from shortener.adapters.api.v1.schemas.payloads.auth import RegisterPayload
 from shortener.adapters.api.v1.schemas.responses.auth import RegisterSuccessResponse
 from shortener.adapters.api.v1.schemas.responses.types import FastAPIRouteResponses
 
@@ -39,16 +39,16 @@ register_responses.set_error_response(
     responses=register_responses.get_schema()
 )
 async def register(
-    request: RegisterRequest,
+    payload: RegisterPayload,
     use_case: RegisterUserUseCaseDependency,
     language: LanguageParserDependency
 ):
     try:
         user = await use_case.execute(
-            email=request.get_email(),
-            name=request.get_name(),
-            plan_pk=request.get_plan_pk(),
-            password=request.get_password(),
+            email=payload.get_email(),
+            name=payload.get_name(),
+            plan_pk=payload.get_plan_pk(),
+            password=payload.get_password(),
             lang=language
         )
     except PlanNotFoundError:

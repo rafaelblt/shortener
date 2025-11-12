@@ -2,7 +2,7 @@ from http import HTTPStatus
 
 from shortener.adapters.api.v1.dependencies import LoginUserUseCaseDependency
 from shortener.adapters.api.v1.error_codes import ApiErrorCode
-from shortener.adapters.api.v1.schemas.requests.auth import LoginRequest
+from shortener.adapters.api.v1.schemas.payloads.auth import LoginPayload
 from shortener.adapters.api.v1.schemas.responses.types import FastAPIRouteResponses
 from shortener.adapters.api.v1.schemas.responses.auth import LoginSuccessResponse
 
@@ -33,13 +33,13 @@ responses.set_error_response(
 
 @router.post("/login", responses=responses.get_schema())
 async def login(
-    request: LoginRequest,
+    payload: LoginPayload,
     use_case: LoginUserUseCaseDependency,
 ): 
-    email = request.get_email()
+    email = payload.get_email()
     try:
         retrieved = await use_case.execute(
-            email=email, password=request.password
+            email=email, password=payload.password
         )
     except (UserNotFoundError, UserPasswordIncorrectError):
         detail = "Invalid email or password."

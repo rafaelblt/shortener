@@ -12,7 +12,7 @@ NameValidator = CustomAfterValidator(Name.validate_name)
 PasswordValidator = CustomAfterValidator(PlainPassword.validate_password)
 
 
-class RegisterRequest(BaseModel):
+class RegisterPayload(BaseModel):
     email: Annotated[str, AfterValidator(EmailValidator)]
     name: Annotated[str, AfterValidator(NameValidator)]
     password: Annotated[str, AfterValidator(PasswordValidator)]

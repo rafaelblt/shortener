@@ -9,7 +9,7 @@ from pydantic import BaseModel, AfterValidator, ConfigDict
 EmailValidator = CustomAfterValidator(Email.validate_email)
 
 
-class LoginRequest(BaseModel):
+class LoginPayload(BaseModel):
     email: Annotated[str, AfterValidator(EmailValidator)]
     password: str
     
