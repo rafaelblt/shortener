@@ -43,8 +43,8 @@ test_infra = "pytest -v tests/test_infra/"
 test_fixtures = "pytest -v tests/test_fixtures/"
 test_layers = 'task test_domain && task test_fixtures && task test_use_cases && task test_infra && task test_adapters'
 
-i18n_extract = "pybabel extract -F babel.cfg -o shortener/infra/translations/messages.pot shortener/infra/templates"
-i18n_init = "pybabel init -i messages.pot -d translations -l pt_BR"
+i18n_extract = "pybabel extract -F babel.cfg -o shortener/infra/translations/messages.pot shortener/infra/templates shortener/adapters/api/"
+i18n_init = "pybabel init -i shortener/infra/translations/messages.pot -d shortener/infra/translations -l pt_BR"
 i18n_update = "pybabel update -i shortener/infra/translations/messages.pot -d shortener/infra/translations"
 i18n_compile = "pybabel compile -d shortener/infra/translations"
 i18n_rebuild = "task i18n_extract && task i18n_update && task i18n_compile"
