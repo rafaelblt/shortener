@@ -1,11 +1,10 @@
-from typing import Literal
 from pydantic import BaseModel, Field
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from shortener.adapters.api.v1.schemas.entities.user import PublicUserSchema
-from shortener.domain.services.token import Token
-from shortener.domain.shared.datetime_utils import utc_now
-from shortener.domain.user.user import User
+
+from shortener.domain.shared.token import Token
+from shortener.domain.user import User
 
 
 class AccessTokenField(BaseModel):
@@ -21,7 +20,7 @@ class RefreshTokenField(BaseModel):
     expires_seconds: int = Field(..., description="Token expiration time in seconds")
 
 
-class SuccessLoginResponse(BaseModel):
+class LoginSuccessResponse(BaseModel):
     access_token: AccessTokenField = Field(..., description="Access token data")
     refresh_token: RefreshTokenField = Field(..., description="Refresh token data")
     user: PublicUserSchema = Field(..., description="Authenticated user")

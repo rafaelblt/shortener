@@ -4,7 +4,7 @@ from shortener.adapters.api.v1.dependencies import LoginUserUseCaseDependency
 from shortener.adapters.api.v1.error_codes import ApiErrorCode
 from shortener.adapters.api.v1.schemas.requests.auth import LoginRequest
 from shortener.adapters.api.v1.schemas.responses.types import FastAPIRouteResponses
-from shortener.adapters.api.v1.schemas.responses.auth import SuccessLoginResponse
+from shortener.adapters.api.v1.schemas.responses.auth import LoginSuccessResponse
 
 from shortener.domain.user.exceptions import (
     UserAccessDeniedError, UserNotFoundError, UserPasswordIncorrectError
@@ -17,7 +17,7 @@ responses = FastAPIRouteResponses()
 responses.set_response(
     status_code=HTTPStatus.OK,
     description="Login successfully.",
-    model=SuccessLoginResponse
+    model=LoginSuccessResponse
 )
 responses.set_error_response(
     status_code=HTTPStatus.UNAUTHORIZED,
@@ -52,7 +52,7 @@ async def login(
             HTTPStatus.FORBIDDEN, {"detail": detail}
         )
 
-    return SuccessLoginResponse.make_response(
+    return LoginSuccessResponse.make_response(
         access_token=retrieved["access_token"],
         refresh_token=retrieved["refresh_token"],
         user=retrieved["user"]

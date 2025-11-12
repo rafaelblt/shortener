@@ -6,7 +6,7 @@ from fastapi import Body
 from shortener.adapters.api.v1.dependencies import RefreshLoginUseCaseDependency
 from shortener.adapters.api.v1.error_codes import ApiErrorCode
 from shortener.adapters.api.v1.schemas.responses.types import FastAPIRouteResponses
-from shortener.adapters.api.v1.schemas.responses.auth import SuccessLoginResponse
+from shortener.adapters.api.v1.schemas.responses.auth import LoginSuccessResponse
 
 from shortener.domain.services.exceptions import TokenExpiredError, TokenInvalidError
 from shortener.domain.user.exceptions import UserAccessDeniedError
@@ -18,7 +18,7 @@ responses = FastAPIRouteResponses()
 responses.set_response(
     status_code=HTTPStatus.OK,
     description="Refresh successfully.",
-    model=SuccessLoginResponse
+    model=LoginSuccessResponse
 )
 responses.set_error_response(
     status_code=HTTPStatus.UNAUTHORIZED,
@@ -50,7 +50,7 @@ async def refresh_login(
             HTTPStatus.FORBIDDEN, {"detail": detail}
         )
 
-    return SuccessLoginResponse.make_response(
+    return LoginSuccessResponse.make_response(
         access_token=retrieved["access_token"],
         refresh_token=retrieved["refresh_token"],
         user=retrieved["user"]

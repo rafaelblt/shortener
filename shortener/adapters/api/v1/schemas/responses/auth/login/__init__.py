@@ -1,1 +1,1 @@
-from .success import SuccessLoginResponse
+from .success import LoginSuccessResponse

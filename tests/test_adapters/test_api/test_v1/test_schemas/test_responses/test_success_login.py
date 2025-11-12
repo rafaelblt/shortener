@@ -1,7 +1,7 @@
-from datetime import timedelta, datetime
+from datetime import timedelta
 
 from shortener.adapters.api.v1.schemas.entities.user import PublicUserSchema
-from shortener.adapters.api.v1.schemas.responses.auth.login import SuccessLoginResponse
+from shortener.adapters.api.v1.schemas.responses.auth.login import LoginSuccessResponse
 
 from shortener.domain.shared.datetime_utils import utc_now
 from shortener.domain.shared.primarykey import PrimaryKey
@@ -45,7 +45,7 @@ def test_make_response(normal_user: User):
         "user": PublicUserSchema.from_domain(normal_user).model_dump()
     }
 
-    retrieved = SuccessLoginResponse.make_response(
+    retrieved = LoginSuccessResponse.make_response(
         user=normal_user,
         access_token=access_token,
         refresh_token=refresh_token
