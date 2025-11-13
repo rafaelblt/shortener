@@ -1,4 +1,8 @@
 import os
+import warnings
+
+
+warnings.filterwarnings("ignore", category=DeprecationWarning, module="passlib")
 
 environment = {
     "API_BASE_URL": "https://testshort.com",
