@@ -23,9 +23,19 @@ def test_method_hash(password_hasher: PasslibPasswordHasher):
     assert str(retrieved) != pw
 
 
-def test_method_verify(password_hasher: PasslibPasswordHasher):
-    plain = "my@security#pass%123"
-    hashed = password_hasher.hash(plain)
-    
-    assert password_hasher.verify(plain, hashed)
-    assert password_hasher.verify("other_password", hashed) is False
+@pytest.mark.parametrize(
+    ("plain", "hashed", "expected_result"),
+    [
+        ("123", "123", False),
+        ("123", PasslibPasswordHasher().hash("123"), True),
+        ("1234", PasslibPasswordHasher().hash("123"), False),
+        ("my@security#pass%123", PasslibPasswordHasher().hash("my@security#pass%123"), True),
+    ]
+)
+def test_method_verify(
+    password_hasher: PasslibPasswordHasher,
+    plain: str,
+    hashed: str,
+    expected_result: bool
+):
+    assert password_hasher.verify(plain, hashed) == expected_result
