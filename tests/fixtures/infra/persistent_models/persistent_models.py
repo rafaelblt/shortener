@@ -1,4 +1,3 @@
-import pytest
 import pytest_asyncio
 
 from shortener.domain.plan import Plan
@@ -10,11 +9,12 @@ from shortener.infra.db.repositories import (
 from shortener.infra.services.refresh_token import SQLAlchemyRefreshAuthTokenService
 from shortener.infra.db.sqlalchemy_uow import SQLAlchemyUnitOfWork
 
+from tests.fixtures.domain.users import UserFixture
 
 
 @pytest_asyncio.fixture
 async def persistent_default_plan(
-    default_plan,
+    default_plan: Plan,
     sqlalchemy_plan_repository: SQLAlchemyPlanRepository,
     sqlalchemy_uow: SQLAlchemyUnitOfWork
 ):
@@ -38,7 +38,7 @@ async def persistent_eco_plan(
 async def persistent_normal_user(
     persistent_default_plan,
     persistent_normal_shorturl,
-    normal_user: User,
+    normal_user: UserFixture,
     sqlalchemy_user_repository: SQLAlchemyUserRepository,
     sqlalchemy_uow: SQLAlchemyUnitOfWork,
 ):
@@ -46,34 +46,45 @@ async def persistent_normal_user(
     async with sqlalchemy_uow.transaction():
         persistent_user = await sqlalchemy_user_repository.add(normal_user)
         await persistent_user.add_shorturl(persistent_normal_shorturl)
-
-    return persistent_user
+    fixture = UserFixture.from_user(
+        user=persistent_user,
+        plain_password=normal_user.mock_data["plain_password"]
+    )
+    return fixture
 
 
 @pytest_asyncio.fixture
 async def persistent_poor_user(
     persistent_eco_plan,
-    poor_user,
+    poor_user: UserFixture,
     sqlalchemy_uow: SQLAlchemyUnitOfWork,
     sqlalchemy_user_repository: SQLAlchemyUserRepository
 ):
     poor_user.change_plan(persistent_eco_plan)
     async with sqlalchemy_uow.transaction():
         persistent_user = await sqlalchemy_user_repository.add(poor_user)
-    return persistent_user
+    fixture = UserFixture.from_user(
+        user=persistent_user,
+        plain_password=poor_user.mock_data["plain_password"]
+    )
+    return fixture
 
 
 @pytest_asyncio.fixture
 async def persistent_banned_user(
     persistent_default_plan: Plan,
-    banned_user: User,
+    banned_user: UserFixture,
     sqlalchemy_uow: SQLAlchemyUnitOfWork,
     sqlalchemy_user_repository: SQLAlchemyUserRepository
 ):
     banned_user.change_plan(persistent_default_plan)
     async with sqlalchemy_uow.transaction():
         persistent_user = await sqlalchemy_user_repository.add(banned_user)
-    return persistent_user
+    fixture = UserFixture.from_user(
+        user=persistent_user,
+        plain_password=banned_user.mock_data["plain_password"]
+    )
+    return fixture
 
 
 @pytest_asyncio.fixture

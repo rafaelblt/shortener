@@ -23,6 +23,22 @@ class UserFixture(User):
         self.mock_data = UserMockData(
             plain_password=plain_password
         )
+    
+    @classmethod
+    def from_user(cls, user: User, plain_password: PlainPassword):
+        fixture = cls(
+            pk=user.pk,
+            email=user.email,
+            name=user.name,
+            hashed_password=user.hashed_password,
+            plan=user.plan,
+            shorturls=user.shorturls,
+            is_superuser=user.is_superuser,
+            created_at=user.created_at,
+            last_login=user.last_login
+        )
+        fixture._init_mock_data(plain_password=plain_password)
+        return fixture
 
 
 @pytest_asyncio.fixture
