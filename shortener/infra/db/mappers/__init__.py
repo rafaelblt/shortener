@@ -1,4 +1,3 @@
 from .plan import map_plan_domain_to_model, map_plan_model_to_domain
 from .user import map_user_domain_to_model, map_user_model_to_domain, UserMapper
-from .refresh_token import map_refresh_token_domain_to_model, map_refresh_token_model_to_domain
 from .shorturl import map_shorturl_domain_to_model, map_shorturl_model_to_domain
