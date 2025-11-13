@@ -5,7 +5,6 @@ from shortener.domain.shared.warnings import deprecated_func
 from shortener.domain.plan import Plan
 from shortener.domain.user import User
 from shortener.domain.shorturl import ShortURL
-from shortener.domain.refresh_token import RefreshToken
 
 from shortener.infra.db.models import (
     PlanModel,
@@ -58,9 +57,9 @@ def assert_plan_fields(
     def define_fields(entmap, instance: Plan | PlanModel):
         entmap["name"] = instance.name
         entmap["max_shorturls"] = instance.max_shorturls
-        if isinstance(instance, RefreshToken):
+        if isinstance(instance, Plan):
             entmap["pk"] = None if instance.pk.is_undefined() else instance.pk.get_id()
-        elif isinstance(instance, RefreshTokenModel):
+        elif isinstance(instance, PlanModel):
             entmap["pk"] = instance.id if instance.id else None
 
     first_data = {}
@@ -108,36 +107,6 @@ def assert_user_fields(
     assert first_data == second_data, f"{first_data} != {second_data}"
 
 
-@deprecated_func("use serialize_refresh_token function instead")
-def assert_refresh_token_fields(
-    first: RefreshToken | RefreshTokenModel,
-    second: RefreshToken | RefreshTokenModel,
-    ignore_pk: bool = False
-):
-    def define_fields(entmap, instance):
-        entmap["token"] = instance.token
-        entmap["expires_at"] = instance.expires_at
-        entmap["created_at"] = instance.created_at
-        entmap["revoked"] = instance.revoked
-        if isinstance(instance, RefreshToken):
-            entmap["pk"] = None if instance.pk.is_undefined() else instance.pk.get_id()
-            entmap["user_pk"] = instance.user.pk.raw_value
-        elif isinstance(instance, RefreshTokenModel):
-            entmap["pk"] = instance.id if instance.id else None
-            entmap["user_pk"] = str(instance.user_id)
-
-    first_data = {}
-    define_fields(first_data, first)
-    second_data = {}
-    define_fields(second_data, second)
-
-    if ignore_pk:
-        first_data.pop("pk")
-        second_data.pop("pk")
-    
-    assert first_data == second_data, f"{first_data} != {second_data}"
-
-
 @deprecated_func("use serialize_shorturl function instead")
 def assert_shorturl_fields(
     first: ShortURL | ShortURLModel,
@@ -176,9 +145,9 @@ async def serialize_plan(
     plan_dict = {}
     plan_dict["name"] = instance.name
     plan_dict["max_shorturls"] = instance.max_shorturls
-    if isinstance(instance, RefreshToken):
+    if isinstance(instance, Plan):
         plan_dict["pk"] = None if instance.pk.is_undefined() else instance.pk.get_id()
-    elif isinstance(instance, RefreshTokenModel):
+    elif isinstance(instance, PlanModel):
         plan_dict["pk"] = instance.id if instance.id else None
     for field in exclude_fields:
         plan_dict.pop(field)
@@ -208,26 +177,6 @@ async def serialize_user(
     for field in exclude_fields:
         user_dict.pop(field)
     return user_dict
-
-
-async def serialize_refresh_token(
-    instance: RefreshToken | RefreshTokenModel,
-    exclude_fields: list[str] = []
-):
-    token_dict = {}
-    token_dict["token"] = instance.token
-    token_dict["expires_at"] = instance.expires_at
-    token_dict["created_at"] = instance.created_at
-    token_dict["revoked"] = instance.revoked
-    if isinstance(instance, RefreshToken):
-        token_dict["pk"] = None if instance.pk.is_undefined() else instance.pk.get_id()
-        token_dict["user_pk"] = instance.user.pk.raw_value
-    elif isinstance(instance, RefreshTokenModel):
-        token_dict["pk"] = instance.id if instance.id else None
-        token_dict["user_pk"] = str(instance.user_id)
-    for field in exclude_fields:
-        token_dict.pop(field)
-    return token_dict
 
 
 async def serialize_shorturl(
