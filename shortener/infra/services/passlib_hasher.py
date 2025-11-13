@@ -1,7 +1,6 @@
-from shortener.domain.services.password_hasher import PasswordHasherService
-
 from passlib.context import CryptContext
 
+from shortener.domain.services.password_hasher import PasswordHasherService
 from shortener.domain.user.fields.hashed_password import HashedPassword
 
 
@@ -13,4 +12,7 @@ class PasslibPasswordHasher(PasswordHasherService):
         return HashedPassword(self.pwd_context.hash(plain_password))
 
     def verify(self, plain_password: str, hashed_password: str) -> bool:
-        return self.pwd_context.verify(plain_password, hashed_password)
+        try:
+            return self.pwd_context.verify(plain_password, hashed_password)
+        except (ValueError, TypeError):
+            return False
