@@ -6,13 +6,15 @@ from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shortener.adapters.api.v1.error_codes import ApiErrorCode
-from shortener.domain.user import User
+
+from shortener.domain.user import User, UserRepository
+from shortener.domain.plan import Plan
 from shortener.domain.shared.language import Language
-from shortener.infra.db.repositories import SQLAlchemyUserRepository
+
+from shortener.infra.db.models import UserModel
 
 from tests.fixtures import MockSendEmailService
 from tests.fixtures.domain.users import UserFixture
-from tests.utils.entity_helpers import get_persistent_plan
 
 
 @pytest.fixture
@@ -20,7 +22,7 @@ def route(auth_route: str):
     return f"{auth_route}/register"
 
 
-def test_validation_of_user_register_request(client: TestClient, route: str):
+def test_validation_of_register_payload(client: TestClient, route: str):
     response = client.post(
         route, 
         json={
@@ -52,16 +54,18 @@ async def test_response_bad_request_with_plan_non_existent(
 
 @pytest.mark.asyncio
 async def test_response_created_with_valid_data(
-    client: TestClient, route: str, normal_user: User, db_session: AsyncSession
+    client: TestClient,
+    route: str,
+    normal_user: User,
+    persistent_default_plan: Plan,
 ):
-    await get_persistent_plan(db_session, normal_user.plan)
     response = client.post(
         route, 
         json={
             "email": normal_user.email,
             "name": normal_user.name,
             "password": "!@#$Password123",
-            "plan_id": 1
+            "plan_id": persistent_default_plan.pk.get_id()
         }
     )
     assert response.status_code == HTTPStatus.CREATED
@@ -71,20 +75,23 @@ async def test_response_created_with_valid_data(
 
 @pytest.mark.asyncio
 async def test_if_user_is_saved_in_session(
-    client: TestClient, route: str, normal_user: User, db_session: AsyncSession
+    client: TestClient,
+    route: str,
+    normal_user: User,
+    persistent_default_plan: Plan,
+    sqlalchemy_user_repository: UserRepository,
 ):
-    await get_persistent_plan(db_session, normal_user.plan)
-    client.post(
+    response = client.post(
         route,
         json={
             "email": normal_user.email,
             "name": normal_user.name,
             "password": "!@#$Password123",
-            "plan_id": 1
+            "plan_id": persistent_default_plan.pk.get_id()
         }
     )
-    repository = SQLAlchemyUserRepository(db_session)
-    user = await repository.get_by_email(normal_user.email)
+    assert response.status_code == HTTPStatus.CREATED
+    user = await sqlalchemy_user_repository.get_by_email(normal_user.email)
     assert user is not None
     assert user.name == normal_user.name
     assert user.email == normal_user.email
@@ -93,9 +100,11 @@ async def test_if_user_is_saved_in_session(
 
 @pytest.mark.asyncio
 async def test_if_email_is_sent_to_user(
-    client: TestClient, route: str, normal_user: User, db_session: AsyncSession
+    client: TestClient,
+    route: str,
+    normal_user: User,
+    persistent_default_plan: Plan,
 ):
-    await get_persistent_plan(db_session, normal_user.plan)
     client.post(
         route,
         headers={"Accept-Language": Language.PT_BR},
@@ -103,7 +112,7 @@ async def test_if_email_is_sent_to_user(
             "email": normal_user.email,
             "name": normal_user.name,
             "password": "!@#$Password123",
-            "plan_id": 1
+            "plan_id": persistent_default_plan.pk.get_id()
         }
     )
     logs = MockSendEmailService().mock_logs
