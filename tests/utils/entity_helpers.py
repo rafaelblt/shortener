@@ -26,28 +26,6 @@ async def get_persistent_plan(session: AsyncSession, plan: Plan):
     return await repository.add(plan)
 
 
-@deprecated_func("use pesistent user fixtures instead")
-async def get_persistent_user(session: AsyncSession, user: User):
-    plan = user.plan
-    if plan.pk.is_undefined():
-        plan = await get_persistent_plan(session, plan)
-    user.change_plan(plan)
-
-    repository = SQLAlchemyUserRepository(session=session)
-    return await repository.add(user)
-
-
-@deprecated_func("use pesistent shorturls fixtures instead")
-async def get_persistent_shorturl(session: AsyncSession, shorturl: ShortURL):
-    user = shorturl.owner
-    if user.id is None:
-        user = await get_persistent_user(session, user)
-    shorturl.change_owner(user)
-
-    repository = SQLAlchemyShortURLRepository(session=session)
-    return await repository.add(shorturl)
-
-
 @deprecated_func("use serialize_plan function instead")
 def assert_plan_fields(
     first: Plan | PlanModel,
