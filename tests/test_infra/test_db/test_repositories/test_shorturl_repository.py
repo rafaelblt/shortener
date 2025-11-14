@@ -12,7 +12,7 @@ from shortener.domain.shorturl.exceptions import ShortURLNotFoundError
 from shortener.infra.db.models import ShortURLModel
 from shortener.infra.db.repositories import SQLAlchemyShortURLRepository
 
-from tests.utils.entity_helpers import get_persistent_user, assert_shorturl_fields
+from tests.utils.entity_helpers import assert_shorturl_fields
 
 
 @pytest.fixture
