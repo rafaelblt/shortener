@@ -1,5 +1,3 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from shortener.domain.shared.warnings import deprecated_func
 
 from shortener.domain.plan import Plan
@@ -10,20 +8,7 @@ from shortener.infra.db.models import (
     PlanModel,
     UserModel,
     ShortURLModel,
-    RefreshTokenModel
 )
-
-from shortener.infra.db.repositories import (
-    SQLAlchemyPlanRepository,
-    SQLAlchemyUserRepository,
-    SQLAlchemyShortURLRepository,
-)
-
-
-@deprecated_func("use pesistent plan fixtures instead")
-async def get_persistent_plan(session: AsyncSession, plan: Plan):
-    repository = SQLAlchemyPlanRepository(session=session)
-    return await repository.add(plan)
 
 
 @deprecated_func("use serialize_plan function instead")
