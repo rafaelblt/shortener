@@ -4,17 +4,17 @@ import pytest_asyncio
 from datetime import datetime, timezone
 
 from shortener.domain.shared.pagination import PaginatedResult
+from shortener.domain.shared.primarykey import PrimaryKey
 
 from shortener.domain.plan import Plan
 
-from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.domain.user import User
 from shortener.domain.user.fields import Email, Name, HashedPassword, UserStatus
 from shortener.domain.user.exceptions import UserNotFoundError
 
 from shortener.infra.db.repositories import SQLAlchemyUserRepository
 
-from tests.utils.entity_helpers import get_persistent_plan, assert_user_fields
+from tests.utils.entity_helpers import assert_user_fields
 
 
 @pytest_asyncio.fixture
@@ -23,13 +23,15 @@ async def repository(sqlalchemy_user_repository):
 
 
 @pytest.mark.asyncio
-async def test_add(repository: SQLAlchemyUserRepository, normal_user: User):
-    saved_plan = await get_persistent_plan(
-        session=repository.session, plan=normal_user.plan
-    )
-    normal_user.change_plan(saved_plan)
+async def test_add(
+    repository: SQLAlchemyUserRepository,
+    normal_user: User,
+    persistent_default_plan: Plan
+):
+    normal_user.change_plan(persistent_default_plan)
 
     retrieved = await repository.add(normal_user)
+
     assert isinstance(retrieved, User)
     assert retrieved.pk.get_id() == 1
     assert_user_fields(retrieved, normal_user, ignore_pk=True)
@@ -37,12 +39,11 @@ async def test_add(repository: SQLAlchemyUserRepository, normal_user: User):
 
 @pytest.mark.asyncio
 async def test_get_by_pk(
-    repository: SQLAlchemyUserRepository, normal_user: User
+    repository: SQLAlchemyUserRepository,
+    normal_user: User,
+    persistent_default_plan: Plan
 ):
-    saved_plan = await get_persistent_plan(
-        session=repository.session, plan=normal_user.plan
-    )
-    normal_user.change_plan(saved_plan)
+    normal_user.change_plan(persistent_default_plan)
     saved_user = await repository.add(normal_user)
 
     retrieved = await repository.get_by_pk(saved_user.pk)
@@ -51,33 +52,36 @@ async def test_get_by_pk(
     assert_user_fields(retrieved, saved_user)
 
 
+# TODO: improve the test below
 @pytest.mark.asyncio
 async def test_update(
     repository: SQLAlchemyUserRepository, 
     normal_user: User,
-    eco_plan: Plan
+    persistent_default_plan: Plan,
+    persistent_eco_plan: Plan
 ):
-    saved_plan = await get_persistent_plan(
-        session=repository.session, plan=normal_user.plan
-    )
-    normal_user.change_plan(saved_plan)
-
+    # setup: saving the user
+    normal_user.change_plan(persistent_default_plan)
     saved_user = await repository.add(normal_user)
 
-    other_plan = await get_persistent_plan(session=repository.session, plan=eco_plan)
+    # updating saved user fields
     saved_user._email = Email("test.updated.email@email.com")
     saved_user.change_name(Name("Test Updated Name"))
     saved_user.change_hashed_password(HashedPassword("test!new@hashed#password"))
-    saved_user.change_plan(other_plan)
+    saved_user.change_plan(persistent_eco_plan)
     saved_user._status = UserStatus.SUSPENDED
     saved_user._is_superuser = True
     saved_user._created_at = datetime(3000, month=5, day=29, tzinfo=timezone.utc)
     saved_user._last_login = datetime(3000, month=5, day=29, tzinfo=timezone.utc)
 
+    # executing the update repository method
     retrieved = await repository.update(saved_user)
+
+    # asserting the retrieved result
     assert isinstance(retrieved, User)
     assert_user_fields(retrieved, saved_user)
 
+    # asserting the saved user in repository
     updated_user = await repository.get_by_pk(saved_user.pk)
     assert isinstance(updated_user, User)
     assert_user_fields(updated_user, saved_user)
@@ -113,13 +117,11 @@ async def test_get_all_with_no_users(repository: SQLAlchemyUserRepository):
 async def test_get_all_with_users(
     repository: SQLAlchemyUserRepository, 
     normal_user: User,
-    old_user: User
+    old_user: User,
+    persistent_default_plan: Plan
 ):
-    saved_plan = await get_persistent_plan(
-        session=repository.session, plan=normal_user.plan
-    )
-    normal_user.change_plan(saved_plan)
-    old_user.change_plan(saved_plan)
+    normal_user.change_plan(persistent_default_plan)
+    old_user.change_plan(persistent_default_plan)
 
     await repository.add(normal_user)
     await repository.add(old_user)
@@ -138,12 +140,11 @@ async def test_get_all_with_users(
 
 @pytest.mark.asyncio
 async def test_get_by_email(
-    repository: SQLAlchemyUserRepository, normal_user: User
+    repository: SQLAlchemyUserRepository,
+    normal_user: User,
+    persistent_default_plan: Plan
 ):
-    saved_plan = await get_persistent_plan(
-        session=repository.session, plan=normal_user.plan
-    )
-    normal_user.change_plan(saved_plan)
+    normal_user.change_plan(persistent_default_plan)
     saved_user = await repository.add(normal_user)
 
     retrieved = await repository.get_by_email(saved_user.email)
@@ -158,13 +159,11 @@ async def test_list_paginated(
     normal_user: User,
     super_user: User,
     old_user: User,
+    persistent_default_plan: Plan,
 ):
-    saved_plan = await get_persistent_plan(
-        session=repository.session, plan=normal_user.plan
-    )
-    normal_user.change_plan(saved_plan)
-    super_user.change_plan(saved_plan)
-    old_user.change_plan(saved_plan)
+    normal_user.change_plan(persistent_default_plan)
+    super_user.change_plan(persistent_default_plan)
+    old_user.change_plan(persistent_default_plan)
 
     await repository.add(normal_user)
     await repository.add(super_user)
@@ -184,12 +183,11 @@ async def test_list_paginated(
 
 @pytest.mark.asyncio
 async def test_exists_by_email_true(
-    repository: SQLAlchemyUserRepository, normal_user: User
+    repository: SQLAlchemyUserRepository,
+    normal_user: User,
+    persistent_default_plan: Plan
 ):
-    saved_plan = await get_persistent_plan(
-        session=repository.session, plan=normal_user.plan
-    )
-    normal_user.change_plan(saved_plan)
+    normal_user.change_plan(persistent_default_plan)
     saved_user = await repository.add(normal_user)
 
     retrieved = await repository.exists_by_email(saved_user.email)
@@ -206,12 +204,11 @@ async def test_exists_by_email_false(
 
 @pytest.mark.asyncio
 async def test_delete_by_pk(
-    repository: SQLAlchemyUserRepository, normal_user: User
+    repository: SQLAlchemyUserRepository,
+    normal_user: User,
+    persistent_default_plan: Plan
 ):
-    saved_plan = await get_persistent_plan(
-        session=repository.session, plan=normal_user.plan
-    )
-    normal_user.change_plan(saved_plan)
+    normal_user.change_plan(persistent_default_plan)
     saved_user = await repository.add(normal_user)
 
     retrieved = await repository.delete_by_pk(saved_user.pk)
