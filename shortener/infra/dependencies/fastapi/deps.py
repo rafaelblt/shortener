@@ -38,6 +38,7 @@ from .services import (
 )
 from .use_cases import (
     make_create_shorturl_for_user_use_case,
+    make_read_shorturl_of_user_use_case,
     make_create_shorturl_use_case,
     make_delete_shorturl_use_case,
     make_get_shorturl_use_case,
@@ -77,6 +78,7 @@ class FastApiDependencies:
     refresh_login_use_case: DependsClass = field(default_factory=wrap_with_depends(make_refresh_login_use_case))
     create_shorturl_use_case: DependsClass = field(default_factory=wrap_with_depends(make_create_shorturl_use_case))
     create_shorturl_for_user_use_case: DependsClass = field(default_factory=wrap_with_depends(make_create_shorturl_for_user_use_case))
+    read_shorturl_of_user_use_case: DependsClass = field(default_factory=wrap_with_depends(make_read_shorturl_of_user_use_case))
     delete_shorturl_use_case: DependsClass = field(default_factory=wrap_with_depends(make_delete_shorturl_use_case))
     get_shorturl_use_case: DependsClass = field(default_factory=wrap_with_depends(make_get_shorturl_use_case))
     list_shorturl_use_case: DependsClass = field(default_factory=wrap_with_depends(make_list_shorturl_use_case))

@@ -12,6 +12,7 @@ from .use_cases import (
     LoginUserUseCaseDependency,
     RefreshLoginUseCaseDependency,
     RegisterUserUseCaseDependency,
+    ReadShortURLOfUserUseCaseDependency,
     ResolveShortURLUseCaseDependency,
     UpdateShortURLUseCaseDependency,
     VerifyEmailUseCaseDependency

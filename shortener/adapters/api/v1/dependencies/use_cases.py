@@ -8,6 +8,7 @@ from shortener.use_cases import (
     DeleteShortURLUseCase,
     GetShortURLUseCase,
     ListShortURLUseCase,
+    ReadShortURLOfUserUseCase,
     ResolveShortURLUseCase,
     UpdateShortURLUseCase,
     VerifyEmailUseCase,
@@ -15,7 +16,6 @@ from shortener.use_cases import (
     RefreshLoginUseCase,
     RegisterUserUseCase,
 )
-
 
 
 CreateShortURLForUserUseCaseDependency = Annotated[
@@ -35,6 +35,9 @@ ListShortURLUseCaseDependency = Annotated[
 ]
 ResolveShortURLUseCaseDependency = Annotated[
     ResolveShortURLUseCase, fastapi_deps.resolve_shorturl_use_case
+]
+ReadShortURLOfUserUseCaseDependency = Annotated[
+    ReadShortURLOfUserUseCase, fastapi_deps.read_shorturl_of_user_use_case
 ]
 UpdateShortURLUseCaseDependency = Annotated[
     UpdateShortURLUseCase, fastapi_deps.update_shorturl_use_case
