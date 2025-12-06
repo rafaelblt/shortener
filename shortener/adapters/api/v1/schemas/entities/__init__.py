@@ -1,2 +1,2 @@
 from .user import PublicUserSchema
-from .shorturl import PublicShortURLSchema
+from .shorturl import PublicShortURLSchema, ShortURLPrivateSchema
