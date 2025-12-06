@@ -1,6 +1,7 @@
 from http import HTTPStatus
 from typing import Any, TypedDict
 
+from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 
 from shortener.adapters.api.v1.schemas.responses.error_response import ErrorResponse
@@ -86,3 +87,42 @@ class FastAPIRouteResponses:
             status_code=status_code,
             content=content
         )
+
+
+class RouteResponseSpec:
+    def __init__(self):
+        self._data = {}
+
+    def add_json_response(
+        self,
+        status_code: HTTPStatus,
+        description: str,
+        model: BaseModel.__class__,
+        examples: dict[str, dict],
+    ):
+        self._data[status_code] = {
+            "description": description,
+            "model": model,
+            "examples": examples,
+        }
+
+    def get_schema(self):
+        schema = {}
+        for status_code, data in self._data.items():
+            schema[status_code] = {
+                "description": data["description"],
+                "model": data["model"],
+                "content": {
+                    "application/json": {
+                        "examples": data["examples"]
+                    }
+                }
+            }
+        return schema
+    
+    def get_example(
+        self,
+        status_code: HTTPStatus,
+        title: str,
+    ):
+        return self._data[status_code]["examples"][title]
