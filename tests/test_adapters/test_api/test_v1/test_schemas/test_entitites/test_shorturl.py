@@ -12,3 +12,5 @@ def test_public_shorturl_from_domain(normal_shorturl: ShortURL):
     assert retrieved.slug == normal_shorturl.slug
     assert retrieved.original_url == normal_shorturl.original_url
     assert retrieved.created_at == normal_shorturl.created_at
+
+# TODO: test_shorturl_private_schema

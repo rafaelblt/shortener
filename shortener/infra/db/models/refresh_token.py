@@ -30,8 +30,8 @@ class RefreshTokenModel(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: utc_now(), nullable=False
     )
-    user_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     user = relationship(
         "UserModel", back_populates="refresh_tokens", lazy="selectin"

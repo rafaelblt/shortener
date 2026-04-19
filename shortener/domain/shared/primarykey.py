@@ -11,6 +11,16 @@ class PrimaryKey:
     _type: PkType
     
     @classmethod
+    def create_pk(cls, value: str):
+        if not isinstance(value, str):
+            raise TypeError("PrimaryKey value must be str.")
+        if len(value) < 1:
+            raise ValueError("PrimaryKey value cannot be empty.")
+        pk = cls()
+        pk._value = value
+        return pk
+
+    @classmethod
     def create_pk_id(cls, id: int):
         if not isinstance(id, int):
             raise TypeError("PrimaryKey ID must be int")

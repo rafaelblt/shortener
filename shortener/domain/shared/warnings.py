@@ -2,7 +2,7 @@ import warnings
 import functools
 
 
-def deprecated_func(reason: str, category=UserWarning):
+def deprecated_func(reason: str, category=DeprecationWarning):
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):

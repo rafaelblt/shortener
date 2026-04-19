@@ -41,6 +41,7 @@ class SQLAlchemyRefreshAuthTokenService(AuthTokenService):
         )
 
     async def decode_token(self, token: str) -> User:
+        # TODO: add RefreshTokenModel.revoked == False in where statement?
         refresh_token = await self.session.scalar(
             select(RefreshTokenModel).where(RefreshTokenModel.token == token)
         )
