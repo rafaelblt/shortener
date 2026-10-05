@@ -11,7 +11,7 @@ from shortener.domain.user.exceptions import UserStatusInvalidToVerifyEmailError
 
 from shortener.use_cases import VerifyEmailUseCase
 
-from tests.fixtures import MockAuthTokenService
+from tests.fixtures.mocks import MockAuthTokenService
 
 
 def get_email_verification_token(user: User): ...

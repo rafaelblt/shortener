@@ -13,7 +13,7 @@ from shortener.domain.shared.language import Language
 
 from shortener.infra.db.models import UserModel
 
-from tests.fixtures import MockSendEmailService
+from tests.fixtures.mocks import MockSendEmailService
 from tests.fixtures.domain.users import UserFixture
 
 

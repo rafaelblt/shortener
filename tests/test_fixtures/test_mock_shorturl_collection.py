@@ -2,7 +2,7 @@ import pytest
 
 from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.domain.shorturl.shorturl import ShortURL
-from tests.fixtures import MockShortURLCollection
+from tests.fixtures.mocks import MockShortURLCollection
 
 
 @pytest.fixture

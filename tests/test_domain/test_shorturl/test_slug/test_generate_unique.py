@@ -1,6 +1,6 @@
 import pytest
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 from shortener.domain.shorturl import ShortURLRepository
 from shortener.domain.shorturl.fields.slug import (
@@ -12,15 +12,16 @@ from shortener.domain.shorturl.utils import generate_unique_slug
 
 
 @pytest.fixture
-def repository(mock_shorturl_repository):
-    return mock_shorturl_repository
+def repository():
+    repository = Mock(spec=ShortURLRepository)
+    repository.exists_by_slug = AsyncMock(return_value=False)
+    return repository
 
 
 @pytest.fixture
-def slug_always_exists_repo(mock_shorturl_repository):
-    repo = mock_shorturl_repository
-    repo.exists_by_slug = AsyncMock(return_value=True)
-    return repo
+def slug_always_exists_repo(repository):
+    repository.exists_by_slug = AsyncMock(return_value=True)
+    return repository
 
 
 @pytest.mark.asyncio

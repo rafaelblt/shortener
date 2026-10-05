@@ -9,7 +9,7 @@ from shortener.domain.shared.token import Token
 from shortener.domain.shared.datetime_utils import utc_now
 from shortener.domain.user import User
 
-from tests.fixtures import MockAuthTokenService
+from tests.fixtures.mocks import MockAuthTokenService
 from tests.utils.date_helpers import assert_datetime
 
 

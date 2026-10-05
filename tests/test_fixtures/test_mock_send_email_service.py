@@ -1,6 +1,6 @@
 import pytest
 
-from tests.fixtures import MockSendEmailService
+from tests.fixtures.mocks import MockSendEmailService
 
 from shortener.domain.services.send_email import SendEmailService
 

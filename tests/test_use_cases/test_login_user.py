@@ -11,7 +11,8 @@ from shortener.domain.user.exceptions import (
 from shortener.domain.user.user import User
 from shortener.use_cases.login_user import LoginUserUseCase
 
-from tests.fixtures import UserFixture, MockAuthTokenService
+from tests.fixtures.domain.users import UserFixture
+from tests.fixtures.mocks import MockAuthTokenService
 
 
 @pytest.fixture

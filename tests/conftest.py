@@ -1,8 +1,5 @@
 import os
-import warnings
 
-
-warnings.filterwarnings("ignore", category=DeprecationWarning, module="passlib")
 
 environment = {
     "API_BASE_URL": "https://testshort.com",
@@ -15,5 +12,3 @@ environment = {
 
 for var, value in environment.items():
     os.environ.setdefault(var, value)
-
-from tests.fixtures import *

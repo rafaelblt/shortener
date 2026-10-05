@@ -5,7 +5,7 @@ from datetime import timedelta
 from shortener.domain.services.token import Token, TokenService, TokenInvalidError, TokenExpiredError
 from shortener.domain.shared.datetime_utils import utc_now
 
-from tests.fixtures import MockTokenService
+from tests.fixtures.mocks import MockTokenService
 
 
 @pytest.fixture

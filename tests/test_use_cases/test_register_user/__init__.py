@@ -18,7 +18,7 @@ from shortener.domain.user.exceptions import EmailAlreadyExistsError
 
 from shortener.use_cases import RegisterUserUseCase
 
-from tests.fixtures import MockSendEmailService, MockAuthTokenService
+from tests.fixtures.mocks import MockSendEmailService, MockAuthTokenService
 
 
 @pytest.fixture

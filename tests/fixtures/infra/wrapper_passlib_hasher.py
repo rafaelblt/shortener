@@ -1,7 +1,7 @@
 import pytest
 
 from shortener.infra.services.passlib_hasher import PasslibPasswordHasher
-from tests.fixtures import MockPasswordHasherService
+from tests.fixtures.mocks import MockPasswordHasherService
 
 
 class WrapperPasslibPasswordHasher(PasslibPasswordHasher):

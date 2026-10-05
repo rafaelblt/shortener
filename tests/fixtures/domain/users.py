@@ -9,7 +9,10 @@ from shortener.domain.shorturl.shorturl import ShortURL
 from shortener.domain.user import User
 from shortener.domain.user.fields import *
 
-from tests.fixtures import MockPasswordHasherService
+from tests.fixtures.mocks.password_hasher import (
+    MockPasswordHasherService,
+    mock_password_hasher
+)
 
 
 class UserMockData(TypedDict):

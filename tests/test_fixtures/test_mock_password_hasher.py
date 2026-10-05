@@ -2,7 +2,7 @@ import pytest
 
 from shortener.domain.services.password_hasher import PasswordHasherService
 
-from tests.fixtures import MockPasswordHasherService
+from tests.fixtures.mocks import MockPasswordHasherService
 
 
 @pytest.fixture

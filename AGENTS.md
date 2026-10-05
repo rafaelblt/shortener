@@ -17,7 +17,6 @@ The scope is `shortener/domain/` and its tests: `tests/test_domain/` and the fix
 - Don't fix `use_cases`, `adapters` or `infra`. Problems in those layers are ignored until we reach them.
 - Changes to the domain will break the upper layers. That is expected: don't patch them to keep up.
 - This phase is verified with `poetry run task test_domain`. The full suite is not a criterion.
-- The domain tests load `tests/conftest.py`, which currently imports fixtures from every layer. When that stops the domain tests from running, isolate the domain fixtures instead of fixing the upper layers.
 - The domain's rules, what is leaving it and its known problems are in [docs/domain.md](docs/domain.md). If a rule is unclear, ask instead of making one up.
 
 ## Principles
@@ -58,6 +57,7 @@ Tests are a priority and follow the same principles: simple, organized, readable
 - Every feature comes with tests covering the happy path, the error cases and the boundaries (for example, a slug's minimum and maximum length).
 - One behavior per test. The test's name says which behavior, and in which situation.
 - The structure of `tests/` mirrors that of `shortener/`.
+- Each layer's test directory has its own `conftest.py`, which loads fixtures (from `tests/fixtures/<layer>/`) only from its own layer and the layers below it. That way, a broken upper layer never stops a lower layer's tests from running. `tests/conftest.py` never imports project code.
 - Deterministic tests: never rely on the clock, randomness or execution order without controlling them.
 - Test behavior, not implementation details.
 - Fixing a bug starts with a test that reproduces it.

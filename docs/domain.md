@@ -145,8 +145,7 @@ Verified in the current code. Fixing them is part of this phase.
 6. **`Slug` accepts values that aren't strings.** `Slug(12345)` silently becomes `"12345"`.
 7. **Duplicated validation.** `URL` and `OriginalURL` repeat the same check in `__new__` and in `validate()`.
 8. **Inconsistencies in `shorturl.py`.** It uses `datetime.now(tz=timezone.utc)` instead of `utc_now()`, and ends with an unused import of `User`.
-9. **The domain tests depend on every layer.** `tests/conftest.py` imports fixtures from `adapters` and `infra`. Once `User` is removed, the domain tests stop loading.
-10. **Clock-dependent test.** `test_record_visit` compares times down to the second and can fail when a second ticks over.
+9. **Clock-dependent test.** `test_record_visit` compares times down to the second and can fail when a second ticks over.
 
 ## Open questions
 
