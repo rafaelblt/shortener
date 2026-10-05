@@ -14,7 +14,7 @@ shortener/domain/
 └── shared/     pieces used by more than one concept
 ```
 
-The domain currently also has `user/`, `plan/`, `refresh_token/` and `services/`, which are leaving. See [What leaves the domain](#what-leaves-the-domain).
+The domain currently also has `user/`, `plan/` and `services/`, which are leaving. See [What leaves the domain](#what-leaves-the-domain).
 
 ## ShortURL
 
@@ -128,8 +128,7 @@ Concepts that don't belong in the shortener and will be removed:
 | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
 | `user/`: `User`, `Name`, `PlainPassword`, `HashedPassword`, `UserStatus`, `ShortURLCollection`, `EmailAlreadyExistsValidator` | The service doesn't know the user. The owner is only a reference. |
 | `plan/`: `Plan`, the limit of short URLs per user                                        | Plans are outside the service.                                           |
-| `refresh_token/`                                                                         | Authentication is outside the service.                                   |
-| `services/`: emails, templates, password hashing, token generation                       | Same as above. JWT validation, when it arrives, belongs to the upper layers. |
+| `services/`: emails, templates, password hashing, token generation                       | Authentication is outside the service. JWT validation, when it arrives, belongs to the upper layers. |
 | `shared/email.py`, `shared/language.py`, `shared/token.py`                               | They only exist for users, emails, translations and tokens.              |
 | `shared/warnings.py`                                                                     | Not a domain rule. It only marks functions as deprecated.                |
 
