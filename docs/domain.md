@@ -14,7 +14,7 @@ shortener/domain/
 └── shared/     pieces used by more than one concept
 ```
 
-The domain currently also has `plan/`, which is leaving. See [What leaves the domain](#what-leaves-the-domain).
+Some modules in `shared/` are still leaving. See [What leaves the domain](#what-leaves-the-domain).
 
 ## ShortURL
 
@@ -126,7 +126,6 @@ Concepts that don't belong in the shortener and will be removed:
 
 | Code                                                                                     | Reason                                                                   |
 | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| `plan/`: `Plan`, the limit of short URLs per user                                        | Plans are outside the service.                                           |
 | `shared/email.py`, `shared/language.py`, `shared/token.py`                               | They only exist for users, emails, translations and tokens.              |
 | `shared/warnings.py`                                                                     | Not a domain rule. It only marks functions as deprecated.                |
 
