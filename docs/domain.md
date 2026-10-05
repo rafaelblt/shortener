@@ -14,6 +14,10 @@ shortener/domain/
 └── shared/     pieces used by more than one concept
 ```
 
+## Time
+
+The domain never reads the clock. Every operation that depends on the current moment receives it as a `now` argument, in UTC: `ShortURL.create()`, `record_visit()`, `is_expired()`, `is_available()` and `resolve()`. This keeps the domain deterministic and leaves the source of time to the use cases.
+
 ## ShortURL
 
 `shorturl/shorturl.py`
@@ -26,9 +30,9 @@ shortener/domain/
 | `owner_id`         | `OwnerID`          | Reference to the owner. See [Owner](#owner).         |
 | `status`           | `ShortURLStatus`   | Starts as `ACTIVE`. See [Status](#status).           |
 | `visit_count`      | `int`              | Number of visits, never negative. Starts at 0.       |
-| `created_at`       | `datetime`         | In UTC. Defaults to the moment of creation.          |
+| `created_at`       | `datetime`         | In UTC. The `now` given to `ShortURL.create()`.      |
 | `expires_at`       | `datetime \| None` | In UTC. `None` means it never expires.               |
-| `last_accessed_at` | `datetime \| None` | In UTC. Moment of the last visit.                    |
+| `last_accessed_at` | `datetime \| None` | In UTC. The `now` of the last visit.                 |
 
 A new short URL is created with `ShortURL.create()`, which generates its ID. The constructor takes every field and is meant for rebuilding a short URL that already exists, such as one loaded from the database.
 
@@ -38,12 +42,12 @@ The fields are read-only, and changes go through the methods:
 
 | Method                   | Effect                                                                                  |
 | ------------------------ | --------------------------------------------------------------------------------------- |
-| `resolve()`              | Returns the `original_url` if the short URL is available. Otherwise, raises the status error. |
-| `record_visit()`         | Adds a visit and updates `last_accessed_at`. Doesn't check the status.                  |
+| `resolve(now)`           | Returns the `original_url` if the short URL is available at `now`. Otherwise, raises the matching error. |
+| `record_visit(now)`      | Adds a visit and sets `last_accessed_at` to `now`. Doesn't check availability.          |
+| `is_expired(now)`        | Whether `expires_at` has been reached at `now`. See [Expiration](#expiration).          |
+| `is_available(now)`      | Whether the status is `ACTIVE` and the short URL hasn't expired at `now`.               |
 | `enable()` / `disable()` | Switch between `ACTIVE` and `DEACTIVATED`.                                              |
 | `change_slug()`, `change_original_url()`, `change_owner_id()` | Replace the field, checking its type.              |
-
-The `is_available` property is `True` only when the status is `ACTIVE`.
 
 ### IDs
 
@@ -94,11 +98,17 @@ The destination URL must have a scheme and a host, and use `https`. `OriginalURL
 | ------------- | ---------------------- | ---------------------------------------------------------- |
 | `ACTIVE`      | Available              | Default on creation, or `enable()` from `DEACTIVATED`      |
 | `DEACTIVATED` | Turned off by the owner | `disable()` from `ACTIVE`                                 |
-| `EXPIRED`     | Past `expires_at`      | On construction, if `expires_at` has already passed        |
+| `EXPIRED`     | Marked as expired      | Only through the constructor. Reaching `expires_at` doesn't change the status. |
 | `SUSPENDED`   | Suspended              | Only through the constructor. No method leads to it.       |
 | `BANNED`      | Banned                 | Only through the constructor. No method leads to it.       |
 
 `enable()` on an `ACTIVE` short URL and `disable()` on a `DEACTIVATED` one do nothing. In the `EXPIRED`, `SUSPENDED` and `BANNED` statuses, both raise the matching error, and so does `resolve()`.
+
+### Expiration
+
+A short URL with an `expires_at` stops working once that moment is reached: `is_expired(now)` is true when `expires_at <= now`. From then on, `resolve(now)` raises `ShortURLExpiredError` and `is_available(now)` is false, even though the status is still `ACTIVE`.
+
+Expiration is checked when the short URL is used, against the given `now`, so it never depends on a status being updated in time.
 
 ### Repository
 
@@ -114,7 +124,7 @@ The destination URL must have a scheme and a host, and use `https`. `OriginalURL
 | --------------------- | --------------------------------------------------------------------------------- |
 | `entity_id.py`        | `EntityID`, the identity of an entity: an immutable UUID, compared by type and value |
 | `valueobjects/url.py` | `URL`, a string validated to have a scheme and a host                             |
-| `datetime_utils.py`   | `utc_now()`, `is_utc()` and `ensure_utc()`                                        |
+| `datetime_utils.py`   | `is_utc()` and `ensure_utc()`                                                     |
 | `pagination.py`       | `PaginatedResult`, a page of results with total, offset and limit                 |
 | `exceptions.py`       | `DomainError`, `ValidationError` and `MultiValidationError`                       |
 | `validator.py`        | `Validator` and `MultiFieldValidator`                                             |
@@ -125,26 +135,24 @@ The destination URL must have a scheme and a host, and use `https`. `OriginalURL
 | ------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | `ValidationError` and subclasses            | An input value is invalid. Carries `field`, `value` and a stable `code` the API can return to the client: `SLUG_INVALID`, `SLUG_FORBIDDEN`, `SLUG_TOO_SHORT`, `SLUG_TOO_LONG`, `SLUG_ALREADY_EXISTS`, `URL_INVALID`. |
 | `ShortURLAvailabilityError` and subclasses  | The short URL exists but isn't available: `Deactivated`, `Expired`, `Suspended` or `Banned`.   |
-| `ShortURLAttributeTypeError` and `ValueError` | Wrong type or value given to the constructor. A programming error, not a client input error. |
+| `ShortURLAttributeTypeError` and `ValueError` | Wrong type or value given to the constructor or a method. A programming error, not a client input error. |
 | `ShortURLRepositoryError` and subclasses    | Persistence failures, raised by the repository implementations.                                |
 
 ## Known problems
 
 Verified in the current code. Fixing them is part of this phase.
 
-1. **Expiration is only evaluated on construction.** A short URL created with `expires_at` in the future stays `ACTIVE` after that moment passes, and `resolve()` keeps returning the URL.
-2. **The slug length error messages are swapped.** `ShortURLSlugTooLongError` says "must be at least 30" and `ShortURLSlugTooShortError` says "must be at most 3".
-3. **`generate_unique_slug()` makes one attempt more** than `max_attempts`.
-4. **`Slug` accepts values that aren't strings.** `Slug(12345)` silently becomes `"12345"`.
-5. **Duplicated validation.** `URL` and `OriginalURL` repeat the same check in `__new__` and in `validate()`.
-6. **Inconsistency in `shorturl.py`.** It uses `datetime.now(tz=timezone.utc)` instead of `utc_now()`.
-7. **Clock-dependent test.** `test_record_visit` compares times down to the second and can fail when a second ticks over.
+1. **The slug length error messages are swapped.** `ShortURLSlugTooLongError` says "must be at least 30" and `ShortURLSlugTooShortError` says "must be at most 3".
+2. **`generate_unique_slug()` makes one attempt more** than `max_attempts`.
+3. **`Slug` accepts values that aren't strings.** `Slug(12345)` silently becomes `"12345"`.
+4. **Duplicated validation.** `URL` and `OriginalURL` repeat the same check in `__new__` and in `validate()`.
 
 ## Open questions
 
 Decisions to make during this phase:
 
 - **`SUSPENDED` and `BANNED`.** They are moderation statuses, and no domain method leads to them. Should they stay?
+- **`EXPIRED`.** Expiration is now checked against `expires_at` when the short URL is used, so nothing sets this status anymore. Should it stay?
 - **`change_owner_id()`.** Does it make sense to transfer a short URL to another owner?
 - **Owner operations in the repository**, such as listing or deleting an owner's short URLs. They should come in when the use cases need them.
 - **Abstractions to revisit for simplicity:** `DomainEntity` (`get_fields()` is only used in tests), `MultiFieldValidator` (unused and untested), `Validator`, `ShortURLValidator`, and the overlapping repository errors (`ShortURLNotFoundError`, `ShortURLNotFoundInDatabaseError`, `ShortURLDeletionNotFoundError`).

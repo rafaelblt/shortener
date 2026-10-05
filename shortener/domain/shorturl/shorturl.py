@@ -1,6 +1,6 @@
 from typing import Optional
 
-from datetime import datetime, timezone
+from datetime import datetime
 
 from shortener.domain.domain_entity import DomainEntity
 from shortener.domain.shared.datetime_utils import is_utc
@@ -39,14 +39,12 @@ class ShortURL(DomainEntity):
         slug: Slug,
         original_url: OriginalURL,
         owner_id: OwnerID,
+        created_at: datetime,
         status: ShortURLStatus = ShortURLStatus.ACTIVE,
         visit_count: int = 0,
-        created_at: Optional[datetime] = None,
         expires_at: Optional[datetime] = None,
         last_accessed_at: Optional[datetime] = None,
     ):
-        created_at = created_at or datetime.now(tz=timezone.utc)
-
         self.validate_id(id)
         self.validate_slug(slug)
         self.validate_original_url(original_url)
@@ -67,14 +65,13 @@ class ShortURL(DomainEntity):
         self._expires_at = expires_at
         self._last_accessed_at = last_accessed_at
 
-        self._update_status()
-
     @classmethod
     def create(
         cls,
         slug: Slug,
         original_url: OriginalURL,
         owner_id: OwnerID,
+        now: datetime,
         expires_at: Optional[datetime] = None,
     ) -> "ShortURL":
         return cls(
@@ -82,6 +79,7 @@ class ShortURL(DomainEntity):
             slug=slug,
             original_url=original_url,
             owner_id=owner_id,
+            created_at=now,
             expires_at=expires_at,
         )
 
@@ -123,10 +121,11 @@ class ShortURL(DomainEntity):
         return self._last_accessed_at
 
 
-    @property
-    def is_available(self) -> bool:
-        """Returns True if the ShortURL is available to be accessed."""
-        return self.status == ShortURLStatus.ACTIVE
+    def is_expired(self, now: datetime) -> bool:
+        return self.expires_at is not None and self.expires_at <= now
+
+    def is_available(self, now: datetime) -> bool:
+        return self.status == ShortURLStatus.ACTIVE and not self.is_expired(now)
 
 
     @staticmethod
@@ -225,25 +224,25 @@ class ShortURL(DomainEntity):
         self._owner_id = new_owner_id
 
 
-    def record_visit(self):
-        """
-        Registers a new visit to the ShortURL.
-        Increments the visit count and updates the last accessed timestamp.
-        """
+    def record_visit(self, now: datetime):
+        self.validate_last_accessed_at(now)
         self._visit_count = self.visit_count + 1
-        self._last_accessed_at = datetime.now(tz=timezone.utc)
+        self._last_accessed_at = now
     
-    def resolve(self) -> URL:
+    def resolve(self, now: datetime) -> URL:
         """
-        Returns the original_url if the ShortURL is available to be resolved.
+        Returns the original_url if the ShortURL is available at the given moment.
 
         Raises:
             ShortURLSuspendedError: If the ShortURL status is SUSPENDED.
             ShortURLDeactivatedError: If the ShortURL status is DEACTIVATED.
-            ShortURLExpiredError: If the ShortURL status is EXPIRED.
+            ShortURLExpiredError: If the ShortURL status is EXPIRED, or if 
+                expires_at has been reached.
             ShortURLBannedError: If the ShortURL status is BANNED.
         """
         if self.status == ShortURLStatus.ACTIVE:
+            if self.is_expired(now):
+                raise ShortURLExpiredError()
             return self.original_url
         elif self.status == ShortURLStatus.SUSPENDED:
             raise ShortURLSuspendedError()
@@ -279,17 +278,6 @@ class ShortURL(DomainEntity):
             raise ShortURLExpiredError()
         if self.status == ShortURLStatus.BANNED:
             raise ShortURLBannedError()
-
-    def _update_status(self):
-        if self.status == ShortURLStatus.ACTIVE and self._check_expiration():
-            self._status = ShortURLStatus.EXPIRED
-
-    def _check_expiration(self):
-        return (
-            isinstance(self.expires_at, datetime) and
-            self.expires_at <= datetime.now(tz=timezone.utc)
-        )
-
 
     def __repr__(self):
         return (

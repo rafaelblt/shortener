@@ -1,10 +1,15 @@
 import pytest
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 from shortener.domain.shorturl.shorturl import ShortURL
 from shortener.domain.shorturl.fields import OriginalURL, Slug, ShortURLID, OwnerID
+
+
+@pytest.fixture
+def now():
+    return datetime(year=2026, month=1, day=1, tzinfo=timezone.utc)
 
 
 @pytest.fixture
@@ -13,20 +18,22 @@ def owner_id():
 
 
 @pytest.fixture
-def normal_shorturl(owner_id):
+def normal_shorturl(owner_id, now):
     return ShortURL.create(
         slug=Slug("lorem-ipsum-website"),
         original_url=OriginalURL("https://lorem.makeyoursite.com"),
         owner_id=owner_id,
+        now=now,
     )
 
 
 @pytest.fixture
-def other_shorturl(owner_id):
+def other_shorturl(owner_id, now):
     return ShortURL.create(
         slug=Slug("other-network"),
         original_url=OriginalURL("https://others.com"),
         owner_id=owner_id,
+        now=now,
     )
 
 
@@ -42,19 +49,37 @@ def old_shorturl(owner_id):
 
 
 @pytest.fixture
-def expired_shorturl(owner_id):
+def expired_shorturl(owner_id, now):
     return ShortURL.create(
         slug=Slug("this-is-expired"),
         original_url=OriginalURL("https://expiration.com"),
         owner_id=owner_id,
-        expires_at=datetime(year=2000, month=1, day=1, tzinfo=timezone.utc)
+        now=now - timedelta(days=2),
+        expires_at=now - timedelta(days=1),
     )
 
 
 @pytest.fixture
-def biggest_shorturl(owner_id):
+def biggest_shorturl(owner_id, now):
     return ShortURL.create(
         slug=Slug("the-top-one"),
         original_url=OriginalURL("https://bigbig.com"),
         owner_id=owner_id,
+        now=now,
+    )
+
+
+@pytest.fixture
+def expires_at(now):
+    return now + timedelta(hours=1)
+
+
+@pytest.fixture
+def expiring_shorturl(owner_id, now, expires_at):
+    return ShortURL.create(
+        slug=Slug("expires-soon"),
+        original_url=OriginalURL("https://soon.com"),
+        owner_id=owner_id,
+        now=now,
+        expires_at=expires_at,
     )

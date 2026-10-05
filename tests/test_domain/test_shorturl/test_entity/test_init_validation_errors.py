@@ -21,6 +21,7 @@ def required_fields(normal_shorturl):
         "slug": normal_shorturl.slug,
         "original_url": normal_shorturl.original_url,
         "owner_id": normal_shorturl.owner_id,
+        "created_at": normal_shorturl.created_at,
     }
 
 
@@ -82,6 +83,7 @@ def test_visit_count_invalid(required_fields: dict):
 
 
 def test_created_at_invalid(required_fields: dict): 
+    required_fields.pop("created_at")
     created_at = 1992
     e = get_type_error_message(
         attr="created_at", type_expected="datetime", got=created_at

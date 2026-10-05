@@ -8,10 +8,6 @@ def is_utc(dt: datetime) -> bool:
     )
 
 
-def utc_now() -> datetime:
-    return datetime.now(tz=timezone.utc)
-
-
 def ensure_utc(dt: datetime) -> datetime:
     if dt.tzinfo is None:
         return dt.replace(tzinfo=timezone.utc)

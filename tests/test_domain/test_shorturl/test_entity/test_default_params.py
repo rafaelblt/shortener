@@ -1,5 +1,5 @@
 import pytest
-from datetime import datetime, timezone
+from datetime import datetime
 
 from shortener.domain.shorturl import ShortURL
 from shortener.domain.shorturl.fields import ShortURLStatus, ShortURLID, OwnerID
@@ -42,13 +42,8 @@ def test_visit_count(shorturl: ShortURL):
     assert shorturl.visit_count == 0
 
 
-def test_created_at(shorturl: ShortURL):
-    created_at = shorturl.created_at
-    expected = datetime.now(tz=timezone.utc)
-    strftime = "%d/%m/%Y, %H:%M:%S"
-
-    assert isinstance(created_at, datetime)
-    assert created_at.strftime(strftime) == expected.strftime(strftime)
+def test_created_at_is_the_given_now(shorturl: ShortURL, now: datetime):
+    assert shorturl.created_at == now
 
 
 def test_expires_at(shorturl: ShortURL):
