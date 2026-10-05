@@ -113,7 +113,6 @@ The destination URL must have a scheme and a host, and use `https`. `OriginalURL
 | Module                | Contents                                                                          |
 | --------------------- | --------------------------------------------------------------------------------- |
 | `entity_id.py`        | `EntityID`, the identity of an entity: an immutable UUID, compared by type and value |
-| `primarykey.py`       | `PrimaryKey`, the identity of entities: an integer ID, or undefined until persisted |
 | `valueobjects/url.py` | `URL`, a string validated to have a scheme and a host                             |
 | `datetime_utils.py`   | `utc_now()`, `is_utc()` and `ensure_utc()`                                        |
 | `pagination.py`       | `PaginatedResult`, a page of results with total, offset and limit                 |
@@ -135,12 +134,11 @@ Verified in the current code. Fixing them is part of this phase.
 
 1. **Expiration is only evaluated on construction.** A short URL created with `expires_at` in the future stays `ACTIVE` after that moment passes, and `resolve()` keeps returning the URL.
 2. **The slug length error messages are swapped.** `ShortURLSlugTooLongError` says "must be at least 30" and `ShortURLSlugTooShortError` says "must be at most 3".
-3. **`PrimaryKey.create_pk()` creates a key with no type.** Reading `pk_type` from it raises `AttributeError`.
-4. **`generate_unique_slug()` makes one attempt more** than `max_attempts`.
-5. **`Slug` accepts values that aren't strings.** `Slug(12345)` silently becomes `"12345"`.
-6. **Duplicated validation.** `URL` and `OriginalURL` repeat the same check in `__new__` and in `validate()`.
-7. **Inconsistency in `shorturl.py`.** It uses `datetime.now(tz=timezone.utc)` instead of `utc_now()`.
-8. **Clock-dependent test.** `test_record_visit` compares times down to the second and can fail when a second ticks over.
+3. **`generate_unique_slug()` makes one attempt more** than `max_attempts`.
+4. **`Slug` accepts values that aren't strings.** `Slug(12345)` silently becomes `"12345"`.
+5. **Duplicated validation.** `URL` and `OriginalURL` repeat the same check in `__new__` and in `validate()`.
+6. **Inconsistency in `shorturl.py`.** It uses `datetime.now(tz=timezone.utc)` instead of `utc_now()`.
+7. **Clock-dependent test.** `test_record_visit` compares times down to the second and can fail when a second ticks over.
 
 ## Open questions
 
