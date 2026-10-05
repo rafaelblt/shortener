@@ -43,6 +43,15 @@ The fields are read-only, and changes go through the methods:
 
 The `is_available` property is `True` only when the status is `ACTIVE`.
 
+### IDs
+
+`shorturl/fields/shorturl_id.py` and `shorturl/fields/owner_id.py`
+
+`ShortURLID` and `OwnerID` are `EntityID`s (see [Shared](#shared)). Two IDs are only equal when they have the same type and value, so a `ShortURLID` never equals an `OwnerID`.
+
+- `ShortURLID.generate()` creates a new ID from a UUIDv7. UUIDv7 values are ordered by creation time, which suits database indexes better than random UUIDs.
+- An `OwnerID` is never generated here: owners are created outside the service (see [Owner](#owner)).
+
 ### Owner
 
 Every short URL has an owner: **there are no anonymous short URLs**.
