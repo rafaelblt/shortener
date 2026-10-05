@@ -126,7 +126,6 @@ Concepts that don't belong in the shortener and will be removed:
 
 | Code                                                                                     | Reason                                                                   |
 | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| `shared/email.py`, `shared/language.py`, `shared/token.py`                               | They only exist for users, emails, translations and tokens.              |
 | `shared/warnings.py`                                                                     | Not a domain rule. It only marks functions as deprecated.                |
 
 ## Known problems

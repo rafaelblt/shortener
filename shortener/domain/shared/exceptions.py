@@ -17,15 +17,3 @@ class ValidationError(DomainError):
 class MultiValidationError(Exception): 
     def __init__(self, errors: list[ValidationError]):
         self.errors = errors
-
-
-class EmailValidationError(ValidationError):
-    def __init__(self, value: str, code: str, message: str):
-        super().__init__(value=value, field="email", code=code, message=message)
-
-class EmailInvalidError(EmailValidationError):
-    code = "INVALID_EMAIL"
-
-    def __init__(self, email: str):
-        msg = "The provided email is invalid."
-        super().__init__(value=email, code=self.code, message=msg)
