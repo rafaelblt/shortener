@@ -102,6 +102,7 @@ The destination URL must have a scheme and a host, and use `https`. `OriginalURL
 
 | Module                | Contents                                                                          |
 | --------------------- | --------------------------------------------------------------------------------- |
+| `entity_id.py`        | `EntityID`, the identity of an entity: an immutable UUID, compared by type and value |
 | `primarykey.py`       | `PrimaryKey`, the identity of entities: an integer ID, or undefined until persisted |
 | `valueobjects/url.py` | `URL`, a string validated to have a scheme and a host                             |
 | `datetime_utils.py`   | `utc_now()`, `is_utc()` and `ensure_utc()`                                        |
