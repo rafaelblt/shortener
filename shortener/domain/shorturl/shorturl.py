@@ -3,11 +3,10 @@ from typing import Optional
 from datetime import datetime, timezone
 
 from shortener.domain.domain_entity import DomainEntity
-from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.domain.shared.datetime_utils import is_utc
 from shortener.domain.shared.valueobjects.url import URL
 
-from .fields import Slug, OriginalURL, ShortURLStatus
+from .fields import Slug, OriginalURL, ShortURLStatus, ShortURLID, OwnerID
 from .exceptions import (
     ShortURLAvailabilityError,
     ShortURLExpiredError,
@@ -23,10 +22,10 @@ class ShortURL(DomainEntity):
     @staticmethod
     def get_fields() -> list[str]:
         return [
-            "pk",
+            "id",
             "slug",
             "original_url",
-            "owner_pk",
+            "owner_id",
             "status",
             "visit_count",
             "created_at",
@@ -36,34 +35,32 @@ class ShortURL(DomainEntity):
 
     def __init__(
         self,
-        original_url: OriginalURL,
+        id: ShortURLID,
         slug: Slug,
-        pk: Optional[PrimaryKey] = None,
-        owner_pk: Optional[PrimaryKey] = None,
+        original_url: OriginalURL,
+        owner_id: OwnerID,
         status: ShortURLStatus = ShortURLStatus.ACTIVE,
         visit_count: int = 0,
         created_at: Optional[datetime] = None,
         expires_at: Optional[datetime] = None,
         last_accessed_at: Optional[datetime] = None,
     ):
-        pk = pk or PrimaryKey.create_pk_undefined()
-        owner_pk = owner_pk or PrimaryKey.create_pk_undefined()
         created_at = created_at or datetime.now(tz=timezone.utc)
 
-        self.validate_pk(pk)
+        self.validate_id(id)
         self.validate_slug(slug)
         self.validate_original_url(original_url)
-        self.validate_owner_pk(owner_pk)
+        self.validate_owner_id(owner_id)
         self.validate_status(status)
         self.validate_visit_count(visit_count)
         self.validate_created_at(created_at)
         self.validate_expires_at(expires_at)
         self.validate_last_accessed_at(last_accessed_at)
 
-        self._pk = pk
+        self._id = id
         self._slug = slug
         self._original_url = original_url
-        self._owner_pk = owner_pk
+        self._owner_id = owner_id
         self._status = status
         self._visit_count = visit_count
         self._created_at = created_at
@@ -72,10 +69,26 @@ class ShortURL(DomainEntity):
 
         self._update_status()
 
+    @classmethod
+    def create(
+        cls,
+        slug: Slug,
+        original_url: OriginalURL,
+        owner_id: OwnerID,
+        expires_at: Optional[datetime] = None,
+    ) -> "ShortURL":
+        return cls(
+            id=ShortURLID.generate(),
+            slug=slug,
+            original_url=original_url,
+            owner_id=owner_id,
+            expires_at=expires_at,
+        )
+
 
     @property
-    def pk(self):
-        return self._pk
+    def id(self):
+        return self._id
 
     @property
     def slug(self):
@@ -86,8 +99,8 @@ class ShortURL(DomainEntity):
         return self._original_url
 
     @property
-    def owner_pk(self):
-        return self._owner_pk
+    def owner_id(self):
+        return self._owner_id
 
     @property
     def status(self):
@@ -117,10 +130,10 @@ class ShortURL(DomainEntity):
 
 
     @staticmethod
-    def validate_pk(pk):
-        if not isinstance(pk, PrimaryKey):
+    def validate_id(id):
+        if not isinstance(id, ShortURLID):
             raise ShortURLAttributeTypeError(
-                attr="pk", type_expected="PrimaryKey", got=pk
+                attr="id", type_expected="ShortURLID", got=id
             )
 
     @staticmethod
@@ -138,10 +151,10 @@ class ShortURL(DomainEntity):
             )
 
     @staticmethod
-    def validate_owner_pk(owner_pk):
-        if not isinstance(owner_pk, PrimaryKey):
+    def validate_owner_id(owner_id):
+        if not isinstance(owner_id, OwnerID):
             raise ShortURLAttributeTypeError(
-                attr="owner_pk", type_expected="PrimaryKey", got=owner_pk
+                attr="owner_id", type_expected="OwnerID", got=owner_id
             )
 
     @staticmethod
@@ -207,9 +220,9 @@ class ShortURL(DomainEntity):
         self.validate_original_url(new_url)
         self._original_url = new_url
 
-    def change_owner_pk(self, new_owner_pk: PrimaryKey):
-        self.validate_owner_pk(new_owner_pk)
-        self._owner_pk = new_owner_pk
+    def change_owner_id(self, new_owner_id: OwnerID):
+        self.validate_owner_id(new_owner_id)
+        self._owner_id = new_owner_id
 
 
     def record_visit(self):
@@ -280,5 +293,5 @@ class ShortURL(DomainEntity):
 
     def __repr__(self):
         return (
-            f"<ShortURL pk={self.pk}, slug={self.slug}, original_url={self.original_url}>"
+            f"<ShortURL id={self.id}, slug={self.slug}, original_url={self.original_url}>"
         )

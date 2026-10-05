@@ -1,17 +1,24 @@
 import pytest
 from datetime import datetime, timezone
+from uuid import UUID
 
-from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.domain.shorturl import ShortURL
-from shortener.domain.shorturl.fields import Slug, OriginalURL, ShortURLStatus
+from shortener.domain.shorturl.fields import (
+    Slug, OriginalURL, ShortURLStatus, ShortURLID, OwnerID
+)
+
+
+ID_VALUE = UUID("0199b2c4-7a3e-7c1a-9b5e-3f2d4c6b8a10")
+OWNER_ID_VALUE = UUID("0199b2c4-7a3e-7c1a-9b5e-3f2d4c6b8a11")
 
 
 @pytest.fixture
 def shorturl():
     return ShortURL(
-        pk=PrimaryKey.create_pk_id(1),
+        id=ShortURLID(ID_VALUE),
         slug=Slug("i-am-slug"),
         original_url=OriginalURL("https://google.com"),
+        owner_id=OwnerID(OWNER_ID_VALUE),
         status=ShortURLStatus.SUSPENDED,
         visit_count=5,
         created_at=datetime(year=2002, month=2, day=2, tzinfo=timezone.utc),
@@ -24,8 +31,8 @@ def test_instance(shorturl: ShortURL):
     assert isinstance(shorturl, ShortURL)
 
 
-def test_pk(shorturl: ShortURL):
-    assert shorturl.pk.get_id() == 1
+def test_id(shorturl: ShortURL):
+    assert shorturl.id == ShortURLID(ID_VALUE)
 
 
 def test_slug(shorturl: ShortURL):
@@ -36,6 +43,10 @@ def test_slug(shorturl: ShortURL):
 def test_original_url(shorturl: ShortURL):
     assert isinstance(shorturl.original_url, OriginalURL)
     assert shorturl.original_url == "https://google.com"
+
+
+def test_owner_id(shorturl: ShortURL):
+    assert shorturl.owner_id == OwnerID(OWNER_ID_VALUE)
 
 
 def test_status(shorturl: ShortURL):

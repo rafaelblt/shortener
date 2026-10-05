@@ -20,15 +20,17 @@ shortener/domain/
 
 | Field              | Type               | Rule                                                 |
 | ------------------ | ------------------ | ---------------------------------------------------- |
-| `pk`               | `PrimaryKey`       | Identity. Undefined until the short URL is persisted. |
+| `id`               | `ShortURLID`       | Identity. See [IDs](#ids).                           |
 | `slug`             | `Slug`             | The short path. See [Slug](#slug).                   |
 | `original_url`     | `OriginalURL`      | The destination. See [OriginalURL](#originalurl).    |
-| `owner_pk`         | `PrimaryKey`       | Reference to the owner. See [Owner](#owner).         |
+| `owner_id`         | `OwnerID`          | Reference to the owner. See [Owner](#owner).         |
 | `status`           | `ShortURLStatus`   | Starts as `ACTIVE`. See [Status](#status).           |
 | `visit_count`      | `int`              | Number of visits, never negative. Starts at 0.       |
 | `created_at`       | `datetime`         | In UTC. Defaults to the moment of creation.          |
 | `expires_at`       | `datetime \| None` | In UTC. `None` means it never expires.               |
 | `last_accessed_at` | `datetime \| None` | In UTC. Moment of the last visit.                    |
+
+A new short URL is created with `ShortURL.create()`, which generates its ID. The constructor takes every field and is meant for rebuilding a short URL that already exists, such as one loaded from the database.
 
 The constructor checks the type of every field (`ShortURLAttributeTypeError`) and rejects a negative `visit_count` and datetimes outside UTC (`ValueError`).
 
@@ -39,7 +41,7 @@ The fields are read-only, and changes go through the methods:
 | `resolve()`              | Returns the `original_url` if the short URL is available. Otherwise, raises the status error. |
 | `record_visit()`         | Adds a visit and updates `last_accessed_at`. Doesn't check the status.                  |
 | `enable()` / `disable()` | Switch between `ACTIVE` and `DEACTIVATED`.                                              |
-| `change_slug()`, `change_original_url()`, `change_owner_pk()` | Replace the field, checking its type.              |
+| `change_slug()`, `change_original_url()`, `change_owner_id()` | Replace the field, checking its type.              |
 
 The `is_available` property is `True` only when the status is `ACTIVE`.
 
@@ -50,6 +52,7 @@ The `is_available` property is `True` only when the status is `ACTIVE`.
 `ShortURLID` and `OwnerID` are `EntityID`s (see [Shared](#shared)). Two IDs are only equal when they have the same type and value, so a `ShortURLID` never equals an `OwnerID`.
 
 - `ShortURLID.generate()` creates a new ID from a UUIDv7. UUIDv7 values are ordered by creation time, which suits database indexes better than random UUIDs.
+- The ID of a short URL belongs to the domain: it exists from the moment the short URL is created, and never comes from the database.
 - An `OwnerID` is never generated here: owners are created outside the service (see [Owner](#owner)).
 
 ### Owner
@@ -60,10 +63,8 @@ The owner is only a reference. The domain stores the owner's identifier, but kno
 
 Two things happen outside the domain, but shape this rule:
 
-- The owner's identity comes from a JWT validated in the upper layers. The client never provides the owner directly.
+- The owner's identity comes from a JWT validated in the upper layers, whose subject is the owner's UUID. The client never provides the owner directly.
 - When a user is deleted, an external event will trigger the deletion of their short URLs. Until the event is processed, those short URLs keep working with an owner that no longer exists. This window is accepted because it doesn't harm the shortener.
-
-> **Current divergence:** `owner_pk` is optional and, when omitted, stays undefined, which allows anonymous short URLs.
 
 ### Slug
 
@@ -103,7 +104,7 @@ The destination URL must have a scheme and a host, and use `https`. `OriginalURL
 
 `shorturl/repository.py`
 
-`ShortURLRepository` is the persistence interface the domain defines and the infrastructure implements. Its methods are asynchronous: `add`, `update`, `get_all`, `get_by_pk`, `get_by_slug`, `list_paginated`, `delete_by_pk` and `exists_by_slug`.
+`ShortURLRepository` is the persistence interface the domain defines and the infrastructure implements. Its methods are asynchronous: `add`, `update`, `get_all`, `get_by_id`, `get_by_slug`, `list_paginated`, `delete_by_id` and `exists_by_slug`.
 
 ## Shared
 
@@ -133,21 +134,19 @@ The destination URL must have a scheme and a host, and use `https`. `OriginalURL
 Verified in the current code. Fixing them is part of this phase.
 
 1. **Expiration is only evaluated on construction.** A short URL created with `expires_at` in the future stays `ACTIVE` after that moment passes, and `resolve()` keeps returning the URL.
-2. **Anonymous short URLs are possible**, because `owner_pk` is optional (see [Owner](#owner)).
-3. **The slug length error messages are swapped.** `ShortURLSlugTooLongError` says "must be at least 30" and `ShortURLSlugTooShortError` says "must be at most 3".
-4. **`PrimaryKey.create_pk()` creates a key with no type.** Reading `pk_type` from it raises `AttributeError`.
-5. **`generate_unique_slug()` makes one attempt more** than `max_attempts`.
-6. **`Slug` accepts values that aren't strings.** `Slug(12345)` silently becomes `"12345"`.
-7. **Duplicated validation.** `URL` and `OriginalURL` repeat the same check in `__new__` and in `validate()`.
-8. **Inconsistency in `shorturl.py`.** It uses `datetime.now(tz=timezone.utc)` instead of `utc_now()`.
-9. **Clock-dependent test.** `test_record_visit` compares times down to the second and can fail when a second ticks over.
+2. **The slug length error messages are swapped.** `ShortURLSlugTooLongError` says "must be at least 30" and `ShortURLSlugTooShortError` says "must be at most 3".
+3. **`PrimaryKey.create_pk()` creates a key with no type.** Reading `pk_type` from it raises `AttributeError`.
+4. **`generate_unique_slug()` makes one attempt more** than `max_attempts`.
+5. **`Slug` accepts values that aren't strings.** `Slug(12345)` silently becomes `"12345"`.
+6. **Duplicated validation.** `URL` and `OriginalURL` repeat the same check in `__new__` and in `validate()`.
+7. **Inconsistency in `shorturl.py`.** It uses `datetime.now(tz=timezone.utc)` instead of `utc_now()`.
+8. **Clock-dependent test.** `test_record_visit` compares times down to the second and can fail when a second ticks over.
 
 ## Open questions
 
 Decisions to make during this phase:
 
 - **`SUSPENDED` and `BANNED`.** They are moderation statuses, and no domain method leads to them. Should they stay?
-- **Format of the owner reference.** It is currently an integer-ID `PrimaryKey`, but the identifier that comes from the JWT (`sub`) is a string. `PrimaryKey.create_pk()` seems to have started this change.
-- **`change_owner_pk()`.** Does it make sense to transfer a short URL to another owner?
+- **`change_owner_id()`.** Does it make sense to transfer a short URL to another owner?
 - **Owner operations in the repository**, such as listing or deleting an owner's short URLs. They should come in when the use cases need them.
-- **Abstractions to revisit for simplicity:** `DomainEntity` (`get_fields()` is only used in tests), `MultiFieldValidator` (unused and untested), `Validator`, `ShortURLValidator`, and the overlapping repository errors (`ShortURLNotFoundError`, `ShortURLNotFoundInDatabaseError`, `ShortURLDeletionNotFoundError`, `ShortURLInvalidToUpdateError`).
+- **Abstractions to revisit for simplicity:** `DomainEntity` (`get_fields()` is only used in tests), `MultiFieldValidator` (unused and untested), `Validator`, `ShortURLValidator`, and the overlapping repository errors (`ShortURLNotFoundError`, `ShortURLNotFoundInDatabaseError`, `ShortURLDeletionNotFoundError`).

@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 
-from shortener.domain.shared.primarykey import PrimaryKey
 from shortener.domain.shared.pagination import PaginatedResult
 
 from shortener.domain.shorturl import ShortURL
+from shortener.domain.shorturl.fields import ShortURLID
 from shortener.domain.shorturl.exceptions import ShortURLNotFoundError
 
 
@@ -37,7 +37,6 @@ class ShortURLRepository(ABC):
             ShortURL: The updated entity.
         
         Raises:
-            ShortURLInvalidToUpdateError: ShortURL without id.
             ShortURLNotFoundError: ShortURL not found in database.
         """
         pass
@@ -53,12 +52,12 @@ class ShortURLRepository(ABC):
         pass
 
     @abstractmethod
-    async def get_by_pk(self, pk: PrimaryKey) -> ShortURL | None:
+    async def get_by_id(self, id: ShortURLID) -> ShortURL | None:
         """
-        Retrieves a ShortURL by its pk.
+        Retrieves a ShortURL by its id.
 
         Args:
-            pk (PrimaryKey): The ShortURL pk.
+            id (ShortURLID): The ShortURL id.
 
         Returns:
             Optional[ShortURL]: The entity object or None if not found.
@@ -93,12 +92,12 @@ class ShortURLRepository(ABC):
         pass
 
     @abstractmethod
-    async def delete_by_pk(self, pk: PrimaryKey) -> ShortURL:
+    async def delete_by_id(self, id: ShortURLID) -> ShortURL:
         """
         Delete a existent ShortURL from the database.
 
         Args:
-            pk (PrimaryKey): The pk of ShortURL to be deleted.
+            id (ShortURLID): The id of the ShortURL to be deleted.
         
         Returns:
             ShortURL: The deleted entity.

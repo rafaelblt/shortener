@@ -17,8 +17,10 @@ def valid_url():
 @pytest.fixture
 def required_fields(normal_shorturl):
     return {
+        "id": normal_shorturl.id,
         "slug": normal_shorturl.slug,
-        "original_url": normal_shorturl.original_url
+        "original_url": normal_shorturl.original_url,
+        "owner_id": normal_shorturl.owner_id,
     }
 
 
@@ -45,11 +47,20 @@ def test_original_url_invalid(required_fields: dict):
         ShortURL(**required_fields, original_url=url) # type: ignore
     
 
-def test_pk_invalid(required_fields: dict):
-    pk = 1
-    e = get_type_error_message(attr="pk", type_expected="PrimaryKey", got=pk)
+def test_id_invalid(required_fields: dict):
+    required_fields.pop("id")
+    id = 1
+    e = get_type_error_message(attr="id", type_expected="ShortURLID", got=id)
     with pytest.raises(TypeError, match=e):
-        ShortURL(**required_fields, pk=pk) # type: ignore
+        ShortURL(**required_fields, id=id) # type: ignore
+
+
+def test_owner_id_invalid(required_fields: dict):
+    required_fields.pop("owner_id")
+    owner_id = 1
+    e = get_type_error_message(attr="owner_id", type_expected="OwnerID", got=owner_id)
+    with pytest.raises(TypeError, match=e):
+        ShortURL(**required_fields, owner_id=owner_id) # type: ignore
 
 
 def test_status_invalid(required_fields: dict): 

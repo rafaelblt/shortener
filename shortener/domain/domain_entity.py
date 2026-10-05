@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from shortener.domain.shared.primarykey import PrimaryKey
+from shortener.domain.shared.entity_id import EntityID
 
 
 class DomainEntity(ABC):
@@ -15,5 +15,5 @@ class DomainEntity(ABC):
 
     @property
     @abstractmethod
-    def pk(self) -> PrimaryKey:
+    def id(self) -> EntityID:
         pass

@@ -1,9 +1,9 @@
 import pytest
 
-from shortener.domain.shared.primarykey import PrimaryKey
+from uuid import UUID
 
 from shortener.domain.shorturl.exceptions import ShortURLAttributeTypeError
-from shortener.domain.shorturl.fields import Slug, OriginalURL
+from shortener.domain.shorturl.fields import Slug, OriginalURL, OwnerID
 from shortener.domain.shorturl import ShortURL
 
 
@@ -29,13 +29,13 @@ def test_change_original_url_raises_error(normal_shorturl: ShortURL):
         normal_shorturl.change_original_url("a") # type: ignore
 
 
-def test_change_owner_pk(normal_shorturl: ShortURL):
-    new_owner_pk = PrimaryKey.create_pk_id(1)
-    normal_shorturl.change_owner_pk(new_owner_pk)
-    assert normal_shorturl.owner_pk == new_owner_pk
+def test_change_owner_id(normal_shorturl: ShortURL):
+    new_owner_id = OwnerID(UUID("0199b2c4-7a3e-7c1a-9b5e-3f2d4c6b8a11"))
+    normal_shorturl.change_owner_id(new_owner_id)
+    assert normal_shorturl.owner_id == new_owner_id
 
 
-def test_change_owner_pk_raises_error(normal_shorturl: ShortURL):
+def test_change_owner_id_raises_error(normal_shorturl: ShortURL):
     with pytest.raises(ShortURLAttributeTypeError):
-        normal_shorturl.change_owner_pk("a") # type: ignore
+        normal_shorturl.change_owner_id("a") # type: ignore
 
