@@ -77,4 +77,4 @@ poetry run pytest tests/test_domain --cov=shortener/domain --cov-report=term-mis
 ## Documentation
 
 - [AGENTS.md](AGENTS.md): principles and conventions for code, tests, comments and commits.
-- [docs/domain.md](docs/domain.md): the domain's concepts and rules, what is leaving it and its known problems.
+- [docs/domain.md](docs/domain.md): the domain's concepts and rules, known problems and open questions.

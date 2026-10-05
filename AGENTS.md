@@ -17,7 +17,7 @@ The scope is `shortener/domain/` and its tests: `tests/test_domain/` and the fix
 - Don't fix `use_cases`, `adapters` or `infra`. Problems in those layers are ignored until we reach them.
 - Changes to the domain will break the upper layers. That is expected: don't patch them to keep up.
 - This phase is verified with `poetry run task test_domain`. The full suite is not a criterion.
-- The domain's rules, what is leaving it and its known problems are in [docs/domain.md](docs/domain.md). If a rule is unclear, ask instead of making one up.
+- The domain's rules, known problems and open questions are in [docs/domain.md](docs/domain.md). If a rule is unclear, ask instead of making one up.
 
 ## Principles
 

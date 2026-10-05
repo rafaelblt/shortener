@@ -14,8 +14,6 @@ shortener/domain/
 └── shared/     pieces used by more than one concept
 ```
 
-Some modules in `shared/` are still leaving. See [What leaves the domain](#what-leaves-the-domain).
-
 ## ShortURL
 
 `shorturl/shorturl.py`
@@ -119,14 +117,6 @@ The destination URL must have a scheme and a host, and use `https`. `OriginalURL
 | `ShortURLAvailabilityError` and subclasses  | The short URL exists but isn't available: `Deactivated`, `Expired`, `Suspended` or `Banned`.   |
 | `ShortURLAttributeTypeError` and `ValueError` | Wrong type or value given to the constructor. A programming error, not a client input error. |
 | `ShortURLRepositoryError` and subclasses    | Persistence failures, raised by the repository implementations.                                |
-
-## What leaves the domain
-
-Concepts that don't belong in the shortener and will be removed:
-
-| Code                                                                                     | Reason                                                                   |
-| ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| `shared/warnings.py`                                                                     | Not a domain rule. It only marks functions as deprecated.                |
 
 ## Known problems
 
