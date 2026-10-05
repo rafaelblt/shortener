@@ -282,9 +282,3 @@ class ShortURL(DomainEntity):
         return (
             f"<ShortURL pk={self.pk}, slug={self.slug}, original_url={self.original_url}>"
         )
-
-
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from shortener.domain.user import User

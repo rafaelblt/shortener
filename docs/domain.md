@@ -14,7 +14,7 @@ shortener/domain/
 └── shared/     pieces used by more than one concept
 ```
 
-The domain currently also has `user/`, `plan/` and `services/`, which are leaving. See [What leaves the domain](#what-leaves-the-domain).
+The domain currently also has `plan/` and `services/`, which are leaving. See [What leaves the domain](#what-leaves-the-domain).
 
 ## ShortURL
 
@@ -126,7 +126,6 @@ Concepts that don't belong in the shortener and will be removed:
 
 | Code                                                                                     | Reason                                                                   |
 | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| `user/`: `User`, `Name`, `PlainPassword`, `HashedPassword`, `UserStatus`, `ShortURLCollection`, `EmailAlreadyExistsValidator` | The service doesn't know the user. The owner is only a reference. |
 | `plan/`: `Plan`, the limit of short URLs per user                                        | Plans are outside the service.                                           |
 | `services/`: emails, templates, password hashing, token generation                       | Authentication is outside the service. JWT validation, when it arrives, belongs to the upper layers. |
 | `shared/email.py`, `shared/language.py`, `shared/token.py`                               | They only exist for users, emails, translations and tokens.              |
@@ -143,7 +142,7 @@ Verified in the current code. Fixing them is part of this phase.
 5. **`generate_unique_slug()` makes one attempt more** than `max_attempts`.
 6. **`Slug` accepts values that aren't strings.** `Slug(12345)` silently becomes `"12345"`.
 7. **Duplicated validation.** `URL` and `OriginalURL` repeat the same check in `__new__` and in `validate()`.
-8. **Inconsistencies in `shorturl.py`.** It uses `datetime.now(tz=timezone.utc)` instead of `utc_now()`, and ends with an unused import of `User`.
+8. **Inconsistency in `shorturl.py`.** It uses `datetime.now(tz=timezone.utc)` instead of `utc_now()`.
 9. **Clock-dependent test.** `test_record_visit` compares times down to the second and can fail when a second ticks over.
 
 ## Open questions
