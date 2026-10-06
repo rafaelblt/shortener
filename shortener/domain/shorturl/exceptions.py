@@ -56,7 +56,7 @@ class ShortURLInvalidURLError(ShortURLValidationError):
     def __init__(self, url: str):
         self.url = url
         msg = "URL must be a valid https url."
-        super().__init__(value=url, field="original_url", code=self.code, message=msg)
+        super().__init__(value=url, field="target_url", code=self.code, message=msg)
 
 
 # - REPOSITORY EXCEPTIONS

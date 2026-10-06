@@ -24,7 +24,7 @@ def test_record_visit_rejects_a_datetime_outside_utc(normal_shorturl: ShortURL):
 
 
 def test_resolve(normal_shorturl: ShortURL, now: datetime):
-    assert normal_shorturl.resolve(now) == normal_shorturl.original_url
+    assert normal_shorturl.resolve(now) == normal_shorturl.target_url
 
 
 def test_resolve_raises_deactivated_error(normal_shorturl: ShortURL, now: datetime):
@@ -41,6 +41,6 @@ def test_resolve_raises_expired_error(expired_shorturl: ShortURL, now: datetime)
 def test_resolve_raises_expired_error_once_expires_at_is_reached(
     expiring_shorturl: ShortURL, now: datetime, expires_at: datetime
 ):
-    assert expiring_shorturl.resolve(now) == expiring_shorturl.original_url
+    assert expiring_shorturl.resolve(now) == expiring_shorturl.target_url
     with pytest.raises(ShortURLExpiredError):
         expiring_shorturl.resolve(expires_at)

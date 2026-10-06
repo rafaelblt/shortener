@@ -30,8 +30,8 @@ def test_slug(shorturl: ShortURL):
     assert shorturl.slug == "lorem-ipsum-website"
 
 
-def test_original_url(shorturl: ShortURL):
-    assert shorturl.original_url == "https://lorem.makeyoursite.com"
+def test_target_url(shorturl: ShortURL):
+    assert shorturl.target_url == "https://lorem.makeyoursite.com"
 
 
 def test_status(shorturl: ShortURL):

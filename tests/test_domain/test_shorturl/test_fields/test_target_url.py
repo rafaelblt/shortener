@@ -39,6 +39,13 @@ def test_new_target_url_that_cannot_be_parsed_raises_error():
     assert e.value.url == value
 
 
+def test_new_target_url_error_belongs_to_target_url_field():
+    with pytest.raises(ShortURLInvalidURLError) as e:
+        TargetURL("http://example.com")
+    assert e.value.field == "target_url"
+    assert e.value.code == "URL_INVALID"
+
+
 def test_validate_target_url_returns_none_for_valid_value():
     assert TargetURL.validate_target_url("https://example.com") is None
 

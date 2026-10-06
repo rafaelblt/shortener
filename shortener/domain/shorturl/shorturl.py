@@ -23,7 +23,7 @@ class ShortURL(DomainEntity):
         return [
             "id",
             "slug",
-            "original_url",
+            "target_url",
             "owner_id",
             "status",
             "visit_count",
@@ -36,7 +36,7 @@ class ShortURL(DomainEntity):
         self,
         id: ShortURLID,
         slug: Slug,
-        original_url: TargetURL,
+        target_url: TargetURL,
         owner_id: OwnerID,
         created_at: datetime,
         status: ShortURLStatus = ShortURLStatus.ACTIVE,
@@ -46,7 +46,7 @@ class ShortURL(DomainEntity):
     ):
         self.validate_id(id)
         self.validate_slug(slug)
-        self.validate_original_url(original_url)
+        self.validate_target_url(target_url)
         self.validate_owner_id(owner_id)
         self.validate_status(status)
         self.validate_visit_count(visit_count)
@@ -56,7 +56,7 @@ class ShortURL(DomainEntity):
 
         self._id = id
         self._slug = slug
-        self._original_url = original_url
+        self._target_url = target_url
         self._owner_id = owner_id
         self._status = status
         self._visit_count = visit_count
@@ -68,7 +68,7 @@ class ShortURL(DomainEntity):
     def create(
         cls,
         slug: Slug,
-        original_url: TargetURL,
+        target_url: TargetURL,
         owner_id: OwnerID,
         now: datetime,
         expires_at: Optional[datetime] = None,
@@ -76,7 +76,7 @@ class ShortURL(DomainEntity):
         return cls(
             id=ShortURLID.generate(),
             slug=slug,
-            original_url=original_url,
+            target_url=target_url,
             owner_id=owner_id,
             created_at=now,
             expires_at=expires_at,
@@ -92,8 +92,8 @@ class ShortURL(DomainEntity):
         return self._slug
 
     @property
-    def original_url(self):
-        return self._original_url
+    def target_url(self):
+        return self._target_url
 
     @property
     def owner_id(self):
@@ -142,10 +142,10 @@ class ShortURL(DomainEntity):
             )
 
     @staticmethod
-    def validate_original_url(original_url):
-        if not isinstance(original_url, TargetURL):
+    def validate_target_url(target_url):
+        if not isinstance(target_url, TargetURL):
             raise ShortURLAttributeTypeError(
-                attr="original_url", type_expected="TargetURL", got=original_url
+                attr="target_url", type_expected="TargetURL", got=target_url
             )
 
     @staticmethod
@@ -214,9 +214,9 @@ class ShortURL(DomainEntity):
         self.validate_slug(new_slug)
         self._slug = new_slug
 
-    def change_original_url(self, new_url: TargetURL):
-        self.validate_original_url(new_url)
-        self._original_url = new_url
+    def change_target_url(self, new_target_url: TargetURL):
+        self.validate_target_url(new_target_url)
+        self._target_url = new_target_url
 
     def change_owner_id(self, new_owner_id: OwnerID):
         self.validate_owner_id(new_owner_id)
@@ -230,7 +230,7 @@ class ShortURL(DomainEntity):
     
     def resolve(self, now: datetime) -> TargetURL:
         """
-        Returns the original_url if the ShortURL is available at the given moment.
+        Returns the target_url if the ShortURL is available at the given moment.
 
         Raises:
             ShortURLSuspendedError: If the ShortURL status is SUSPENDED.
@@ -242,7 +242,7 @@ class ShortURL(DomainEntity):
         if self.status == ShortURLStatus.ACTIVE:
             if self.is_expired(now):
                 raise ShortURLExpiredError()
-            return self.original_url
+            return self.target_url
         elif self.status == ShortURLStatus.SUSPENDED:
             raise ShortURLSuspendedError()
         elif self.status == ShortURLStatus.DEACTIVATED:
@@ -280,5 +280,5 @@ class ShortURL(DomainEntity):
 
     def __repr__(self):
         return (
-            f"<ShortURL id={self.id}, slug={self.slug}, original_url={self.original_url}>"
+            f"<ShortURL id={self.id}, slug={self.slug}, target_url={self.target_url}>"
         )

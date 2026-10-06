@@ -18,15 +18,15 @@ def test_change_slug_raises_error(normal_shorturl: ShortURL):
         normal_shorturl.change_slug("a") # type: ignore
 
 
-def test_change_original_url(normal_shorturl: ShortURL):
-    new_original_url = TargetURL("https://new.com")
-    normal_shorturl.change_original_url(new_original_url)
-    assert normal_shorturl.original_url == new_original_url
+def test_change_target_url(normal_shorturl: ShortURL):
+    new_target_url = TargetURL("https://new.com")
+    normal_shorturl.change_target_url(new_target_url)
+    assert normal_shorturl.target_url == new_target_url
 
 
-def test_change_original_url_raises_error(normal_shorturl: ShortURL):
+def test_change_target_url_raises_error(normal_shorturl: ShortURL):
     with pytest.raises(ShortURLAttributeTypeError):
-        normal_shorturl.change_original_url("a") # type: ignore
+        normal_shorturl.change_target_url("a") # type: ignore
 
 
 def test_change_owner_id(normal_shorturl: ShortURL):

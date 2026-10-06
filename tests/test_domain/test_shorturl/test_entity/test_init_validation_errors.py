@@ -19,7 +19,7 @@ def required_fields(normal_shorturl):
     return {
         "id": normal_shorturl.id,
         "slug": normal_shorturl.slug,
-        "original_url": normal_shorturl.original_url,
+        "target_url": normal_shorturl.target_url,
         "owner_id": normal_shorturl.owner_id,
         "created_at": normal_shorturl.created_at,
     }
@@ -40,12 +40,12 @@ def test_slug_invalid(required_fields: dict):
         ShortURL(**required_fields, slug=slug) # type: ignore
 
 
-def test_original_url_invalid(required_fields: dict):
-    required_fields.pop("original_url")
+def test_target_url_invalid(required_fields: dict):
+    required_fields.pop("target_url")
     url = "https://github.com"
-    e = get_type_error_message(attr="original_url", type_expected="TargetURL", got=url)
+    e = get_type_error_message(attr="target_url", type_expected="TargetURL", got=url)
     with pytest.raises(TypeError, match=e):
-        ShortURL(**required_fields, original_url=url) # type: ignore
+        ShortURL(**required_fields, target_url=url) # type: ignore
     
 
 def test_id_invalid(required_fields: dict):

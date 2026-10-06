@@ -15,7 +15,7 @@ The restructuring goes back to the original idea: **a URL shortener, and nothing
 The service:
 
 - creates, reads, lists, updates and deletes short URLs;
-- resolves a slug to its original URL.
+- resolves a slug to its target URL.
 
 The service does **not** handle:
 
