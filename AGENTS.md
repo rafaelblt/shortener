@@ -91,6 +91,12 @@ Every task that changes code (a feature, a fix, a refactor, a removal) also cove
 2. After changing it, fix what became wrong and describe what was added or removed.
 3. Add the why of a decision made in the task when it helps a later reader understand something the code doesn't show. Weigh it: most changes don't need one.
 
+## Issues
+
+Until the repository is on GitHub, issues live in [docs/issues/](docs/issues/README.md), one file per issue. The format, the states and the workflow are described there.
+
+**The content of an issue is never edited, only added to.** Only the state fields (`status`, `resolution` and `labels`) change. Everything else stays as it was written, and a correction goes in a new entry at the end.
+
 ## Commits
 
 [Conventional Commits](https://www.conventionalcommits.org/):
@@ -124,6 +130,7 @@ Every task that changes code (a feature, a fix, a refactor, a removal) also cove
 | `adapters:api`                                 | HTTP API                            |
 | `infra:db`, `infra:settings`, `infra:services` | Infrastructure                      |
 | `fixtures`, `utils`, `conftest`                | Test infrastructure (with `test`)   |
+| `issues`                                       | Issue files (with `docs`)           |
 
 Examples from the history:
 
