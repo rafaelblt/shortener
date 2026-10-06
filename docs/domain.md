@@ -88,7 +88,7 @@ Each field is checked on its own and never compared with another, so `expires_at
 | `is_available(now)`                                                                           | `True` when `status` is `ACTIVE` and `is_expired(now)` is false.                                                                              |
 | `enable()`                                                                                    | Sets `status` to `ACTIVE`. See [Status](#status).                                                                                             |
 | `disable()`                                                                                   | Sets `status` to `DEACTIVATED`. See [Status](#status).                                                                                        |
-| `change_slug(new_slug)`, `change_target_url(new_target_url)`, `change_owner_id(new_owner_id)` | Validate the type with the field's `validate_<field>()` and replace the field. `change_slug()` doesn't check that the slug is unique.         |
+| `change_slug(new_slug)`, `change_target_url(new_target_url)`                                  | Validate the type with the field's `validate_<field>()` and replace the field. `change_slug()` doesn't check that the slug is unique.         |
 | `get_fields()`                                                                                | Static. Returns the names of the nine fields, in the order of the table. Required by `DomainEntity`.                                          |
 
 ### IDs
@@ -106,6 +106,8 @@ Each field is checked on its own and never compared with another, so `expires_at
 Every short URL has an owner: **there are no anonymous short URLs**.
 
 The owner is only a reference. The domain stores the owner's identifier, but knows nothing about the user: there is no user entity, and no name, email, password or status. That is also why the domain doesn't check whether the owner exists.
+
+`owner_id` is set when the short URL is created or rebuilt, and no method changes it.
 
 Two things happen outside the domain, but shape this rule:
 
@@ -289,6 +291,5 @@ Wrong types or values given to the domain's code. They are programming errors, n
 
 Decisions to make during this phase:
 
-- **`change_owner_id()`.** Does it make sense to transfer a short URL to another owner?
 - **Owner operations in the repository**, such as listing or deleting an owner's short URLs. They should come in when the use cases need them.
 - **Abstractions to revisit for simplicity:** `DomainEntity` (`get_fields()` is only used in tests), `MultiFieldValidator` (unused and untested), `Validator`, `ShortURLValidator`, and the overlapping not-found errors (`ShortURLNotFoundError`, `ShortURLNotFoundInDatabaseError`, `ShortURLDeletionNotFoundError`).

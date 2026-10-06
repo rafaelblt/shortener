@@ -215,10 +215,6 @@ class ShortURL(DomainEntity):
         self.validate_target_url(new_target_url)
         self._target_url = new_target_url
 
-    def change_owner_id(self, new_owner_id: OwnerID):
-        self.validate_owner_id(new_owner_id)
-        self._owner_id = new_owner_id
-
 
     def record_visit(self, now: datetime):
         self.validate_last_accessed_at(now)
