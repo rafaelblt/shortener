@@ -13,14 +13,13 @@ shortener/domain/
 ├── domain_entity.py       DomainEntity, the base class of ShortURL
 ├── shorturl/
 │   ├── shorturl.py        ShortURL
-│   ├── fields/            ShortURLID, OwnerID, Slug, OriginalURL and ShortURLStatus
+│   ├── fields/            ShortURLID, OwnerID, Slug, TargetURL and ShortURLStatus
 │   ├── exceptions.py      the errors of ShortURL and its fields
 │   ├── repository.py      ShortURLRepository
 │   ├── validator.py       ShortURLValidator
 │   └── utils.py           generate_unique_slug()
 └── shared/                code that doesn't depend on shorturl/
     ├── entity_id.py       EntityID
-    ├── valueobjects/      URL and InvalidURLError
     ├── datetime_utils.py  is_utc() and ensure_utc()
     ├── pagination.py      PaginatedResult
     ├── exceptions.py      DomainError, ValidationError and MultiValidationError
@@ -55,7 +54,7 @@ Abstract base class of entities. A subclass implements:
 | ------------------ | ------------------ | ----------------------------------------------------------- |
 | `id`               | `ShortURLID`       | Identity. See [IDs](#ids).                                  |
 | `slug`             | `Slug`             | The short path. See [Slug](#slug).                          |
-| `original_url`     | `OriginalURL`      | The destination. See [OriginalURL](#originalurl).           |
+| `original_url`     | `TargetURL`        | The destination. See [TargetURL](#targeturl).               |
 | `owner_id`         | `OwnerID`          | Reference to the owner. See [Owner](#owner).                |
 | `status`           | `ShortURLStatus`   | Defaults to `ACTIVE`. See [Status](#status).                |
 | `visit_count`      | `int`              | Number of visits, `>= 0`. Defaults to `0`.                  |
@@ -134,13 +133,19 @@ Because the pattern is checked first, an empty string raises `ShortURLInvalidSlu
 
 Slugs are unique, but `Slug` and `ShortURL` don't check it, and nothing in the domain raises `ShortURLSlugAlreadyExistsError`. `generate_unique_slug(repository, length=DEFAULT_RANDOM_SLUG_LENGTH, max_attempts=DEFAULT_MAX_ATTEMPS_TO_GENERATE_UNIQUE_SLUG)`, in `shorturl/utils.py`, calls `Slug.generate_random(length)` until `repository.exists_by_slug()` returns `False` for the generated slug, and returns that slug. If no attempt succeeds, it raises `RuntimeError`, after `max_attempts + 1` attempts ([issue 0002](issues/0002-generate-unique-slug-makes-one-extra-attempt.md)). An error raised by `Slug.generate_random()`, such as `ShortURLForbiddenSlugError`, isn't caught ([issue 0006](issues/0006-generate-unique-slug-can-raise-forbidden-slug-error.md)). `max_attempts` defaults to 100.
 
-### OriginalURL
+### TargetURL
 
-`shorturl/fields/url.py`
+`shorturl/fields/target_url.py`
 
-The destination of the short URL. `OriginalURL` extends [`URL`](#url), so the value must have a scheme and a netloc, and adds one rule: the scheme must be `https`. Any failure raises `ShortURLInvalidURLError`, including the `InvalidURLError` raised by `URL`, which is converted into it.
+The destination of the short URL. `TargetURL` is a `str` subclass. Creating one validates the value with `TargetURL.validate_target_url()`, which parses it with `urllib.parse.urlparse` and raises `ShortURLInvalidURLError` when:
 
-`OriginalURL.validate(value)` runs the same checks without creating an `OriginalURL` ([issue 0004](issues/0004-url-and-originalurl-duplicate-their-validation.md)).
+- `urlparse` fails with `ValueError` or `TypeError`, as it does for `https://[invalid`;
+- the scheme isn't `https`. `urlparse` lowercases the scheme, so `HTTPS://example.com` also passes;
+- the netloc (the host part) is empty, as in `https://` or `https:///path`.
+
+Nothing else is checked: the netloc isn't validated, so `https://exa mple.com` is a valid `TargetURL`. A value that isn't a string can raise other errors, such as `AttributeError` for `TargetURL(123)` ([issue 0003](issues/0003-value-objects-dont-check-the-value-is-a-string.md)).
+
+`TargetURL.validate_target_url(value)` can also be called on its own, and returns `None` for a valid value.
 
 ### Status
 
@@ -215,15 +220,6 @@ The identity of an entity: a frozen dataclass with one field, `value: UUID`.
 - Equality and hashing come from the dataclass: two `EntityID`s are only equal when they are of the same class and have the same `value`.
 - `str()` returns the UUID as a string.
 
-### URL
-
-`shared/valueobjects/url.py`
-
-`URL` is a `str` subclass. Creating one parses the value with `urllib.parse.urlparse`, and raises `InvalidURLError` when `urlparse` fails with `ValueError` or `TypeError`, or when the scheme or the netloc (the host part) is empty. Nothing else is checked: the netloc isn't validated, so `https://exa mple.com` is a valid `URL`. A value that isn't a string can raise other errors, such as `AttributeError` for `URL(123)` ([issue 0003](issues/0003-value-objects-dont-check-the-value-is-a-string.md)).
-
-- `is_https()`: whether the scheme is `https`. `urlparse` lowercases the scheme, so `HTTPS://example.com` also passes.
-- `URL.validate(value)`: runs the same checks without creating a `URL`, and returns `None` ([issue 0004](issues/0004-url-and-originalurl-duplicate-their-validation.md)).
-
 ### Datetime helpers
 
 `shared/datetime_utils.py`
@@ -255,23 +251,22 @@ With `limit = 0`, `current_page` and `total_pages` raise `ZeroDivisionError`.
 
 ## Errors
 
-`shared/exceptions.py`, `shared/valueobjects/url.py` and `shorturl/exceptions.py`
+`shared/exceptions.py` and `shorturl/exceptions.py`
 
 ### Validation errors
 
 `DomainError(code, message)` stores `code` and `message`, and its text is `[<code>]: <message>`. `ValidationError(value, field, code, message)` extends it with the invalid `value` and the `field` it belongs to. The `code` is a stable identifier the API can return to the client.
 
-| Error                            | `code`                | `field`        | Raised by                                 |
-| -------------------------------- | --------------------- | -------------- | ----------------------------------------- |
-| `InvalidURLError`                | `INVALID_URL`         | `url`          | `URL()`, `URL.validate()`                 |
-| `ShortURLInvalidURLError`        | `URL_INVALID`         | `original_url` | `OriginalURL()`, `OriginalURL.validate()` |
-| `ShortURLInvalidSlugError`       | `SLUG_INVALID`        | `slug`         | `Slug()`, `Slug.validate_slug()`          |
-| `ShortURLForbiddenSlugError`     | `SLUG_FORBIDDEN`      | `slug`         | `Slug()`, `Slug.validate_slug()`          |
-| `ShortURLSlugTooShortError`      | `SLUG_TOO_SHORT`      | `slug`         | `Slug()`, `Slug.validate_slug()`          |
-| `ShortURLSlugTooLongError`       | `SLUG_TOO_LONG`       | `slug`         | `Slug()`, `Slug.validate_slug()`          |
-| `ShortURLSlugAlreadyExistsError` | `SLUG_ALREADY_EXISTS` | `slug`         | Nothing in the domain                     |
+| Error                            | `code`                | `field`        | Raised by                                         |
+| -------------------------------- | --------------------- | -------------- | ------------------------------------------------- |
+| `ShortURLInvalidURLError`        | `URL_INVALID`         | `original_url` | `TargetURL()`, `TargetURL.validate_target_url()`  |
+| `ShortURLInvalidSlugError`       | `SLUG_INVALID`        | `slug`         | `Slug()`, `Slug.validate_slug()`                  |
+| `ShortURLForbiddenSlugError`     | `SLUG_FORBIDDEN`      | `slug`         | `Slug()`, `Slug.validate_slug()`                  |
+| `ShortURLSlugTooShortError`      | `SLUG_TOO_SHORT`      | `slug`         | `Slug()`, `Slug.validate_slug()`                  |
+| `ShortURLSlugTooLongError`       | `SLUG_TOO_LONG`       | `slug`         | `Slug()`, `Slug.validate_slug()`                  |
+| `ShortURLSlugAlreadyExistsError` | `SLUG_ALREADY_EXISTS` | `slug`         | Nothing in the domain                             |
 
-Each of them also stores the input under its own name (`url` or `slug`), and the length errors store the limit (`min_length` or `max_length`). The messages of the length errors are swapped ([issue 0001](issues/0001-slug-length-error-messages-are-swapped.md)). `InvalidURLError` extends `ValidationError` directly. The others extend `ShortURLValidationError`, which extends `ValidationError` and adds nothing.
+Each of them also stores the input under its own name (`url` or `slug`), and the length errors store the limit (`min_length` or `max_length`). The messages of the length errors are swapped ([issue 0001](issues/0001-slug-length-error-messages-are-swapped.md)). They extend `ShortURLValidationError`, which extends `ValidationError` and adds nothing.
 
 `MultiValidationError(errors)` holds a list of `ValidationError`s in `errors`. It extends `Exception`, not `DomainError`, and is raised by `MultiFieldValidator.validate()`.
 

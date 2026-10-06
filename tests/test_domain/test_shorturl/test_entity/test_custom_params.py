@@ -4,7 +4,7 @@ from uuid import UUID
 
 from shortener.domain.shorturl import ShortURL
 from shortener.domain.shorturl.fields import (
-    Slug, OriginalURL, ShortURLStatus, ShortURLID, OwnerID
+    Slug, TargetURL, ShortURLStatus, ShortURLID, OwnerID
 )
 
 
@@ -17,7 +17,7 @@ def shorturl():
     return ShortURL(
         id=ShortURLID(ID_VALUE),
         slug=Slug("i-am-slug"),
-        original_url=OriginalURL("https://google.com"),
+        original_url=TargetURL("https://google.com"),
         owner_id=OwnerID(OWNER_ID_VALUE),
         status=ShortURLStatus.SUSPENDED,
         visit_count=5,
@@ -41,7 +41,7 @@ def test_slug(shorturl: ShortURL):
 
 
 def test_original_url(shorturl: ShortURL):
-    assert isinstance(shorturl.original_url, OriginalURL)
+    assert isinstance(shorturl.original_url, TargetURL)
     assert shorturl.original_url == "https://google.com"
 
 

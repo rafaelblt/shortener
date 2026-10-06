@@ -1,6 +1,6 @@
 ---
-status: open
-resolution:
+status: closed
+resolution: fixed
 labels: [refactor, domain]
 ---
 
@@ -14,3 +14,7 @@ Each class writes the same validation twice, once in `__new__` and once in the `
 - `OriginalURL` (`shortener/domain/shorturl/fields/url.py`): both convert `InvalidURLError` into `ShortURLInvalidURLError`, and raise it when the scheme isn't `https`.
 
 AGENTS.md asks for each rule to be written in one place.
+
+## 2026-10-06: Closed as fixed
+
+`URL` and `OriginalURL` were replaced by a single class, `TargetURL` (`shortener/domain/shorturl/fields/target_url.py`), and `shortener/domain/shared/valueobjects/` was removed. Its validation is written once, in `TargetURL.validate_target_url()`, which `__new__` calls.

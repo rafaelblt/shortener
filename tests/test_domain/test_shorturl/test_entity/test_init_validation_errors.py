@@ -1,7 +1,7 @@
 import pytest
 
 from shortener.domain.shorturl import ShortURL
-from shortener.domain.shorturl.fields import Slug, OriginalURL
+from shortener.domain.shorturl.fields import Slug, TargetURL
 
 
 @pytest.fixture
@@ -11,7 +11,7 @@ def valid_slug():
 
 @pytest.fixture
 def valid_url():
-    return OriginalURL("https://valid-url.com")
+    return TargetURL("https://valid-url.com")
 
 
 @pytest.fixture
@@ -43,7 +43,7 @@ def test_slug_invalid(required_fields: dict):
 def test_original_url_invalid(required_fields: dict):
     required_fields.pop("original_url")
     url = "https://github.com"
-    e = get_type_error_message(attr="original_url", type_expected="OriginalURL", got=url)
+    e = get_type_error_message(attr="original_url", type_expected="TargetURL", got=url)
     with pytest.raises(TypeError, match=e):
         ShortURL(**required_fields, original_url=url) # type: ignore
     

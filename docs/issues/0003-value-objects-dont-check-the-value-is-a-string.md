@@ -20,3 +20,12 @@ URL(None)           # InvalidURLError
 `Slug.__new__` (`shortener/domain/shorturl/fields/slug.py`) calls `str(value)` before validating. `URL.__new__` (`shortener/domain/shared/valueobjects/url.py`) passes the value to `urlparse`, and only catches `ValueError` and `TypeError`.
 
 Which error a value that isn't a string should raise is still to be decided.
+
+## 2026-10-06: `URL` and `OriginalURL` replaced by `TargetURL`
+
+`URL` and `OriginalURL` no longer exist: `TargetURL` (`shortener/domain/shorturl/fields/target_url.py`) replaced both. It also passes the value to `urlparse` and only catches `ValueError` and `TypeError`, so the problem remains for `Slug` and `TargetURL`:
+
+```python
+TargetURL(123)      # AttributeError: 'int' object has no attribute 'decode'
+TargetURL(None)     # ShortURLInvalidURLError
+```

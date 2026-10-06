@@ -3,7 +3,7 @@ import pytest
 from uuid import UUID
 
 from shortener.domain.shorturl.exceptions import ShortURLAttributeTypeError
-from shortener.domain.shorturl.fields import Slug, OriginalURL, OwnerID
+from shortener.domain.shorturl.fields import Slug, TargetURL, OwnerID
 from shortener.domain.shorturl import ShortURL
 
 
@@ -19,7 +19,7 @@ def test_change_slug_raises_error(normal_shorturl: ShortURL):
 
 
 def test_change_original_url(normal_shorturl: ShortURL):
-    new_original_url = OriginalURL("https://new.com")
+    new_original_url = TargetURL("https://new.com")
     normal_shorturl.change_original_url(new_original_url)
     assert normal_shorturl.original_url == new_original_url
 

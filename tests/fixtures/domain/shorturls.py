@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 from shortener.domain.shorturl.shorturl import ShortURL
-from shortener.domain.shorturl.fields import OriginalURL, Slug, ShortURLID, OwnerID
+from shortener.domain.shorturl.fields import TargetURL, Slug, ShortURLID, OwnerID
 
 
 @pytest.fixture
@@ -21,7 +21,7 @@ def owner_id():
 def normal_shorturl(owner_id, now):
     return ShortURL.create(
         slug=Slug("lorem-ipsum-website"),
-        original_url=OriginalURL("https://lorem.makeyoursite.com"),
+        original_url=TargetURL("https://lorem.makeyoursite.com"),
         owner_id=owner_id,
         now=now,
     )
@@ -31,7 +31,7 @@ def normal_shorturl(owner_id, now):
 def other_shorturl(owner_id, now):
     return ShortURL.create(
         slug=Slug("other-network"),
-        original_url=OriginalURL("https://others.com"),
+        original_url=TargetURL("https://others.com"),
         owner_id=owner_id,
         now=now,
     )
@@ -42,7 +42,7 @@ def old_shorturl(owner_id):
     return ShortURL(
         id=ShortURLID.generate(),
         slug=Slug("old-site"),
-        original_url=OriginalURL("https://google.com"),
+        original_url=TargetURL("https://google.com"),
         owner_id=owner_id,
         created_at=datetime(year=2000, month=1, day=1, tzinfo=timezone.utc)
     )
@@ -52,7 +52,7 @@ def old_shorturl(owner_id):
 def expired_shorturl(owner_id, now):
     return ShortURL.create(
         slug=Slug("this-is-expired"),
-        original_url=OriginalURL("https://expiration.com"),
+        original_url=TargetURL("https://expiration.com"),
         owner_id=owner_id,
         now=now - timedelta(days=2),
         expires_at=now - timedelta(days=1),
@@ -63,7 +63,7 @@ def expired_shorturl(owner_id, now):
 def biggest_shorturl(owner_id, now):
     return ShortURL.create(
         slug=Slug("the-top-one"),
-        original_url=OriginalURL("https://bigbig.com"),
+        original_url=TargetURL("https://bigbig.com"),
         owner_id=owner_id,
         now=now,
     )
@@ -78,7 +78,7 @@ def expires_at(now):
 def expiring_shorturl(owner_id, now, expires_at):
     return ShortURL.create(
         slug=Slug("expires-soon"),
-        original_url=OriginalURL("https://soon.com"),
+        original_url=TargetURL("https://soon.com"),
         owner_id=owner_id,
         now=now,
         expires_at=expires_at,
