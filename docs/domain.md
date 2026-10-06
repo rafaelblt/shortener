@@ -157,7 +157,6 @@ Nothing else is checked: the netloc isn't validated, so `https://exa mple.com` i
 | ------------- | ----------------------------------------------------------------------------------- |
 | `ACTIVE`      | Default of the constructor and of `create()`, or `enable()` from `DEACTIVATED`      |
 | `DEACTIVATED` | `disable()` from `ACTIVE`                                                           |
-| `EXPIRED`     | Only by passing it to the constructor. Reaching `expires_at` doesn't change the status. |
 | `SUSPENDED`   | Only by passing it to the constructor                                               |
 | `BANNED`      | Only by passing it to the constructor                                               |
 
@@ -167,7 +166,6 @@ What each method does in each status. Error names mean the method raises that er
 | ------------- | -------------------------------------------------------------------------------- | ------------------------ | ------------------------ |
 | `ACTIVE`      | Returns `target_url`, or raises `ShortURLExpiredError` if `is_expired(now)`      | Nothing                  | Changes to `DEACTIVATED` |
 | `DEACTIVATED` | `ShortURLDeactivatedError`                                                       | Changes to `ACTIVE`      | Nothing                  |
-| `EXPIRED`     | `ShortURLExpiredError`                                                           | `ShortURLExpiredError`   | `ShortURLExpiredError`   |
 | `SUSPENDED`   | `ShortURLSuspendedError`                                                         | `ShortURLSuspendedError` | `ShortURLSuspendedError` |
 | `BANNED`      | `ShortURLBannedError`                                                            | `ShortURLBannedError`    | `ShortURLBannedError`    |
 
@@ -177,9 +175,7 @@ What each method does in each status. Error names mean the method raises that er
 
 A short URL with an `expires_at` expires once that moment is reached: `is_expired(now)` is true when `expires_at <= now`. From then on, `is_available(now)` is false and, if the status is `ACTIVE`, `resolve(now)` raises `ShortURLExpiredError`. The status doesn't change.
 
-Expiration is checked when the short URL is used, against the given `now`, so it never depends on a status being updated in time.
-
-`is_expired()` only looks at `expires_at`. A short URL in the `EXPIRED` status with no `expires_at`, or with one later than `now`, has `is_expired(now)` false. It is still unavailable, because its status isn't `ACTIVE`.
+Expiration isn't a status, and has a different meaning: no status says that a short URL has expired, and knowing it always takes comparing `expires_at` with `now`. It is checked when the short URL is used, so it never depends on a status being updated in time.
 
 ### Repository
 
@@ -298,7 +294,6 @@ Wrong types or values given to the domain's code. They are programming errors, n
 Decisions to make during this phase:
 
 - **`SUSPENDED` and `BANNED`.** They are moderation statuses, and no domain method leads to them. Should they stay?
-- **`EXPIRED`.** Expiration is now checked against `expires_at` when the short URL is used, so nothing sets this status anymore. Should it stay?
 - **`change_owner_id()`.** Does it make sense to transfer a short URL to another owner?
 - **Owner operations in the repository**, such as listing or deleting an owner's short URLs. They should come in when the use cases need them.
 - **Abstractions to revisit for simplicity:** `DomainEntity` (`get_fields()` is only used in tests), `MultiFieldValidator` (unused and untested), `Validator`, `ShortURLValidator`, and the overlapping not-found errors (`ShortURLNotFoundError`, `ShortURLNotFoundInDatabaseError`, `ShortURLDeletionNotFoundError`).

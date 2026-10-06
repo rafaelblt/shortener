@@ -6,4 +6,3 @@ class ShortURLStatus(Enum):
     DEACTIVATED = "deactivated"
     BANNED = "banned"
     SUSPENDED = "suspended"
-    EXPIRED = "expired"

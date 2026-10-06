@@ -235,7 +235,7 @@ class ShortURL(DomainEntity):
         Raises:
             ShortURLSuspendedError: If the ShortURL status is SUSPENDED.
             ShortURLDeactivatedError: If the ShortURL status is DEACTIVATED.
-            ShortURLExpiredError: If the ShortURL status is EXPIRED, or if 
+            ShortURLExpiredError: If the ShortURL status is ACTIVE and 
                 expires_at has been reached.
             ShortURLBannedError: If the ShortURL status is BANNED.
         """
@@ -247,8 +247,6 @@ class ShortURL(DomainEntity):
             raise ShortURLSuspendedError()
         elif self.status == ShortURLStatus.DEACTIVATED:
             raise ShortURLDeactivatedError()
-        elif self.status == ShortURLStatus.EXPIRED:
-            raise ShortURLExpiredError()
         elif self.status == ShortURLStatus.BANNED:
             raise ShortURLBannedError()
         else:
@@ -261,8 +259,6 @@ class ShortURL(DomainEntity):
 
         if self.status == ShortURLStatus.SUSPENDED:
             raise ShortURLSuspendedError()
-        elif self.status == ShortURLStatus.EXPIRED:
-            raise ShortURLExpiredError()
         elif self.status == ShortURLStatus.BANNED:
             raise ShortURLBannedError()
         
@@ -273,8 +269,6 @@ class ShortURL(DomainEntity):
 
         if self.status == ShortURLStatus.SUSPENDED:
             raise ShortURLSuspendedError()
-        if self.status == ShortURLStatus.EXPIRED:
-            raise ShortURLExpiredError()
         if self.status == ShortURLStatus.BANNED:
             raise ShortURLBannedError()
 
