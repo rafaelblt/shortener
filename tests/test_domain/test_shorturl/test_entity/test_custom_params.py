@@ -19,7 +19,7 @@ def shorturl():
         slug=Slug("i-am-slug"),
         target_url=TargetURL("https://google.com"),
         owner_id=OwnerID(OWNER_ID_VALUE),
-        status=ShortURLStatus.SUSPENDED,
+        status=ShortURLStatus.DEACTIVATED,
         visit_count=5,
         created_at=datetime(year=2002, month=2, day=2, tzinfo=timezone.utc),
         expires_at=datetime(year=2006, month=6, day=6, tzinfo=timezone.utc),
@@ -50,7 +50,7 @@ def test_owner_id(shorturl: ShortURL):
 
 
 def test_status(shorturl: ShortURL):
-    assert shorturl.status == ShortURLStatus.SUSPENDED
+    assert shorturl.status == ShortURLStatus.DEACTIVATED
 
 
 def test_visit_count(shorturl: ShortURL):

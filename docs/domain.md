@@ -86,8 +86,8 @@ Each field is checked on its own and never compared with another, so `expires_at
 | `record_visit(now)`                                                                           | Validates `now` with `validate_last_accessed_at()`, adds 1 to `visit_count` and sets `last_accessed_at` to `now`. Doesn't check availability. |
 | `is_expired(now)`                                                                             | `True` when `expires_at` isn't `None` and `expires_at <= now`. Doesn't look at `status`. See [Expiration](#expiration).                       |
 | `is_available(now)`                                                                           | `True` when `status` is `ACTIVE` and `is_expired(now)` is false.                                                                              |
-| `enable()`                                                                                    | Changes `DEACTIVATED` to `ACTIVE`. See [Status](#status).                                                                                     |
-| `disable()`                                                                                   | Changes `ACTIVE` to `DEACTIVATED`. See [Status](#status).                                                                                     |
+| `enable()`                                                                                    | Sets `status` to `ACTIVE`. See [Status](#status).                                                                                             |
+| `disable()`                                                                                   | Sets `status` to `DEACTIVATED`. See [Status](#status).                                                                                        |
 | `change_slug(new_slug)`, `change_target_url(new_target_url)`, `change_owner_id(new_owner_id)` | Validate the type with the field's `validate_<field>()` and replace the field. `change_slug()` doesn't check that the slug is unique.         |
 | `get_fields()`                                                                                | Static. Returns the names of the nine fields, in the order of the table. Required by `DomainEntity`.                                          |
 
@@ -157,8 +157,6 @@ Nothing else is checked: the netloc isn't validated, so `https://exa mple.com` i
 | ------------- | ----------------------------------------------------------------------------------- |
 | `ACTIVE`      | Default of the constructor and of `create()`, or `enable()` from `DEACTIVATED`      |
 | `DEACTIVATED` | `disable()` from `ACTIVE`                                                           |
-| `SUSPENDED`   | Only by passing it to the constructor                                               |
-| `BANNED`      | Only by passing it to the constructor                                               |
 
 What each method does in each status. Error names mean the method raises that error.
 
@@ -166,8 +164,6 @@ What each method does in each status. Error names mean the method raises that er
 | ------------- | -------------------------------------------------------------------------------- | ------------------------ | ------------------------ |
 | `ACTIVE`      | Returns `target_url`, or raises `ShortURLExpiredError` if `is_expired(now)`      | Nothing                  | Changes to `DEACTIVATED` |
 | `DEACTIVATED` | `ShortURLDeactivatedError`                                                       | Changes to `ACTIVE`      | Nothing                  |
-| `SUSPENDED`   | `ShortURLSuspendedError`                                                         | `ShortURLSuspendedError` | `ShortURLSuspendedError` |
-| `BANNED`      | `ShortURLBannedError`                                                            | `ShortURLBannedError`    | `ShortURLBannedError`    |
 
 `resolve()` only looks at `expires_at` in the `ACTIVE` status, and `enable()` and `disable()` never look at it.
 
@@ -268,7 +264,7 @@ Each of them also stores the input under its own name (`url` or `slug`), and the
 
 ### Availability errors
 
-`ShortURLAvailabilityError` and its subclasses `ShortURLDeactivatedError`, `ShortURLExpiredError`, `ShortURLSuspendedError` and `ShortURLBannedError` mean the short URL exists but isn't available. They extend `Exception` and carry no message or code. `resolve()`, `enable()` and `disable()` raise the subclasses, as in the [Status](#status) table. `resolve()` raises `ShortURLAvailabilityError` itself only for a status it doesn't handle, which none of the current statuses is.
+`ShortURLAvailabilityError` and its subclasses `ShortURLDeactivatedError` and `ShortURLExpiredError` mean the short URL exists but isn't available. They extend `Exception` and carry no message or code. Only `resolve()` raises them, and only the subclasses, as in the [Status](#status) table. Nothing raises `ShortURLAvailabilityError` itself.
 
 ### Programming errors
 
@@ -293,7 +289,6 @@ Wrong types or values given to the domain's code. They are programming errors, n
 
 Decisions to make during this phase:
 
-- **`SUSPENDED` and `BANNED`.** They are moderation statuses, and no domain method leads to them. Should they stay?
 - **`change_owner_id()`.** Does it make sense to transfer a short URL to another owner?
 - **Owner operations in the repository**, such as listing or deleting an owner's short URLs. They should come in when the use cases need them.
 - **Abstractions to revisit for simplicity:** `DomainEntity` (`get_fields()` is only used in tests), `MultiFieldValidator` (unused and untested), `Validator`, `ShortURLValidator`, and the overlapping not-found errors (`ShortURLNotFoundError`, `ShortURLNotFoundInDatabaseError`, `ShortURLDeletionNotFoundError`).

@@ -7,11 +7,8 @@ from shortener.domain.shared.datetime_utils import is_utc
 
 from .fields import Slug, TargetURL, ShortURLStatus, ShortURLID, OwnerID
 from .exceptions import (
-    ShortURLAvailabilityError,
     ShortURLExpiredError,
     ShortURLDeactivatedError,
-    ShortURLSuspendedError,
-    ShortURLBannedError,
     ShortURLAttributeTypeError
 )
 
@@ -233,44 +230,21 @@ class ShortURL(DomainEntity):
         Returns the target_url if the ShortURL is available at the given moment.
 
         Raises:
-            ShortURLSuspendedError: If the ShortURL status is SUSPENDED.
             ShortURLDeactivatedError: If the ShortURL status is DEACTIVATED.
-            ShortURLExpiredError: If the ShortURL status is ACTIVE and 
+            ShortURLExpiredError: If the ShortURL status is ACTIVE and
                 expires_at has been reached.
-            ShortURLBannedError: If the ShortURL status is BANNED.
         """
-        if self.status == ShortURLStatus.ACTIVE:
-            if self.is_expired(now):
-                raise ShortURLExpiredError()
-            return self.target_url
-        elif self.status == ShortURLStatus.SUSPENDED:
-            raise ShortURLSuspendedError()
-        elif self.status == ShortURLStatus.DEACTIVATED:
+        if self.status == ShortURLStatus.DEACTIVATED:
             raise ShortURLDeactivatedError()
-        elif self.status == ShortURLStatus.BANNED:
-            raise ShortURLBannedError()
-        else:
-            raise ShortURLAvailabilityError()
+        if self.is_expired(now):
+            raise ShortURLExpiredError()
+        return self.target_url
 
     def enable(self):
-        if self.status == ShortURLStatus.DEACTIVATED:
-            self._status = ShortURLStatus.ACTIVE
-            return
+        self._status = ShortURLStatus.ACTIVE
 
-        if self.status == ShortURLStatus.SUSPENDED:
-            raise ShortURLSuspendedError()
-        elif self.status == ShortURLStatus.BANNED:
-            raise ShortURLBannedError()
-        
     def disable(self):
-        if self.status == ShortURLStatus.ACTIVE:
-            self._status = ShortURLStatus.DEACTIVATED
-            return
-
-        if self.status == ShortURLStatus.SUSPENDED:
-            raise ShortURLSuspendedError()
-        if self.status == ShortURLStatus.BANNED:
-            raise ShortURLBannedError()
+        self._status = ShortURLStatus.DEACTIVATED
 
     def __repr__(self):
         return (
