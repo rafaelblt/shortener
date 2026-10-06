@@ -2,6 +2,7 @@ import pytest
 from datetime import datetime
 
 from shortener.domain.shorturl import ShortURL
+from shortener.domain.shorturl.fields import ShortURLStatus
 from shortener.domain.shorturl.exceptions import (
     ShortURLDeactivatedError, 
     ShortURLExpiredError
@@ -44,3 +45,33 @@ def test_resolve_raises_expired_error_once_expires_at_is_reached(
     assert expiring_shorturl.resolve(now) == expiring_shorturl.target_url
     with pytest.raises(ShortURLExpiredError):
         expiring_shorturl.resolve(expires_at)
+
+
+def test_resolve_raises_deactivated_error_when_also_expired(
+    expired_shorturl: ShortURL, now: datetime
+):
+    expired_shorturl.disable()
+    with pytest.raises(ShortURLDeactivatedError):
+        expired_shorturl.resolve(now)
+
+
+def test_disable_deactivates_an_active_shorturl(normal_shorturl: ShortURL):
+    normal_shorturl.disable()
+    assert normal_shorturl.status == ShortURLStatus.DEACTIVATED
+
+
+def test_disable_keeps_a_deactivated_shorturl_deactivated(normal_shorturl: ShortURL):
+    normal_shorturl.disable()
+    normal_shorturl.disable()
+    assert normal_shorturl.status == ShortURLStatus.DEACTIVATED
+
+
+def test_enable_activates_a_deactivated_shorturl(normal_shorturl: ShortURL):
+    normal_shorturl.disable()
+    normal_shorturl.enable()
+    assert normal_shorturl.status == ShortURLStatus.ACTIVE
+
+
+def test_enable_keeps_an_active_shorturl_active(normal_shorturl: ShortURL):
+    normal_shorturl.enable()
+    assert normal_shorturl.status == ShortURLStatus.ACTIVE
