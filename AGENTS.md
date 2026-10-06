@@ -17,7 +17,7 @@ The scope is `shortener/domain/` and its tests: `tests/test_domain/` and the fix
 - Don't fix `use_cases`, `adapters` or `infra`. Problems in those layers are ignored until we reach them.
 - Changes to the domain will break the upper layers. That is expected: don't patch them to keep up.
 - This phase is verified with `poetry run task test_domain`. The full suite is not a criterion.
-- [docs/domain.md](docs/domain.md) describes the domain as it is in the code, with its rules, known problems and open questions. It has to stay faithful to `shortener/domain/` (see [`docs/`](#docs)). If a rule is unclear, ask instead of making one up.
+- [docs/domain.md](docs/domain.md) describes the domain as it is in the code, with its rules and open questions. Its known bugs are open issues labeled `domain`, and fixing them is part of this phase. It has to stay faithful to `shortener/domain/` (see [`docs/`](#docs)). If a rule is unclear, ask instead of making one up.
 
 ## Principles
 
@@ -78,7 +78,7 @@ The code should say what it does on its own. Comments are for what it can't say:
 
 Markdown documentation, starting simple. The idea is one file per layer, and for now only the domain is written: [docs/domain.md](docs/domain.md). When a file grows too large, it becomes a directory with one file per concept (for example, `docs/domain/shorturl.md`).
 
-**Each document is faithful to the code of its layer.** `docs/domain.md` describes `shortener/domain/` as it is now, not as it should be. A bug that is known but not fixed yet goes in the document's known problems.
+**Each document is faithful to the code of its layer.** `docs/domain.md` describes `shortener/domain/` as it is now, not as it should be. A bug that is known but not fixed yet becomes an [issue](#issues), linked from where the document describes the affected code.
 
 A document says two kinds of things, and they are treated differently:
 

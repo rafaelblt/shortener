@@ -2,7 +2,7 @@
 
 The domain is the core of the shortener: the rules that hold regardless of database, HTTP or framework. It lives in `shortener/domain/` and imports nothing from the other layers.
 
-This document describes the domain as it is in the code. Bugs that are verified but not fixed yet are in [Known problems](#known-problems), and decisions still to be made are in [Open questions](#open-questions).
+This document describes the domain as it is in the code. Verified bugs that aren't fixed yet are [issues](issues/README.md) labeled `domain`, linked from where this document describes the code they affect. Decisions still to be made are in [Open questions](#open-questions).
 
 ## Overview
 
@@ -117,11 +117,11 @@ Two things happen outside the domain, but shape this rule:
 
 `shorturl/fields/slug.py`
 
-The slug is the short path that identifies the short URL. `Slug` is a `str` subclass. Creating one converts the value with `str()` (see [Known problems](#known-problems)) and validates it with `Slug.validate_slug()`, which runs these checks in order and raises at the first that fails:
+The slug is the short path that identifies the short URL. `Slug` is a `str` subclass. Creating one converts the value with `str()` ([issue 0003](issues/0003-value-objects-dont-check-the-value-is-a-string.md)) and validates it with `Slug.validate_slug()`, which runs these checks in order and raises at the first that fails:
 
 | Check                                                                                                   | Error                        |
 | ------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| Matches `SLUG_PATTERN`, `^[a-zA-Z0-9_-]+$`: only ASCII letters, digits, `_` and `-`, and at least one character | `ShortURLInvalidSlugError`   |
+| Matches `SLUG_PATTERN`, `^[a-zA-Z0-9_-]+$`: only ASCII letters, digits, `_` and `-`, and at least one character. A trailing `\n` also passes ([issue 0005](issues/0005-slug-can-end-with-a-newline.md)) | `ShortURLInvalidSlugError`   |
 | Its lowercase form isn't in `FORBIDDEN_SLUGS`                                                           | `ShortURLForbiddenSlugError` |
 | At least `SLUG_MIN_LENGTH` (3) characters                                                               | `ShortURLSlugTooShortError`  |
 | At most `SLUG_MAX_LENGTH` (30) characters                                                               | `ShortURLSlugTooLongError`   |
@@ -130,9 +130,9 @@ The slug is the short path that identifies the short URL. `Slug` is a `str` subc
 
 Because the pattern is checked first, an empty string raises `ShortURLInvalidSlugError`, not `ShortURLSlugTooShortError`. `Slug.validate_slug(value)` can also be called on its own, and returns `None` for a valid value.
 
-`Slug.generate_random(length=DEFAULT_RANDOM_SLUG_LENGTH, chars=DEFAULT_CHARS)` picks `length` characters from `chars` with `random.choices` and returns them as a `Slug`, so the result goes through the same validation. By default, it picks 6 characters among the ASCII letters and digits.
+`Slug.generate_random(length=DEFAULT_RANDOM_SLUG_LENGTH, chars=DEFAULT_CHARS)` picks `length` characters from `chars` with `random.choices` and returns them as a `Slug`, so the result goes through the same validation and can raise its errors. By default, it picks 6 characters among the ASCII letters and digits.
 
-Slugs are unique, but `Slug` and `ShortURL` don't check it, and nothing in the domain raises `ShortURLSlugAlreadyExistsError`. `generate_unique_slug(repository, length=DEFAULT_RANDOM_SLUG_LENGTH, max_attempts=DEFAULT_MAX_ATTEMPS_TO_GENERATE_UNIQUE_SLUG)`, in `shorturl/utils.py`, calls `Slug.generate_random(length)` until `repository.exists_by_slug()` returns `False` for the generated slug, and returns that slug. If no attempt succeeds, it raises `RuntimeError` (see [Known problems](#known-problems)). `max_attempts` defaults to 100.
+Slugs are unique, but `Slug` and `ShortURL` don't check it, and nothing in the domain raises `ShortURLSlugAlreadyExistsError`. `generate_unique_slug(repository, length=DEFAULT_RANDOM_SLUG_LENGTH, max_attempts=DEFAULT_MAX_ATTEMPS_TO_GENERATE_UNIQUE_SLUG)`, in `shorturl/utils.py`, calls `Slug.generate_random(length)` until `repository.exists_by_slug()` returns `False` for the generated slug, and returns that slug. If no attempt succeeds, it raises `RuntimeError`, after `max_attempts + 1` attempts ([issue 0002](issues/0002-generate-unique-slug-makes-one-extra-attempt.md)). An error raised by `Slug.generate_random()`, such as `ShortURLForbiddenSlugError`, isn't caught ([issue 0006](issues/0006-generate-unique-slug-can-raise-forbidden-slug-error.md)). `max_attempts` defaults to 100.
 
 ### OriginalURL
 
@@ -140,7 +140,7 @@ Slugs are unique, but `Slug` and `ShortURL` don't check it, and nothing in the d
 
 The destination of the short URL. `OriginalURL` extends [`URL`](#url), so the value must have a scheme and a netloc, and adds one rule: the scheme must be `https`. Any failure raises `ShortURLInvalidURLError`, including the `InvalidURLError` raised by `URL`, which is converted into it.
 
-`OriginalURL.validate(value)` runs the same checks without creating an `OriginalURL` (see [Known problems](#known-problems)).
+`OriginalURL.validate(value)` runs the same checks without creating an `OriginalURL` ([issue 0004](issues/0004-url-and-originalurl-duplicate-their-validation.md)).
 
 ### Status
 
@@ -219,10 +219,10 @@ The identity of an entity: a frozen dataclass with one field, `value: UUID`.
 
 `shared/valueobjects/url.py`
 
-`URL` is a `str` subclass. Creating one parses the value with `urllib.parse.urlparse`, and raises `InvalidURLError` when `urlparse` fails with `ValueError` or `TypeError`, or when the scheme or the netloc (the host part) is empty. Nothing else is checked: the netloc isn't validated, so `https://exa mple.com` is a valid `URL`.
+`URL` is a `str` subclass. Creating one parses the value with `urllib.parse.urlparse`, and raises `InvalidURLError` when `urlparse` fails with `ValueError` or `TypeError`, or when the scheme or the netloc (the host part) is empty. Nothing else is checked: the netloc isn't validated, so `https://exa mple.com` is a valid `URL`. A value that isn't a string can raise other errors, such as `AttributeError` for `URL(123)` ([issue 0003](issues/0003-value-objects-dont-check-the-value-is-a-string.md)).
 
 - `is_https()`: whether the scheme is `https`. `urlparse` lowercases the scheme, so `HTTPS://example.com` also passes.
-- `URL.validate(value)`: runs the same checks without creating a `URL`, and returns `None`.
+- `URL.validate(value)`: runs the same checks without creating a `URL`, and returns `None` ([issue 0004](issues/0004-url-and-originalurl-duplicate-their-validation.md)).
 
 ### Datetime helpers
 
@@ -271,7 +271,7 @@ With `limit = 0`, `current_page` and `total_pages` raise `ZeroDivisionError`.
 | `ShortURLSlugTooLongError`       | `SLUG_TOO_LONG`       | `slug`         | `Slug()`, `Slug.validate_slug()`          |
 | `ShortURLSlugAlreadyExistsError` | `SLUG_ALREADY_EXISTS` | `slug`         | Nothing in the domain                     |
 
-Each of them also stores the input under its own name (`url` or `slug`), and the length errors store the limit (`min_length` or `max_length`). `InvalidURLError` extends `ValidationError` directly. The others extend `ShortURLValidationError`, which extends `ValidationError` and adds nothing.
+Each of them also stores the input under its own name (`url` or `slug`), and the length errors store the limit (`min_length` or `max_length`). The messages of the length errors are swapped ([issue 0001](issues/0001-slug-length-error-messages-are-swapped.md)). `InvalidURLError` extends `ValidationError` directly. The others extend `ShortURLValidationError`, which extends `ValidationError` and adds nothing.
 
 `MultiValidationError(errors)` holds a list of `ValidationError`s in `errors`. It extends `Exception`, not `DomainError`, and is raised by `MultiFieldValidator.validate()`.
 
@@ -297,17 +297,6 @@ Wrong types or values given to the domain's code. They are programming errors, n
 ### Other errors
 
 - `RuntimeError`: raised by `generate_unique_slug()` when every attempt finds an existing slug.
-
-## Known problems
-
-Verified in the current code. Fixing them is part of this phase.
-
-1. **The slug length error messages are swapped.** `ShortURLSlugTooLongError` says "must be at least 30" and `ShortURLSlugTooShortError` says "must be at most 3".
-2. **`generate_unique_slug()` makes one attempt more** than `max_attempts`.
-3. **Value objects don't check that the value is a string.** `Slug(12345)` silently becomes `"12345"`, and `URL(123)` and `OriginalURL(123)` raise `AttributeError` instead of a validation error.
-4. **Duplicated validation.** `URL` and `OriginalURL` repeat the same check in `__new__` and in `validate()`.
-5. **A slug can end with a newline.** `SLUG_PATTERN` ends in `$`, which `re.match` also matches before a trailing `\n`, so `Slug("abc\n")` is valid.
-6. **`generate_unique_slug()` can raise `ShortURLForbiddenSlugError`.** `Slug.generate_random()` can produce a forbidden slug (with the default length of 6, `config` or `logout` in any letter case), and the error escapes instead of leading to a new attempt.
 
 ## Open questions
 
