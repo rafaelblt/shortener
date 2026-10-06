@@ -37,7 +37,7 @@ In order of priority:
 3. **Readability.** Anyone understands the code by reading it: no excessive abstraction, abbreviations or long functions.
 4. **Tests.** Every feature well covered, by tests that follow the principles above.
 
-The practical rules for each principle, for comments and for commits are in [AGENTS.md](AGENTS.md).
+The practical rules for each principle, for comments, documentation and commits are in [AGENTS.md](AGENTS.md).
 
 ## Architecture
 
@@ -77,4 +77,4 @@ poetry run pytest tests/test_domain --cov=shortener/domain --cov-report=term-mis
 ## Documentation
 
 - [AGENTS.md](AGENTS.md): principles and conventions for code, tests, comments and commits.
-- [docs/domain.md](docs/domain.md): the domain's concepts and rules, known problems and open questions.
+- [docs/domain.md](docs/domain.md): what each part of the domain does, as it is in the code, with its rules, known problems and open questions.
