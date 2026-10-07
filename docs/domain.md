@@ -19,7 +19,6 @@ shortener/domain/
 └── shared/                code that doesn't depend on shorturl/
     ├── entity_id.py       EntityID
     ├── datetime_utils.py  is_utc() and ensure_utc()
-    ├── pagination.py      PaginatedResult
     ├── exceptions.py      DomainError, ValidationError and MultiValidationError
     └── validator.py       Validator and MultiFieldValidator
 ```
@@ -199,21 +198,6 @@ The identity of an entity: a frozen dataclass with one field, `value: UUID`.
 
 - `is_utc(dt)`: `True` when `dt` is timezone-aware and its UTC offset at that moment is zero. So a zone like `Europe/London` passes in winter and fails in summer. `ShortURL` uses it to validate its datetimes.
 - `ensure_utc(dt)`: when `dt` is naive, returns it with its `tzinfo` set to UTC, without converting the time. When `dt` is aware, returns it unchanged, even if it isn't in UTC. The domain doesn't use it.
-
-### PaginatedResult
-
-`shared/pagination.py`
-
-A page of items, generic on the item type: `PaginatedResult(items, total, offset, limit)`. The four arguments are stored as attributes with the same names, without validation. Derived properties:
-
-| Property       | Value                     |
-| -------------- | ------------------------- |
-| `current_page` | `offset // limit + 1`     |
-| `total_pages`  | `ceil(total / limit)`     |
-| `has_next`     | `offset + limit < total`  |
-| `has_previous` | `offset > 0`              |
-
-With `limit = 0`, `current_page` and `total_pages` raise `ZeroDivisionError`.
 
 ### Validators
 
