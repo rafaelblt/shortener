@@ -19,12 +19,6 @@ class ShortURLExpiredError(ShortURLAvailabilityError): ...
 class ShortURLValidationError(ValidationError):
     def __init__(self, value: str | int, field: str, code: str, message: str):
         super().__init__(value, field, code, message)
-class ShortURLSlugAlreadyExistsError(ShortURLValidationError):
-    code = "SLUG_ALREADY_EXISTS"
-    def __init__(self, slug: str):
-        self.slug = slug
-        msg = f"The provided slug already exists."
-        super().__init__(value=slug, field="slug", code=self.code, message=msg)
 class ShortURLInvalidSlugError(ShortURLValidationError):
     code = "SLUG_INVALID"
     def __init__(self, slug: str):

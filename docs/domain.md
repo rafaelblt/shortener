@@ -115,7 +115,7 @@ Because the pattern is checked first, an empty string raises `ShortURLInvalidSlu
 
 `Slug.generate_random(length=DEFAULT_RANDOM_SLUG_LENGTH, chars=DEFAULT_CHARS)` picks `length` characters from `chars` with `random.choices` and returns them as a `Slug`, so the result goes through the same validation and can raise its errors. By default, it picks 6 characters among the ASCII letters and digits.
 
-Slugs are unique, but `Slug` and `ShortURL` don't check it, and nothing in the domain raises `ShortURLSlugAlreadyExistsError`.
+Slugs are unique, but `Slug` and `ShortURL` don't check it.
 
 ### TargetURL
 
@@ -193,7 +193,6 @@ The identity of an entity: a frozen dataclass with one field, `value: UUID`.
 | `ShortURLForbiddenSlugError`     | `SLUG_FORBIDDEN`      | `slug`         | `Slug()`, `Slug.validate_slug()`                  |
 | `ShortURLSlugTooShortError`      | `SLUG_TOO_SHORT`      | `slug`         | `Slug()`, `Slug.validate_slug()`                  |
 | `ShortURLSlugTooLongError`       | `SLUG_TOO_LONG`       | `slug`         | `Slug()`, `Slug.validate_slug()`                  |
-| `ShortURLSlugAlreadyExistsError` | `SLUG_ALREADY_EXISTS` | `slug`         | Nothing in the domain                             |
 
 Each of them also stores the input under its own name (`url` or `slug`), and the length errors store the limit (`min_length` or `max_length`). The messages of the length errors are swapped ([issue 0001](issues/0001-slug-length-error-messages-are-swapped.md)). They extend `ShortURLValidationError`, which extends `ValidationError` and adds nothing.
 
