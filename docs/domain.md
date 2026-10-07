@@ -19,6 +19,7 @@ shortener/domain/
     ├── datetime_utils.py  is_utc()
     ├── result.py          Result, Ok and Err
     ├── validation.py      StringValidation, ValidationError, ValidationIssue and IssueCode
+    ├── parsing.py         require_non_empty_string()
     └── exceptions.py      DomainError and ValidationError
 ```
 
@@ -224,6 +225,12 @@ Each rule records a `ValidationIssue` when the value breaks it, and the chain go
 | `TOO_LONG`       | `"too_long"`       | is longer than the maximum length        |
 | `INVALID_FORMAT` | `"invalid_format"` | doesn't have the expected format         |
 | `FORBIDDEN`      | `"forbidden"`      | is one of the values that aren't allowed |
+
+### Parsing
+
+`shared/parsing.py`
+
+`require_non_empty_string(value, type_name)` returns `value` when it is a non-empty `str`. Otherwise, it raises `TypeError` if it isn't a `str`, or `ValueError` if it's empty, with `type_name` in the message.
 
 ## Errors
 
