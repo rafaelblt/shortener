@@ -9,11 +9,11 @@ from shortener.domain.shared.result import Result
 from shortener.domain.shared.validation import StringValidation, ValidationError
 
 
-DEFAULT_RANDOM_SLUG_LENGTH: Final = 6
+RANDOM_SLUG_LENGTH: Final = 6
 SLUG_MAX_LENGTH: Final = 30
 SLUG_MIN_LENGTH: Final = 3
 
-DEFAULT_CHARS: Final = string.ascii_letters + string.digits
+RANDOM_SLUG_CHARS: Final = string.ascii_letters + string.digits
 SLUG_PATTERN: Final = re.compile(r"^[a-zA-Z0-9_-]+$")
 
 
@@ -57,13 +57,10 @@ class Slug(str):
         return cls._build(require_non_empty_string(value, cls.__name__))
 
     @classmethod
-    def generate_random(
-        cls,
-        length: int = DEFAULT_RANDOM_SLUG_LENGTH,
-        chars: str = DEFAULT_CHARS
-    ) -> Result["Slug", ValidationError]:
-        random_slug = "".join(random.choices(chars, k=length))
-        return cls.create(random_slug)
+    def generate_random(cls) -> "Slug":
+        # RANDOM_SLUG_LENGTH and RANDOM_SLUG_CHARS follow the rules of create(),
+        # so the constructor never raises here.
+        return cls("".join(random.choices(RANDOM_SLUG_CHARS, k=RANDOM_SLUG_LENGTH)))
 
     @classmethod
     def _build(cls, value: str) -> "Slug":

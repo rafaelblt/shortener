@@ -1,51 +1,28 @@
 from shortener.domain.shorturl.fields.slug import (
     Slug,
-    DEFAULT_RANDOM_SLUG_LENGTH,
-    DEFAULT_CHARS,
+    RANDOM_SLUG_LENGTH,
+    RANDOM_SLUG_CHARS,
+    SLUG_MAX_LENGTH,
+    SLUG_MIN_LENGTH,
     SLUG_PATTERN
 )
 
 
-def test_instance():
-    random_slug = Slug.generate_random().unwrap()
-    assert isinstance(random_slug, Slug)
+def test_returns_a_slug():
+    assert isinstance(Slug.generate_random(), Slug)
 
 
-def test_default_random_slug_length():
-    random_slug = Slug.generate_random().unwrap()
-    assert len(random_slug) == DEFAULT_RANDOM_SLUG_LENGTH
+def test_has_the_random_slug_length():
+    assert len(Slug.generate_random()) == RANDOM_SLUG_LENGTH
 
 
-def test_slug_pattern():
-    random_slug = Slug.generate_random().unwrap()
-    assert SLUG_PATTERN.match(random_slug)
+def test_only_uses_the_random_slug_chars():
+    assert all(char in RANDOM_SLUG_CHARS for char in Slug.generate_random())
 
 
-def test_default_chars():
-    random_slug = Slug.generate_random().unwrap()
-    assert all(char in DEFAULT_CHARS for char in random_slug)
+def test_random_slug_length_is_within_the_slug_length_limits():
+    assert SLUG_MIN_LENGTH <= RANDOM_SLUG_LENGTH <= SLUG_MAX_LENGTH
 
 
-def test_generate_with_custom_length():
-    custom_length = 15
-    random_slug = Slug.generate_random(length=custom_length).unwrap()
-    assert isinstance(random_slug, Slug)
-    assert len(random_slug) == custom_length
-
-
-def test_generate_with_custom_chars():
-    custom_chars = "abc123"
-    random_slug = Slug.generate_random(chars=custom_chars).unwrap()
-    assert isinstance(random_slug, Slug)
-    assert all(char in custom_chars for char in random_slug)
-    assert SLUG_PATTERN.match(random_slug)
-
-
-def test_generate_with_custom_length_and_chars():
-    custom_length = 9
-    custom_chars = "xyz789"
-    random_slug = Slug.generate_random(length=custom_length, chars=custom_chars).unwrap()
-    assert isinstance(random_slug, Slug)
-    assert len(random_slug) == custom_length
-    assert all(char in custom_chars for char in random_slug)
-    assert SLUG_PATTERN.match(random_slug)
+def test_random_slug_chars_all_match_the_slug_pattern():
+    assert SLUG_PATTERN.fullmatch(RANDOM_SLUG_CHARS)

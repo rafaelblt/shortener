@@ -2,16 +2,16 @@ import re
 import string
 
 from shortener.domain.shorturl.fields.slug import (
-    DEFAULT_RANDOM_SLUG_LENGTH,
+    RANDOM_SLUG_LENGTH,
     SLUG_MAX_LENGTH,
     SLUG_MIN_LENGTH,
-    DEFAULT_CHARS,
+    RANDOM_SLUG_CHARS,
     SLUG_PATTERN
 )
 
 
-def test_default_random_slug_length():
-    assert DEFAULT_RANDOM_SLUG_LENGTH == 6
+def test_random_slug_length():
+    assert RANDOM_SLUG_LENGTH == 6
 
 
 def test_slug_max_length():
@@ -22,8 +22,8 @@ def test_slug_min_length():
     assert SLUG_MIN_LENGTH == 3
 
 
-def test_default_chars():
-    assert DEFAULT_CHARS == string.ascii_letters + string.digits
+def test_random_slug_chars():
+    assert RANDOM_SLUG_CHARS == string.ascii_letters + string.digits
 
 
 def test_slug_pattern():

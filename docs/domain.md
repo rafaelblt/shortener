@@ -128,7 +128,7 @@ The slug is the short path that identifies the short URL. It is a [value object]
 
 An empty string breaks two rules, and gets `INVALID_FORMAT` and `TOO_SHORT`.
 
-`Slug.generate_random(length=DEFAULT_RANDOM_SLUG_LENGTH, chars=DEFAULT_CHARS)` picks `length` characters from `chars` with `random.choices`, and returns what `create()` returns for them. With the defaults, 6 characters among the ASCII letters and digits, the slug follows every rule, so it always returns `Ok`.
+`Slug.generate_random()` picks `RANDOM_SLUG_LENGTH` (6) characters from `RANDOM_SLUG_CHARS`, the ASCII letters and digits, with `random.choices`, and returns them as a `Slug` built by the constructor. The length is within the limits and every character matches `SLUG_PATTERN`, so the slug always follows the rules of `create()`, and the constructor never raises.
 
 Slugs are unique, but `Slug` and `ShortURL` don't check it.
 
