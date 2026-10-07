@@ -72,7 +72,6 @@ Each field is checked on its own and never compared with another, so `expires_at
 | `enable()`                                                                                    | Sets `status` to `ACTIVE`. See [Status](#status).                                                                                             |
 | `disable()`                                                                                   | Sets `status` to `DEACTIVATED`. See [Status](#status).                                                                                        |
 | `change_slug(new_slug)`, `change_target_url(new_target_url)`                                  | Validate the type with the field's `validate_<field>()` and replace the field. `change_slug()` doesn't check that the slug is unique.         |
-| `get_fields()`                                                                                | Static. Returns the names of the nine fields, in the order of the table.                                                                      |
 
 ### IDs
 
@@ -212,6 +211,4 @@ Wrong types or values given to the domain's code. They are programming errors, n
 
 ## Open questions
 
-Decisions to make during this phase:
-
-- **`ShortURL.get_fields()`:** nothing in the domain calls it, and only test mocks of the upper layers use it.
+Decisions to make during this phase. There are none at the moment.

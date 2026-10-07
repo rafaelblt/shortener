@@ -14,20 +14,6 @@ from .exceptions import (
 
 class ShortURL:
 
-    @staticmethod
-    def get_fields() -> list[str]:
-        return [
-            "id",
-            "slug",
-            "target_url",
-            "owner_id",
-            "status",
-            "visit_count",
-            "created_at",
-            "expires_at",
-            "last_accessed_at",
-        ]
-
     def __init__(
         self,
         id: ShortURLID,
