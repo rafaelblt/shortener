@@ -18,8 +18,7 @@ shortener/domain/
 └── shared/                code that doesn't depend on shorturl/
     ├── entity_id.py       EntityID
     ├── datetime_utils.py  is_utc() and ensure_utc()
-    ├── exceptions.py      DomainError, ValidationError and MultiValidationError
-    └── validator.py       Validator and MultiFieldValidator
+    └── exceptions.py      DomainError and ValidationError
 ```
 
 ## Time
@@ -192,13 +191,6 @@ The identity of an entity: a frozen dataclass with one field, `value: UUID`.
 - `is_utc(dt)`: `True` when `dt` is timezone-aware and its UTC offset at that moment is zero. So a zone like `Europe/London` passes in winter and fails in summer. `ShortURL` uses it to validate its datetimes.
 - `ensure_utc(dt)`: when `dt` is naive, returns it with its `tzinfo` set to UTC, without converting the time. When `dt` is aware, returns it unchanged, even if it isn't in UTC. The domain doesn't use it.
 
-### Validators
-
-`shared/validator.py`
-
-- `Validator`: abstract class with one abstract async method, `validate(value) -> None`.
-- `MultiFieldValidator(validators_map)`: `validators_map` maps a field name to a list of `Validator`s. `validate(**kwargs)` runs, concurrently with `asyncio.gather`, the validators mapped to each keyword argument. Keywords that aren't in the map are ignored. If any validator raised a `ValidationError`, it raises `MultiValidationError` with every `ValidationError` raised; exceptions of other types are discarded. Otherwise, it returns `None`.
-
 ## Errors
 
 `shared/exceptions.py` and `shorturl/exceptions.py`
@@ -218,8 +210,6 @@ The identity of an entity: a frozen dataclass with one field, `value: UUID`.
 
 Each of them also stores the input under its own name (`url` or `slug`), and the length errors store the limit (`min_length` or `max_length`). The messages of the length errors are swapped ([issue 0001](issues/0001-slug-length-error-messages-are-swapped.md)). They extend `ShortURLValidationError`, which extends `ValidationError` and adds nothing.
 
-`MultiValidationError(errors)` holds a list of `ValidationError`s in `errors`. It extends `Exception`, not `DomainError`, and is raised by `MultiFieldValidator.validate()`.
-
 ### Availability errors
 
 `ShortURLAvailabilityError` and its subclasses `ShortURLDeactivatedError` and `ShortURLExpiredError` mean the short URL exists but isn't available. They extend `Exception` and carry no message or code. Only `resolve()` raises them, and only the subclasses, as in the [Status](#status) table. Nothing raises `ShortURLAvailabilityError` itself.
@@ -236,4 +226,4 @@ Wrong types or values given to the domain's code. They are programming errors, n
 
 Decisions to make during this phase:
 
-- **Abstractions to revisit for simplicity:** `DomainEntity` (`get_fields()` is only used in tests), `MultiFieldValidator` (unused and untested) and `Validator`.
+- **Abstractions to revisit for simplicity:** `DomainEntity` (`get_fields()` is only used in tests).

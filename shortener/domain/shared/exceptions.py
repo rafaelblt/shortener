@@ -12,8 +12,3 @@ class ValidationError(DomainError):
         self.code = code
         self.message = message
         super().__init__(code=code, message=message)
-
-
-class MultiValidationError(Exception): 
-    def __init__(self, errors: list[ValidationError]):
-        self.errors = errors
