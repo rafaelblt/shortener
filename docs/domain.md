@@ -18,6 +18,7 @@ shortener/domain/
     ├── entity_id.py       EntityID
     ├── datetime_utils.py  is_utc()
     ├── result.py          Result, Ok and Err
+    ├── validation.py      StringValidation, ValidationError, ValidationIssue and IssueCode
     └── exceptions.py      DomainError and ValidationError
 ```
 
@@ -194,6 +195,35 @@ match result:
 | --------------- | --------------------- | --------------------------------------------------- |
 | `map(function)` | `Ok(function(value))` | The same `Err`, without calling `function`          |
 | `unwrap()`      | `value`               | Raises `ValueError`, whose only argument is `error` |
+
+### Validation
+
+`shared/validation.py`
+
+`StringValidation(value)` validates a value with rules chained one after the other, and `result()` ends the chain:
+
+```python
+StringValidation(value).min_length(3).max_length(30).result()
+```
+
+Each rule records a `ValidationIssue` when the value breaks it, and the chain goes on, so every broken rule is recorded, in the order of the chain. A value that isn't a `str` gets an `INVALID_TYPE` issue when `StringValidation` is created, and every rule is skipped.
+
+| Method                  | Records                                                                                  |
+| ----------------------- | ---------------------------------------------------------------------------------------- |
+| `min_length(length)`    | `TOO_SHORT` when `len(value) < length`                                                   |
+| `max_length(length)`    | `TOO_LONG` when `len(value) > length`                                                    |
+| `matches(pattern)`      | `INVALID_FORMAT` when `pattern.fullmatch(value)` is `None`: the whole value has to match |
+| `satisfies(rule, code)` | `code` when `rule(value)` is false. It adds a rule the methods above don't cover.        |
+
+`result()` returns `Ok(value)` when no issue was recorded. Otherwise, it returns `Err` with a `ValidationError`: a frozen dataclass whose `issues` holds the recorded `ValidationIssue`s, as a tuple. A `ValidationIssue` is a frozen dataclass with a single field, `code`, an `IssueCode`. The codes describe the kind of rule that was broken, not what was validated, so a code means the same thing wherever it comes from:
+
+| `IssueCode`      | Value              | The value...                             |
+| ---------------- | ------------------ | ---------------------------------------- |
+| `INVALID_TYPE`   | `"invalid_type"`   | isn't of the expected type               |
+| `TOO_SHORT`      | `"too_short"`      | is shorter than the minimum length       |
+| `TOO_LONG`       | `"too_long"`       | is longer than the maximum length        |
+| `INVALID_FORMAT` | `"invalid_format"` | doesn't have the expected format         |
+| `FORBIDDEN`      | `"forbidden"`      | is one of the values that aren't allowed |
 
 ## Errors
 
