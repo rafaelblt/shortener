@@ -14,8 +14,7 @@ shortener/domain/
 ├── shorturl/
 │   ├── shorturl.py        ShortURL
 │   ├── fields/            ShortURLID, OwnerID, Slug, TargetURL and ShortURLStatus
-│   ├── exceptions.py      the errors of ShortURL and its fields
-│   └── validator.py       ShortURLValidator
+│   └── exceptions.py      the errors of ShortURL and its fields
 └── shared/                code that doesn't depend on shorturl/
     ├── entity_id.py       EntityID
     ├── datetime_utils.py  is_utc() and ensure_utc()
@@ -172,12 +171,6 @@ A short URL with an `expires_at` expires once that moment is reached: `is_expire
 
 Expiration isn't a status, and has a different meaning: no status says that a short URL has expired, and knowing it always takes comparing `expires_at` with `now`. It is checked when the short URL is used, so it never depends on a status being updated in time.
 
-### ShortURLValidator
-
-`shorturl/validator.py`
-
-Abstract class with one abstract async method, `validate(shorturl) -> None`. Its docstring defines the contract: return `None` when the short URL is valid, and raise `ShortURLValidationError` when any part of it isn't. The domain has no implementation of it, and doesn't call it.
-
 ## Shared
 
 `shared/`
@@ -243,4 +236,4 @@ Wrong types or values given to the domain's code. They are programming errors, n
 
 Decisions to make during this phase:
 
-- **Abstractions to revisit for simplicity:** `DomainEntity` (`get_fields()` is only used in tests), `MultiFieldValidator` (unused and untested), `Validator` and `ShortURLValidator`.
+- **Abstractions to revisit for simplicity:** `DomainEntity` (`get_fields()` is only used in tests), `MultiFieldValidator` (unused and untested) and `Validator`.
