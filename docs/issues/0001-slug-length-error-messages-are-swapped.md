@@ -1,6 +1,6 @@
 ---
-status: open
-resolution:
+status: closed
+resolution: obsolete
 labels: [bug, domain]
 ---
 
@@ -21,3 +21,7 @@ Slug("a" * 31)  # [SLUG_TOO_LONG]: Slug must be at least 30 characters long.
 ```
 
 Expected, from the error codes and the limits they carry: "at least 3" for `SLUG_TOO_SHORT`, and "at most 30" for `SLUG_TOO_LONG`.
+
+## 2026-10-07: Closed as obsolete
+
+The slug length errors were removed, along with their messages. `Slug.create()` now returns the broken rules in a `ValidationError`, as issues that only have a code: `TOO_SHORT` or `TOO_LONG`.

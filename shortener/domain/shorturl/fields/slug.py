@@ -3,11 +3,13 @@ import string
 import random
 
 from typing import Final
-from shortener.domain.shorturl.exceptions import (
-    ShortURLSlugTooLongError,
-    ShortURLSlugTooShortError,
-    ShortURLForbiddenSlugError,
-    ShortURLInvalidSlugError
+
+from shortener.domain.shared.parsing import require_non_empty_string
+from shortener.domain.shared.result import Result
+from shortener.domain.shared.validation import (
+    IssueCode,
+    StringValidation,
+    ValidationError,
 )
 
 
@@ -20,17 +22,17 @@ SLUG_PATTERN: Final = re.compile(r"^[a-zA-Z0-9_-]+$")
 
 FORBIDDEN_SLUGS = {
     "docs",
-    "admin", 
-    "login", 
-    "logout", 
-    "dashboard", 
-    "api", 
-    "config", 
-    "help", 
-    "support", 
-    "terms", 
-    "privacy", 
-    "about", 
+    "admin",
+    "login",
+    "logout",
+    "dashboard",
+    "api",
+    "config",
+    "help",
+    "support",
+    "terms",
+    "privacy",
+    "about",
     "contact"
 }
 
@@ -38,58 +40,56 @@ FORBIDDEN_SLUGS = {
 class Slug(str):
     """A custom string class representing a Slug for ShortURL"""
 
-    def __new__(cls, value: str):
-        value = str(value)
-        cls.validate_slug(value)
-        return super().__new__(cls, value)
+    def __new__(cls, value: str) -> "Slug":
+        """
+        Prefer create(), which returns the broken rules instead of raising.
+
+        Raises:
+            ValueError: The value breaks a rule of create(). Its only argument
+                is the ValidationError.
+        """
+        return cls.create(value).unwrap()
 
     def __repr__(self):
         return f"<Slug({super().__repr__()})>"
-    
-    @staticmethod
-    def validate_slug(value: str):
-        """
-        Validate the Slug value.
 
-        Args:
-            value (str): The slug to be validated.
-        
-        Returns: 
-            None: The slug is valid.
+    @classmethod
+    def create(cls, value: object) -> Result["Slug", ValidationError]:
+        return (
+            StringValidation(value)
+            .matches(SLUG_PATTERN)
+            .satisfies(_is_not_forbidden, IssueCode.FORBIDDEN)
+            .min_length(SLUG_MIN_LENGTH)
+            .max_length(SLUG_MAX_LENGTH)
+            .result()
+            .map(cls._build)
+        )
+
+    @classmethod
+    def parse(cls, value: object) -> "Slug":
+        """
+        Only checks that the value is a non-empty str, so a slug created under
+        older rules is still accepted. See docs/domain.md#value-objects
 
         Raises:
-            ShortURLInvalidSlugError: The slug contains invalid characters.
-            ShortURLForbiddenSlugError: The slug is forbidden.
-            ShortURLSlugTooLongError: The slug is longer than max length.
-            ShortURLSlugTooShortError: The slug is shorther than min length.
+            TypeError: The value isn't a str.
+            ValueError: The value is empty.
         """
-        if not SLUG_PATTERN.match(value):
-            raise ShortURLInvalidSlugError(slug=value)
-
-        if value.lower() in FORBIDDEN_SLUGS:
-            raise ShortURLForbiddenSlugError(value)
-
-        if len(value) < SLUG_MIN_LENGTH:
-            raise ShortURLSlugTooShortError(slug=value, min_length=SLUG_MIN_LENGTH)
-        
-        if len(value) > SLUG_MAX_LENGTH:
-            raise ShortURLSlugTooLongError(slug=value, max_length=SLUG_MAX_LENGTH)
+        return cls._build(require_non_empty_string(value, cls.__name__))
 
     @classmethod
     def generate_random(
-        cls, 
+        cls,
         length: int = DEFAULT_RANDOM_SLUG_LENGTH,
         chars: str = DEFAULT_CHARS
-    ) -> "Slug":
-        """
-        Generate a random slug with a specified length and chars.
-
-        Args:
-            length (int): The length of the slug to generate.
-            chars (str): The chars to use for generate.
-        
-        Returns:
-            str: A randomly generated slug.
-        """
+    ) -> Result["Slug", ValidationError]:
         random_slug = "".join(random.choices(chars, k=length))
-        return cls(random_slug)
+        return cls.create(random_slug)
+
+    @classmethod
+    def _build(cls, value: str) -> "Slug":
+        return super().__new__(cls, value)
+
+
+def _is_not_forbidden(value: str) -> bool:
+    return value.lower() not in FORBIDDEN_SLUGS

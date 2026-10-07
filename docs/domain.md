@@ -13,14 +13,13 @@ shortener/domain/
 ├── shorturl/
 │   ├── shorturl.py        ShortURL
 │   ├── fields/            ShortURLID, OwnerID, Slug, TargetURL and ShortURLStatus
-│   └── exceptions.py      the errors of ShortURL and its fields
+│   └── exceptions.py      the errors of ShortURL
 └── shared/                code that doesn't depend on shorturl/
     ├── entity_id.py       EntityID
     ├── datetime_utils.py  is_utc()
     ├── result.py          Result, Ok and Err
     ├── validation.py      StringValidation, ValidationError, ValidationIssue and IssueCode
-    ├── parsing.py         require_non_empty_string()
-    └── exceptions.py      DomainError and ValidationError
+    └── parsing.py         require_non_empty_string()
 ```
 
 ## Time
@@ -31,6 +30,22 @@ No rule of the domain reads the clock. Every operation that depends on the curre
 - `is_expired()`, `is_available()` and `resolve()` don't validate `now`. `is_expired()` compares it with `expires_at` when there is one, and the other two call `is_expired()` only in the `ACTIVE` status. In that comparison, a `now` that isn't a timezone-aware datetime raises `TypeError`.
 
 The clock is read in one place: `ShortURLID.generate()`, since a UUIDv7 contains the moment it was generated. No rule depends on that moment.
+
+## Value objects
+
+`Slug` and `TargetURL` are `str` subclasses whose value the domain validates. They offer three ways of getting an instance, each for a different situation:
+
+| Way             | Checks                                                                                  | When a check fails                                                     | For                                                                                                  |
+| --------------- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `create(value)` | Every rule of the value object                                                          | Returns `Err` with a `ValidationError`                                 | New values, such as a slug sent by a client. It is the recommended way.                              |
+| The constructor | The same rules, by calling `create()`                                                   | Raises `ValueError`, whose only argument is the `ValidationError`      | Values known to be valid, such as literals in tests.                                                 |
+| `parse(value)`  | Only that the value is a non-empty `str`, with [`require_non_empty_string()`](#parsing) | Raises `TypeError` if it isn't a `str`, and `ValueError` if it's empty | Values that already exist, such as one loaded from the database, or one used to look up a short URL. |
+
+`create()` checks the rules with [`StringValidation`](#validation), and returns a [`Result`](#result): `Ok` with the instance, or `Err` with a `ValidationError` that has an issue for each rule the value breaks. Each issue has a code, and the codes are shared by the value objects, so the upper layers handle a `TOO_LONG` the same way, whichever value object returned it. A value that isn't a `str` only gets the `INVALID_TYPE` issue. The rules of each value object are in its section: [Slug](#slug) and [TargetURL](#targeturl).
+
+The rules of `create()` can change, and a value accepted under older rules has to keep working. That is why `parse()` doesn't apply them, and only checks what any value of the type has.
+
+`ShortURLID`, `OwnerID` and `ShortURLStatus` don't follow this model: see [IDs](#ids) and [Status](#status).
 
 ## ShortURL
 
@@ -103,20 +118,20 @@ Two things happen outside the domain, but shape this rule:
 
 `shorturl/fields/slug.py`
 
-The slug is the short path that identifies the short URL. `Slug` is a `str` subclass. Creating one converts the value with `str()` ([issue 0003](issues/0003-value-objects-dont-check-the-value-is-a-string.md)) and validates it with `Slug.validate_slug()`, which runs these checks in order and raises at the first that fails:
+The slug is the short path that identifies the short URL. It is a [value object](#value-objects), and these are the rules of `Slug.create()`, in the order of its issues:
 
-| Check                                                                                                   | Error                        |
-| ------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| Matches `SLUG_PATTERN`, `^[a-zA-Z0-9_-]+$`: only ASCII letters, digits, `_` and `-`, and at least one character. A trailing `\n` also passes ([issue 0005](issues/0005-slug-can-end-with-a-newline.md)) | `ShortURLInvalidSlugError`   |
-| Its lowercase form isn't in `FORBIDDEN_SLUGS`                                                           | `ShortURLForbiddenSlugError` |
-| At least `SLUG_MIN_LENGTH` (3) characters                                                               | `ShortURLSlugTooShortError`  |
-| At most `SLUG_MAX_LENGTH` (30) characters                                                               | `ShortURLSlugTooLongError`   |
+| Rule                                                                                                 | Issue code       |
+| ---------------------------------------------------------------------------------------------------- | ---------------- |
+| The whole value matches `SLUG_PATTERN`, `^[a-zA-Z0-9_-]+$`: only ASCII letters, digits, `_` and `-` | `INVALID_FORMAT` |
+| Its lowercase form isn't in `FORBIDDEN_SLUGS`                                                        | `FORBIDDEN`      |
+| At least `SLUG_MIN_LENGTH` (3) characters                                                            | `TOO_SHORT`      |
+| At most `SLUG_MAX_LENGTH` (30) characters                                                            | `TOO_LONG`       |
 
 `FORBIDDEN_SLUGS` holds `about`, `admin`, `api`, `config`, `contact`, `dashboard`, `docs`, `help`, `login`, `logout`, `privacy`, `support` and `terms`.
 
-Because the pattern is checked first, an empty string raises `ShortURLInvalidSlugError`, not `ShortURLSlugTooShortError`. `Slug.validate_slug(value)` can also be called on its own, and returns `None` for a valid value.
+An empty string breaks two rules, and gets `INVALID_FORMAT` and `TOO_SHORT`.
 
-`Slug.generate_random(length=DEFAULT_RANDOM_SLUG_LENGTH, chars=DEFAULT_CHARS)` picks `length` characters from `chars` with `random.choices` and returns them as a `Slug`, so the result goes through the same validation and can raise its errors. By default, it picks 6 characters among the ASCII letters and digits.
+`Slug.generate_random(length=DEFAULT_RANDOM_SLUG_LENGTH, chars=DEFAULT_CHARS)` picks `length` characters from `chars` with `random.choices`, and returns what `create()` returns for them. By default, it picks 6 characters among the ASCII letters and digits, and then returns `Err` only for a forbidden slug: `config` or `logout` in any letter case, 128 of the 62⁶ possible slugs.
 
 Slugs are unique, but `Slug` and `ShortURL` don't check it.
 
@@ -124,15 +139,13 @@ Slugs are unique, but `Slug` and `ShortURL` don't check it.
 
 `shorturl/fields/target_url.py`
 
-The destination of the short URL. `TargetURL` is a `str` subclass. Creating one validates the value with `TargetURL.validate_target_url()`, which parses it with `urllib.parse.urlparse` and raises `ShortURLInvalidURLError` when:
+The destination of the short URL. It is a [value object](#value-objects), and `TargetURL.create()` has a single rule: the value parses with `urllib.parse.urlparse`, its scheme is `https`, and its netloc (the host part) isn't empty. A value that breaks it gets `INVALID_FORMAT`, such as:
 
-- `urlparse` fails with `ValueError` or `TypeError`, as it does for `https://[invalid`;
-- the scheme isn't `https`. `urlparse` lowercases the scheme, so `HTTPS://example.com` also passes;
-- the netloc (the host part) is empty, as in `https://` or `https:///path`.
+- one that `urlparse` fails to parse with `ValueError`, as `https://[invalid`;
+- one whose scheme isn't `https`. `urlparse` lowercases the scheme, so `HTTPS://example.com` is accepted;
+- one whose netloc is empty, as `https://` or `https:///path`.
 
-Nothing else is checked: the netloc isn't validated, so `https://exa mple.com` is a valid `TargetURL`. A value that isn't a string can raise other errors, such as `AttributeError` for `TargetURL(123)` ([issue 0003](issues/0003-value-objects-dont-check-the-value-is-a-string.md)).
-
-`TargetURL.validate_target_url(value)` can also be called on its own, and returns `None` for a valid value.
+Nothing else is checked: the netloc isn't validated, so `https://exa mple.com` is accepted.
 
 ### Status
 
@@ -234,21 +247,9 @@ Each rule records a `ValidationIssue` when the value breaks it, and the chain go
 
 ## Errors
 
-`shared/exceptions.py` and `shorturl/exceptions.py`
+`shorturl/exceptions.py`
 
-### Validation errors
-
-`DomainError(code, message)` stores `code` and `message`, and its text is `[<code>]: <message>`. `ValidationError(value, field, code, message)` extends it with the invalid `value` and the `field` it belongs to. The `code` is a stable identifier the API can return to the client.
-
-| Error                            | `code`                | `field`        | Raised by                                         |
-| -------------------------------- | --------------------- | -------------- | ------------------------------------------------- |
-| `ShortURLInvalidURLError`        | `URL_INVALID`         | `target_url`   | `TargetURL()`, `TargetURL.validate_target_url()`  |
-| `ShortURLInvalidSlugError`       | `SLUG_INVALID`        | `slug`         | `Slug()`, `Slug.validate_slug()`                  |
-| `ShortURLForbiddenSlugError`     | `SLUG_FORBIDDEN`      | `slug`         | `Slug()`, `Slug.validate_slug()`                  |
-| `ShortURLSlugTooShortError`      | `SLUG_TOO_SHORT`      | `slug`         | `Slug()`, `Slug.validate_slug()`                  |
-| `ShortURLSlugTooLongError`       | `SLUG_TOO_LONG`       | `slug`         | `Slug()`, `Slug.validate_slug()`                  |
-
-Each of them also stores the input under its own name (`url` or `slug`), and the length errors store the limit (`min_length` or `max_length`). The messages of the length errors are swapped ([issue 0001](issues/0001-slug-length-error-messages-are-swapped.md)). They extend `ShortURLValidationError`, which extends `ValidationError` and adds nothing.
+A value that breaks a rule of a value object isn't an exception: `create()` returns it as a [`ValidationError`](#validation).
 
 ### Availability errors
 
@@ -259,8 +260,12 @@ Each of them also stores the input under its own name (`url` or `slug`), and the
 Wrong types or values given to the domain's code. They are programming errors, not client input errors.
 
 - `ShortURLAttributeTypeError`, a `TypeError`: wrong type given to the `ShortURL` constructor, a `change_*()` method or `record_visit()`.
-- `ValueError`: a negative `visit_count`, or a datetime that isn't in UTC, given to the `ShortURL` constructor or `record_visit()`.
+- `ValueError`: a negative `visit_count`, or a datetime that isn't in UTC, given to the `ShortURL` constructor or `record_visit()`. Also a value that breaks a rule of `create()`, given to the constructor of `Slug` or `TargetURL`.
 - `TypeError`: an `EntityID` created with a `value` that isn't a `UUID`.
+
+### Parsing errors
+
+`parse()` of `Slug` and `TargetURL` raises `TypeError` for a value that isn't a `str`, and `ValueError` for an empty one. See [Value objects](#value-objects).
 
 ## Open questions
 

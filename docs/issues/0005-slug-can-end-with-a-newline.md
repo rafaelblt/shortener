@@ -1,6 +1,6 @@
 ---
-status: open
-resolution:
+status: closed
+resolution: fixed
 labels: [bug, domain]
 ---
 
@@ -15,3 +15,7 @@ Slug("abc\n")  # <Slug('abc\n')>, len 4
 ```
 
 Expected, from the message of `ShortURLInvalidSlugError` ("Allowed: a-z, A-Z, 0-9, _, -"): `ShortURLInvalidSlugError`.
+
+## 2026-10-07: Closed as fixed
+
+`Slug.create()` checks `SLUG_PATTERN` with `StringValidation.matches()`, which uses `fullmatch`, so the whole value has to match and `Slug.create("abc\n")` returns `Err` with the `INVALID_FORMAT` issue. Tested in `tests/test_domain/test_shorturl/test_slug/test_create.py`.

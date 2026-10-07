@@ -1,6 +1,6 @@
 ---
-status: open
-resolution:
+status: closed
+resolution: fixed
 labels: [bug, domain]
 ---
 
@@ -29,3 +29,7 @@ Which error a value that isn't a string should raise is still to be decided.
 TargetURL(123)      # AttributeError: 'int' object has no attribute 'decode'
 TargetURL(None)     # ShortURLInvalidURLError
 ```
+
+## 2026-10-07: Closed as fixed
+
+`Slug` and `TargetURL` now handle a value that isn't a string the same way: `create()` returns `Err` with the `INVALID_TYPE` issue, the constructor raises `ValueError`, and `parse()` raises `TypeError`. `Slug` no longer converts the value with `str()`.

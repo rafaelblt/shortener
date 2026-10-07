@@ -1,6 +1,3 @@
-from shortener.domain.shared.exceptions import ValidationError
-
-
 class ShortURLAttributeTypeError(TypeError):
     def __init__(self, attr: str, type_expected: str, got):
         super().__init__(
@@ -13,39 +10,3 @@ class ShortURLAttributeTypeError(TypeError):
 class ShortURLAvailabilityError(Exception): ...
 class ShortURLDeactivatedError(ShortURLAvailabilityError): ...
 class ShortURLExpiredError(ShortURLAvailabilityError): ...
-
-
-# - VALIDATION EXCEPTIONS
-class ShortURLValidationError(ValidationError):
-    def __init__(self, value: str | int, field: str, code: str, message: str):
-        super().__init__(value, field, code, message)
-class ShortURLInvalidSlugError(ShortURLValidationError):
-    code = "SLUG_INVALID"
-    def __init__(self, slug: str):
-        self.slug = slug
-        msg = "Slug contains invalid characters. Allowed: a-z, A-Z, 0-9, _, -"
-        super().__init__(value=slug, field="slug", code=self.code, message=msg)
-class ShortURLForbiddenSlugError(ShortURLValidationError):
-    code = "SLUG_FORBIDDEN"
-    def __init__(self, slug: str):
-        self.slug = slug
-        msg = "The provided slug is forbidden."
-        super().__init__(value=slug, field="slug", code=self.code, message=msg)
-class ShortURLSlugTooLongError(ShortURLValidationError):
-    code = "SLUG_TOO_LONG"
-    def __init__(self, slug: str, max_length: int):
-        self.slug, self.max_length = slug, max_length
-        msg = f"Slug must be at least {max_length} characters long."
-        super().__init__(value=slug, field="slug", code=self.code, message=msg)
-class ShortURLSlugTooShortError(ShortURLValidationError):
-    code = "SLUG_TOO_SHORT"
-    def __init__(self, slug: str, min_length: int):
-        self.slug, self.min_length = slug, min_length
-        msg = f"Slug must be at most {min_length} characters long."
-        super().__init__(value=slug, field="slug", code=self.code, message=msg)
-class ShortURLInvalidURLError(ShortURLValidationError):
-    code = "URL_INVALID"
-    def __init__(self, url: str):
-        self.url = url
-        msg = "URL must be a valid https url."
-        super().__init__(value=url, field="target_url", code=self.code, message=msg)
