@@ -1,6 +1,6 @@
 ---
-status: open
-resolution:
+status: closed
+resolution: obsolete
 labels: [bug, domain]
 ---
 
@@ -20,3 +20,7 @@ with patch("random.choices", return_value=list("LogOut")):
 ```
 
 Expected, from the docstring of `generate_unique_slug()`: a unique slug, or `RuntimeError` when every attempt fails.
+
+## 2026-10-07: Closed as obsolete
+
+`generate_unique_slug()` was removed from the domain, along with `shortener/domain/shorturl/utils.py` and its tests. It depended on `ShortURLRepository`, which is leaving the domain: the repository interface belongs to the layer that uses it.

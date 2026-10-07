@@ -16,8 +16,7 @@ shortener/domain/
 │   ├── fields/            ShortURLID, OwnerID, Slug, TargetURL and ShortURLStatus
 │   ├── exceptions.py      the errors of ShortURL and its fields
 │   ├── repository.py      ShortURLRepository
-│   ├── validator.py       ShortURLValidator
-│   └── utils.py           generate_unique_slug()
+│   └── validator.py       ShortURLValidator
 └── shared/                code that doesn't depend on shorturl/
     ├── entity_id.py       EntityID
     ├── datetime_utils.py  is_utc() and ensure_utc()
@@ -133,7 +132,7 @@ Because the pattern is checked first, an empty string raises `ShortURLInvalidSlu
 
 `Slug.generate_random(length=DEFAULT_RANDOM_SLUG_LENGTH, chars=DEFAULT_CHARS)` picks `length` characters from `chars` with `random.choices` and returns them as a `Slug`, so the result goes through the same validation and can raise its errors. By default, it picks 6 characters among the ASCII letters and digits.
 
-Slugs are unique, but `Slug` and `ShortURL` don't check it, and nothing in the domain raises `ShortURLSlugAlreadyExistsError`. `generate_unique_slug(repository, length=DEFAULT_RANDOM_SLUG_LENGTH, max_attempts=DEFAULT_MAX_ATTEMPS_TO_GENERATE_UNIQUE_SLUG)`, in `shorturl/utils.py`, calls `Slug.generate_random(length)` until `repository.exists_by_slug()` returns `False` for the generated slug, and returns that slug. If no attempt succeeds, it raises `RuntimeError`, after `max_attempts + 1` attempts ([issue 0002](issues/0002-generate-unique-slug-makes-one-extra-attempt.md)). An error raised by `Slug.generate_random()`, such as `ShortURLForbiddenSlugError`, isn't caught ([issue 0006](issues/0006-generate-unique-slug-can-raise-forbidden-slug-error.md)). `max_attempts` defaults to 100.
+Slugs are unique, but `Slug` and `ShortURL` don't check it, and nothing in the domain raises `ShortURLSlugAlreadyExistsError`.
 
 ### TargetURL
 
@@ -282,10 +281,6 @@ Wrong types or values given to the domain's code. They are programming errors, n
   - `ShortURLNotFoundError(value, field)`: no short URL has `field` equal to `value`. The repository contract raises it from `update()` and `delete_by_id()`.
   - `ShortURLNotFoundInDatabaseError`: adds nothing to `ShortURLRepositoryError`. Nothing in the domain raises it.
 - `ShortURLDeletionNotFoundError` extends `Exception` directly, not `ShortURLRepositoryError`. Nothing in the domain raises it.
-
-### Other errors
-
-- `RuntimeError`: raised by `generate_unique_slug()` when every attempt finds an existing slug.
 
 ## Open questions
 

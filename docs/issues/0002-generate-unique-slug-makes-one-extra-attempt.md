@@ -1,6 +1,6 @@
 ---
-status: open
-resolution:
+status: closed
+resolution: obsolete
 labels: [bug, domain]
 ---
 
@@ -21,3 +21,7 @@ await generate_unique_slug(repository, max_attempts=3)
 Expected, from the parameter name, the docstring and the error message: exactly `max_attempts` attempts.
 
 The tests in `tests/test_domain/test_shorturl/test_slug/test_generate_unique.py` only check the error message, not the number of attempts.
+
+## 2026-10-07: Closed as obsolete
+
+`generate_unique_slug()` was removed from the domain, along with `shortener/domain/shorturl/utils.py` and its tests. It depended on `ShortURLRepository`, which is leaving the domain: the repository interface belongs to the layer that uses it.

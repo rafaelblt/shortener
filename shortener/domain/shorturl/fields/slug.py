@@ -15,8 +15,6 @@ DEFAULT_RANDOM_SLUG_LENGTH: Final = 6
 SLUG_MAX_LENGTH: Final = 30
 SLUG_MIN_LENGTH: Final = 3
 
-DEFAULT_MAX_ATTEMPS_TO_GENERATE_UNIQUE_SLUG = 100
-
 DEFAULT_CHARS: Final = string.ascii_letters + string.digits
 SLUG_PATTERN: Final = re.compile(r"^[a-zA-Z0-9_-]+$")
 
