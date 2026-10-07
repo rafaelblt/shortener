@@ -47,11 +47,6 @@ def test_trailing_newline_is_an_invalid_format():
     assert Slug.create("abc\n") == invalid(IssueCode.INVALID_FORMAT)
 
 
-@pytest.mark.parametrize("value", ["docs", "DOCS", "LogOut"])
-def test_forbidden_slug_in_any_letter_case_is_forbidden(value):
-    assert Slug.create(value) == invalid(IssueCode.FORBIDDEN)
-
-
 def test_empty_value_is_an_invalid_format_and_too_short():
     assert Slug.create("") == invalid(IssueCode.INVALID_FORMAT, IssueCode.TOO_SHORT)
 

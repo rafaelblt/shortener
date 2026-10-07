@@ -19,7 +19,7 @@ def test_value_that_is_not_a_string_only_gets_invalid_type(value):
         StringValidation(value)
         .min_length(10)
         .matches(LOWERCASE_LETTERS)
-        .satisfies(lambda value: False, IssueCode.FORBIDDEN)
+        .satisfies(lambda value: False, IssueCode.INVALID_FORMAT)
         .result()
     )
     assert result == invalid(IssueCode.INVALID_TYPE)
@@ -52,13 +52,13 @@ def test_matches_rejects_a_value_that_only_partially_matches_as_invalid_format(v
 
 
 def test_satisfies_accepts_a_value_that_follows_the_rule():
-    result = StringValidation("abc").satisfies(str.islower, IssueCode.FORBIDDEN).result()
+    result = StringValidation("abc").satisfies(str.islower, IssueCode.INVALID_FORMAT).result()
     assert result == Ok("abc")
 
 
 def test_satisfies_rejects_a_value_that_breaks_the_rule_with_the_given_code():
-    result = StringValidation("ABC").satisfies(str.islower, IssueCode.FORBIDDEN).result()
-    assert result == invalid(IssueCode.FORBIDDEN)
+    result = StringValidation("ABC").satisfies(str.islower, IssueCode.INVALID_FORMAT).result()
+    assert result == invalid(IssueCode.INVALID_FORMAT)
 
 
 def test_records_an_issue_for_each_broken_rule_in_the_order_of_the_chain():

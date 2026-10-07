@@ -6,11 +6,7 @@ from typing import Final
 
 from shortener.domain.shared.parsing import require_non_empty_string
 from shortener.domain.shared.result import Result
-from shortener.domain.shared.validation import (
-    IssueCode,
-    StringValidation,
-    ValidationError,
-)
+from shortener.domain.shared.validation import StringValidation, ValidationError
 
 
 DEFAULT_RANDOM_SLUG_LENGTH: Final = 6
@@ -19,22 +15,6 @@ SLUG_MIN_LENGTH: Final = 3
 
 DEFAULT_CHARS: Final = string.ascii_letters + string.digits
 SLUG_PATTERN: Final = re.compile(r"^[a-zA-Z0-9_-]+$")
-
-FORBIDDEN_SLUGS = {
-    "docs",
-    "admin",
-    "login",
-    "logout",
-    "dashboard",
-    "api",
-    "config",
-    "help",
-    "support",
-    "terms",
-    "privacy",
-    "about",
-    "contact"
-}
 
 
 class Slug(str):
@@ -58,7 +38,6 @@ class Slug(str):
         return (
             StringValidation(value)
             .matches(SLUG_PATTERN)
-            .satisfies(_is_not_forbidden, IssueCode.FORBIDDEN)
             .min_length(SLUG_MIN_LENGTH)
             .max_length(SLUG_MAX_LENGTH)
             .result()
@@ -89,7 +68,3 @@ class Slug(str):
     @classmethod
     def _build(cls, value: str) -> "Slug":
         return super().__new__(cls, value)
-
-
-def _is_not_forbidden(value: str) -> bool:
-    return value.lower() not in FORBIDDEN_SLUGS

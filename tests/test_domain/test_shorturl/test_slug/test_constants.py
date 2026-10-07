@@ -6,8 +6,7 @@ from shortener.domain.shorturl.fields.slug import (
     SLUG_MAX_LENGTH,
     SLUG_MIN_LENGTH,
     DEFAULT_CHARS,
-    SLUG_PATTERN,
-    FORBIDDEN_SLUGS
+    SLUG_PATTERN
 )
 
 
@@ -30,22 +29,3 @@ def test_default_chars():
 def test_slug_pattern():
     assert isinstance(SLUG_PATTERN, re.Pattern)
     assert SLUG_PATTERN.pattern == r"^[a-zA-Z0-9_-]+$"
-
-
-def test_forbidden_slugs():
-    expected_forbidden_slugs = {
-        "docs",
-        "admin",
-        "login",
-        "logout",
-        "dashboard",
-        "api",
-        "config",
-        "help",
-        "support",
-        "terms",
-        "privacy",
-        "about",
-        "contact"
-    }
-    assert FORBIDDEN_SLUGS == expected_forbidden_slugs

@@ -123,15 +123,12 @@ The slug is the short path that identifies the short URL. It is a [value object]
 | Rule                                                                                                 | Issue code       |
 | ---------------------------------------------------------------------------------------------------- | ---------------- |
 | The whole value matches `SLUG_PATTERN`, `^[a-zA-Z0-9_-]+$`: only ASCII letters, digits, `_` and `-` | `INVALID_FORMAT` |
-| Its lowercase form isn't in `FORBIDDEN_SLUGS`                                                        | `FORBIDDEN`      |
 | At least `SLUG_MIN_LENGTH` (3) characters                                                            | `TOO_SHORT`      |
 | At most `SLUG_MAX_LENGTH` (30) characters                                                            | `TOO_LONG`       |
 
-`FORBIDDEN_SLUGS` holds `about`, `admin`, `api`, `config`, `contact`, `dashboard`, `docs`, `help`, `login`, `logout`, `privacy`, `support` and `terms`.
-
 An empty string breaks two rules, and gets `INVALID_FORMAT` and `TOO_SHORT`.
 
-`Slug.generate_random(length=DEFAULT_RANDOM_SLUG_LENGTH, chars=DEFAULT_CHARS)` picks `length` characters from `chars` with `random.choices`, and returns what `create()` returns for them. By default, it picks 6 characters among the ASCII letters and digits, and then returns `Err` only for a forbidden slug: `config` or `logout` in any letter case, 128 of the 62⁶ possible slugs.
+`Slug.generate_random(length=DEFAULT_RANDOM_SLUG_LENGTH, chars=DEFAULT_CHARS)` picks `length` characters from `chars` with `random.choices`, and returns what `create()` returns for them. With the defaults, 6 characters among the ASCII letters and digits, the slug follows every rule, so it always returns `Ok`.
 
 Slugs are unique, but `Slug` and `ShortURL` don't check it.
 
@@ -231,13 +228,12 @@ Each rule records a `ValidationIssue` when the value breaks it, and the chain go
 
 `result()` returns `Ok(value)` when no issue was recorded. Otherwise, it returns `Err` with a `ValidationError`: a frozen dataclass whose `issues` holds the recorded `ValidationIssue`s, as a tuple. A `ValidationIssue` is a frozen dataclass with a single field, `code`, an `IssueCode`. The codes describe the kind of rule that was broken, not what was validated, so a code means the same thing wherever it comes from:
 
-| `IssueCode`      | Value              | The value...                             |
-| ---------------- | ------------------ | ---------------------------------------- |
-| `INVALID_TYPE`   | `"invalid_type"`   | isn't of the expected type               |
-| `TOO_SHORT`      | `"too_short"`      | is shorter than the minimum length       |
-| `TOO_LONG`       | `"too_long"`       | is longer than the maximum length        |
-| `INVALID_FORMAT` | `"invalid_format"` | doesn't have the expected format         |
-| `FORBIDDEN`      | `"forbidden"`      | is one of the values that aren't allowed |
+| `IssueCode`      | Value              | The value...                       |
+| ---------------- | ------------------ | ---------------------------------- |
+| `INVALID_TYPE`   | `"invalid_type"`   | isn't of the expected type         |
+| `TOO_SHORT`      | `"too_short"`      | is shorter than the minimum length |
+| `TOO_LONG`       | `"too_long"`       | is longer than the maximum length  |
+| `INVALID_FORMAT` | `"invalid_format"` | doesn't have the expected format   |
 
 ### Parsing
 

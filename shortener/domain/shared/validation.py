@@ -12,7 +12,6 @@ class IssueCode(Enum):
     TOO_SHORT = "too_short"
     TOO_LONG = "too_long"
     INVALID_FORMAT = "invalid_format"
-    FORBIDDEN = "forbidden"
 
 
 @dataclass(frozen=True)

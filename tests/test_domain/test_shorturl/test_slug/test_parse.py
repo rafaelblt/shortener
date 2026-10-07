@@ -10,7 +10,7 @@ def test_returns_a_slug_with_the_value():
 
 
 @pytest.mark.parametrize(
-    "value", ["docs", "a", "a" * (SLUG_MAX_LENGTH + 1), "dot.slug"]
+    "value", ["a", "a" * (SLUG_MAX_LENGTH + 1), "dot.slug"]
 )
 def test_accepts_a_value_that_breaks_the_rules_of_create(value):
     assert Slug.parse(value) == value

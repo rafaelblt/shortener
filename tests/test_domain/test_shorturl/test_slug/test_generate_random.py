@@ -1,13 +1,9 @@
-from unittest.mock import patch
-
-from shortener.domain.shared.validation import IssueCode
 from shortener.domain.shorturl.fields.slug import (
     Slug,
     DEFAULT_RANDOM_SLUG_LENGTH,
     DEFAULT_CHARS,
     SLUG_PATTERN
 )
-from tests.fixtures.domain.validation import invalid
 
 
 def test_instance():
@@ -53,8 +49,3 @@ def test_generate_with_custom_length_and_chars():
     assert len(random_slug) == custom_length
     assert all(char in custom_chars for char in random_slug)
     assert SLUG_PATTERN.match(random_slug)
-
-
-def test_returns_err_when_the_generated_slug_breaks_a_rule():
-    with patch("random.choices", return_value=list("LogOut")):
-        assert Slug.generate_random() == invalid(IssueCode.FORBIDDEN)
