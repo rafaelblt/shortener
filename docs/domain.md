@@ -16,7 +16,7 @@ shortener/domain/
 │   └── exceptions.py      the errors of ShortURL and its fields
 └── shared/                code that doesn't depend on shorturl/
     ├── entity_id.py       EntityID
-    ├── datetime_utils.py  is_utc() and ensure_utc()
+    ├── datetime_utils.py  is_utc()
     └── exceptions.py      DomainError and ValidationError
 ```
 
@@ -175,8 +175,7 @@ The identity of an entity: a frozen dataclass with one field, `value: UUID`.
 
 `shared/datetime_utils.py`
 
-- `is_utc(dt)`: `True` when `dt` is timezone-aware and its UTC offset at that moment is zero. So a zone like `Europe/London` passes in winter and fails in summer. `ShortURL` uses it to validate its datetimes.
-- `ensure_utc(dt)`: when `dt` is naive, returns it with its `tzinfo` set to UTC, without converting the time. When `dt` is aware, returns it unchanged, even if it isn't in UTC. The domain doesn't use it.
+`is_utc(dt)` returns `True` when `dt` is timezone-aware and its UTC offset at that moment is zero. So a zone like `Europe/London` passes in winter and fails in summer. `ShortURL` uses it to validate its datetimes.
 
 ## Errors
 
