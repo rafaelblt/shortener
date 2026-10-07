@@ -1,6 +1,6 @@
 # Domain
 
-The domain is the core of the shortener: the rules that hold regardless of database, HTTP or framework. It lives in `shortener/domain/` and imports nothing from the other layers.
+The domain is the core of the shortener: the rules that hold regardless of database, HTTP or framework. It lives in `shortener/domain/` and imports nothing from the other layers. It doesn't define the repository: its interface belongs to the layer that uses it.
 
 This document describes the domain as it is in the code. Verified bugs that aren't fixed yet are [issues](issues/README.md) labeled `domain`, linked from where this document describes the code they affect. Decisions still to be made are in [Open questions](#open-questions).
 
@@ -15,7 +15,6 @@ shortener/domain/
 │   ├── shorturl.py        ShortURL
 │   ├── fields/            ShortURLID, OwnerID, Slug, TargetURL and ShortURLStatus
 │   ├── exceptions.py      the errors of ShortURL and its fields
-│   ├── repository.py      ShortURLRepository
 │   └── validator.py       ShortURLValidator
 └── shared/                code that doesn't depend on shorturl/
     ├── entity_id.py       EntityID
@@ -174,25 +173,6 @@ A short URL with an `expires_at` expires once that moment is reached: `is_expire
 
 Expiration isn't a status, and has a different meaning: no status says that a short URL has expired, and knowing it always takes comparing `expires_at` with `now`. It is checked when the short URL is used, so it never depends on a status being updated in time.
 
-### Repository
-
-`shorturl/repository.py`
-
-`ShortURLRepository` is the persistence interface the domain defines and the infrastructure implements. Its methods are abstract and asynchronous, and their docstrings define the contract:
-
-| Method                          | Returns                     | Contract                                                                          |
-| ------------------------------- | --------------------------- | --------------------------------------------------------------------------------- |
-| `add(shorturl)`                 | `ShortURL`                  | Stores the short URL and returns it.                                              |
-| `update(shorturl)`              | `ShortURL`                  | Updates a stored short URL and returns it. Raises `ShortURLNotFoundError` if it isn't stored. |
-| `get_all()`                     | `list[ShortURL]`            | Every stored short URL.                                                           |
-| `get_by_id(id: ShortURLID)`     | `ShortURL \| None`          | The short URL with that ID, or `None`.                                            |
-| `get_by_slug(slug: str)`        | `ShortURL \| None`          | The short URL with that slug, or `None`.                                          |
-| `list_paginated(offset, limit)` | `PaginatedResult[ShortURL]` | Up to `limit` short URLs, starting at `offset`.                                   |
-| `delete_by_id(id: ShortURLID)`  | `ShortURL`                  | Deletes the short URL and returns it. Raises `ShortURLNotFoundError` if it isn't stored. |
-| `exists_by_slug(slug: str)`     | `bool`                      | Whether a short URL with that slug is stored.                                     |
-
-It also has two class attributes, `EntityType = ShortURL` and `exceptions = {"entity_not_found": ShortURLNotFoundError}`. Nothing in `shortener/` reads them, only the test mock `tests/fixtures/mocks/chameleon_repository.py`.
-
 ### ShortURLValidator
 
 `shorturl/validator.py`
@@ -278,7 +258,7 @@ Wrong types or values given to the domain's code. They are programming errors, n
 ### Repository errors
 
 - `ShortURLRepositoryError` extends `Exception`, and has two subclasses:
-  - `ShortURLNotFoundError(value, field)`: no short URL has `field` equal to `value`. The repository contract raises it from `update()` and `delete_by_id()`.
+  - `ShortURLNotFoundError(value, field)`: no short URL has `field` equal to `value`. Nothing in the domain raises it.
   - `ShortURLNotFoundInDatabaseError`: adds nothing to `ShortURLRepositoryError`. Nothing in the domain raises it.
 - `ShortURLDeletionNotFoundError` extends `Exception` directly, not `ShortURLRepositoryError`. Nothing in the domain raises it.
 
@@ -286,5 +266,4 @@ Wrong types or values given to the domain's code. They are programming errors, n
 
 Decisions to make during this phase:
 
-- **Owner operations in the repository**, such as listing or deleting an owner's short URLs. They should come in when the use cases need them.
 - **Abstractions to revisit for simplicity:** `DomainEntity` (`get_fields()` is only used in tests), `MultiFieldValidator` (unused and untested), `Validator`, `ShortURLValidator`, and the overlapping not-found errors (`ShortURLNotFoundError`, `ShortURLNotFoundInDatabaseError`, `ShortURLDeletionNotFoundError`).
