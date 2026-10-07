@@ -2,7 +2,7 @@ import pytest
 
 from shortener.domain.shared.result import Ok
 from shortener.domain.shared.validation import IssueCode
-from shortener.domain.shorturl.fields.slug import (
+from shortener.domain.shorturl.slug import (
     Slug,
     SLUG_MAX_LENGTH,
     SLUG_MIN_LENGTH

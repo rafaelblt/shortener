@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 from shortener.domain.shorturl.shorturl import ShortURL
-from shortener.domain.shorturl.fields import TargetURL, Slug, ShortURLID, OwnerID
+from shortener.domain.shorturl import TargetURL, Slug, ShortURLID, OwnerID
 
 
 @pytest.fixture

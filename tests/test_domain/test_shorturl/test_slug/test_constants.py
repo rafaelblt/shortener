@@ -1,7 +1,7 @@
 import re
 import string
 
-from shortener.domain.shorturl.fields.slug import (
+from shortener.domain.shorturl.slug import (
     RANDOM_SLUG_LENGTH,
     SLUG_MAX_LENGTH,
     SLUG_MIN_LENGTH,

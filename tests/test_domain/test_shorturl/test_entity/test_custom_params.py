@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from uuid import UUID
 
 from shortener.domain.shorturl import ShortURL
-from shortener.domain.shorturl.fields import (
+from shortener.domain.shorturl import (
     Slug, TargetURL, ShortURLStatus, ShortURLID, OwnerID
 )
 

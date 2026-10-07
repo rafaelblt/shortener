@@ -1,7 +1,7 @@
 import pytest
 
 from shortener.domain.shorturl import ShortURL
-from shortener.domain.shorturl.fields import Slug, TargetURL
+from shortener.domain.shorturl import Slug, TargetURL
 
 
 @pytest.fixture

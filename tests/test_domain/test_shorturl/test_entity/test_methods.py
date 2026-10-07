@@ -2,7 +2,7 @@ import pytest
 from datetime import datetime
 
 from shortener.domain.shorturl import ShortURL
-from shortener.domain.shorturl.fields import ShortURLStatus
+from shortener.domain.shorturl import ShortURLStatus
 from shortener.domain.shorturl.exceptions import (
     ShortURLDeactivatedError, 
     ShortURLExpiredError

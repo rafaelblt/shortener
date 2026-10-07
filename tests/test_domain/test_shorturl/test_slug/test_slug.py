@@ -1,7 +1,7 @@
 import pytest
 
 from shortener.domain.shared.validation import IssueCode
-from shortener.domain.shorturl.fields.slug import Slug
+from shortener.domain.shorturl.slug import Slug
 from tests.fixtures.domain.validation import invalid
 
 

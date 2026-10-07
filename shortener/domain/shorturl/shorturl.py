@@ -4,7 +4,11 @@ from datetime import datetime
 
 from shortener.domain.shared.datetime_utils import is_utc
 
-from .fields import Slug, TargetURL, ShortURLStatus, ShortURLID, OwnerID
+from .slug import Slug
+from .target_url import TargetURL
+from .status import ShortURLStatus
+from .shorturl_id import ShortURLID
+from .owner_id import OwnerID
 from .exceptions import (
     ShortURLExpiredError,
     ShortURLDeactivatedError,

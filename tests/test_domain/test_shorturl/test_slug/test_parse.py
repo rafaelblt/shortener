@@ -1,6 +1,6 @@
 import pytest
 
-from shortener.domain.shorturl.fields.slug import Slug, SLUG_MAX_LENGTH
+from shortener.domain.shorturl.slug import Slug, SLUG_MAX_LENGTH
 
 
 def test_returns_a_slug_with_the_value():

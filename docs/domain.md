@@ -12,7 +12,11 @@ There is a single central concept: the **short URL**, a short slug that points t
 shortener/domain/
 ├── shorturl/
 │   ├── shorturl.py        ShortURL
-│   ├── fields/            ShortURLID, OwnerID, Slug, TargetURL and ShortURLStatus
+│   ├── shorturl_id.py     ShortURLID
+│   ├── owner_id.py        OwnerID
+│   ├── slug.py            Slug
+│   ├── target_url.py      TargetURL
+│   ├── status.py          ShortURLStatus
 │   └── exceptions.py      the errors of ShortURL
 └── shared/                code that doesn't depend on shorturl/
     ├── entity_id.py       EntityID
@@ -93,7 +97,7 @@ Each field is checked on its own and never compared with another, so `expires_at
 
 ### IDs
 
-`shorturl/fields/shorturl_id.py` and `shorturl/fields/owner_id.py`
+`shorturl/shorturl_id.py` and `shorturl/owner_id.py`
 
 `ShortURLID` and `OwnerID` are [`EntityID`s](#entityid). Two IDs are only equal when they have the same type and value, so a `ShortURLID` never equals an `OwnerID`.
 
@@ -116,7 +120,7 @@ Two things happen outside the domain, but shape this rule:
 
 ### Slug
 
-`shorturl/fields/slug.py`
+`shorturl/slug.py`
 
 The slug is the short path that identifies the short URL. It is a [value object](#value-objects), and these are the rules of `Slug.create()`, in the order of its issues:
 
@@ -134,7 +138,7 @@ Slugs are unique, but `Slug` and `ShortURL` don't check it.
 
 ### TargetURL
 
-`shorturl/fields/target_url.py`
+`shorturl/target_url.py`
 
 The destination of the short URL. It is a [value object](#value-objects), and `TargetURL.create()` has a single rule: the value parses with `urllib.parse.urlparse`, its scheme is `https`, and its netloc (the host part) isn't empty. A value that breaks it gets `INVALID_FORMAT`, such as:
 
@@ -146,7 +150,7 @@ Nothing else is checked: the netloc isn't validated, so `https://exa mple.com` i
 
 ### Status
 
-`shorturl/fields/status.py`
+`shorturl/status.py`
 
 `ShortURLStatus` is an `Enum` whose values are the names in lowercase, such as `ACTIVE = "active"`.
 
