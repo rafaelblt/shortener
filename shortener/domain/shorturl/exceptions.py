@@ -55,18 +55,3 @@ class ShortURLInvalidURLError(ShortURLValidationError):
         self.url = url
         msg = "URL must be a valid https url."
         super().__init__(value=url, field="target_url", code=self.code, message=msg)
-
-
-# - REPOSITORY EXCEPTIONS
-class ShortURLRepositoryError(Exception): ...
-class ShortURLNotFoundInDatabaseError(ShortURLRepositoryError): ...
-class ShortURLNotFoundError(ShortURLRepositoryError):
-    def __init__(self, value, field: str):
-        self.value = value
-        self.field = field
-        super().__init__(f"ShortURL with {field}={value} not found.")
-
-
-
-
-class ShortURLDeletionNotFoundError(Exception): ...

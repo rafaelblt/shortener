@@ -255,15 +255,8 @@ Wrong types or values given to the domain's code. They are programming errors, n
 - `ValueError`: a negative `visit_count`, or a datetime that isn't in UTC, given to the `ShortURL` constructor or `record_visit()`.
 - `TypeError`: an `EntityID` created with a `value` that isn't a `UUID`.
 
-### Repository errors
-
-- `ShortURLRepositoryError` extends `Exception`, and has two subclasses:
-  - `ShortURLNotFoundError(value, field)`: no short URL has `field` equal to `value`. Nothing in the domain raises it.
-  - `ShortURLNotFoundInDatabaseError`: adds nothing to `ShortURLRepositoryError`. Nothing in the domain raises it.
-- `ShortURLDeletionNotFoundError` extends `Exception` directly, not `ShortURLRepositoryError`. Nothing in the domain raises it.
-
 ## Open questions
 
 Decisions to make during this phase:
 
-- **Abstractions to revisit for simplicity:** `DomainEntity` (`get_fields()` is only used in tests), `MultiFieldValidator` (unused and untested), `Validator`, `ShortURLValidator`, and the overlapping not-found errors (`ShortURLNotFoundError`, `ShortURLNotFoundInDatabaseError`, `ShortURLDeletionNotFoundError`).
+- **Abstractions to revisit for simplicity:** `DomainEntity` (`get_fields()` is only used in tests), `MultiFieldValidator` (unused and untested), `Validator` and `ShortURLValidator`.
