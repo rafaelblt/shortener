@@ -2,7 +2,6 @@ from typing import Optional
 
 from datetime import datetime
 
-from shortener.domain.domain_entity import DomainEntity
 from shortener.domain.shared.datetime_utils import is_utc
 
 from .fields import Slug, TargetURL, ShortURLStatus, ShortURLID, OwnerID
@@ -13,7 +12,7 @@ from .exceptions import (
 )
 
 
-class ShortURL(DomainEntity):
+class ShortURL:
 
     @staticmethod
     def get_fields() -> list[str]:

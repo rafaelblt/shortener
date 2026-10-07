@@ -10,7 +10,6 @@ There is a single central concept: the **short URL**, a short slug that points t
 
 ```
 shortener/domain/
-├── domain_entity.py       DomainEntity, the base class of ShortURL
 ├── shorturl/
 │   ├── shorturl.py        ShortURL
 │   ├── fields/            ShortURLID, OwnerID, Slug, TargetURL and ShortURLStatus
@@ -29,17 +28,6 @@ No rule of the domain reads the clock. Every operation that depends on the curre
 - `is_expired()`, `is_available()` and `resolve()` don't validate `now`. `is_expired()` compares it with `expires_at` when there is one, and the other two call `is_expired()` only in the `ACTIVE` status. In that comparison, a `now` that isn't a timezone-aware datetime raises `TypeError`.
 
 The clock is read in one place: `ShortURLID.generate()`, since a UUIDv7 contains the moment it was generated. No rule depends on that moment.
-
-## DomainEntity
-
-`domain_entity.py`
-
-Abstract base class of entities. A subclass implements:
-
-- `get_fields()`: a static method that returns the names of the entity's fields;
-- `id`: a property that returns the entity's `EntityID`.
-
-`ShortURL` is its only subclass.
 
 ## ShortURL
 
@@ -84,7 +72,7 @@ Each field is checked on its own and never compared with another, so `expires_at
 | `enable()`                                                                                    | Sets `status` to `ACTIVE`. See [Status](#status).                                                                                             |
 | `disable()`                                                                                   | Sets `status` to `DEACTIVATED`. See [Status](#status).                                                                                        |
 | `change_slug(new_slug)`, `change_target_url(new_target_url)`                                  | Validate the type with the field's `validate_<field>()` and replace the field. `change_slug()` doesn't check that the slug is unique.         |
-| `get_fields()`                                                                                | Static. Returns the names of the nine fields, in the order of the table. Required by `DomainEntity`.                                          |
+| `get_fields()`                                                                                | Static. Returns the names of the nine fields, in the order of the table.                                                                      |
 
 ### IDs
 
@@ -226,4 +214,4 @@ Wrong types or values given to the domain's code. They are programming errors, n
 
 Decisions to make during this phase:
 
-- **Abstractions to revisit for simplicity:** `DomainEntity` (`get_fields()` is only used in tests).
+- **`ShortURL.get_fields()`:** nothing in the domain calls it, and only test mocks of the upper layers use it.
