@@ -17,6 +17,7 @@ shortener/domain/
 └── shared/                code that doesn't depend on shorturl/
     ├── entity_id.py       EntityID
     ├── datetime_utils.py  is_utc()
+    ├── result.py          Result, Ok and Err
     └── exceptions.py      DomainError and ValidationError
 ```
 
@@ -176,6 +177,23 @@ The identity of an entity: a frozen dataclass with one field, `value: UUID`.
 `shared/datetime_utils.py`
 
 `is_utc(dt)` returns `True` when `dt` is timezone-aware and its UTC offset at that moment is zero. So a zone like `Europe/London` passes in winter and fails in summer. `ShortURL` uses it to validate its datetimes.
+
+### Result
+
+`shared/result.py`
+
+`Result[T, E]` is `Ok[T] | Err[E]`, modeled after Rust's `Result`: the outcome of an operation that can fail, returned instead of raising an exception. `Ok` holds the result in `value`, and `Err` holds the failure in `error`. Both are frozen dataclasses, so they compare by content and can be matched:
+
+```python
+match result:
+    case Ok(value): ...
+    case Err(error): ...
+```
+
+| Method          | On `Ok(value)`        | On `Err(error)`                                     |
+| --------------- | --------------------- | --------------------------------------------------- |
+| `map(function)` | `Ok(function(value))` | The same `Err`, without calling `function`          |
+| `unwrap()`      | `value`               | Raises `ValueError`, whose only argument is `error` |
 
 ## Errors
 
