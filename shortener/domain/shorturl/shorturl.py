@@ -124,10 +124,6 @@ class ShortURL:
         return self._last_resolved_at
 
 
-    def is_available(self) -> bool:
-        return self.status == ShortURLStatus.ACTIVE
-
-
     def change_slug(self, new_slug: Slug):
         _check_attribute_type("slug", new_slug, Slug)
         self._slug = new_slug
