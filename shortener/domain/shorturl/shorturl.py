@@ -92,35 +92,35 @@ class ShortURL:
 
 
     @property
-    def id(self):
+    def id(self) -> ShortURLID:
         return self._id
 
     @property
-    def slug(self):
+    def slug(self) -> Slug:
         return self._slug
 
     @property
-    def target_url(self):
+    def target_url(self) -> TargetURL:
         return self._target_url
 
     @property
-    def owner_id(self):
+    def owner_id(self) -> OwnerID:
         return self._owner_id
 
     @property
-    def status(self):
+    def status(self) -> ShortURLStatus:
         return self._status
 
     @property
-    def resolution_count(self):
+    def resolution_count(self) -> int:
         return self._resolution_count
 
     @property
-    def created_at(self):
+    def created_at(self) -> datetime:
         return self._created_at
 
     @property
-    def last_resolved_at(self):
+    def last_resolved_at(self) -> Optional[datetime]:
         return self._last_resolved_at
 
 
