@@ -154,24 +154,24 @@ class ShortURL:
         self._target_url = new_target_url
 
 
-    def record_visit(self, now: datetime):
-        _check_type("last_accessed_at", now, datetime)
-        self._visit_count = self.visit_count + 1
-        self._last_accessed_at = now
-    
     def resolve(self, now: datetime) -> TargetURL:
         """
-        Returns the target_url if the ShortURL is available at the given moment.
+        Records a visit and returns the target_url if the ShortURL is available
+        at the given moment.
 
         Raises:
+            ShortURLAttributeTypeError: If now isn't a datetime.
             ShortURLDeactivatedError: If the ShortURL status is DEACTIVATED.
             ShortURLExpiredError: If the ShortURL status is ACTIVE and
                 expires_at has been reached.
         """
+        _check_type("last_accessed_at", now, datetime)
         if self.status == ShortURLStatus.DEACTIVATED:
             raise ShortURLDeactivatedError()
         if self.is_expired(now):
             raise ShortURLExpiredError()
+        self._visit_count = self.visit_count + 1
+        self._last_accessed_at = now
         return self.target_url
 
     def enable(self):
