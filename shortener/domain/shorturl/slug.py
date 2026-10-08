@@ -57,7 +57,7 @@ class Slug(str):
         return cls._build(require_non_empty_string(value, cls.__name__))
 
     @classmethod
-    def generate_random(cls) -> "Slug":
+    def generate(cls) -> "Slug":
         # RANDOM_SLUG_LENGTH and RANDOM_SLUG_CHARS follow the rules of create(),
         # so the constructor never raises here.
         return cls("".join(random.choices(RANDOM_SLUG_CHARS, k=RANDOM_SLUG_LENGTH)))

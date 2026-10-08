@@ -9,15 +9,15 @@ from shortener.domain.shorturl.slug import (
 
 
 def test_returns_a_slug():
-    assert isinstance(Slug.generate_random(), Slug)
+    assert isinstance(Slug.generate(), Slug)
 
 
 def test_has_the_random_slug_length():
-    assert len(Slug.generate_random()) == RANDOM_SLUG_LENGTH
+    assert len(Slug.generate()) == RANDOM_SLUG_LENGTH
 
 
 def test_only_uses_the_random_slug_chars():
-    assert all(char in RANDOM_SLUG_CHARS for char in Slug.generate_random())
+    assert all(char in RANDOM_SLUG_CHARS for char in Slug.generate())
 
 
 def test_random_slug_length_is_within_the_slug_length_limits():
