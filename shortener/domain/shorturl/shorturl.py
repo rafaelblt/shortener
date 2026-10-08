@@ -30,15 +30,15 @@ class ShortURL:
         expires_at: Optional[datetime] = None,
         last_accessed_at: Optional[datetime] = None,
     ):
-        self.validate_id(id)
-        self.validate_slug(slug)
-        self.validate_target_url(target_url)
-        self.validate_owner_id(owner_id)
-        self.validate_status(status)
-        self.validate_visit_count(visit_count)
-        self.validate_created_at(created_at)
-        self.validate_expires_at(expires_at)
-        self.validate_last_accessed_at(last_accessed_at)
+        _check_type("id", id, ShortURLID)
+        _check_type("slug", slug, Slug)
+        _check_type("target_url", target_url, TargetURL)
+        _check_type("owner_id", owner_id, OwnerID)
+        _check_type("status", status, ShortURLStatus)
+        _check_visit_count(visit_count)
+        _check_utc_datetime("created_at", created_at)
+        _check_optional_utc_datetime("expires_at", expires_at)
+        _check_optional_utc_datetime("last_accessed_at", last_accessed_at)
 
         self._id = id
         self._slug = slug
@@ -113,100 +113,17 @@ class ShortURL:
         return self.status == ShortURLStatus.ACTIVE and not self.is_expired(now)
 
 
-    @staticmethod
-    def validate_id(id):
-        if not isinstance(id, ShortURLID):
-            raise ShortURLAttributeTypeError(
-                attr="id", type_expected="ShortURLID", got=id
-            )
-
-    @staticmethod
-    def validate_slug(slug):
-        if not isinstance(slug, Slug):
-            raise ShortURLAttributeTypeError(
-                attr="slug", type_expected="Slug", got=slug
-            )
-
-    @staticmethod
-    def validate_target_url(target_url):
-        if not isinstance(target_url, TargetURL):
-            raise ShortURLAttributeTypeError(
-                attr="target_url", type_expected="TargetURL", got=target_url
-            )
-
-    @staticmethod
-    def validate_owner_id(owner_id):
-        if not isinstance(owner_id, OwnerID):
-            raise ShortURLAttributeTypeError(
-                attr="owner_id", type_expected="OwnerID", got=owner_id
-            )
-
-    @staticmethod
-    def validate_status(status):
-        if not isinstance(status, ShortURLStatus):
-            raise ShortURLAttributeTypeError(
-                attr="status", type_expected="ShortURLStatus", got=status
-            )
-
-    @staticmethod
-    def validate_visit_count(visit_count):
-        if not isinstance(visit_count, int):
-            raise ShortURLAttributeTypeError(
-                attr="visit_count", type_expected="int", got=visit_count
-            )
-        if visit_count < 0:
-            raise ValueError(
-                ("The ShortURL visit_count must be greater than or equal to 0, "
-                f"got {visit_count}")
-            )
-
-    @staticmethod
-    def validate_created_at(created_at):
-        if not isinstance(created_at, datetime):
-            raise ShortURLAttributeTypeError(
-                attr="created_at", type_expected="datetime", got=created_at
-            )
-        if not is_utc(created_at):
-            raise ValueError(
-                "The ShortURL created_at must be in UTC timezone."
-            )
-
-    @staticmethod
-    def validate_expires_at(expires_at):
-        if not isinstance(expires_at, (datetime, type(None))):
-            raise ShortURLAttributeTypeError(
-                attr="expires_at", type_expected="datetime or None", got=expires_at
-            )
-        if isinstance(expires_at, datetime) and not is_utc(expires_at):            
-            raise ValueError(
-                "The ShortURL expires_at must be in UTC timezone."
-            )
-
-    @staticmethod
-    def validate_last_accessed_at(last_accessed_at):
-        if not isinstance(last_accessed_at, (datetime, type(None))):
-            raise ShortURLAttributeTypeError(
-                attr="last_accessed_at", 
-                type_expected="datetime or None", 
-                got=last_accessed_at
-            )
-        if isinstance(last_accessed_at, datetime) and not is_utc(last_accessed_at):
-            raise ValueError(
-                "The ShortURL last_accessed_at must be in UTC timezone."
-            )
-
-
     def change_slug(self, new_slug: Slug):
-        self.validate_slug(new_slug)
+        _check_type("slug", new_slug, Slug)
         self._slug = new_slug
 
     def change_target_url(self, new_target_url: TargetURL):
-        self.validate_target_url(new_target_url)
+        _check_type("target_url", new_target_url, TargetURL)
         self._target_url = new_target_url
 
 
     def record_visit(self, now: datetime):
-        self.validate_last_accessed_at(now)
+        _check_optional_utc_datetime("last_accessed_at", now)
         self._visit_count = self.visit_count + 1
         self._last_accessed_at = now
     
@@ -235,3 +152,35 @@ class ShortURL:
         return (
             f"<ShortURL id={self.id}, slug={self.slug}, target_url={self.target_url}>"
         )
+
+
+def _check_type(attribute: str, value: object, expected_type: type) -> None:
+    if not isinstance(value, expected_type):
+        raise ShortURLAttributeTypeError(
+            attr=attribute, type_expected=expected_type.__name__, got=value
+        )
+
+
+def _check_visit_count(visit_count: int) -> None:
+    _check_type("visit_count", visit_count, int)
+    if visit_count < 0:
+        raise ValueError(
+            "The ShortURL visit_count must be greater than or equal to 0, "
+            f"got {visit_count}"
+        )
+
+
+def _check_utc_datetime(attribute: str, value: datetime) -> None:
+    _check_type(attribute, value, datetime)
+    if not is_utc(value):
+        raise ValueError(f"The ShortURL {attribute} must be in UTC timezone.")
+
+
+def _check_optional_utc_datetime(attribute: str, value: Optional[datetime]) -> None:
+    if value is None:
+        return
+    if not isinstance(value, datetime):
+        raise ShortURLAttributeTypeError(
+            attr=attribute, type_expected="datetime or None", got=value
+        )
+    _check_utc_datetime(attribute, value)

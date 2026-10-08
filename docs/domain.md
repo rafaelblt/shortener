@@ -75,7 +75,7 @@ The fields are read-only properties, and change only through the [methods](#meth
 
 The constructor takes every field and is meant for rebuilding a short URL that already exists, such as one loaded from the database. `id`, `slug`, `target_url`, `owner_id` and `created_at` are required, and the other fields have the defaults in the table.
 
-The constructor validates the fields in the order of the table, each with a public static method `validate_<field>()`, and raises at the first invalid one:
+The constructor checks the fields in the order of the table, and raises at the first invalid one:
 
 - a value whose type isn't the one in the table raises `ShortURLAttributeTypeError`. The check uses `isinstance`, so subclasses pass, including `bool` for `visit_count`;
 - a negative `visit_count` raises `ValueError`;
@@ -85,15 +85,15 @@ Each field is checked on its own and never compared with another, so `expires_at
 
 ### Methods
 
-| Method                                                                                        | Effect                                                                                                                                        |
-| --------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `resolve(now)`                                                                                | Returns `target_url` when `is_available(now)` is true. Otherwise, raises the error in the [Status](#status) table. Doesn't record a visit.    |
-| `record_visit(now)`                                                                           | Validates `now` with `validate_last_accessed_at()`, adds 1 to `visit_count` and sets `last_accessed_at` to `now`. Doesn't check availability. |
-| `is_expired(now)`                                                                             | `True` when `expires_at` isn't `None` and `expires_at <= now`. Doesn't look at `status`. See [Expiration](#expiration).                       |
-| `is_available(now)`                                                                           | `True` when `status` is `ACTIVE` and `is_expired(now)` is false.                                                                              |
-| `enable()`                                                                                    | Sets `status` to `ACTIVE`. See [Status](#status).                                                                                             |
-| `disable()`                                                                                   | Sets `status` to `DEACTIVATED`. See [Status](#status).                                                                                        |
-| `change_slug(new_slug)`, `change_target_url(new_target_url)`                                  | Validate the type with the field's `validate_<field>()` and replace the field. `change_slug()` doesn't check that the slug is unique.         |
+| Method                                                       | Effect                                                                                                                                                 |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `resolve(now)`                                               | Returns `target_url` when `is_available(now)` is true. Otherwise, raises the error in the [Status](#status) table. Doesn't record a visit.             |
+| `record_visit(now)`                                          | Checks `now` like the constructor checks `last_accessed_at`, adds 1 to `visit_count` and sets `last_accessed_at` to `now`. Doesn't check availability. |
+| `is_expired(now)`                                            | `True` when `expires_at` isn't `None` and `expires_at <= now`. Doesn't look at `status`. See [Expiration](#expiration).                                |
+| `is_available(now)`                                          | `True` when `status` is `ACTIVE` and `is_expired(now)` is false.                                                                                       |
+| `enable()`                                                   | Sets `status` to `ACTIVE`. See [Status](#status).                                                                                                      |
+| `disable()`                                                  | Sets `status` to `DEACTIVATED`. See [Status](#status).                                                                                                 |
+| `change_slug(new_slug)`, `change_target_url(new_target_url)` | Check the type of the new value like the constructor, and replace the field. `change_slug()` doesn't check that the slug is unique.                    |
 
 ### IDs
 
