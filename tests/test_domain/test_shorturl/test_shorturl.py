@@ -74,6 +74,19 @@ def test_create_generates_a_new_id_each_time(
     assert normal_shorturl.id != other_shorturl.id
 
 
+def test_create_rejects_a_now_that_is_not_a_datetime(owner_id: OwnerID):
+    with pytest.raises(TypeError) as raised:
+        ShortURL.create(
+            slug=Slug("my-slug"),
+            target_url=TargetURL("https://example.com"),
+            owner_id=owner_id,
+            now=None, # type: ignore
+        )
+    assert_mentions(
+        str(raised.value), "created_at", datetime.__name__, type(None).__name__
+    )
+
+
 def test_restore_keeps_the_given_values(fields: dict[str, Any]):
     shorturl = ShortURL.restore(**fields)
     assert {name: getattr(shorturl, name) for name in fields} == fields
