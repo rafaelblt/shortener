@@ -231,3 +231,13 @@ def test_disable_makes_a_shorturl_in_any_status_deactivated(
     shorturl = ShortURL.restore(**{**fields, "status": status})
     shorturl.disable()
     assert shorturl.status == ShortURLStatus.DEACTIVATED
+
+
+def test_repr_mentions_the_class_id_slug_and_target_url(normal_shorturl: ShortURL):
+    assert_mentions(
+        repr(normal_shorturl),
+        ShortURL.__name__,
+        str(normal_shorturl.id),
+        normal_shorturl.slug,
+        normal_shorturl.target_url,
+    )
