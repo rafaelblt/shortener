@@ -29,7 +29,7 @@ shortener/domain/
 
 No rule of the domain reads the clock. Every operation that depends on the current moment receives it as a `now` argument: `ShortURL.create()`, `resolve()`, `is_expired()` and `is_available()`. This keeps the domain deterministic and leaves the source of time to the use cases.
 
-- `create()` and `resolve()` store `now`, as `created_at` and `last_accessed_at`, so they check it: a `now` that isn't a `datetime`, `None` included, raises `ShortURLAttributeTypeError`. `resolve()` checks it before the availability, so it raises even when the short URL isn't available.
+- `create()` and `resolve()` store `now`, as `created_at` and `last_resolved_at`, so they check it: a `now` that isn't a `datetime`, `None` included, raises `ShortURLAttributeTypeError`. `resolve()` checks it before the availability, so it raises even when the short URL isn't available.
 - `is_expired()` and `is_available()` don't check `now`. `is_expired()` compares it with `expires_at` when there is one, and `is_available()` and `resolve()` call `is_expired()` only in the `ACTIVE` status. Python can't compare a naive datetime with a timezone-aware one, so if only one of them is naive, the comparison raises `TypeError`.
 
 The domain only deals with moments in time, not with timezones. It accepts datetimes in any timezone, naive ones included, and doesn't convert them: guaranteeing they are in UTC is up to the layer that provides them.
@@ -56,30 +56,32 @@ The rules of `create()` can change, and a value accepted under older rules has t
 
 `shorturl/shorturl.py`
 
-| Field              | Type               | Rule                                                     |
-| ------------------ | ------------------ | -------------------------------------------------------- |
-| `id`               | `ShortURLID`       | Identity. See [IDs](#ids).                               |
-| `slug`             | `Slug`             | The short path. See [Slug](#slug).                       |
-| `target_url`       | `TargetURL`        | The destination. See [TargetURL](#targeturl).            |
-| `owner_id`         | `OwnerID`          | Reference to the owner. See [Owner](#owner).             |
-| `status`           | `ShortURLStatus`   | `create()` sets it to `ACTIVE`. See [Status](#status).   |
-| `visit_count`      | `int`              | Number of visits, `>= 0`. `create()` sets it to `0`.     |
-| `created_at`       | `datetime`         | `create()` sets it to `now`.                             |
-| `expires_at`       | `datetime \| None` | `None` means it never expires.                           |
-| `last_accessed_at` | `datetime \| None` | `create()` sets it to `None`, `resolve()` to `now`.      |
+| Field              | Type               | Rule                                                                                  |
+| ------------------ | ------------------ | ------------------------------------------------------------------------------------- |
+| `id`               | `ShortURLID`       | Identity. See [IDs](#ids).                                                            |
+| `slug`             | `Slug`             | The short path. See [Slug](#slug).                                                    |
+| `target_url`       | `TargetURL`        | The destination. See [TargetURL](#targeturl).                                         |
+| `owner_id`         | `OwnerID`          | Reference to the owner. See [Owner](#owner).                                          |
+| `status`           | `ShortURLStatus`   | `create()` sets it to `ACTIVE`. See [Status](#status).                                |
+| `resolution_count` | `int`              | Number of times `resolve()` returned `target_url`, `>= 0`. `create()` sets it to `0`. |
+| `created_at`       | `datetime`         | `create()` sets it to `now`.                                                          |
+| `expires_at`       | `datetime \| None` | `None` means it never expires.                                                        |
+| `last_resolved_at` | `datetime \| None` | `create()` sets it to `None`, `resolve()` to `now`.                                   |
 
 The fields are read-only properties, and change only through the [methods](#methods).
 
+`resolution_count` and `last_resolved_at` are about resolutions, not visits: the domain knows when it returned the target URL, not whether the client opened it.
+
 ### Creating and restoring
 
-`ShortURL.create(slug, target_url, owner_id, now, expires_at=None)` creates a new short URL: it generates the ID with `ShortURLID.generate()`, sets `created_at` to `now`, `status` to `ACTIVE`, `visit_count` to `0` and `last_accessed_at` to `None`.
+`ShortURL.create(slug, target_url, owner_id, now, expires_at=None)` creates a new short URL: it generates the ID with `ShortURLID.generate()`, sets `created_at` to `now`, `status` to `ACTIVE`, `resolution_count` to `0` and `last_resolved_at` to `None`.
 
-`ShortURL.restore(*, id, slug, target_url, owner_id, status, visit_count, created_at, expires_at, last_accessed_at)` rebuilds a short URL that already exists, such as one loaded from the database. It takes every field, only by keyword, and keeps them as given.
+`ShortURL.restore(*, id, slug, target_url, owner_id, status, resolution_count, created_at, expires_at, last_resolved_at)` rebuilds a short URL that already exists, such as one loaded from the database. It takes every field, only by keyword, and keeps them as given.
 
 Both call the constructor, which takes every field, with no defaults. It checks them in the order of the table, and raises at the first invalid one:
 
-- a value whose type isn't the one in the table raises `ShortURLAttributeTypeError`. The check uses `isinstance`, so subclasses pass, including `bool` for `visit_count`;
-- a negative `visit_count` raises `ValueError`.
+- a value whose type isn't the one in the table raises `ShortURLAttributeTypeError`. The check uses `isinstance`, so subclasses pass, including `bool` for `resolution_count`;
+- a negative `resolution_count` raises `ValueError`.
 
 Each field is checked on its own and never compared with another, so `expires_at` can be earlier than `created_at`.
 
@@ -87,16 +89,16 @@ Each field is checked on its own and never compared with another, so `expires_at
 
 ### Methods
 
-| Method                                                       | Effect                                                                                                                                                                                                                                                                             |
-| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `resolve(now)`                                               | Checks `now` like the constructor checks `created_at`. When `is_available(now)` is true, records a visit: adds 1 to `visit_count` and sets `last_accessed_at` to `now`. Then returns `target_url`. Otherwise, raises the error in the [Status](#status) table and records nothing. |
-| `is_expired(now)`                                            | `True` when `expires_at` isn't `None` and `expires_at <= now`. Doesn't look at `status`. See [Expiration](#expiration).                                                                                                                                                            |
-| `is_available(now)`                                          | `True` when `status` is `ACTIVE` and `is_expired(now)` is false.                                                                                                                                                                                                                   |
-| `enable()`                                                   | Sets `status` to `ACTIVE`. See [Status](#status).                                                                                                                                                                                                                                  |
-| `disable()`                                                  | Sets `status` to `DEACTIVATED`. See [Status](#status).                                                                                                                                                                                                                             |
-| `change_slug(new_slug)`, `change_target_url(new_target_url)` | Check the type of the new value like the constructor, and replace the field. `change_slug()` doesn't check that the slug is unique.                                                                                                                                                |
+| Method                                                       | Effect                                                                                                                                                                                                                                                                                       |
+| ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `resolve(now)`                                               | Checks `now` like the constructor checks `created_at`. When `is_available(now)` is true, counts the resolution: adds 1 to `resolution_count` and sets `last_resolved_at` to `now`. Then returns `target_url`. Otherwise, raises the error in the [Status](#status) table and counts nothing. |
+| `is_expired(now)`                                            | `True` when `expires_at` isn't `None` and `expires_at <= now`. Doesn't look at `status`. See [Expiration](#expiration).                                                                                                                                                                      |
+| `is_available(now)`                                          | `True` when `status` is `ACTIVE` and `is_expired(now)` is false.                                                                                                                                                                                                                             |
+| `enable()`                                                   | Sets `status` to `ACTIVE`. See [Status](#status).                                                                                                                                                                                                                                            |
+| `disable()`                                                  | Sets `status` to `DEACTIVATED`. See [Status](#status).                                                                                                                                                                                                                                       |
+| `change_slug(new_slug)`, `change_target_url(new_target_url)` | Check the type of the new value like the constructor, and replace the field. `change_slug()` doesn't check that the slug is unique.                                                                                                                                                          |
 
-Recording the visit is part of `resolve()`, and not a method of its own, so that the domain decides when a visit counts: only when the short URL is available. The use cases can't forget to record it, or record it for a short URL that isn't available.
+Counting the resolution is part of `resolve()`, and not a method of its own, so that the domain decides when a resolution counts: only when the short URL is available. The use cases can't forget to count it, or count it for a short URL that isn't available.
 
 ### IDs
 
@@ -164,10 +166,10 @@ Nothing else is checked: the netloc isn't validated, so `https://exa mple.com` i
 
 What each method does in each status. Error names mean the method raises that error.
 
-| Status        | `resolve(now)`                                                                                  | `enable()`          | `disable()`              |
-| ------------- | ----------------------------------------------------------------------------------------------- | ------------------- | ------------------------ |
-| `ACTIVE`      | Records a visit and returns `target_url`, or raises `ShortURLExpiredError` if `is_expired(now)` | Nothing             | Changes to `DEACTIVATED` |
-| `DEACTIVATED` | `ShortURLDeactivatedError`                                                                      | Changes to `ACTIVE` | Nothing                  |
+| Status        | `resolve(now)`                                                                                        | `enable()`          | `disable()`              |
+| ------------- | ----------------------------------------------------------------------------------------------------- | ------------------- | ------------------------ |
+| `ACTIVE`      | Counts the resolution and returns `target_url`, or raises `ShortURLExpiredError` if `is_expired(now)` | Nothing             | Changes to `DEACTIVATED` |
+| `DEACTIVATED` | `ShortURLDeactivatedError`                                                                            | Changes to `ACTIVE` | Nothing                  |
 
 `resolve()` only looks at `expires_at` in the `ACTIVE` status, and `enable()` and `disable()` never look at it.
 
@@ -257,7 +259,7 @@ A value that breaks a rule of a value object isn't an exception: `create()` retu
 Wrong types or values given to the domain's code. They are programming errors, not client input errors.
 
 - `ShortURLAttributeTypeError`, a `TypeError`: wrong type given to `ShortURL.create()`, `ShortURL.restore()`, a `change_*()` method or `resolve()`.
-- `ValueError`: a negative `visit_count` given to `ShortURL.restore()`. Also a value that breaks a rule of `create()`, given to the constructor of `Slug` or `TargetURL`.
+- `ValueError`: a negative `resolution_count` given to `ShortURL.restore()`. Also a value that breaks a rule of `create()`, given to the constructor of `Slug` or `TargetURL`.
 - `TypeError`: an `EntityID` created with a `value` that isn't a `UUID`. Also a `now` that can't be compared with `expires_at`, given to `is_expired()`, `is_available()` or `resolve()` (see [Time](#time)).
 
 ### Parsing errors

@@ -23,30 +23,30 @@ class ShortURL:
         target_url: TargetURL,
         owner_id: OwnerID,
         status: ShortURLStatus,
-        visit_count: int,
+        resolution_count: int,
         created_at: datetime,
         expires_at: Optional[datetime],
-        last_accessed_at: Optional[datetime],
+        last_resolved_at: Optional[datetime],
     ):
         _check_type("id", id, ShortURLID)
         _check_type("slug", slug, Slug)
         _check_type("target_url", target_url, TargetURL)
         _check_type("owner_id", owner_id, OwnerID)
         _check_type("status", status, ShortURLStatus)
-        _check_visit_count(visit_count)
+        _check_resolution_count(resolution_count)
         _check_type("created_at", created_at, datetime)
         _check_optional_datetime("expires_at", expires_at)
-        _check_optional_datetime("last_accessed_at", last_accessed_at)
+        _check_optional_datetime("last_resolved_at", last_resolved_at)
 
         self._id = id
         self._slug = slug
         self._target_url = target_url
         self._owner_id = owner_id
         self._status = status
-        self._visit_count = visit_count
+        self._resolution_count = resolution_count
         self._created_at = created_at
         self._expires_at = expires_at
-        self._last_accessed_at = last_accessed_at
+        self._last_resolved_at = last_resolved_at
 
     @classmethod
     def create(
@@ -63,10 +63,10 @@ class ShortURL:
             target_url=target_url,
             owner_id=owner_id,
             status=ShortURLStatus.ACTIVE,
-            visit_count=0,
+            resolution_count=0,
             created_at=now,
             expires_at=expires_at,
-            last_accessed_at=None,
+            last_resolved_at=None,
         )
 
     @classmethod
@@ -78,10 +78,10 @@ class ShortURL:
         target_url: TargetURL,
         owner_id: OwnerID,
         status: ShortURLStatus,
-        visit_count: int,
+        resolution_count: int,
         created_at: datetime,
         expires_at: Optional[datetime],
-        last_accessed_at: Optional[datetime],
+        last_resolved_at: Optional[datetime],
     ) -> "ShortURL":
         """
         Rebuilds a short URL that already exists, such as one loaded from the
@@ -94,10 +94,10 @@ class ShortURL:
             target_url=target_url,
             owner_id=owner_id,
             status=status,
-            visit_count=visit_count,
+            resolution_count=resolution_count,
             created_at=created_at,
             expires_at=expires_at,
-            last_accessed_at=last_accessed_at,
+            last_resolved_at=last_resolved_at,
         )
 
 
@@ -122,8 +122,8 @@ class ShortURL:
         return self._status
 
     @property
-    def visit_count(self):
-        return self._visit_count
+    def resolution_count(self):
+        return self._resolution_count
 
     @property
     def created_at(self):
@@ -134,8 +134,8 @@ class ShortURL:
         return self._expires_at
 
     @property
-    def last_accessed_at(self):
-        return self._last_accessed_at
+    def last_resolved_at(self):
+        return self._last_resolved_at
 
 
     def is_expired(self, now: datetime) -> bool:
@@ -156,8 +156,8 @@ class ShortURL:
 
     def resolve(self, now: datetime) -> TargetURL:
         """
-        Records a visit and returns the target_url if the ShortURL is available
-        at the given moment.
+        Counts the resolution and returns the target_url if the ShortURL is
+        available at the given moment.
 
         Raises:
             ShortURLAttributeTypeError: If now isn't a datetime.
@@ -165,13 +165,13 @@ class ShortURL:
             ShortURLExpiredError: If the ShortURL status is ACTIVE and
                 expires_at has been reached.
         """
-        _check_type("last_accessed_at", now, datetime)
+        _check_type("last_resolved_at", now, datetime)
         if self.status == ShortURLStatus.DEACTIVATED:
             raise ShortURLDeactivatedError()
         if self.is_expired(now):
             raise ShortURLExpiredError()
-        self._visit_count = self.visit_count + 1
-        self._last_accessed_at = now
+        self._resolution_count = self.resolution_count + 1
+        self._last_resolved_at = now
         return self.target_url
 
     def enable(self):
@@ -193,12 +193,12 @@ def _check_type(attribute: str, value: object, expected_type: type) -> None:
         )
 
 
-def _check_visit_count(visit_count: int) -> None:
-    _check_type("visit_count", visit_count, int)
-    if visit_count < 0:
+def _check_resolution_count(resolution_count: int) -> None:
+    _check_type("resolution_count", resolution_count, int)
+    if resolution_count < 0:
         raise ValueError(
-            "The ShortURL visit_count must be greater than or equal to 0, "
-            f"got {visit_count}"
+            "The ShortURL resolution_count must be greater than or equal to 0, "
+            f"got {resolution_count}"
         )
 
 

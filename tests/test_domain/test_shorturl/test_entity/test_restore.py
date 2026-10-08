@@ -20,10 +20,10 @@ def shorturl():
         target_url=TargetURL("https://google.com"),
         owner_id=OwnerID(OWNER_ID_VALUE),
         status=ShortURLStatus.DEACTIVATED,
-        visit_count=5,
+        resolution_count=5,
         created_at=datetime(year=2002, month=2, day=2, tzinfo=timezone.utc),
         expires_at=datetime(year=2006, month=6, day=6, tzinfo=timezone.utc),
-        last_accessed_at=datetime(year=2004, month=4, day=4, tzinfo=timezone.utc)
+        last_resolved_at=datetime(year=2004, month=4, day=4, tzinfo=timezone.utc)
     )
 
 
@@ -53,8 +53,8 @@ def test_status(shorturl: ShortURL):
     assert shorturl.status == ShortURLStatus.DEACTIVATED
 
 
-def test_visit_count(shorturl: ShortURL):
-    assert shorturl.visit_count == 5
+def test_resolution_count(shorturl: ShortURL):
+    assert shorturl.resolution_count == 5
 
 
 def test_created_at(shorturl: ShortURL):
@@ -75,13 +75,13 @@ def test_expires_at(shorturl: ShortURL):
     assert expires_at.strftime(strftime) == expected.strftime(strftime)
 
 
-def test_last_accessed_at(shorturl: ShortURL):
-    last_accessed_at = shorturl.last_accessed_at
+def test_last_resolved_at(shorturl: ShortURL):
+    last_resolved_at = shorturl.last_resolved_at
     expected = datetime(2004, 4, 4)
     strftime = "%d/%m/%Y, %H:%M:%S"
 
-    assert isinstance(last_accessed_at, datetime)
-    assert last_accessed_at.strftime(strftime) == expected.strftime(strftime)
+    assert isinstance(last_resolved_at, datetime)
+    assert last_resolved_at.strftime(strftime) == expected.strftime(strftime)
 
 
 def test_keeps_datetimes_in_any_timezone(shorturl: ShortURL):
@@ -93,10 +93,10 @@ def test_keeps_datetimes_in_any_timezone(shorturl: ShortURL):
         target_url=shorturl.target_url,
         owner_id=shorturl.owner_id,
         status=shorturl.status,
-        visit_count=shorturl.visit_count,
+        resolution_count=shorturl.resolution_count,
         created_at=naive,
         expires_at=other_timezone,
-        last_accessed_at=None,
+        last_resolved_at=None,
     )
     assert restored.created_at == naive
     assert restored.expires_at == other_timezone

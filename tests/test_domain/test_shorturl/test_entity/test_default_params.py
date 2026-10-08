@@ -38,8 +38,8 @@ def test_status(shorturl: ShortURL):
     assert shorturl.status == ShortURLStatus.ACTIVE
 
 
-def test_visit_count(shorturl: ShortURL):
-    assert shorturl.visit_count == 0
+def test_resolution_count(shorturl: ShortURL):
+    assert shorturl.resolution_count == 0
 
 
 def test_created_at_is_the_given_now(shorturl: ShortURL, now: datetime):
@@ -50,5 +50,5 @@ def test_expires_at(shorturl: ShortURL):
     assert shorturl.expires_at == None
 
 
-def test_last_accessed_at(shorturl: ShortURL):
-    assert shorturl.last_accessed_at == None
+def test_last_resolved_at(shorturl: ShortURL):
+    assert shorturl.last_resolved_at == None
