@@ -20,7 +20,6 @@ shortener/domain/
 │   └── exceptions.py      the errors of ShortURL
 └── shared/                code that doesn't depend on shorturl/
     ├── entity_id.py       EntityID
-    ├── datetime_utils.py  is_utc()
     ├── result.py          Result, Ok and Err
     ├── validation.py      StringValidation, ValidationError, ValidationIssue and IssueCode
     └── parsing.py         require_non_empty_string()
@@ -30,8 +29,10 @@ shortener/domain/
 
 No rule of the domain reads the clock. Every operation that depends on the current moment receives it as a `now` argument: `ShortURL.create()`, `record_visit()`, `is_expired()`, `is_available()` and `resolve()`. This keeps the domain deterministic and leaves the source of time to the use cases.
 
-- `create()` and `record_visit()` store `now`, as `created_at` and `last_accessed_at`, so they check it: a `now` that isn't a timezone-aware UTC datetime, `None` included, raises `ShortURLAttributeTypeError` or `ValueError`.
-- `is_expired()`, `is_available()` and `resolve()` don't validate `now`. `is_expired()` compares it with `expires_at` when there is one, and the other two call `is_expired()` only in the `ACTIVE` status. In that comparison, a `now` that isn't a timezone-aware datetime raises `TypeError`.
+- `create()` and `record_visit()` store `now`, as `created_at` and `last_accessed_at`, so they check it: a `now` that isn't a `datetime`, `None` included, raises `ShortURLAttributeTypeError`.
+- `is_expired()`, `is_available()` and `resolve()` don't check `now`. `is_expired()` compares it with `expires_at` when there is one, and the other two call `is_expired()` only in the `ACTIVE` status. Python can't compare a naive datetime with a timezone-aware one, so if only one of them is naive, the comparison raises `TypeError`.
+
+The domain only deals with moments in time, not with timezones. It accepts datetimes in any timezone, naive ones included, and doesn't convert them: guaranteeing they are in UTC is up to the layer that provides them.
 
 The clock is read in one place: `ShortURLID.generate()`, since a UUIDv7 contains the moment it was generated. No rule depends on that moment.
 
@@ -55,17 +56,17 @@ The rules of `create()` can change, and a value accepted under older rules has t
 
 `shorturl/shorturl.py`
 
-| Field              | Type               | Rule                                                          |
-| ------------------ | ------------------ | ------------------------------------------------------------- |
-| `id`               | `ShortURLID`       | Identity. See [IDs](#ids).                                    |
-| `slug`             | `Slug`             | The short path. See [Slug](#slug).                            |
-| `target_url`       | `TargetURL`        | The destination. See [TargetURL](#targeturl).                 |
-| `owner_id`         | `OwnerID`          | Reference to the owner. See [Owner](#owner).                  |
-| `status`           | `ShortURLStatus`   | `create()` sets it to `ACTIVE`. See [Status](#status).        |
-| `visit_count`      | `int`              | Number of visits, `>= 0`. `create()` sets it to `0`.          |
-| `created_at`       | `datetime`         | UTC. `create()` sets it to `now`.                             |
-| `expires_at`       | `datetime \| None` | UTC. `None` means it never expires.                           |
-| `last_accessed_at` | `datetime \| None` | UTC. `create()` sets it to `None`, `record_visit()` to `now`. |
+| Field              | Type               | Rule                                                     |
+| ------------------ | ------------------ | -------------------------------------------------------- |
+| `id`               | `ShortURLID`       | Identity. See [IDs](#ids).                               |
+| `slug`             | `Slug`             | The short path. See [Slug](#slug).                       |
+| `target_url`       | `TargetURL`        | The destination. See [TargetURL](#targeturl).            |
+| `owner_id`         | `OwnerID`          | Reference to the owner. See [Owner](#owner).             |
+| `status`           | `ShortURLStatus`   | `create()` sets it to `ACTIVE`. See [Status](#status).   |
+| `visit_count`      | `int`              | Number of visits, `>= 0`. `create()` sets it to `0`.     |
+| `created_at`       | `datetime`         | `create()` sets it to `now`.                             |
+| `expires_at`       | `datetime \| None` | `None` means it never expires.                           |
+| `last_accessed_at` | `datetime \| None` | `create()` sets it to `None`, `record_visit()` to `now`. |
 
 The fields are read-only properties, and change only through the [methods](#methods).
 
@@ -78,8 +79,7 @@ The fields are read-only properties, and change only through the [methods](#meth
 Both call the constructor, which takes every field, with no defaults. It checks them in the order of the table, and raises at the first invalid one:
 
 - a value whose type isn't the one in the table raises `ShortURLAttributeTypeError`. The check uses `isinstance`, so subclasses pass, including `bool` for `visit_count`;
-- a negative `visit_count` raises `ValueError`;
-- a datetime that is naive, or whose UTC offset isn't zero, raises `ValueError` (see [`is_utc()`](#datetime-helpers)).
+- a negative `visit_count` raises `ValueError`.
 
 Each field is checked on its own and never compared with another, so `expires_at` can be earlier than `created_at`.
 
@@ -190,12 +190,6 @@ The identity of an entity: a frozen dataclass with one field, `value: UUID`.
 - Equality and hashing come from the dataclass: two `EntityID`s are only equal when they are of the same class and have the same `value`.
 - `str()` returns the UUID as a string.
 
-### Datetime helpers
-
-`shared/datetime_utils.py`
-
-`is_utc(dt)` returns `True` when `dt` is timezone-aware and its UTC offset at that moment is zero. So a zone like `Europe/London` passes in winter and fails in summer. `ShortURL` uses it to validate its datetimes.
-
 ### Result
 
 `shared/result.py`
@@ -262,8 +256,8 @@ A value that breaks a rule of a value object isn't an exception: `create()` retu
 Wrong types or values given to the domain's code. They are programming errors, not client input errors.
 
 - `ShortURLAttributeTypeError`, a `TypeError`: wrong type given to `ShortURL.create()`, `ShortURL.restore()`, a `change_*()` method or `record_visit()`.
-- `ValueError`: a negative `visit_count`, or a datetime that isn't in UTC, given to `ShortURL.create()`, `ShortURL.restore()` or `record_visit()`. Also a value that breaks a rule of `create()`, given to the constructor of `Slug` or `TargetURL`.
-- `TypeError`: an `EntityID` created with a `value` that isn't a `UUID`.
+- `ValueError`: a negative `visit_count` given to `ShortURL.restore()`. Also a value that breaks a rule of `create()`, given to the constructor of `Slug` or `TargetURL`.
+- `TypeError`: an `EntityID` created with a `value` that isn't a `UUID`. Also a `now` that can't be compared with `expires_at`, given to `is_expired()`, `is_available()` or `resolve()` (see [Time](#time)).
 
 ### Parsing errors
 

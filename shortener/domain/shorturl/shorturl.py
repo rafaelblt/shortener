@@ -2,8 +2,6 @@ from typing import Optional
 
 from datetime import datetime
 
-from shortener.domain.shared.datetime_utils import is_utc
-
 from .slug import Slug
 from .target_url import TargetURL
 from .status import ShortURLStatus
@@ -36,9 +34,9 @@ class ShortURL:
         _check_type("owner_id", owner_id, OwnerID)
         _check_type("status", status, ShortURLStatus)
         _check_visit_count(visit_count)
-        _check_utc_datetime("created_at", created_at)
-        _check_optional_utc_datetime("expires_at", expires_at)
-        _check_optional_utc_datetime("last_accessed_at", last_accessed_at)
+        _check_type("created_at", created_at, datetime)
+        _check_optional_datetime("expires_at", expires_at)
+        _check_optional_datetime("last_accessed_at", last_accessed_at)
 
         self._id = id
         self._slug = slug
@@ -157,7 +155,7 @@ class ShortURL:
 
 
     def record_visit(self, now: datetime):
-        _check_utc_datetime("last_accessed_at", now)
+        _check_type("last_accessed_at", now, datetime)
         self._visit_count = self.visit_count + 1
         self._last_accessed_at = now
     
@@ -204,17 +202,8 @@ def _check_visit_count(visit_count: int) -> None:
         )
 
 
-def _check_utc_datetime(attribute: str, value: datetime) -> None:
-    _check_type(attribute, value, datetime)
-    if not is_utc(value):
-        raise ValueError(f"The ShortURL {attribute} must be in UTC timezone.")
-
-
-def _check_optional_utc_datetime(attribute: str, value: Optional[datetime]) -> None:
-    if value is None:
-        return
-    if not isinstance(value, datetime):
+def _check_optional_datetime(attribute: str, value: Optional[datetime]) -> None:
+    if value is not None and not isinstance(value, datetime):
         raise ShortURLAttributeTypeError(
             attr=attribute, type_expected="datetime or None", got=value
         )
-    _check_utc_datetime(attribute, value)

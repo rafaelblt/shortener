@@ -20,9 +20,10 @@ def test_record_visit_sets_last_accessed_at_to_now(normal_shorturl: ShortURL, no
     assert normal_shorturl.last_accessed_at == now
 
 
-def test_record_visit_rejects_a_datetime_outside_utc(normal_shorturl: ShortURL):
-    with pytest.raises(ValueError, match="must be in UTC"):
-        normal_shorturl.record_visit(datetime(year=2026, month=1, day=1))
+def test_record_visit_accepts_a_naive_datetime(normal_shorturl: ShortURL):
+    naive = datetime(year=2026, month=1, day=1)
+    normal_shorturl.record_visit(naive)
+    assert normal_shorturl.last_accessed_at == naive
 
 
 def test_record_visit_rejects_none(normal_shorturl: ShortURL):

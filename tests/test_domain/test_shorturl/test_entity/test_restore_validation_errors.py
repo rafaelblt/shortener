@@ -1,7 +1,5 @@
 import pytest
 
-from datetime import datetime
-
 from shortener.domain.shorturl import ShortURL
 
 
@@ -54,12 +52,6 @@ def test_visit_count_lower_than_0_raises_value_error(fields: dict):
         f"got {visit_count}")
     with pytest.raises(ValueError, match=e):
         ShortURL.restore(**{**fields, "visit_count": visit_count})
-
-
-@pytest.mark.parametrize("attr", ["created_at", "expires_at", "last_accessed_at"])
-def test_datetime_outside_utc_raises_value_error(fields: dict, attr):
-    with pytest.raises(ValueError, match=f"The ShortURL {attr} must be in UTC"):
-        ShortURL.restore(**{**fields, attr: datetime(year=2026, month=1, day=1)})
 
 
 def test_restore_takes_keyword_arguments_only(fields: dict):

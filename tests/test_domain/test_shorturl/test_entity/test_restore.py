@@ -1,5 +1,5 @@
 import pytest
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 from shortener.domain.shorturl import ShortURL
@@ -82,3 +82,21 @@ def test_last_accessed_at(shorturl: ShortURL):
 
     assert isinstance(last_accessed_at, datetime)
     assert last_accessed_at.strftime(strftime) == expected.strftime(strftime)
+
+
+def test_keeps_datetimes_in_any_timezone(shorturl: ShortURL):
+    naive = datetime(year=2002, month=2, day=2)
+    other_timezone = datetime(year=2006, month=6, day=6, tzinfo=timezone(timedelta(hours=-3)))
+    restored = ShortURL.restore(
+        id=shorturl.id,
+        slug=shorturl.slug,
+        target_url=shorturl.target_url,
+        owner_id=shorturl.owner_id,
+        status=shorturl.status,
+        visit_count=shorturl.visit_count,
+        created_at=naive,
+        expires_at=other_timezone,
+        last_accessed_at=None,
+    )
+    assert restored.created_at == naive
+    assert restored.expires_at == other_timezone
