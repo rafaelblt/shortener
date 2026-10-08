@@ -80,15 +80,17 @@ def test_restore_keeps_the_given_values(fields: dict[str, Any]):
 
 
 def test_restore_keeps_datetimes_in_any_timezone(fields: dict[str, Any]):
-    naive = datetime(2002, 2, 2)
-    utc_minus_3 = datetime(2006, 6, 6, tzinfo=timezone(timedelta(hours=-3)))
+    utc_minus_3 = datetime(2002, 2, 2, tzinfo=timezone(timedelta(hours=-3)))
+    naive = datetime(2006, 6, 6)
 
     shorturl = ShortURL.restore(
-        **{**fields, "created_at": naive, "last_resolved_at": utc_minus_3}
+        **{**fields, "created_at": utc_minus_3, "last_resolved_at": naive}
     )
 
-    assert shorturl.created_at == naive
-    assert shorturl.last_resolved_at == utc_minus_3
+    assert shorturl.created_at == utc_minus_3
+    # Aware datetimes are equal when they are the same moment, in any timezone.
+    assert shorturl.created_at.tzinfo == utc_minus_3.tzinfo
+    assert shorturl.last_resolved_at == naive
 
 
 @pytest.mark.parametrize(
