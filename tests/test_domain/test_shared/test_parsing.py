@@ -12,7 +12,7 @@ def test_returns_a_non_empty_string():
 
 
 @pytest.mark.parametrize("value", [123, None, b"abc"])
-def test_rejects_a_value_that_is_not_a_string_with_type_error(value):
+def test_rejects_a_value_that_is_not_a_string_with_type_error(value: object):
     with pytest.raises(TypeError) as raised:
         require_non_empty_string(value, TYPE_NAME)
     assert_mentions(str(raised.value), TYPE_NAME, str.__name__, type(value).__name__)

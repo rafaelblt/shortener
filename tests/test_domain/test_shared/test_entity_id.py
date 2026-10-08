@@ -16,7 +16,7 @@ def test_keeps_the_value():
 
 
 @pytest.mark.parametrize("value", [str(VALUE), VALUE.int, None])
-def test_rejects_a_value_that_is_not_a_uuid(value):
+def test_rejects_a_value_that_is_not_a_uuid(value: object):
     with pytest.raises(TypeError) as raised:
         EntityID(value)
     assert_mentions(
@@ -24,11 +24,8 @@ def test_rejects_a_value_that_is_not_a_uuid(value):
     )
 
 
-def test_is_equal_to_an_id_with_the_same_value():
+def test_is_equal_only_to_an_id_with_the_same_value():
     assert EntityID(VALUE) == EntityID(VALUE)
-
-
-def test_is_not_equal_to_an_id_with_another_value():
     assert EntityID(VALUE) != EntityID(OTHER_VALUE)
 
 
@@ -43,4 +40,4 @@ def test_is_immutable():
 
 
 def test_str_is_the_uuid_string():
-    assert str(EntityID(VALUE)) == "0199b2c4-7a3e-7c1a-9b5e-3f2d4c6b8a10"
+    assert str(EntityID(VALUE)) == str(VALUE)
