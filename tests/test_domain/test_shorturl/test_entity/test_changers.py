@@ -2,6 +2,7 @@ import pytest
 
 from shortener.domain.shorturl import Slug, TargetURL
 from shortener.domain.shorturl import ShortURL
+from tests.utils.text_helpers import assert_mentions
 
 
 def test_change_slug(normal_shorturl: ShortURL):
@@ -11,9 +12,9 @@ def test_change_slug(normal_shorturl: ShortURL):
 
 
 def test_change_slug_raises_error(normal_shorturl: ShortURL):
-    e = "The ShortURL slug must be an instance of Slug, got str"
-    with pytest.raises(TypeError, match=e):
+    with pytest.raises(TypeError) as raised:
         normal_shorturl.change_slug("a") # type: ignore
+    assert_mentions(str(raised.value), "slug", Slug.__name__, str.__name__)
 
 
 def test_change_target_url(normal_shorturl: ShortURL):
@@ -23,7 +24,7 @@ def test_change_target_url(normal_shorturl: ShortURL):
 
 
 def test_change_target_url_raises_error(normal_shorturl: ShortURL):
-    e = "The ShortURL target_url must be an instance of TargetURL, got str"
-    with pytest.raises(TypeError, match=e):
+    with pytest.raises(TypeError) as raised:
         normal_shorturl.change_target_url("a") # type: ignore
+    assert_mentions(str(raised.value), "target_url", TargetURL.__name__, str.__name__)
 

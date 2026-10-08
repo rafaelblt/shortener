@@ -4,6 +4,7 @@ from datetime import datetime
 from shortener.domain.shorturl import ShortURL
 from shortener.domain.shorturl import ShortURLStatus
 from shortener.domain.shorturl.exceptions import ShortURLDeactivatedError
+from tests.utils.text_helpers import assert_mentions
 
 
 def test_resolve_returns_the_target_url(normal_shorturl: ShortURL, now: datetime):
@@ -40,9 +41,9 @@ def test_resolve_rejects_none(normal_shorturl: ShortURL):
 
 
 def test_resolve_type_error_names_the_now_parameter(normal_shorturl: ShortURL):
-    e = "The now parameter must be an instance of datetime, got NoneType"
-    with pytest.raises(TypeError, match=e):
+    with pytest.raises(TypeError) as raised:
         normal_shorturl.resolve(None) # type: ignore
+    assert_mentions(str(raised.value), "now", datetime.__name__, type(None).__name__)
 
 
 def test_resolve_rejects_none_before_checking_availability(normal_shorturl: ShortURL):

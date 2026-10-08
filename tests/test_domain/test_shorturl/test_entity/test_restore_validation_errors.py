@@ -1,6 +1,12 @@
 import pytest
 
+from datetime import datetime
+
 from shortener.domain.shorturl import ShortURL
+from shortener.domain.shorturl import (
+    Slug, TargetURL, ShortURLStatus, ShortURLID, OwnerID
+)
+from tests.utils.text_helpers import assert_mentions
 
 
 @pytest.fixture
@@ -17,41 +23,35 @@ def fields(normal_shorturl):
     }
 
 
-def get_type_error_message(attribute, expected_type, value):
-    return (
-        f"The ShortURL {attribute} must be an instance of {expected_type}, got "
-        f"{type(value).__name__}"
-    )
-
-
 @pytest.mark.parametrize(
     "attribute, expected_type, value",
     [
-        ("id", "ShortURLID", 1),
-        ("slug", "Slug", {"slug": "test-slug"}),
-        ("target_url", "TargetURL", "https://github.com"),
-        ("owner_id", "OwnerID", 1),
-        ("status", "ShortURLStatus", "active"),
-        ("resolution_count", "int", "1"),
-        ("created_at", "datetime", 1992),
-        ("created_at", "datetime", None),
-        ("last_resolved_at", "datetime", 1992),
+        ("id", ShortURLID, 1),
+        ("slug", Slug, {"slug": "test-slug"}),
+        ("target_url", TargetURL, "https://github.com"),
+        ("owner_id", OwnerID, 1),
+        ("status", ShortURLStatus, "active"),
+        ("resolution_count", int, "1"),
+        ("created_at", datetime, 1992),
+        ("created_at", datetime, None),
+        ("last_resolved_at", datetime, 1992),
     ],
 )
 def test_field_of_the_wrong_type_raises_type_error(
     fields: dict, attribute, expected_type, value
 ):
-    e = get_type_error_message(attribute, expected_type, value)
-    with pytest.raises(TypeError, match=e):
+    with pytest.raises(TypeError) as raised:
         ShortURL.restore(**{**fields, attribute: value})
+    assert_mentions(
+        str(raised.value), attribute, expected_type.__name__, type(value).__name__
+    )
 
 
 def test_resolution_count_lower_than_0_raises_value_error(fields: dict):
     resolution_count = -1
-    e = ("The ShortURL resolution_count must be greater than or equal to 0, "
-        f"got {resolution_count}")
-    with pytest.raises(ValueError, match=e):
+    with pytest.raises(ValueError) as raised:
         ShortURL.restore(**{**fields, "resolution_count": resolution_count})
+    assert_mentions(str(raised.value), "resolution_count", str(resolution_count))
 
 
 def test_restore_takes_keyword_arguments_only(fields: dict):

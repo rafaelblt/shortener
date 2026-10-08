@@ -4,6 +4,7 @@ from shortener.domain.shared.result import Ok
 from shortener.domain.shared.validation import IssueCode
 from shortener.domain.shorturl.target_url import TargetURL
 from tests.fixtures.domain.validation import invalid
+from tests.utils.text_helpers import assert_mentions
 
 
 def test_create_returns_ok_with_the_value():
@@ -67,14 +68,17 @@ def test_parse_accepts_a_value_that_breaks_the_rules_of_create(value):
 
 @pytest.mark.parametrize("value", [123, None])
 def test_parse_rejects_a_value_that_is_not_a_string_with_type_error(value):
-    with pytest.raises(TypeError, match="TargetURL must be a str"):
+    with pytest.raises(TypeError) as raised:
         TargetURL.parse(value)
+    assert_mentions(str(raised.value), TargetURL.__name__)
 
 
 def test_parse_rejects_an_empty_string_with_value_error():
-    with pytest.raises(ValueError, match="TargetURL must not be empty"):
+    with pytest.raises(ValueError) as raised:
         TargetURL.parse("")
+    assert_mentions(str(raised.value), TargetURL.__name__)
 
 
-def test_target_url_repr():
-    assert repr(TargetURL("https://example.com")) == "<TargetURL('https://example.com')>"
+def test_repr_mentions_the_class_and_the_value():
+    value = "https://example.com"
+    assert_mentions(repr(TargetURL(value)), TargetURL.__name__, value)

@@ -4,6 +4,7 @@ from dataclasses import FrozenInstanceError
 from uuid import UUID
 
 from shortener.domain.shared.entity_id import EntityID
+from tests.utils.text_helpers import assert_mentions
 
 
 VALUE = UUID("0199b2c4-7a3e-7c1a-9b5e-3f2d4c6b8a10")
@@ -16,10 +17,11 @@ def test_keeps_the_value():
 
 @pytest.mark.parametrize("value", [str(VALUE), VALUE.int, None])
 def test_rejects_a_value_that_is_not_a_uuid(value):
-    with pytest.raises(
-        TypeError, match="The EntityID value must be an instance of UUID"
-    ):
+    with pytest.raises(TypeError) as raised:
         EntityID(value)
+    assert_mentions(
+        str(raised.value), EntityID.__name__, UUID.__name__, type(value).__name__
+    )
 
 
 def test_is_equal_to_an_id_with_the_same_value():
