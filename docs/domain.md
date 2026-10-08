@@ -30,7 +30,7 @@ shortener/domain/
 
 No rule of the domain reads the clock. Every operation that depends on the current moment receives it as a `now` argument: `ShortURL.create()`, `record_visit()`, `is_expired()`, `is_available()` and `resolve()`. This keeps the domain deterministic and leaves the source of time to the use cases.
 
-- `create()` and `record_visit()` store `now`, as `created_at` and `last_accessed_at`, so they validate it like those fields: a `now` that isn't a timezone-aware UTC datetime raises `ShortURLAttributeTypeError` or `ValueError`.
+- `create()` and `record_visit()` store `now`, as `created_at` and `last_accessed_at`, so they check it: a `now` that isn't a timezone-aware UTC datetime, `None` included, raises `ShortURLAttributeTypeError` or `ValueError`.
 - `is_expired()`, `is_available()` and `resolve()` don't validate `now`. `is_expired()` compares it with `expires_at` when there is one, and the other two call `is_expired()` only in the `ACTIVE` status. In that comparison, a `now` that isn't a timezone-aware datetime raises `TypeError`.
 
 The clock is read in one place: `ShortURLID.generate()`, since a UUIDv7 contains the moment it was generated. No rule depends on that moment.
@@ -88,7 +88,7 @@ Each field is checked on its own and never compared with another, so `expires_at
 | Method                                                       | Effect                                                                                                                                                 |
 | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `resolve(now)`                                               | Returns `target_url` when `is_available(now)` is true. Otherwise, raises the error in the [Status](#status) table. Doesn't record a visit.             |
-| `record_visit(now)`                                          | Checks `now` like the constructor checks `last_accessed_at`, adds 1 to `visit_count` and sets `last_accessed_at` to `now`. Doesn't check availability. |
+| `record_visit(now)`                                          | Checks `now` like the constructor checks `created_at`, adds 1 to `visit_count` and sets `last_accessed_at` to `now`. Doesn't check availability.        |
 | `is_expired(now)`                                            | `True` when `expires_at` isn't `None` and `expires_at <= now`. Doesn't look at `status`. See [Expiration](#expiration).                                |
 | `is_available(now)`                                          | `True` when `status` is `ACTIVE` and `is_expired(now)` is false.                                                                                       |
 | `enable()`                                                   | Sets `status` to `ACTIVE`. See [Status](#status).                                                                                                      |

@@ -123,7 +123,7 @@ class ShortURL:
 
 
     def record_visit(self, now: datetime):
-        _check_optional_utc_datetime("last_accessed_at", now)
+        _check_utc_datetime("last_accessed_at", now)
         self._visit_count = self.visit_count + 1
         self._last_accessed_at = now
     

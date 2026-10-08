@@ -4,6 +4,7 @@ from datetime import datetime
 from shortener.domain.shorturl import ShortURL
 from shortener.domain.shorturl import ShortURLStatus
 from shortener.domain.shorturl.exceptions import (
+    ShortURLAttributeTypeError,
     ShortURLDeactivatedError, 
     ShortURLExpiredError
 )
@@ -22,6 +23,11 @@ def test_record_visit_sets_last_accessed_at_to_now(normal_shorturl: ShortURL, no
 def test_record_visit_rejects_a_datetime_outside_utc(normal_shorturl: ShortURL):
     with pytest.raises(ValueError, match="must be in UTC"):
         normal_shorturl.record_visit(datetime(year=2026, month=1, day=1))
+
+
+def test_record_visit_rejects_none(normal_shorturl: ShortURL):
+    with pytest.raises(ShortURLAttributeTypeError):
+        normal_shorturl.record_visit(None) # type: ignore
 
 
 def test_resolve(normal_shorturl: ShortURL, now: datetime):
