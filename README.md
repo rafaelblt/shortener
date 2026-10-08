@@ -30,14 +30,7 @@ In the upper layers, the owner's identity will come from a JWT validated by the 
 
 ## Principles
 
-In order of priority:
-
-1. **Simplicity.** Simple code, simple features, simple architecture.
-2. **Organization.** Every responsibility in its proper place, with no repetition.
-3. **Readability.** Anyone understands the code by reading it: no excessive abstraction, abbreviations or long functions.
-4. **Tests.** Every feature well covered, by tests that follow the principles above.
-
-The practical rules for each principle, for comments, documentation and commits are in [AGENTS.md](AGENTS.md).
+In order of priority: simplicity, organization, readability and tests. What each one means in practice, and the conventions for comments, documentation, issues and commits, are in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Architecture
 
@@ -62,7 +55,7 @@ The restructuring happens layer by layer, from the inside out:
 | `adapters`  | Waiting                                |
 | `infra`     | Waiting                                |
 
-**The scope of this phase is the domain and its tests.** Problems in the upper layers (bugs, broken tests, code that depends on concepts being removed) are ignored until we reach each of them. That includes the breakage caused by cleaning up the domain itself.
+Problems in the upper layers (bugs, broken tests, code that depends on concepts being removed) are ignored until we reach each of them. The scope of the current phase and how to work in it are in [CONTRIBUTING.md](CONTRIBUTING.md#current-phase-domain).
 
 ## Development
 
@@ -74,8 +67,11 @@ poetry run task test_domain
 poetry run pytest tests/test_domain --cov=shortener/domain --cov-report=term-missing
 ```
 
+Before changing anything, read [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Documentation
 
-- [AGENTS.md](AGENTS.md): principles and conventions for code, tests, comments, documentation, issues and commits.
+- [CONTRIBUTING.md](CONTRIBUTING.md): the current phase, the principles and the conventions for code, tests, comments, documentation, issues and commits. They apply to everyone who changes the project.
+- [AGENTS.md](AGENTS.md): what is specific to agents, and which documents they read for each kind of task.
 - [docs/domain.md](docs/domain.md): what each part of the domain does, as it is in the code, with its rules and open questions.
 - [docs/issues/](docs/issues/README.md): the issues, until the repository is on GitHub.
