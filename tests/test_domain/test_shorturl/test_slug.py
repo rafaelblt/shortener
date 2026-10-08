@@ -110,4 +110,5 @@ def test_generate_never_breaks_the_rules_of_create():
 
 
 def test_repr_mentions_the_class_and_the_value():
-    assert_mentions(repr(Slug("my-slug")), Slug.__name__, "my-slug")
+    value = "my-slug"
+    assert_mentions(repr(Slug(value)), Slug.__name__, value)

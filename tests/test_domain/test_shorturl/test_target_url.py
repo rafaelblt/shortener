@@ -7,75 +7,79 @@ from tests.fixtures.domain.validation import invalid
 from tests.utils.text_helpers import assert_mentions
 
 
-def test_create_returns_ok_with_the_value():
-    value = "https://www.example.com/path?query=1"
-    assert TargetURL.create(value) == Ok(value)
-
-
-def test_the_value_in_ok_is_a_target_url():
-    assert isinstance(TargetURL.create("https://example.com").unwrap(), TargetURL)
-
-
-def test_create_accepts_an_uppercase_scheme():
-    assert TargetURL.create("HTTPS://example.com") == Ok("HTTPS://example.com")
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param("https://www.example.com/path?query=1", id="path and query"),
+        pytest.param("HTTPS://example.com", id="uppercase scheme"),
+    ],
+)
+def test_create_returns_ok_with_a_target_url_of_a_valid_value(value: str):
+    result = TargetURL.create(value)
+    assert result == Ok(value)
+    assert isinstance(result.unwrap(), TargetURL)
 
 
 @pytest.mark.parametrize(
-    "value",
-    ["http://example.com", "ftp://example.com", "example.com", ""],
+    "value, codes",
+    [
+        pytest.param("http://example.com", [IssueCode.INVALID_FORMAT], id="http"),
+        pytest.param("ftp://example.com", [IssueCode.INVALID_FORMAT], id="ftp"),
+        pytest.param("example.com", [IssueCode.INVALID_FORMAT], id="no scheme"),
+        pytest.param("", [IssueCode.INVALID_FORMAT], id="empty"),
+        pytest.param("https://", [IssueCode.INVALID_FORMAT], id="no host"),
+        pytest.param("https://?", [IssueCode.INVALID_FORMAT], id="query without host"),
+        pytest.param("https:///path", [IssueCode.INVALID_FORMAT], id="path without host"),
+        pytest.param("https://[invalid", [IssueCode.INVALID_FORMAT], id="unparsable"),
+        pytest.param(123, [IssueCode.INVALID_TYPE], id="int"),
+        pytest.param(None, [IssueCode.INVALID_TYPE], id="None"),
+    ],
 )
-def test_create_without_https_scheme_is_an_invalid_format(value):
-    assert TargetURL.create(value) == invalid(IssueCode.INVALID_FORMAT)
+def test_create_returns_err_with_an_issue_for_each_broken_rule(
+    value: object, codes: list[IssueCode]
+):
+    assert TargetURL.create(value) == invalid(*codes)
 
 
-@pytest.mark.parametrize("value", ["https://", "https://?", "https:///path"])
-def test_create_without_host_is_an_invalid_format(value):
-    assert TargetURL.create(value) == invalid(IssueCode.INVALID_FORMAT)
-
-
-def test_create_with_a_value_that_cannot_be_parsed_is_an_invalid_format():
-    assert TargetURL.create("https://[invalid") == invalid(IssueCode.INVALID_FORMAT)
-
-
-@pytest.mark.parametrize("value", [123, None])
-def test_create_with_a_value_that_is_not_a_string_is_an_invalid_type(value):
-    assert TargetURL.create(value) == invalid(IssueCode.INVALID_TYPE)
-
-
-def test_new_target_url():
-    target_url = TargetURL("https://www.example.com/path?query=1")
+def test_constructor_returns_a_target_url_with_the_value():
+    target_url = TargetURL("https://example.com")
     assert isinstance(target_url, TargetURL)
-    assert isinstance(target_url, str)
-    assert target_url == "https://www.example.com/path?query=1"
+    assert target_url == "https://example.com"
 
 
-def test_new_target_url_with_invalid_value_raises_value_error_with_the_validation_error():
+def test_constructor_raises_value_error_with_the_validation_error():
     with pytest.raises(ValueError) as raised:
         TargetURL("http://example.com")
     assert raised.value.args == (invalid(IssueCode.INVALID_FORMAT).error,)
 
 
-def test_parse_returns_a_target_url_with_the_value():
-    target_url = TargetURL.parse("https://example.com")
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param("https://example.com", id="valid"),
+        pytest.param("http://example.com", id="http"),
+        pytest.param("https://", id="no host"),
+    ],
+)
+def test_parse_returns_a_target_url_of_any_non_empty_string(value: str):
+    target_url = TargetURL.parse(value)
     assert isinstance(target_url, TargetURL)
-    assert target_url == "https://example.com"
+    assert target_url == value
 
 
-@pytest.mark.parametrize("value", ["http://example.com", "https://"])
-def test_parse_accepts_a_value_that_breaks_the_rules_of_create(value):
-    assert TargetURL.parse(value) == value
-
-
-@pytest.mark.parametrize("value", [123, None])
-def test_parse_rejects_a_value_that_is_not_a_string_with_type_error(value):
-    with pytest.raises(TypeError) as raised:
+@pytest.mark.parametrize(
+    "value, error",
+    [
+        pytest.param(123, TypeError, id="int"),
+        pytest.param(None, TypeError, id="None"),
+        pytest.param("", ValueError, id="empty"),
+    ],
+)
+def test_parse_rejects_an_empty_string_or_a_value_that_is_not_a_string(
+    value: object, error: type[Exception]
+):
+    with pytest.raises(error) as raised:
         TargetURL.parse(value)
-    assert_mentions(str(raised.value), TargetURL.__name__)
-
-
-def test_parse_rejects_an_empty_string_with_value_error():
-    with pytest.raises(ValueError) as raised:
-        TargetURL.parse("")
     assert_mentions(str(raised.value), TargetURL.__name__)
 
 
