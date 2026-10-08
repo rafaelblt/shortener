@@ -1,8 +1,8 @@
 from urllib.parse import urlparse
 
-from shortener.domain.shared.parsing import require_non_empty_string
-from shortener.domain.shared.result import Result
-from shortener.domain.shared.validation import (
+from shortener.shared.parsing import require_non_empty_string
+from shortener.shared.result import Result
+from shortener.shared.validation import (
     IssueCode,
     StringValidation,
     ValidationError,

@@ -6,12 +6,13 @@ The [README](README.md) explains the service's scope, the owner concept, the arc
 
 ## Current phase: domain
 
-The project is being rebuilt layer by layer, from the inside out (see [Current state](README.md#current-state)). The scope of this phase is `shortener/domain/` and its tests: `tests/test_domain/` and the fixtures those tests use. Update this section when the phase changes.
+The project is being rebuilt layer by layer, from the inside out (see [Current state](README.md#current-state)). The scope of this phase is `shortener/domain/`, `shortener/shared/` and their tests: `tests/test_domain/`, `tests/test_shared/` and the fixtures those tests use. Update this section when the phase changes.
 
 - Don't fix `use_cases`, `adapters` or `infra`. Problems in those layers are ignored until we reach them.
-- Changes to the domain will break the upper layers. That is expected: don't patch them to keep up.
-- This phase is verified with `poetry run task test_domain`. The full suite is not a criterion.
+- Changes to the domain and to `shared/` will break the upper layers. That is expected: don't patch them to keep up.
+- This phase is verified with `poetry run task test_shared` and `poetry run task test_domain`. The full suite is not a criterion.
 - [docs/domain.md](docs/domain.md) describes the domain as it is in the code, with its rules and open questions. Its known bugs are open issues labeled `domain`, and fixing them is part of this phase. It has to stay faithful to `shortener/domain/` (see [`docs/`](#docs)). If a rule is unclear, ask instead of making one up.
+- [docs/shared.md](docs/shared.md) describes `shortener/shared/`, and has to stay faithful to it in the same way.
 
 ## Principles
 
@@ -30,7 +31,7 @@ Simple code, simple features, simple architecture.
 
 Every responsibility in its proper place.
 
-- Each layer has a role (see the [Architecture](README.md#architecture) in the README) and dependencies point inward. The domain imports nothing from `use_cases`, `adapters`, `infra` or any framework.
+- Each layer has a role (see the [Architecture](README.md#architecture) in the README) and dependencies point inward. The domain imports nothing from `use_cases`, `adapters`, `infra` or any framework. `shared/` is code any layer can use, and imports nothing from the layers.
 - One concept per module, and the module's name says what is inside.
 - No repetition: each rule is written in one place and reused.
 - Similar structures follow the same shape. Follow the existing pattern before creating a new one.
@@ -51,7 +52,7 @@ Tests are a priority and follow the same principles: simple, organized, readable
 - Every feature comes with tests covering the happy path, the error cases and the boundaries (for example, a slug's minimum and maximum length).
 - One behavior per test. The test's name says which behavior, and in which situation.
 - The structure of `tests/` mirrors that of `shortener/`.
-- Each layer's test directory has its own `conftest.py`, which loads fixtures (from `tests/fixtures/<layer>/`) only from its own layer and the layers below it. That way, a broken upper layer never stops a lower layer's tests from running. `tests/conftest.py` never imports project code.
+- Each layer's test directory has its own `conftest.py`, which loads fixtures (from `tests/fixtures/<layer>/`) only from its own layer and the layers below it. `shared/` counts as below every layer. That way, a broken upper layer never stops a lower layer's tests from running. `tests/conftest.py` never imports project code.
 - Deterministic tests: never rely on the clock, randomness or execution order without controlling them.
 - Test behavior, not implementation details.
 - Fixing a bug starts with a test that reproduces it.
@@ -70,7 +71,7 @@ The code should say what it does on its own. Comments are for what it can't say:
 
 ### `docs/`
 
-Markdown documentation, starting simple. The idea is one file per layer, and for now only the domain is written: [docs/domain.md](docs/domain.md). When a file grows too large, it becomes a directory with one file per concept (for example, `docs/domain/shorturl.md`).
+Markdown documentation, starting simple. The idea is one file per layer, plus one for `shared/`, and for now only these are written: [docs/domain.md](docs/domain.md) and [docs/shared.md](docs/shared.md). When a file grows too large, it becomes a directory with one file per concept (for example, `docs/domain/shorturl.md`).
 
 **Each document is faithful to the code of its layer.** `docs/domain.md` describes `shortener/domain/` as it is now, not as it should be. A bug that is known but not fixed yet becomes an [issue](#issues), linked from where the document describes the affected code.
 
@@ -117,7 +118,8 @@ Until the repository is on GitHub, issues live in [docs/issues/](docs/issues/REA
 
 | Scope                                          | For                                 |
 | ---------------------------------------------- | ----------------------------------- |
-| `domain`, `domain:shorturl`, `domain:shared`   | Domain                              |
+| `domain`, `domain:shorturl`                    | Domain                              |
+| `shared`                                       | Code any layer can use              |
 | `use_cases`                                    | Use cases                           |
 | `adapters:api`                                 | HTTP API                            |
 | `infra:db`, `infra:settings`, `infra:services` | Infrastructure                      |

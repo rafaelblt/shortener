@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Callable, Self
 
-from shortener.domain.shared.result import Err, Ok, Result
+from shortener.shared.result import Err, Ok, Result
 
 
 class IssueCode(Enum):

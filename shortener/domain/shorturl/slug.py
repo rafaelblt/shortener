@@ -4,9 +4,9 @@ import random
 
 from typing import Final
 
-from shortener.domain.shared.parsing import require_non_empty_string
-from shortener.domain.shared.result import Result
-from shortener.domain.shared.validation import StringValidation, ValidationError
+from shortener.shared.parsing import require_non_empty_string
+from shortener.shared.result import Result
+from shortener.shared.validation import StringValidation, ValidationError
 
 
 RANDOM_SLUG_LENGTH: Final = 6

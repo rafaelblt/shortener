@@ -1,7 +1,7 @@
 import pytest
 
-from shortener.domain.shared.result import Ok
-from shortener.domain.shared.validation import IssueCode
+from shortener.shared.result import Ok
+from shortener.shared.validation import IssueCode
 from shortener.domain.shorturl.slug import (
     Slug,
     RANDOM_SLUG_CHARS,
@@ -10,7 +10,7 @@ from shortener.domain.shorturl.slug import (
     SLUG_MIN_LENGTH,
     SLUG_PATTERN,
 )
-from tests.fixtures.domain.validation import invalid
+from tests.fixtures.shared.validation import invalid
 from tests.utils.text_helpers import assert_mentions
 
 

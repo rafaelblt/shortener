@@ -39,10 +39,11 @@ shortener/
 ├── domain/      the shortener's rules
 ├── use_cases/   orchestrates the domain for each operation
 ├── adapters/    entry points to the service (HTTP API with FastAPI)
-└── infra/       database, settings and external services
+├── infra/       database, settings and external services
+└── shared/      code any layer can use
 ```
 
-Dependencies point inward, toward the domain. The domain imports nothing from the other layers.
+Dependencies point inward, toward the domain. The domain imports nothing from the other layers. Any layer can import `shared/`, which imports nothing from the layers.
 
 ## Current state
 
@@ -63,8 +64,9 @@ Requirements: Python 3.12 and [Poetry](https://python-poetry.org/).
 
 ```bash
 poetry install
+poetry run task test_shared
 poetry run task test_domain
-poetry run pytest tests/test_domain --cov=shortener/domain --cov-report=term-missing
+poetry run pytest tests/test_shared tests/test_domain --cov=shortener/shared --cov=shortener/domain --cov-report=term-missing
 ```
 
 Before changing anything, read [CONTRIBUTING.md](CONTRIBUTING.md).
@@ -74,4 +76,5 @@ Before changing anything, read [CONTRIBUTING.md](CONTRIBUTING.md).
 - [CONTRIBUTING.md](CONTRIBUTING.md): the current phase, the principles and the conventions for code, tests, comments, documentation, issues and commits. They apply to everyone who changes the project.
 - [AGENTS.md](AGENTS.md): what is specific to agents, and which documents they read for each kind of task.
 - [docs/domain.md](docs/domain.md): what each part of the domain does, as it is in the code, with its rules and open questions.
+- [docs/shared.md](docs/shared.md): what each part of `shared/` does, as it is in the code.
 - [docs/issues/](docs/issues/README.md): the issues, until the repository is on GitHub.

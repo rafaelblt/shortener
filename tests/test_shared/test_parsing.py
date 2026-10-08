@@ -1,6 +1,6 @@
 import pytest
 
-from shortener.domain.shared.parsing import require_non_empty_string
+from shortener.shared.parsing import require_non_empty_string
 from tests.utils.text_helpers import assert_mentions
 
 

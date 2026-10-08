@@ -37,12 +37,13 @@ pytest-asyncio = "^0.25.3"
 run = 'fastapi dev shortener/adapters/api/main.py'
 
 test = 'pytest --cov=shortener -v'
+test_shared = "pytest -v tests/test_shared/"
 test_domain = "pytest -v tests/test_domain/"
 test_use_cases = "pytest -v tests/test_use_cases/"
 test_adapters = "pytest -v tests/test_adapters/"
 test_infra = "pytest -v tests/test_infra/"
 test_fixtures = "pytest -v tests/test_fixtures/"
-test_layers = 'task test_domain && task test_fixtures && task test_use_cases && task test_infra && task test_adapters'
+test_layers = 'task test_shared && task test_domain && task test_fixtures && task test_use_cases && task test_infra && task test_adapters'
 
 i18n_extract = "pybabel extract -F babel.cfg -o shortener/infra/translations/messages.pot shortener/infra/templates shortener/adapters/api/"
 i18n_init = "pybabel init -i shortener/infra/translations/messages.pot -d shortener/infra/translations -l pt_BR"

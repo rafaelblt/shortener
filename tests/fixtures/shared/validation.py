@@ -1,5 +1,5 @@
-from shortener.domain.shared.result import Err
-from shortener.domain.shared.validation import (
+from shortener.shared.result import Err
+from shortener.shared.validation import (
     IssueCode,
     ValidationError,
     ValidationIssue,

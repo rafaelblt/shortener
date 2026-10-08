@@ -1,6 +1,6 @@
 # Domain
 
-The domain is the core of the shortener: the rules that hold regardless of database, HTTP or framework. It lives in `shortener/domain/` and imports nothing from the other layers. It doesn't define the repository: its interface belongs to the layer that uses it.
+The domain is the core of the shortener: the rules that hold regardless of database, HTTP or framework. It lives in `shortener/domain/` and imports nothing from the other layers, only from [`shortener/shared/`](shared.md). It doesn't define the repository: its interface belongs to the layer that uses it.
 
 This document describes the domain as it is in the code. Verified bugs that aren't fixed yet are [issues](issues/README.md) labeled `domain`, linked from where this document describes the code they affect. Decisions still to be made are in [Open questions](#open-questions).
 
@@ -10,19 +10,15 @@ There is a single central concept: the **short URL**, a short slug that points t
 
 ```
 shortener/domain/
-├── shorturl/
-│   ├── shorturl.py        ShortURL
-│   ├── shorturl_id.py     ShortURLID
-│   ├── owner_id.py        OwnerID
-│   ├── slug.py            Slug
-│   ├── target_url.py      TargetURL
-│   ├── status.py          ShortURLStatus
-│   └── exceptions.py      ShortURLDeactivatedError
-└── shared/                code that doesn't depend on shorturl/
+└── shorturl/
+    ├── shorturl.py        ShortURL
     ├── entity_id.py       EntityID
-    ├── result.py          Result, Ok and Err
-    ├── validation.py      StringValidation, ValidationError, ValidationIssue and IssueCode
-    └── parsing.py         require_non_empty_string()
+    ├── shorturl_id.py     ShortURLID
+    ├── owner_id.py        OwnerID
+    ├── slug.py            Slug
+    ├── target_url.py      TargetURL
+    ├── status.py          ShortURLStatus
+    └── exceptions.py      ShortURLDeactivatedError
 ```
 
 ## Time
@@ -39,13 +35,13 @@ The clock is read in one place: `ShortURLID.generate()`, since a UUIDv7 contains
 
 `Slug` and `TargetURL` are `str` subclasses whose value the domain validates. They offer three ways of getting an instance, each for a different situation:
 
-| Way             | Checks                                                                                  | When a check fails                                                     | For                                                                                                  |
-| --------------- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `create(value)` | Every rule of the value object                                                          | Returns `Err` with a `ValidationError`                                 | New values, such as a slug sent by a client. It is the recommended way.                              |
-| The constructor | The same rules, by calling `create()`                                                   | Raises `ValueError`, whose only argument is the `ValidationError`      | Values known to be valid, such as literals in tests.                                                 |
-| `parse(value)`  | Only that the value is a non-empty `str`, with [`require_non_empty_string()`](#parsing) | Raises `TypeError` if it isn't a `str`, and `ValueError` if it's empty | Values that already exist, such as one loaded from the database, or one used to look up a short URL. |
+| Way             | Checks                                                                                           | When a check fails                                                     | For                                                                                                  |
+| --------------- | ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `create(value)` | Every rule of the value object                                                                   | Returns `Err` with a `ValidationError`                                 | New values, such as a slug sent by a client. It is the recommended way.                              |
+| The constructor | The same rules, by calling `create()`                                                            | Raises `ValueError`, whose only argument is the `ValidationError`      | Values known to be valid, such as literals in tests.                                                 |
+| `parse(value)`  | Only that the value is a non-empty `str`, with [`require_non_empty_string()`](shared.md#parsing) | Raises `TypeError` if it isn't a `str`, and `ValueError` if it's empty | Values that already exist, such as one loaded from the database, or one used to look up a short URL. |
 
-`create()` checks the rules with [`StringValidation`](#validation), and returns a [`Result`](#result): `Ok` with the instance, or `Err` with a `ValidationError` that has an issue for each rule the value breaks. Each issue has a code, and the codes are shared by the value objects, so the upper layers handle a `TOO_LONG` the same way, whichever value object returned it. A value that isn't a `str` only gets the `INVALID_TYPE` issue. The rules of each value object are in its section: [Slug](#slug) and [TargetURL](#targeturl).
+`create()` checks the rules with [`StringValidation`](shared.md#validation), and returns a [`Result`](shared.md#result): `Ok` with the instance, or `Err` with a `ValidationError` that has an issue for each rule the value breaks. Each issue has a code, and the codes are shared by the value objects, so the upper layers handle a `TOO_LONG` the same way, whichever value object returned it. A value that isn't a `str` only gets the `INVALID_TYPE` issue. The rules of each value object are in its section: [Slug](#slug) and [TargetURL](#targeturl).
 
 The rules of `create()` can change, and a value accepted under older rules has to keep working. That is why `parse()` doesn't apply them, and only checks what any value of the type has.
 
@@ -98,9 +94,15 @@ Counting the resolution is part of `resolve()`, and not a method of its own, so 
 
 ### IDs
 
-`shorturl/shorturl_id.py` and `shorturl/owner_id.py`
+`shorturl/entity_id.py`, `shorturl/shorturl_id.py` and `shorturl/owner_id.py`
 
-`ShortURLID` and `OwnerID` are [`EntityID`s](#entityid). Two IDs are only equal when they have the same type and value, so a `ShortURLID` never equals an `OwnerID`.
+`EntityID` is the identity of an entity: a frozen dataclass with one field, `value: UUID`.
+
+- Creating one with a `value` that isn't a `UUID` raises `TypeError`.
+- Equality and hashing come from the dataclass: two `EntityID`s are only equal when they are of the same class and have the same `value`.
+- `str()` returns the UUID as a string.
+
+`ShortURLID` and `OwnerID` are `EntityID`s. Two IDs are only equal when they have the same type and value, so a `ShortURLID` never equals an `OwnerID`.
 
 - `ShortURLID.generate()` returns a new `ShortURLID` with a UUIDv7, from the `uuid6` package. UUIDv7 values are ordered by creation time, which suits database indexes better than random UUIDs.
 - The ID of a short URL is generated by the domain, in `ShortURL.create()`: it exists from the moment the short URL is created, and is never generated by the database.
@@ -167,76 +169,11 @@ What each method does in each status. Error names mean the method raises that er
 | `ACTIVE`      | Counts the resolution and returns `target_url` | Nothing             | Changes to `DEACTIVATED` |
 | `DEACTIVATED` | `ShortURLDeactivatedError`                     | Changes to `ACTIVE` | Nothing                  |
 
-## Shared
-
-`shared/`
-
-### EntityID
-
-`shared/entity_id.py`
-
-The identity of an entity: a frozen dataclass with one field, `value: UUID`.
-
-- Creating one with a `value` that isn't a `UUID` raises `TypeError`.
-- Equality and hashing come from the dataclass: two `EntityID`s are only equal when they are of the same class and have the same `value`.
-- `str()` returns the UUID as a string.
-
-### Result
-
-`shared/result.py`
-
-`Result[T, E]` is `Ok[T] | Err[E]`, modeled after Rust's `Result`: the outcome of an operation that can fail, returned instead of raising an exception. `Ok` holds the result in `value`, and `Err` holds the failure in `error`. Both are frozen dataclasses, so they compare by content and can be matched:
-
-```python
-match result:
-    case Ok(value): ...
-    case Err(error): ...
-```
-
-| Method          | On `Ok(value)`        | On `Err(error)`                                     |
-| --------------- | --------------------- | --------------------------------------------------- |
-| `map(function)` | `Ok(function(value))` | The same `Err`, without calling `function`          |
-| `unwrap()`      | `value`               | Raises `ValueError`, whose only argument is `error` |
-
-### Validation
-
-`shared/validation.py`
-
-`StringValidation(value)` validates a value with rules chained one after the other, and `result()` ends the chain:
-
-```python
-StringValidation(value).min_length(3).max_length(30).result()
-```
-
-Each rule records a `ValidationIssue` when the value breaks it, and the chain goes on, so every broken rule is recorded, in the order of the chain. A value that isn't a `str` gets an `INVALID_TYPE` issue when `StringValidation` is created, and every rule is skipped.
-
-| Method                  | Records                                                                                  |
-| ----------------------- | ---------------------------------------------------------------------------------------- |
-| `min_length(length)`    | `TOO_SHORT` when `len(value) < length`                                                   |
-| `max_length(length)`    | `TOO_LONG` when `len(value) > length`                                                    |
-| `matches(pattern)`      | `INVALID_FORMAT` when `pattern.fullmatch(value)` is `None`: the whole value has to match |
-| `satisfies(rule, code)` | `code` when `rule(value)` is false. It adds a rule the methods above don't cover.        |
-
-`result()` returns `Ok(value)` when no issue was recorded. Otherwise, it returns `Err` with a `ValidationError`: a frozen dataclass whose `issues` holds the recorded `ValidationIssue`s, as a tuple. A `ValidationIssue` is a frozen dataclass with a single field, `code`, an `IssueCode`. The codes describe the kind of rule that was broken, not what was validated, so a code means the same thing wherever it comes from:
-
-| `IssueCode`      | Value              | The value...                       |
-| ---------------- | ------------------ | ---------------------------------- |
-| `INVALID_TYPE`   | `"invalid_type"`   | isn't of the expected type         |
-| `TOO_SHORT`      | `"too_short"`      | is shorter than the minimum length |
-| `TOO_LONG`       | `"too_long"`       | is longer than the maximum length  |
-| `INVALID_FORMAT` | `"invalid_format"` | doesn't have the expected format   |
-
-### Parsing
-
-`shared/parsing.py`
-
-`require_non_empty_string(value, type_name)` returns `value` when it is a non-empty `str`. Otherwise, it raises `TypeError` if it isn't a `str`, or `ValueError` if it's empty, with `type_name` in the message.
-
 ## Errors
 
 `shorturl/exceptions.py`
 
-A value that breaks a rule of a value object isn't an exception: `create()` returns it as a [`ValidationError`](#validation).
+A value that breaks a rule of a value object isn't an exception: `create()` returns it as a [`ValidationError`](shared.md#validation).
 
 ### Availability error
 

@@ -1,13 +1,13 @@
 import re
 import pytest
 
-from shortener.domain.shared.result import Ok, Result
-from shortener.domain.shared.validation import (
+from shortener.shared.result import Ok, Result
+from shortener.shared.validation import (
     IssueCode,
     StringValidation,
     ValidationError,
 )
-from tests.fixtures.domain.validation import invalid
+from tests.fixtures.shared.validation import invalid
 
 
 LOWERCASE_LETTERS = re.compile(r"[a-z]+")

@@ -10,6 +10,7 @@ Read the [README](README.md) for the scope, the architecture and the current sta
 | ----------------------------------------------------- | -------------------------------------------------------- |
 | changes code, tests or documentation                  | [CONTRIBUTING.md](CONTRIBUTING.md), all of it            |
 | touches `shortener/domain/` or `tests/test_domain/`   | [docs/domain.md](docs/domain.md)                         |
+| touches `shortener/shared/` or `tests/test_shared/`   | [docs/shared.md](docs/shared.md)                         |
 | opens, closes or adds to an issue                     | [docs/issues/README.md](docs/issues/README.md)           |
 | makes a commit                                        | [Commits](CONTRIBUTING.md#commits) in CONTRIBUTING.md    |
 

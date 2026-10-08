@@ -1,6 +1,6 @@
 import pytest
 
-from shortener.domain.shared.result import Err, Ok, Result
+from shortener.shared.result import Err, Ok, Result
 
 
 def fail(value):
