@@ -1,6 +1,6 @@
 import pytest
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from uuid import UUID
 
 from shortener.domain.shorturl.shorturl import ShortURL
@@ -48,37 +48,10 @@ def old_shorturl(owner_id):
 
 
 @pytest.fixture
-def expired_shorturl(owner_id, now):
-    return ShortURL.create(
-        slug=Slug("this-is-expired"),
-        target_url=TargetURL("https://expiration.com"),
-        owner_id=owner_id,
-        now=now - timedelta(days=2),
-        expires_at=now - timedelta(days=1),
-    )
-
-
-@pytest.fixture
 def biggest_shorturl(owner_id, now):
     return ShortURL.create(
         slug=Slug("the-top-one"),
         target_url=TargetURL("https://bigbig.com"),
         owner_id=owner_id,
         now=now,
-    )
-
-
-@pytest.fixture
-def expires_at(now):
-    return now + timedelta(hours=1)
-
-
-@pytest.fixture
-def expiring_shorturl(owner_id, now, expires_at):
-    return ShortURL.create(
-        slug=Slug("expires-soon"),
-        target_url=TargetURL("https://soon.com"),
-        owner_id=owner_id,
-        now=now,
-        expires_at=expires_at,
     )

@@ -22,7 +22,6 @@ def shorturl():
         status=ShortURLStatus.DEACTIVATED,
         resolution_count=5,
         created_at=datetime(year=2002, month=2, day=2, tzinfo=timezone.utc),
-        expires_at=datetime(year=2006, month=6, day=6, tzinfo=timezone.utc),
         last_resolved_at=datetime(year=2004, month=4, day=4, tzinfo=timezone.utc)
     )
 
@@ -66,15 +65,6 @@ def test_created_at(shorturl: ShortURL):
     assert created_at.strftime(strftime) == expected.strftime(strftime)
 
 
-def test_expires_at(shorturl: ShortURL):
-    expires_at = shorturl.expires_at
-    expected = datetime(2006, 6, 6)
-    strftime = "%d/%m/%Y, %H:%M:%S"
-
-    assert isinstance(expires_at, datetime)
-    assert expires_at.strftime(strftime) == expected.strftime(strftime)
-
-
 def test_last_resolved_at(shorturl: ShortURL):
     last_resolved_at = shorturl.last_resolved_at
     expected = datetime(2004, 4, 4)
@@ -95,8 +85,7 @@ def test_keeps_datetimes_in_any_timezone(shorturl: ShortURL):
         status=shorturl.status,
         resolution_count=shorturl.resolution_count,
         created_at=naive,
-        expires_at=other_timezone,
-        last_resolved_at=None,
+        last_resolved_at=other_timezone,
     )
     assert restored.created_at == naive
-    assert restored.expires_at == other_timezone
+    assert restored.last_resolved_at == other_timezone

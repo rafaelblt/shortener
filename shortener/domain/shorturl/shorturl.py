@@ -8,7 +8,6 @@ from .status import ShortURLStatus
 from .shorturl_id import ShortURLID
 from .owner_id import OwnerID
 from .exceptions import (
-    ShortURLExpiredError,
     ShortURLDeactivatedError,
     ShortURLAttributeTypeError
 )
@@ -25,7 +24,6 @@ class ShortURL:
         status: ShortURLStatus,
         resolution_count: int,
         created_at: datetime,
-        expires_at: Optional[datetime],
         last_resolved_at: Optional[datetime],
     ):
         _check_type("id", id, ShortURLID)
@@ -35,7 +33,6 @@ class ShortURL:
         _check_type("status", status, ShortURLStatus)
         _check_resolution_count(resolution_count)
         _check_type("created_at", created_at, datetime)
-        _check_optional_datetime("expires_at", expires_at)
         _check_optional_datetime("last_resolved_at", last_resolved_at)
 
         self._id = id
@@ -45,7 +42,6 @@ class ShortURL:
         self._status = status
         self._resolution_count = resolution_count
         self._created_at = created_at
-        self._expires_at = expires_at
         self._last_resolved_at = last_resolved_at
 
     @classmethod
@@ -55,7 +51,6 @@ class ShortURL:
         target_url: TargetURL,
         owner_id: OwnerID,
         now: datetime,
-        expires_at: Optional[datetime] = None,
     ) -> "ShortURL":
         return cls(
             id=ShortURLID.generate(),
@@ -65,7 +60,6 @@ class ShortURL:
             status=ShortURLStatus.ACTIVE,
             resolution_count=0,
             created_at=now,
-            expires_at=expires_at,
             last_resolved_at=None,
         )
 
@@ -80,7 +74,6 @@ class ShortURL:
         status: ShortURLStatus,
         resolution_count: int,
         created_at: datetime,
-        expires_at: Optional[datetime],
         last_resolved_at: Optional[datetime],
     ) -> "ShortURL":
         """
@@ -96,7 +89,6 @@ class ShortURL:
             status=status,
             resolution_count=resolution_count,
             created_at=created_at,
-            expires_at=expires_at,
             last_resolved_at=last_resolved_at,
         )
 
@@ -130,19 +122,12 @@ class ShortURL:
         return self._created_at
 
     @property
-    def expires_at(self):
-        return self._expires_at
-
-    @property
     def last_resolved_at(self):
         return self._last_resolved_at
 
 
-    def is_expired(self, now: datetime) -> bool:
-        return self.expires_at is not None and self.expires_at <= now
-
-    def is_available(self, now: datetime) -> bool:
-        return self.status == ShortURLStatus.ACTIVE and not self.is_expired(now)
+    def is_available(self) -> bool:
+        return self.status == ShortURLStatus.ACTIVE
 
 
     def change_slug(self, new_slug: Slug):
@@ -157,19 +142,15 @@ class ShortURL:
     def resolve(self, now: datetime) -> TargetURL:
         """
         Counts the resolution and returns the target_url if the ShortURL is
-        available at the given moment.
+        available.
 
         Raises:
             ShortURLAttributeTypeError: If now isn't a datetime.
             ShortURLDeactivatedError: If the ShortURL status is DEACTIVATED.
-            ShortURLExpiredError: If the ShortURL status is ACTIVE and
-                expires_at has been reached.
         """
         _check_type("last_resolved_at", now, datetime)
         if self.status == ShortURLStatus.DEACTIVATED:
             raise ShortURLDeactivatedError()
-        if self.is_expired(now):
-            raise ShortURLExpiredError()
         self._resolution_count = self.resolution_count + 1
         self._last_resolved_at = now
         return self.target_url

@@ -46,9 +46,5 @@ def test_created_at_is_the_given_now(shorturl: ShortURL, now: datetime):
     assert shorturl.created_at == now
 
 
-def test_expires_at(shorturl: ShortURL):
-    assert shorturl.expires_at == None
-
-
 def test_last_resolved_at(shorturl: ShortURL):
     assert shorturl.last_resolved_at == None

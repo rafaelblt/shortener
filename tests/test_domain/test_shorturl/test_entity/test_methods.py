@@ -5,8 +5,7 @@ from shortener.domain.shorturl import ShortURL
 from shortener.domain.shorturl import ShortURLStatus
 from shortener.domain.shorturl.exceptions import (
     ShortURLAttributeTypeError,
-    ShortURLDeactivatedError, 
-    ShortURLExpiredError
+    ShortURLDeactivatedError
 )
 
 
@@ -55,27 +54,6 @@ def test_resolve_raises_deactivated_error(normal_shorturl: ShortURL, now: dateti
         normal_shorturl.resolve(now)
 
 
-def test_resolve_raises_expired_error(expired_shorturl: ShortURL, now: datetime):
-    with pytest.raises(ShortURLExpiredError):
-        expired_shorturl.resolve(now)
-
-
-def test_resolve_raises_expired_error_once_expires_at_is_reached(
-    expiring_shorturl: ShortURL, now: datetime, expires_at: datetime
-):
-    assert expiring_shorturl.resolve(now) == expiring_shorturl.target_url
-    with pytest.raises(ShortURLExpiredError):
-        expiring_shorturl.resolve(expires_at)
-
-
-def test_resolve_raises_deactivated_error_when_also_expired(
-    expired_shorturl: ShortURL, now: datetime
-):
-    expired_shorturl.disable()
-    with pytest.raises(ShortURLDeactivatedError):
-        expired_shorturl.resolve(now)
-
-
 def test_resolve_doesnt_count_the_resolution_when_deactivated(
     normal_shorturl: ShortURL, now: datetime
 ):
@@ -84,15 +62,6 @@ def test_resolve_doesnt_count_the_resolution_when_deactivated(
         normal_shorturl.resolve(now)
     assert normal_shorturl.resolution_count == 0
     assert normal_shorturl.last_resolved_at is None
-
-
-def test_resolve_doesnt_count_the_resolution_when_expired(
-    expired_shorturl: ShortURL, now: datetime
-):
-    with pytest.raises(ShortURLExpiredError):
-        expired_shorturl.resolve(now)
-    assert expired_shorturl.resolution_count == 0
-    assert expired_shorturl.last_resolved_at is None
 
 
 def test_disable_deactivates_an_active_shorturl(normal_shorturl: ShortURL):

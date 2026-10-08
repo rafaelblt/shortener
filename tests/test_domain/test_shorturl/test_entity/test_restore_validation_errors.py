@@ -13,7 +13,6 @@ def fields(normal_shorturl):
         "status": normal_shorturl.status,
         "resolution_count": normal_shorturl.resolution_count,
         "created_at": normal_shorturl.created_at,
-        "expires_at": normal_shorturl.expires_at,
         "last_resolved_at": normal_shorturl.last_resolved_at,
     }
 
@@ -36,7 +35,6 @@ def get_type_error_message(attr, type_expected, got):
         ("resolution_count", "int", "1"),
         ("created_at", "datetime", 1992),
         ("created_at", "datetime", None),
-        ("expires_at", "datetime or None", 1992),
         ("last_resolved_at", "datetime or None", 1992),
     ],
 )
