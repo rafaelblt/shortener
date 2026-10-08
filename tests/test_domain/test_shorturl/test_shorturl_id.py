@@ -1,12 +1,10 @@
 from shortener.domain.shorturl import ShortURLID
 
 
-def test_generate_returns_a_shorturl_id():
-    assert isinstance(ShortURLID.generate(), ShortURLID)
-
-
-def test_generate_uses_uuid_version_7():
-    assert ShortURLID.generate().value.version == 7
+def test_generate_returns_a_shorturl_id_with_a_uuid7():
+    shorturl_id = ShortURLID.generate()
+    assert isinstance(shorturl_id, ShortURLID)
+    assert shorturl_id.value.version == 7
 
 
 def test_generate_returns_a_new_id_each_time():
