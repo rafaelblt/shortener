@@ -146,7 +146,7 @@ class ShortURL:
             TypeError: If now isn't a datetime.
             ShortURLDeactivatedError: If the ShortURL status is DEACTIVATED.
         """
-        _check_attribute_type("last_resolved_at", now, datetime)
+        _check_parameter_type("now", now, datetime)
         if self.status == ShortURLStatus.DEACTIVATED:
             raise ShortURLDeactivatedError()
         self._resolution_count = self.resolution_count + 1
@@ -169,6 +169,14 @@ def _check_attribute_type(attribute: str, value: object, expected_type: type) ->
     if not isinstance(value, expected_type):
         raise TypeError(
             f"The ShortURL {attribute} must be an instance of "
+            f"{expected_type.__name__}, got {type(value).__name__}"
+        )
+
+
+def _check_parameter_type(parameter: str, value: object, expected_type: type) -> None:
+    if not isinstance(value, expected_type):
+        raise TypeError(
+            f"The {parameter} parameter must be an instance of "
             f"{expected_type.__name__}, got {type(value).__name__}"
         )
 

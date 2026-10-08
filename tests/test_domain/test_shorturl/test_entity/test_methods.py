@@ -39,6 +39,12 @@ def test_resolve_rejects_none(normal_shorturl: ShortURL):
         normal_shorturl.resolve(None) # type: ignore
 
 
+def test_resolve_type_error_names_the_now_parameter(normal_shorturl: ShortURL):
+    e = "The now parameter must be an instance of datetime, got NoneType"
+    with pytest.raises(TypeError, match=e):
+        normal_shorturl.resolve(None) # type: ignore
+
+
 def test_resolve_rejects_none_before_checking_availability(normal_shorturl: ShortURL):
     normal_shorturl.disable()
     with pytest.raises(TypeError):
