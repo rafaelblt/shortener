@@ -17,7 +17,7 @@ shortener/domain/
 │   ├── slug.py            Slug
 │   ├── target_url.py      TargetURL
 │   ├── status.py          ShortURLStatus
-│   └── exceptions.py      the availability errors of ShortURL
+│   └── exceptions.py      ShortURLDeactivatedError
 └── shared/                code that doesn't depend on shorturl/
     ├── entity_id.py       EntityID
     ├── result.py          Result, Ok and Err
@@ -238,9 +238,9 @@ Each rule records a `ValidationIssue` when the value breaks it, and the chain go
 
 A value that breaks a rule of a value object isn't an exception: `create()` returns it as a [`ValidationError`](#validation).
 
-### Availability errors
+### Availability error
 
-`ShortURLAvailabilityError` and its subclass `ShortURLDeactivatedError` mean the short URL exists but isn't available. They extend `Exception` and carry no message or code. Only `resolve()` raises `ShortURLDeactivatedError`, as in the [Status](#status) table. Nothing raises `ShortURLAvailabilityError` itself.
+`ShortURLDeactivatedError` means the short URL exists but isn't available, because its status is `DEACTIVATED`. It extends `Exception` and carries no message or code. Only `resolve()` raises it, as in the [Status](#status) table.
 
 ### Programming errors
 
