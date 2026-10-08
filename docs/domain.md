@@ -55,33 +55,35 @@ The rules of `create()` can change, and a value accepted under older rules has t
 
 `shorturl/shorturl.py`
 
-| Field              | Type               | Rule                                                        |
-| ------------------ | ------------------ | ----------------------------------------------------------- |
-| `id`               | `ShortURLID`       | Identity. See [IDs](#ids).                                  |
-| `slug`             | `Slug`             | The short path. See [Slug](#slug).                          |
-| `target_url`       | `TargetURL`        | The destination. See [TargetURL](#targeturl).               |
-| `owner_id`         | `OwnerID`          | Reference to the owner. See [Owner](#owner).                |
-| `status`           | `ShortURLStatus`   | Defaults to `ACTIVE`. See [Status](#status).                |
-| `visit_count`      | `int`              | Number of visits, `>= 0`. Defaults to `0`.                  |
-| `created_at`       | `datetime`         | UTC. `create()` sets it to `now`.                           |
-| `expires_at`       | `datetime \| None` | UTC. Defaults to `None`, which means it never expires.      |
-| `last_accessed_at` | `datetime \| None` | UTC. Defaults to `None`. `record_visit()` sets it to `now`. |
+| Field              | Type               | Rule                                                          |
+| ------------------ | ------------------ | ------------------------------------------------------------- |
+| `id`               | `ShortURLID`       | Identity. See [IDs](#ids).                                    |
+| `slug`             | `Slug`             | The short path. See [Slug](#slug).                            |
+| `target_url`       | `TargetURL`        | The destination. See [TargetURL](#targeturl).                 |
+| `owner_id`         | `OwnerID`          | Reference to the owner. See [Owner](#owner).                  |
+| `status`           | `ShortURLStatus`   | `create()` sets it to `ACTIVE`. See [Status](#status).        |
+| `visit_count`      | `int`              | Number of visits, `>= 0`. `create()` sets it to `0`.          |
+| `created_at`       | `datetime`         | UTC. `create()` sets it to `now`.                             |
+| `expires_at`       | `datetime \| None` | UTC. `None` means it never expires.                           |
+| `last_accessed_at` | `datetime \| None` | UTC. `create()` sets it to `None`, `record_visit()` to `now`. |
 
 The fields are read-only properties, and change only through the [methods](#methods).
 
-### Creating and rebuilding
+### Creating and restoring
 
-`ShortURL.create(slug, target_url, owner_id, now, expires_at=None)` creates a new short URL: it generates the ID with `ShortURLID.generate()`, sets `created_at` to `now`, and leaves `status`, `visit_count` and `last_accessed_at` at their defaults.
+`ShortURL.create(slug, target_url, owner_id, now, expires_at=None)` creates a new short URL: it generates the ID with `ShortURLID.generate()`, sets `created_at` to `now`, `status` to `ACTIVE`, `visit_count` to `0` and `last_accessed_at` to `None`.
 
-The constructor takes every field and is meant for rebuilding a short URL that already exists, such as one loaded from the database. `id`, `slug`, `target_url`, `owner_id` and `created_at` are required, and the other fields have the defaults in the table.
+`ShortURL.restore(*, id, slug, target_url, owner_id, status, visit_count, created_at, expires_at, last_accessed_at)` rebuilds a short URL that already exists, such as one loaded from the database. It takes every field, only by keyword, and keeps them as given.
 
-The constructor checks the fields in the order of the table, and raises at the first invalid one:
+Both call the constructor, which takes every field, with no defaults. It checks them in the order of the table, and raises at the first invalid one:
 
 - a value whose type isn't the one in the table raises `ShortURLAttributeTypeError`. The check uses `isinstance`, so subclasses pass, including `bool` for `visit_count`;
 - a negative `visit_count` raises `ValueError`;
 - a datetime that is naive, or whose UTC offset isn't zero, raises `ValueError` (see [`is_utc()`](#datetime-helpers)).
 
 Each field is checked on its own and never compared with another, so `expires_at` can be earlier than `created_at`.
+
+`restore()` repeats the parameters of the constructor on purpose. The constructor may come to take values that only the domain should set, and restoring through its own method keeps the code that loads short URLs from setting them.
 
 ### Methods
 
@@ -111,7 +113,7 @@ Every short URL has an owner: **there are no anonymous short URLs**.
 
 The owner is only a reference. The domain stores the owner's identifier, but knows nothing about the user: there is no user entity, and no name, email, password or status. That is also why the domain doesn't check whether the owner exists.
 
-`owner_id` is set when the short URL is created or rebuilt, and no method changes it.
+`owner_id` is set when the short URL is created or restored, and no method changes it.
 
 Two things happen outside the domain, but shape this rule:
 
@@ -154,10 +156,10 @@ Nothing else is checked: the netloc isn't validated, so `https://exa mple.com` i
 
 `ShortURLStatus` is an `Enum` whose values are the names in lowercase, such as `ACTIVE = "active"`.
 
-| Status        | How it is reached                                                                   |
-| ------------- | ----------------------------------------------------------------------------------- |
-| `ACTIVE`      | Default of the constructor and of `create()`, or `enable()` from `DEACTIVATED`      |
-| `DEACTIVATED` | `disable()` from `ACTIVE`                                                           |
+| Status        | How it is reached                            |
+| ------------- | -------------------------------------------- |
+| `ACTIVE`      | `create()`, or `enable()` from `DEACTIVATED` |
+| `DEACTIVATED` | `disable()` from `ACTIVE`                    |
 
 What each method does in each status. Error names mean the method raises that error.
 
@@ -259,8 +261,8 @@ A value that breaks a rule of a value object isn't an exception: `create()` retu
 
 Wrong types or values given to the domain's code. They are programming errors, not client input errors.
 
-- `ShortURLAttributeTypeError`, a `TypeError`: wrong type given to the `ShortURL` constructor, a `change_*()` method or `record_visit()`.
-- `ValueError`: a negative `visit_count`, or a datetime that isn't in UTC, given to the `ShortURL` constructor or `record_visit()`. Also a value that breaks a rule of `create()`, given to the constructor of `Slug` or `TargetURL`.
+- `ShortURLAttributeTypeError`, a `TypeError`: wrong type given to `ShortURL.create()`, `ShortURL.restore()`, a `change_*()` method or `record_visit()`.
+- `ValueError`: a negative `visit_count`, or a datetime that isn't in UTC, given to `ShortURL.create()`, `ShortURL.restore()` or `record_visit()`. Also a value that breaks a rule of `create()`, given to the constructor of `Slug` or `TargetURL`.
 - `TypeError`: an `EntityID` created with a `value` that isn't a `UUID`.
 
 ### Parsing errors

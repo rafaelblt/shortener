@@ -14,7 +14,7 @@ OWNER_ID_VALUE = UUID("0199b2c4-7a3e-7c1a-9b5e-3f2d4c6b8a11")
 
 @pytest.fixture
 def shorturl():
-    return ShortURL(
+    return ShortURL.restore(
         id=ShortURLID(ID_VALUE),
         slug=Slug("i-am-slug"),
         target_url=TargetURL("https://google.com"),

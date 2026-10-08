@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 from shortener.domain.shorturl.shorturl import ShortURL
-from shortener.domain.shorturl import TargetURL, Slug, ShortURLID, OwnerID
+from shortener.domain.shorturl import TargetURL, Slug, OwnerID
 
 
 @pytest.fixture
@@ -39,12 +39,11 @@ def other_shorturl(owner_id, now):
 
 @pytest.fixture
 def old_shorturl(owner_id):
-    return ShortURL(
-        id=ShortURLID.generate(),
+    return ShortURL.create(
         slug=Slug("old-site"),
         target_url=TargetURL("https://google.com"),
         owner_id=owner_id,
-        created_at=datetime(year=2000, month=1, day=1, tzinfo=timezone.utc)
+        now=datetime(year=2000, month=1, day=1, tzinfo=timezone.utc),
     )
 
 

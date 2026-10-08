@@ -24,11 +24,11 @@ class ShortURL:
         slug: Slug,
         target_url: TargetURL,
         owner_id: OwnerID,
+        status: ShortURLStatus,
+        visit_count: int,
         created_at: datetime,
-        status: ShortURLStatus = ShortURLStatus.ACTIVE,
-        visit_count: int = 0,
-        expires_at: Optional[datetime] = None,
-        last_accessed_at: Optional[datetime] = None,
+        expires_at: Optional[datetime],
+        last_accessed_at: Optional[datetime],
     ):
         _check_type("id", id, ShortURLID)
         _check_type("slug", slug, Slug)
@@ -64,8 +64,42 @@ class ShortURL:
             slug=slug,
             target_url=target_url,
             owner_id=owner_id,
+            status=ShortURLStatus.ACTIVE,
+            visit_count=0,
             created_at=now,
             expires_at=expires_at,
+            last_accessed_at=None,
+        )
+
+    @classmethod
+    def restore(
+        cls,
+        *,
+        id: ShortURLID,
+        slug: Slug,
+        target_url: TargetURL,
+        owner_id: OwnerID,
+        status: ShortURLStatus,
+        visit_count: int,
+        created_at: datetime,
+        expires_at: Optional[datetime],
+        last_accessed_at: Optional[datetime],
+    ) -> "ShortURL":
+        """
+        Rebuilds a short URL that already exists, such as one loaded from the
+        database. It repeats the parameters of the constructor on purpose. See
+        docs/domain.md#creating-and-restoring
+        """
+        return cls(
+            id=id,
+            slug=slug,
+            target_url=target_url,
+            owner_id=owner_id,
+            status=status,
+            visit_count=visit_count,
+            created_at=created_at,
+            expires_at=expires_at,
+            last_accessed_at=last_accessed_at,
         )
 
 
