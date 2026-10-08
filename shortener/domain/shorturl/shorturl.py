@@ -2,6 +2,8 @@ from typing import Optional
 
 from datetime import datetime
 
+from shortener.shared.type_checks import check_parameter_type
+
 from .slug import Slug
 from .target_url import TargetURL
 from .status import ShortURLStatus
@@ -142,7 +144,7 @@ class ShortURL:
             TypeError: If now isn't a datetime.
             ShortURLDeactivatedError: If the ShortURL status is DEACTIVATED.
         """
-        _check_parameter_type("now", now, datetime)
+        check_parameter_type("now", now, datetime)
         if self.status == ShortURLStatus.DEACTIVATED:
             raise ShortURLDeactivatedError()
         self._resolution_count = self.resolution_count + 1
@@ -161,18 +163,13 @@ class ShortURL:
         )
 
 
+# Only ShortURL checks its attributes, so the check stays here, with the class
+# name written in the message. If another entity needs it, consider moving it
+# to shortener/shared/, taking the class name from the entity itself.
 def _check_attribute_type(attribute: str, value: object, expected_type: type) -> None:
     if not isinstance(value, expected_type):
         raise TypeError(
             f"The ShortURL {attribute} must be an instance of "
-            f"{expected_type.__name__}, got {type(value).__name__}"
-        )
-
-
-def _check_parameter_type(parameter: str, value: object, expected_type: type) -> None:
-    if not isinstance(value, expected_type):
-        raise TypeError(
-            f"The {parameter} parameter must be an instance of "
             f"{expected_type.__name__}, got {type(value).__name__}"
         )
 

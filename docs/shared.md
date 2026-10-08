@@ -10,7 +10,8 @@ This document describes `shortener/shared/` as it is in the code.
 shortener/shared/
 ├── result.py          Result, Ok and Err
 ├── validation.py      StringValidation, ValidationError, ValidationIssue and IssueCode
-└── parsing.py         require_non_empty_string()
+├── parsing.py         require_non_empty_string()
+└── type_checks.py     check_parameter_type()
 ```
 
 ## Result
@@ -64,3 +65,8 @@ Each rule records a `ValidationIssue` when the value breaks it, and the chain go
 
 `require_non_empty_string(value, type_name)` returns `value` when it is a non-empty `str`. Otherwise, it raises `TypeError` if it isn't a `str`, or `ValueError` if it's empty, with `type_name` in the message.
 
+## Type checks
+
+`type_checks.py`
+
+`check_parameter_type(parameter, value, expected_type)` checks the type of a value received by a function. It returns `None` when `value` is an instance of `expected_type`. Otherwise, it raises `TypeError` with a message naming the parameter, the expected type and the type received, such as `The now parameter must be an instance of datetime, got str`. The check uses `isinstance`, so subclasses pass.
