@@ -17,7 +17,7 @@ shortener/domain/
 │   ├── slug.py            Slug
 │   ├── target_url.py      TargetURL
 │   ├── status.py          ShortURLStatus
-│   └── exceptions.py      the errors of ShortURL
+│   └── exceptions.py      the availability errors of ShortURL
 └── shared/                code that doesn't depend on shorturl/
     ├── entity_id.py       EntityID
     ├── result.py          Result, Ok and Err
@@ -29,7 +29,7 @@ shortener/domain/
 
 No rule of the domain reads the clock. Every operation that depends on the current moment receives it as a `now` argument: `ShortURL.create()` and `resolve()`. This keeps the domain deterministic and leaves the source of time to the use cases.
 
-Both store `now`, as `created_at` and `last_resolved_at`, so they check it: a `now` that isn't a `datetime`, `None` included, raises `ShortURLAttributeTypeError`. `resolve()` checks it before the availability, so it raises even when the short URL isn't available.
+Both store `now`, as `created_at` and `last_resolved_at`, so they check it: a `now` that isn't a `datetime`, `None` included, raises `TypeError`. `resolve()` checks it before the availability, so it raises even when the short URL isn't available.
 
 The domain only deals with moments in time, not with timezones. It accepts datetimes in any timezone, naive ones included, and doesn't convert them: guaranteeing they are in UTC is up to the layer that provides them.
 
@@ -78,7 +78,7 @@ The fields are read-only properties, and change only through the [methods](#meth
 
 Both call the constructor, which takes every field, with no defaults. It checks them in the order of the table, and raises at the first invalid one:
 
-- a value whose type isn't the one in the table raises `ShortURLAttributeTypeError`. The check uses `isinstance`, so subclasses pass, including `bool` for `resolution_count`;
+- a value whose type isn't the one in the table raises `TypeError`, with a message naming the field, the expected type and the type received. The check uses `isinstance`, so subclasses pass, including `bool` for `resolution_count`;
 - a negative `resolution_count` raises `ValueError`.
 
 Each field is checked on its own and never compared with another, so `last_resolved_at` can be earlier than `created_at`.
@@ -93,7 +93,7 @@ Each field is checked on its own and never compared with another, so `last_resol
 | `is_available()`                                             | `True` when `status` is `ACTIVE`.                                                                                                                                                                                                                                                       |
 | `enable()`                                                   | Sets `status` to `ACTIVE`. See [Status](#status).                                                                                                                                                                                                                                       |
 | `disable()`                                                  | Sets `status` to `DEACTIVATED`. See [Status](#status).                                                                                                                                                                                                                                  |
-| `change_slug(new_slug)`, `change_target_url(new_target_url)` | Check the type of the new value like the constructor, and replace the field. `change_slug()` doesn't check that the slug is unique.                                                                                                                                                     |
+| `change_slug(new_slug)`, `change_target_url(new_target_url)` | Check the type of the new value like the constructor checks the field, and replace it. `change_slug()` doesn't check that the slug is unique.                                                                                                                                           |
 
 Counting the resolution is part of `resolve()`, and not a method of its own, so that the domain decides when a resolution counts: only when the short URL is available. The use cases can't forget to count it, or count it for a short URL that isn't available.
 
@@ -247,9 +247,8 @@ A value that breaks a rule of a value object isn't an exception: `create()` retu
 
 Wrong types or values given to the domain's code. They are programming errors, not client input errors.
 
-- `ShortURLAttributeTypeError`, a `TypeError`: wrong type given to `ShortURL.create()`, `ShortURL.restore()`, a `change_*()` method or `resolve()`.
+- `TypeError`: wrong type given to `ShortURL.create()`, `ShortURL.restore()`, a `change_*()` method or `resolve()`. Also an `EntityID` created with a `value` that isn't a `UUID`.
 - `ValueError`: a negative `resolution_count` given to `ShortURL.restore()`. Also a value that breaks a rule of `create()`, given to the constructor of `Slug` or `TargetURL`.
-- `TypeError`: an `EntityID` created with a `value` that isn't a `UUID`.
 
 ### Parsing errors
 

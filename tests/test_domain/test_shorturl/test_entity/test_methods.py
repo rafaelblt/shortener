@@ -3,10 +3,7 @@ from datetime import datetime
 
 from shortener.domain.shorturl import ShortURL
 from shortener.domain.shorturl import ShortURLStatus
-from shortener.domain.shorturl.exceptions import (
-    ShortURLAttributeTypeError,
-    ShortURLDeactivatedError
-)
+from shortener.domain.shorturl.exceptions import ShortURLDeactivatedError
 
 
 def test_resolve_returns_the_target_url(normal_shorturl: ShortURL, now: datetime):
@@ -38,13 +35,13 @@ def test_resolve_accepts_a_naive_datetime(normal_shorturl: ShortURL):
 
 
 def test_resolve_rejects_none(normal_shorturl: ShortURL):
-    with pytest.raises(ShortURLAttributeTypeError):
+    with pytest.raises(TypeError):
         normal_shorturl.resolve(None) # type: ignore
 
 
 def test_resolve_rejects_none_before_checking_availability(normal_shorturl: ShortURL):
     normal_shorturl.disable()
-    with pytest.raises(ShortURLAttributeTypeError):
+    with pytest.raises(TypeError):
         normal_shorturl.resolve(None) # type: ignore
 
 

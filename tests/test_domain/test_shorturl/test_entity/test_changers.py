@@ -1,6 +1,5 @@
 import pytest
 
-from shortener.domain.shorturl.exceptions import ShortURLAttributeTypeError
 from shortener.domain.shorturl import Slug, TargetURL
 from shortener.domain.shorturl import ShortURL
 
@@ -12,7 +11,8 @@ def test_change_slug(normal_shorturl: ShortURL):
 
 
 def test_change_slug_raises_error(normal_shorturl: ShortURL):
-    with pytest.raises(ShortURLAttributeTypeError):
+    e = "The ShortURL slug must be an instance of Slug, got str"
+    with pytest.raises(TypeError, match=e):
         normal_shorturl.change_slug("a") # type: ignore
 
 
@@ -23,6 +23,7 @@ def test_change_target_url(normal_shorturl: ShortURL):
 
 
 def test_change_target_url_raises_error(normal_shorturl: ShortURL):
-    with pytest.raises(ShortURLAttributeTypeError):
+    e = "The ShortURL target_url must be an instance of TargetURL, got str"
+    with pytest.raises(TypeError, match=e):
         normal_shorturl.change_target_url("a") # type: ignore
 

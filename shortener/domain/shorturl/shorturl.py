@@ -7,10 +7,7 @@ from .target_url import TargetURL
 from .status import ShortURLStatus
 from .shorturl_id import ShortURLID
 from .owner_id import OwnerID
-from .exceptions import (
-    ShortURLDeactivatedError,
-    ShortURLAttributeTypeError
-)
+from .exceptions import ShortURLDeactivatedError
 
 
 class ShortURL:
@@ -26,14 +23,15 @@ class ShortURL:
         created_at: datetime,
         last_resolved_at: Optional[datetime],
     ):
-        _check_type("id", id, ShortURLID)
-        _check_type("slug", slug, Slug)
-        _check_type("target_url", target_url, TargetURL)
-        _check_type("owner_id", owner_id, OwnerID)
-        _check_type("status", status, ShortURLStatus)
+        _check_attribute_type("id", id, ShortURLID)
+        _check_attribute_type("slug", slug, Slug)
+        _check_attribute_type("target_url", target_url, TargetURL)
+        _check_attribute_type("owner_id", owner_id, OwnerID)
+        _check_attribute_type("status", status, ShortURLStatus)
         _check_resolution_count(resolution_count)
-        _check_type("created_at", created_at, datetime)
-        _check_optional_datetime("last_resolved_at", last_resolved_at)
+        _check_attribute_type("created_at", created_at, datetime)
+        if last_resolved_at is not None:
+            _check_attribute_type("last_resolved_at", last_resolved_at, datetime)
 
         self._id = id
         self._slug = slug
@@ -131,11 +129,11 @@ class ShortURL:
 
 
     def change_slug(self, new_slug: Slug):
-        _check_type("slug", new_slug, Slug)
+        _check_attribute_type("slug", new_slug, Slug)
         self._slug = new_slug
 
     def change_target_url(self, new_target_url: TargetURL):
-        _check_type("target_url", new_target_url, TargetURL)
+        _check_attribute_type("target_url", new_target_url, TargetURL)
         self._target_url = new_target_url
 
 
@@ -145,10 +143,10 @@ class ShortURL:
         available.
 
         Raises:
-            ShortURLAttributeTypeError: If now isn't a datetime.
+            TypeError: If now isn't a datetime.
             ShortURLDeactivatedError: If the ShortURL status is DEACTIVATED.
         """
-        _check_type("last_resolved_at", now, datetime)
+        _check_attribute_type("last_resolved_at", now, datetime)
         if self.status == ShortURLStatus.DEACTIVATED:
             raise ShortURLDeactivatedError()
         self._resolution_count = self.resolution_count + 1
@@ -167,24 +165,18 @@ class ShortURL:
         )
 
 
-def _check_type(attribute: str, value: object, expected_type: type) -> None:
+def _check_attribute_type(attribute: str, value: object, expected_type: type) -> None:
     if not isinstance(value, expected_type):
-        raise ShortURLAttributeTypeError(
-            attr=attribute, type_expected=expected_type.__name__, got=value
+        raise TypeError(
+            f"The ShortURL {attribute} must be an instance of "
+            f"{expected_type.__name__}, got {type(value).__name__}"
         )
 
 
 def _check_resolution_count(resolution_count: int) -> None:
-    _check_type("resolution_count", resolution_count, int)
+    _check_attribute_type("resolution_count", resolution_count, int)
     if resolution_count < 0:
         raise ValueError(
             "The ShortURL resolution_count must be greater than or equal to 0, "
             f"got {resolution_count}"
-        )
-
-
-def _check_optional_datetime(attribute: str, value: Optional[datetime]) -> None:
-    if value is not None and not isinstance(value, datetime):
-        raise ShortURLAttributeTypeError(
-            attr=attribute, type_expected="datetime or None", got=value
         )

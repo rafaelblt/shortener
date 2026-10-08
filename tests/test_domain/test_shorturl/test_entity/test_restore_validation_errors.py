@@ -17,15 +17,15 @@ def fields(normal_shorturl):
     }
 
 
-def get_type_error_message(attr, type_expected, got):
+def get_type_error_message(attribute, expected_type, value):
     return (
-        f"The ShortURL {attr} must be an instance of {type_expected}, got "
-        f"{type(got).__name__}"
+        f"The ShortURL {attribute} must be an instance of {expected_type}, got "
+        f"{type(value).__name__}"
     )
 
 
 @pytest.mark.parametrize(
-    "attr, type_expected, value",
+    "attribute, expected_type, value",
     [
         ("id", "ShortURLID", 1),
         ("slug", "Slug", {"slug": "test-slug"}),
@@ -35,13 +35,15 @@ def get_type_error_message(attr, type_expected, got):
         ("resolution_count", "int", "1"),
         ("created_at", "datetime", 1992),
         ("created_at", "datetime", None),
-        ("last_resolved_at", "datetime or None", 1992),
+        ("last_resolved_at", "datetime", 1992),
     ],
 )
-def test_field_of_the_wrong_type_raises_type_error(fields: dict, attr, type_expected, value):
-    e = get_type_error_message(attr=attr, type_expected=type_expected, got=value)
+def test_field_of_the_wrong_type_raises_type_error(
+    fields: dict, attribute, expected_type, value
+):
+    e = get_type_error_message(attribute, expected_type, value)
     with pytest.raises(TypeError, match=e):
-        ShortURL.restore(**{**fields, attr: value})
+        ShortURL.restore(**{**fields, attribute: value})
 
 
 def test_resolution_count_lower_than_0_raises_value_error(fields: dict):
