@@ -18,7 +18,7 @@ shortener/domain/
     ├── slug.py            Slug
     ├── target_url.py      TargetURL
     ├── status.py          ShortURLStatus
-    └── exceptions.py      ShortURLDeactivatedError
+    └── errors.py          ShortURLDeactivatedError
 ```
 
 ## Time
@@ -51,16 +51,16 @@ The rules of `create()` can change, and a value accepted under older rules has t
 
 `shorturl/shorturl.py`
 
-| Field              | Type               | Rule                                                                                  |
-| ------------------ | ------------------ | ------------------------------------------------------------------------------------- |
-| `id`               | `ShortURLID`       | Identity. See [IDs](#ids).                                                            |
-| `slug`             | `Slug`             | The short path. See [Slug](#slug).                                                    |
-| `target_url`       | `TargetURL`        | The destination. See [TargetURL](#targeturl).                                         |
-| `owner_id`         | `OwnerID`          | Reference to the owner. See [Owner](#owner).                                          |
-| `status`           | `ShortURLStatus`   | `create()` sets it to `ACTIVE`. See [Status](#status).                                |
-| `resolution_count` | `int`              | Number of times `resolve()` returned `target_url`, `>= 0`. `create()` sets it to `0`. |
-| `created_at`       | `datetime`         | `create()` sets it to `now`.                                                          |
-| `last_resolved_at` | `datetime \| None` | `create()` sets it to `None`, `resolve()` to `now`.                                   |
+| Field              | Type               | Rule                                                                          |
+| ------------------ | ------------------ | ----------------------------------------------------------------------------- |
+| `id`               | `ShortURLID`       | Identity. See [IDs](#ids).                                                    |
+| `slug`             | `Slug`             | The short path. See [Slug](#slug).                                            |
+| `target_url`       | `TargetURL`        | The destination. See [TargetURL](#targeturl).                                 |
+| `owner_id`         | `OwnerID`          | Reference to the owner. See [Owner](#owner).                                  |
+| `status`           | `ShortURLStatus`   | `create()` sets it to `ACTIVE`. See [Status](#status).                        |
+| `resolution_count` | `int`              | Number of times `resolve()` returned `Ok`, `>= 0`. `create()` sets it to `0`. |
+| `created_at`       | `datetime`         | `create()` sets it to `now`.                                                  |
+| `last_resolved_at` | `datetime \| None` | `create()` sets it to `None`, `resolve()` to `now`.                           |
 
 The fields are read-only properties, and change only through the [methods](#methods).
 
@@ -83,12 +83,12 @@ Each field is checked on its own and never compared with another, so `last_resol
 
 ### Methods
 
-| Method                                                       | Effect                                                                                                                                                                                                                                                                                                                                      |
-| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `resolve(now)`                                               | Raises `TypeError`, with [`check_parameter_type()`](shared.md#type-checks), when `now` isn't a `datetime`. When the status is `ACTIVE`, counts the resolution: adds 1 to `resolution_count` and sets `last_resolved_at` to `now`. Then returns `target_url`. Otherwise, raises the error in the [Status](#status) table and counts nothing. |
-| `enable()`                                                   | Sets `status` to `ACTIVE`. See [Status](#status).                                                                                                                                                                                                                                                                                           |
-| `disable()`                                                  | Sets `status` to `DEACTIVATED`. See [Status](#status).                                                                                                                                                                                                                                                                                      |
-| `change_slug(new_slug)`, `change_target_url(new_target_url)` | Check the type of the new value like the constructor checks the field, and replace it. `change_slug()` doesn't check that the slug is unique.                                                                                                                                                                                               |
+| Method                                                       | Effect                                                                                                                                                                                                                                                                                                                                                            |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `resolve(now)`                                               | Raises `TypeError`, with [`check_parameter_type()`](shared.md#type-checks), when `now` isn't a `datetime`. When the status is `ACTIVE`, counts the resolution: adds 1 to `resolution_count` and sets `last_resolved_at` to `now`. Then returns `Ok` with `target_url`. Otherwise, returns `Err` with the error in the [Status](#status) table and counts nothing. |
+| `enable()`                                                   | Sets `status` to `ACTIVE`. See [Status](#status).                                                                                                                                                                                                                                                                                                                 |
+| `disable()`                                                  | Sets `status` to `DEACTIVATED`. See [Status](#status).                                                                                                                                                                                                                                                                                                            |
+| `change_slug(new_slug)`, `change_target_url(new_target_url)` | Check the type of the new value like the constructor checks the field, and replace it. `change_slug()` doesn't check that the slug is unique.                                                                                                                                                                                                                     |
 
 Counting the resolution is part of `resolve()`, and not a method of its own, so that the domain decides when a resolution counts: only when the short URL is available. The use cases can't forget to count it, or count it for a short URL that isn't available.
 
@@ -162,22 +162,22 @@ Nothing else is checked: the netloc isn't validated, so `https://exa mple.com` i
 | `ACTIVE`      | `create()`, or `enable()` from `DEACTIVATED` |
 | `DEACTIVATED` | `disable()` from `ACTIVE`                    |
 
-What each method does in each status. Error names mean the method raises that error.
+What each method does in each status.
 
-| Status        | `resolve(now)`                                 | `enable()`          | `disable()`              |
-| ------------- | ---------------------------------------------- | ------------------- | ------------------------ |
-| `ACTIVE`      | Counts the resolution and returns `target_url` | Nothing             | Changes to `DEACTIVATED` |
-| `DEACTIVATED` | `ShortURLDeactivatedError`                     | Changes to `ACTIVE` | Nothing                  |
+| Status        | `resolve(now)`                                     | `enable()`          | `disable()`              |
+| ------------- | -------------------------------------------------- | ------------------- | ------------------------ |
+| `ACTIVE`      | Counts the resolution and returns `Ok(target_url)` | Nothing             | Changes to `DEACTIVATED` |
+| `DEACTIVATED` | `Err(ShortURLDeactivatedError())`                  | Changes to `ACTIVE` | Nothing                  |
 
 ## Errors
 
-`shorturl/exceptions.py`
+`shorturl/errors.py`
 
-A value that breaks a rule of a value object isn't an exception: `create()` returns it as a [`ValidationError`](shared.md#validation).
+The errors the use cases have to handle aren't exceptions: the domain returns them in a [`Result`](shared.md#result), so the use cases handle them as values instead of catching them. They are a value that breaks a rule of a value object, which `create()` returns as a [`ValidationError`](shared.md#validation), and the [availability error](#availability-error). Only [programming errors](#programming-errors) and [parsing errors](#parsing-errors) are raised.
 
 ### Availability error
 
-`ShortURLDeactivatedError` means the short URL exists but isn't available, because its status is `DEACTIVATED`. It extends `Exception` and carries no message or code. Only `resolve()` raises it, as in the [Status](#status) table.
+`ShortURLDeactivatedError` means the short URL exists but isn't available, because its status is `DEACTIVATED`. It is a frozen dataclass with no fields, so every instance is equal to every other, and it can be matched as `Err(ShortURLDeactivatedError())`. It isn't an exception. Only `resolve()` returns it, as in the [Status](#status) table.
 
 ### Programming errors
 

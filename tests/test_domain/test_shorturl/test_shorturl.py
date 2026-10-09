@@ -12,7 +12,8 @@ from shortener.domain.shorturl import (
     Slug,
     TargetURL,
 )
-from shortener.domain.shorturl.exceptions import ShortURLDeactivatedError
+from shortener.domain.shorturl.errors import ShortURLDeactivatedError
+from shortener.shared.result import Err, Ok
 from tests.utils.text_helpers import assert_mentions
 
 
@@ -169,7 +170,7 @@ def test_change_rejects_a_value_of_another_type(
 
 
 def test_resolve_returns_the_target_url(normal_shorturl: ShortURL, now: datetime):
-    assert normal_shorturl.resolve(now) == normal_shorturl.target_url
+    assert normal_shorturl.resolve(now) == Ok(normal_shorturl.target_url)
 
 
 def test_resolve_adds_one_to_the_resolution_count_on_each_call(
@@ -202,15 +203,15 @@ def test_resolve_checks_now_before_the_status(deactivated_shorturl: ShortURL):
         deactivated_shorturl.resolve(None) # type: ignore
 
 
-def test_resolve_of_a_deactivated_shorturl_raises_and_counts_nothing(
+def test_resolve_of_a_deactivated_shorturl_returns_err_and_counts_nothing(
     deactivated_shorturl: ShortURL, now: datetime
 ):
     resolution_count = deactivated_shorturl.resolution_count
     last_resolved_at = deactivated_shorturl.last_resolved_at
 
-    with pytest.raises(ShortURLDeactivatedError):
-        deactivated_shorturl.resolve(now)
+    result = deactivated_shorturl.resolve(now)
 
+    assert result == Err(ShortURLDeactivatedError())
     assert deactivated_shorturl.resolution_count == resolution_count
     assert deactivated_shorturl.last_resolved_at == last_resolved_at
 

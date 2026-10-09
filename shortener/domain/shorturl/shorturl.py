@@ -2,6 +2,7 @@ from typing import Optional
 
 from datetime import datetime
 
+from shortener.shared.result import Err, Ok, Result
 from shortener.shared.type_checks import check_parameter_type
 
 from .slug import Slug
@@ -9,7 +10,7 @@ from .target_url import TargetURL
 from .status import ShortURLStatus
 from .shorturl_id import ShortURLID
 from .owner_id import OwnerID
-from .exceptions import ShortURLDeactivatedError
+from .errors import ShortURLDeactivatedError
 
 
 class ShortURL:
@@ -135,21 +136,20 @@ class ShortURL:
         self._target_url = new_target_url
 
 
-    def resolve(self, now: datetime) -> TargetURL:
+    def resolve(self, now: datetime) -> Result[TargetURL, ShortURLDeactivatedError]:
         """
-        Counts the resolution and returns the target_url if the ShortURL is
-        available.
+        Counts the resolution and returns Ok with the target_url if the ShortURL
+        is available. Otherwise, returns Err and counts nothing.
 
         Raises:
             TypeError: If now isn't a datetime.
-            ShortURLDeactivatedError: If the ShortURL status is DEACTIVATED.
         """
         check_parameter_type("now", now, datetime)
         if self.status == ShortURLStatus.DEACTIVATED:
-            raise ShortURLDeactivatedError()
+            return Err(ShortURLDeactivatedError())
         self._resolution_count = self.resolution_count + 1
         self._last_resolved_at = now
-        return self.target_url
+        return Ok(self.target_url)
 
     def enable(self):
         self._status = ShortURLStatus.ACTIVE
