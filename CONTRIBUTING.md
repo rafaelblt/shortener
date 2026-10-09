@@ -52,7 +52,7 @@ Tests are a priority and follow the same principles: simple, organized, readable
 - Every feature comes with tests covering the happy path, the error cases and the boundaries (for example, a slug's minimum and maximum length).
 - One behavior per test. The test's name says which behavior, and in which situation.
 - The structure of `tests/` mirrors that of `shortener/`.
-- Each layer's test directory has its own `conftest.py`, which loads fixtures (from `tests/fixtures/<layer>/`) only from its own layer and the layers below it. `shared/` counts as below every layer. That way, a broken upper layer never stops a lower layer's tests from running. `tests/conftest.py` never imports project code.
+- A layer's test directory whose tests use fixtures has its own `conftest.py`, which loads them (from `tests/fixtures/<layer>/`) only from its own layer and the layers below it. `shared/` counts as below every layer. That way, a broken upper layer never stops a lower layer's tests from running. `tests/conftest.py` never imports project code.
 - Deterministic tests: never rely on the clock, randomness or execution order without controlling them.
 - Test behavior, not implementation details.
 - Fixing a bug starts with a test that reproduces it.
