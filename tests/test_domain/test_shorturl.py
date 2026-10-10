@@ -8,7 +8,7 @@ from shortener.domain import (
     ShortURL,
     ShortURLID,
     ShortURLStatus,
-    OwnerID,
+    UserID,
     Slug,
     TargetURL,
 )
@@ -39,7 +39,7 @@ CHANGES = [
 
 
 @pytest.fixture
-def fields(owner_id: OwnerID) -> dict[str, Any]:
+def fields(owner_id: UserID) -> dict[str, Any]:
     # status, resolution_count and last_resolved_at differ from what create()
     # sets, so the tests can tell that restore() keeps them.
     return {
@@ -59,7 +59,7 @@ def deactivated_shorturl(fields: dict[str, Any]) -> ShortURL:
     return ShortURL.restore(**{**fields, "status": ShortURLStatus.DEACTIVATED})
 
 
-def test_create_keeps_the_given_values(owner_id: OwnerID, now: datetime):
+def test_create_keeps_the_given_values(owner_id: UserID, now: datetime):
     slug = Slug("my-slug")
     target_url = TargetURL("https://example.com")
 
@@ -85,7 +85,7 @@ def test_create_generates_a_new_id_each_time(
     assert normal_shorturl.id != other_shorturl.id
 
 
-def test_create_rejects_a_now_that_is_not_a_datetime(owner_id: OwnerID):
+def test_create_rejects_a_now_that_is_not_a_datetime(owner_id: UserID):
     with pytest.raises(TypeError) as raised:
         ShortURL.create(
             slug=Slug("my-slug"),

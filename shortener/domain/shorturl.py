@@ -9,7 +9,7 @@ from .slug import Slug
 from .target_url import TargetURL
 from .status import ShortURLStatus
 from .shorturl_id import ShortURLID
-from .owner_id import OwnerID
+from .user_id import UserID
 from .errors import ShortURLDeactivatedError
 
 
@@ -20,7 +20,7 @@ class ShortURL:
         id: ShortURLID,
         slug: Slug,
         target_url: TargetURL,
-        owner_id: OwnerID,
+        owner_id: UserID,
         status: ShortURLStatus,
         resolution_count: int,
         created_at: datetime,
@@ -29,7 +29,7 @@ class ShortURL:
         _check_attribute_type("id", id, ShortURLID)
         _check_attribute_type("slug", slug, Slug)
         _check_attribute_type("target_url", target_url, TargetURL)
-        _check_attribute_type("owner_id", owner_id, OwnerID)
+        _check_attribute_type("owner_id", owner_id, UserID)
         _check_attribute_type("status", status, ShortURLStatus)
         _check_resolution_count(resolution_count)
         _check_attribute_type("created_at", created_at, datetime)
@@ -52,7 +52,7 @@ class ShortURL:
         cls,
         slug: Slug,
         target_url: TargetURL,
-        owner_id: OwnerID,
+        owner_id: UserID,
         now: datetime,
     ) -> "ShortURL":
         return cls(
@@ -73,7 +73,7 @@ class ShortURL:
         id: ShortURLID,
         slug: Slug,
         target_url: TargetURL,
-        owner_id: OwnerID,
+        owner_id: UserID,
         status: ShortURLStatus,
         resolution_count: int,
         created_at: datetime,
@@ -109,7 +109,7 @@ class ShortURL:
         return self._target_url
 
     @property
-    def owner_id(self) -> OwnerID:
+    def owner_id(self) -> UserID:
         return self._owner_id
 
     @property

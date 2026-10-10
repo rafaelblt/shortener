@@ -3,7 +3,7 @@ import pytest
 from datetime import datetime, timezone
 from uuid import UUID
 
-from shortener.domain import ShortURL, TargetURL, Slug, OwnerID
+from shortener.domain import ShortURL, TargetURL, Slug, UserID
 
 
 @pytest.fixture
@@ -13,7 +13,7 @@ def now():
 
 @pytest.fixture
 def owner_id():
-    return OwnerID(UUID("0199b2c4-7a3e-7c1a-9b5e-3f2d4c6b8a10"))
+    return UserID(UUID("0199b2c4-7a3e-7c1a-9b5e-3f2d4c6b8a10"))
 
 
 @pytest.fixture
