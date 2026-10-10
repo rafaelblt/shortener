@@ -25,9 +25,11 @@ shortener/domain/
 
 No rule of the domain reads the clock. Every operation that depends on the current moment receives it as a `now` argument: `ShortURL.create()` and `resolve()`. This keeps the domain deterministic and leaves the source of time to the use cases.
 
-Both store `now`, as `created_at` and `last_resolved_at`, so they check it: a `now` that isn't a `datetime`, `None` included, raises `TypeError`. `resolve()` checks it before the availability, so it raises even when the short URL isn't available.
+Both store `now`, as `created_at` and `last_resolved_at`, so they check it: a `now` that isn't a `datetime`, `None` included, raises `TypeError`, and a naive one raises `ValueError`. `resolve()` checks it before the availability, so it raises even when the short URL isn't available.
 
-The domain only deals with moments in time, not with timezones. It accepts datetimes in any timezone, naive ones included, and doesn't convert them: guaranteeing they are in UTC is up to the layer that provides them.
+The domain only deals with moments in time, not with timezones. It accepts timezone-aware datetimes in any timezone, and doesn't convert them: guaranteeing they are in UTC is up to the layer that provides them. Aware datetimes in different timezones are compared by the moment they represent.
+
+A datetime is naive, as Python defines it, when its `utcoffset()` returns `None`: it has no `tzinfo`, or its `tzinfo` gives no offset. The domain rejects naive datetimes because they aren't moments in time: comparing one with an aware datetime is always unequal with `==`, and raises `TypeError` with `<`.
 
 The clock is read in one place: `ShortURLID.generate()`, since a UUIDv7 contains the moment it was generated. No rule depends on that moment.
 
@@ -75,7 +77,8 @@ The fields are read-only properties, and change only through the [methods](#meth
 Both call the constructor, which takes every field, with no defaults. It checks them in the order of the table, and raises at the first invalid one:
 
 - a value whose type isn't the one in the table raises `TypeError`, with a message naming the field, the expected type and the type received. The check uses `isinstance`, so subclasses pass, including `bool` for `resolution_count`;
-- a negative `resolution_count` raises `ValueError`.
+- a negative `resolution_count` raises `ValueError`;
+- a naive `created_at` or `last_resolved_at` raises `ValueError`, with a message naming the field and the value. See [Time](#time).
 
 Each field is checked on its own and never compared with another, so `last_resolved_at` can be earlier than `created_at`.
 
@@ -85,7 +88,7 @@ Each field is checked on its own and never compared with another, so `last_resol
 
 | Method                                                       | Effect                                                                                                                                                                                                                                                                                                                                                            |
 | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `resolve(now)`                                               | Raises `TypeError`, with [`check_parameter_type()`](shared.md#type-checks), when `now` isn't a `datetime`. When the status is `ACTIVE`, counts the resolution: adds 1 to `resolution_count` and sets `last_resolved_at` to `now`. Then returns `Ok` with `target_url`. Otherwise, returns `Err` with the error in the [Status](#status) table and counts nothing. |
+| `resolve(now)`                                               | Raises `TypeError`, with [`check_parameter_type()`](shared.md#type-checks), when `now` isn't a `datetime`, and `ValueError`, naming `now` and the value, when it is [naive](#time). When the status is `ACTIVE`, counts the resolution: adds 1 to `resolution_count` and sets `last_resolved_at` to `now`. Then returns `Ok` with `target_url`. Otherwise, returns `Err` with the error in the [Status](#status) table and counts nothing. |
 | `enable()`                                                   | Sets `status` to `ACTIVE`. See [Status](#status).                                                                                                                                                                                                                                                                                                                 |
 | `disable()`                                                  | Sets `status` to `DEACTIVATED`. See [Status](#status).                                                                                                                                                                                                                                                                                                            |
 | `change_slug(new_slug)`, `change_target_url(new_target_url)` | Check the type of the new value like the constructor checks the field, and replace it. `change_slug()` doesn't check that the slug is unique.                                                                                                                                                                                                                     |
@@ -184,7 +187,7 @@ The errors the use cases have to handle aren't exceptions: the domain returns th
 Wrong types or values given to the domain's code. They are programming errors, not client input errors.
 
 - `TypeError`: wrong type given to `ShortURL.create()`, `ShortURL.restore()`, a `change_*()` method or `resolve()`. Also an `EntityID` created with a `value` that isn't a `UUID`.
-- `ValueError`: a negative `resolution_count` given to `ShortURL.restore()`. Also a value that breaks a rule of `create()`, given to the constructor of `Slug` or `TargetURL`.
+- `ValueError`: a negative `resolution_count` given to `ShortURL.restore()`. Also a naive datetime given to `ShortURL.create()`, `ShortURL.restore()` or `resolve()`. Also a value that breaks a rule of `create()`, given to the constructor of `Slug` or `TargetURL`.
 
 ### Parsing errors
 

@@ -33,8 +33,10 @@ class ShortURL:
         _check_attribute_type("status", status, ShortURLStatus)
         _check_resolution_count(resolution_count)
         _check_attribute_type("created_at", created_at, datetime)
+        _check_timezone_aware("created_at", created_at)
         if last_resolved_at is not None:
             _check_attribute_type("last_resolved_at", last_resolved_at, datetime)
+            _check_timezone_aware("last_resolved_at", last_resolved_at)
 
         self._id = id
         self._slug = slug
@@ -143,8 +145,10 @@ class ShortURL:
 
         Raises:
             TypeError: If now isn't a datetime.
+            ValueError: If now is naive.
         """
         check_parameter_type("now", now, datetime)
+        _check_timezone_aware("now", now)
         if self.status == ShortURLStatus.DEACTIVATED:
             return Err(ShortURLDeactivatedError())
         self._resolution_count = self.resolution_count + 1
@@ -172,6 +176,12 @@ def _check_attribute_type(attribute: str, value: object, expected_type: type) ->
             f"The ShortURL {attribute} must be an instance of "
             f"{expected_type.__name__}, got {type(value).__name__}"
         )
+
+
+# A datetime is naive when utcoffset() returns None, as Python defines it.
+def _check_timezone_aware(name: str, value: datetime) -> None:
+    if value.utcoffset() is None:
+        raise ValueError(f"The {name} datetime must be timezone-aware, got {value}")
 
 
 def _check_resolution_count(resolution_count: int) -> None:

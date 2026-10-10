@@ -1,6 +1,6 @@
 import pytest
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, tzinfo
 from typing import Any, Callable
 from uuid import UUID
 
@@ -16,6 +16,16 @@ from shortener.domain.shorturl.errors import ShortURLDeactivatedError
 from shortener.shared.result import Err, Ok
 from tests.utils.text_helpers import assert_mentions
 
+
+class UnknownOffset(tzinfo):
+    def utcoffset(self, dt: datetime | None) -> None:
+        return None
+
+
+NAIVE_DATETIMES = [
+    pytest.param(datetime(2006, 6, 6), id="no tzinfo"),
+    pytest.param(datetime(2006, 6, 6, tzinfo=UnknownOffset()), id="unknown offset"),
+]
 
 CHANGES = [
     pytest.param(ShortURL.change_slug, "slug", Slug("new-slug"), id="slug"),
@@ -95,16 +105,12 @@ def test_restore_keeps_the_given_values(fields: dict[str, Any]):
 
 def test_restore_keeps_datetimes_in_any_timezone(fields: dict[str, Any]):
     utc_minus_3 = datetime(2002, 2, 2, tzinfo=timezone(timedelta(hours=-3)))
-    naive = datetime(2006, 6, 6)
 
-    shorturl = ShortURL.restore(
-        **{**fields, "created_at": utc_minus_3, "last_resolved_at": naive}
-    )
+    shorturl = ShortURL.restore(**{**fields, "created_at": utc_minus_3})
 
     assert shorturl.created_at == utc_minus_3
     # Aware datetimes are equal when they are the same moment, in any timezone.
     assert shorturl.created_at.tzinfo == utc_minus_3.tzinfo
-    assert shorturl.last_resolved_at == naive
 
 
 @pytest.mark.parametrize(
@@ -130,6 +136,16 @@ def test_restore_rejects_a_field_of_the_wrong_type(
     assert_mentions(
         str(raised.value), field, expected_type.__name__, type(value).__name__
     )
+
+
+@pytest.mark.parametrize("field", ["created_at", "last_resolved_at"])
+@pytest.mark.parametrize("naive", NAIVE_DATETIMES)
+def test_restore_rejects_a_naive_datetime(
+    fields: dict[str, Any], field: str, naive: datetime
+):
+    with pytest.raises(ValueError) as raised:
+        ShortURL.restore(**{**fields, field: naive})
+    assert_mentions(str(raised.value), field, str(naive))
 
 
 def test_restore_rejects_a_negative_resolution_count(fields: dict[str, Any]):
@@ -186,21 +202,31 @@ def test_resolve_sets_last_resolved_at_to_now(normal_shorturl: ShortURL, now: da
     assert normal_shorturl.last_resolved_at == now
 
 
-def test_resolve_accepts_a_naive_now(normal_shorturl: ShortURL):
-    naive = datetime(2026, 1, 1)
-    normal_shorturl.resolve(naive)
-    assert normal_shorturl.last_resolved_at == naive
-
-
 def test_resolve_rejects_a_now_that_is_not_a_datetime(normal_shorturl: ShortURL):
     with pytest.raises(TypeError) as raised:
         normal_shorturl.resolve(None) # type: ignore
     assert_mentions(str(raised.value), "now", datetime.__name__, type(None).__name__)
 
 
-def test_resolve_checks_now_before_the_status(deactivated_shorturl: ShortURL):
-    with pytest.raises(TypeError):
-        deactivated_shorturl.resolve(None) # type: ignore
+@pytest.mark.parametrize("naive", NAIVE_DATETIMES)
+def test_resolve_rejects_a_naive_now(normal_shorturl: ShortURL, naive: datetime):
+    with pytest.raises(ValueError) as raised:
+        normal_shorturl.resolve(naive)
+    assert_mentions(str(raised.value), "now", str(naive))
+
+
+@pytest.mark.parametrize(
+    "now, error",
+    [
+        pytest.param(None, TypeError, id="not a datetime"),
+        pytest.param(datetime(2006, 6, 6), ValueError, id="naive"),
+    ],
+)
+def test_resolve_checks_now_before_the_status(
+    deactivated_shorturl: ShortURL, now: Any, error: type[Exception]
+):
+    with pytest.raises(error):
+        deactivated_shorturl.resolve(now)
 
 
 def test_resolve_of_a_deactivated_shorturl_returns_err_and_counts_nothing(
