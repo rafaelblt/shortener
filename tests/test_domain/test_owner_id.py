@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from shortener.domain.shorturl import OwnerID, ShortURLID
+from shortener.domain import OwnerID, ShortURLID
 
 
 def test_is_not_equal_to_a_shorturl_id_with_the_same_value():

@@ -3,7 +3,7 @@ import pytest
 from dataclasses import FrozenInstanceError
 from uuid import UUID
 
-from shortener.domain.shorturl.entity_id import EntityID
+from shortener.domain.entity_id import EntityID
 from tests.utils.text_helpers import assert_mentions
 
 

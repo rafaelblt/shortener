@@ -3,8 +3,7 @@ import pytest
 from datetime import datetime, timezone
 from uuid import UUID
 
-from shortener.domain.shorturl.shorturl import ShortURL
-from shortener.domain.shorturl import TargetURL, Slug, OwnerID
+from shortener.domain import ShortURL, TargetURL, Slug, OwnerID
 
 
 @pytest.fixture

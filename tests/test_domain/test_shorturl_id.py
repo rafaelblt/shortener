@@ -1,4 +1,4 @@
-from shortener.domain.shorturl import ShortURLID
+from shortener.domain import ShortURLID
 
 
 def test_generate_returns_a_shorturl_id_with_a_uuid7():

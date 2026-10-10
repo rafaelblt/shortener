@@ -1,4 +1,4 @@
-from shortener.domain.shorturl.entity_id import EntityID
+from shortener.domain.entity_id import EntityID
 
 
 class OwnerID(EntityID):

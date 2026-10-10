@@ -2,7 +2,7 @@ import pytest
 
 from shortener.shared.result import Ok
 from shortener.shared.validation import IssueCode
-from shortener.domain.shorturl.slug import (
+from shortener.domain.slug import (
     Slug,
     RANDOM_SLUG_CHARS,
     RANDOM_SLUG_LENGTH,

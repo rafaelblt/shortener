@@ -10,15 +10,14 @@ There is a single central concept: the **short URL**, a short slug that points t
 
 ```
 shortener/domain/
-└── shorturl/
-    ├── shorturl.py        ShortURL
-    ├── entity_id.py       EntityID
-    ├── shorturl_id.py     ShortURLID
-    ├── owner_id.py        OwnerID
-    ├── slug.py            Slug
-    ├── target_url.py      TargetURL
-    ├── status.py          ShortURLStatus
-    └── errors.py          ShortURLDeactivatedError
+├── shorturl.py        ShortURL
+├── entity_id.py       EntityID
+├── shorturl_id.py     ShortURLID
+├── owner_id.py        OwnerID
+├── slug.py            Slug
+├── target_url.py      TargetURL
+├── status.py          ShortURLStatus
+└── errors.py          ShortURLDeactivatedError
 ```
 
 ## Time
@@ -51,7 +50,7 @@ The rules of `create()` can change, and a value accepted under older rules has t
 
 ## ShortURL
 
-`shorturl/shorturl.py`
+`shorturl.py`
 
 | Field              | Type               | Rule                                                                          |
 | ------------------ | ------------------ | ----------------------------------------------------------------------------- |
@@ -97,7 +96,7 @@ Counting the resolution is part of `resolve()`, and not a method of its own, so 
 
 ### IDs
 
-`shorturl/entity_id.py`, `shorturl/shorturl_id.py` and `shorturl/owner_id.py`
+`entity_id.py`, `shorturl_id.py` and `owner_id.py`
 
 `EntityID` is the identity of an entity: a frozen dataclass with one field, `value: UUID`.
 
@@ -126,7 +125,7 @@ Two things happen outside the domain, but shape this rule:
 
 ### Slug
 
-`shorturl/slug.py`
+`slug.py`
 
 The slug is the short path that identifies the short URL. It is a [value object](#value-objects), and these are the rules of `Slug.create()`, in the order of its issues:
 
@@ -144,7 +143,7 @@ Slugs are unique, but `Slug` and `ShortURL` don't check it.
 
 ### TargetURL
 
-`shorturl/target_url.py`
+`target_url.py`
 
 The destination of the short URL. It is a [value object](#value-objects), and `TargetURL.create()` has a single rule: the value parses with `urllib.parse.urlparse`, its scheme is `https`, and its netloc (the host part) isn't empty. A value that breaks it gets `INVALID_FORMAT`, such as:
 
@@ -156,7 +155,7 @@ Nothing else is checked: the netloc isn't validated, so `https://exa mple.com` i
 
 ### Status
 
-`shorturl/status.py`
+`status.py`
 
 `ShortURLStatus` is an `Enum` whose values are the names in lowercase, such as `ACTIVE = "active"`.
 
@@ -174,7 +173,7 @@ What each method does in each status.
 
 ## Errors
 
-`shorturl/errors.py`
+`errors.py`
 
 The errors the use cases have to handle aren't exceptions: the domain returns them in a [`Result`](shared.md#result), so the use cases handle them as values instead of catching them. They are a value that breaks a rule of a value object, which `create()` returns as a [`ValidationError`](shared.md#validation), and the [availability error](#availability-error). Only [programming errors](#programming-errors) and [parsing errors](#parsing-errors) are raised.
 

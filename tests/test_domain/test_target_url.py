@@ -2,7 +2,7 @@ import pytest
 
 from shortener.shared.result import Ok
 from shortener.shared.validation import IssueCode
-from shortener.domain.shorturl.target_url import TargetURL
+from shortener.domain.target_url import TargetURL
 from tests.fixtures.shared.validation import invalid
 from tests.utils.text_helpers import assert_mentions
 

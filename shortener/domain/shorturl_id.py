@@ -1,6 +1,6 @@
 from uuid6 import uuid7
 
-from shortener.domain.shorturl.entity_id import EntityID
+from shortener.domain.entity_id import EntityID
 
 
 class ShortURLID(EntityID):

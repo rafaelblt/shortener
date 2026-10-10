@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone, tzinfo
 from typing import Any, Callable
 from uuid import UUID
 
-from shortener.domain.shorturl import (
+from shortener.domain import (
     ShortURL,
     ShortURLID,
     ShortURLStatus,
@@ -12,7 +12,7 @@ from shortener.domain.shorturl import (
     Slug,
     TargetURL,
 )
-from shortener.domain.shorturl.errors import ShortURLDeactivatedError
+from shortener.domain.errors import ShortURLDeactivatedError
 from shortener.shared.result import Err, Ok
 from tests.utils.text_helpers import assert_mentions
 
