@@ -150,6 +150,8 @@ What [`ResolveSlug`](#resolveslug) returns: only `target_url`, as a plain `str`,
 
 Each use case is a class whose constructor receives the abstractions it uses, and whose `execute()` carries out the operation. `execute()` returns a `Result`: `Ok` with one of the [results](#results), or `Err` with one of the errors of a union named after the use case, such as `ResolveSlugError`. The errors of the domain and of the abstractions are returned as they are.
 
+The target URL and the slug are received as `str`, and the use case turns them into their value objects, since the domain has rules about them that the client can break, returned as an `InvalidInputError` (see [`CreateShortURL`](#createshorturl)). The ID of a short URL is received as a `UUID`, and the caller converts it from whatever its transport carries, such as a string in the path of a request. The domain has no rule about IDs besides being a `UUID`, so a string that isn't one is a parsing failure of the transport, like malformed JSON, and not an input error of the use case. That is why an `id` that isn't a `UUID` raises `TypeError`, as a programming error, and `ShortURLDetails` returns the IDs as `UUID` too.
+
 A use case that writes commits only when it succeeds. When it returns `Err`, it leaves the transaction without calling `commit()`, which rolls it back.
 
 A use case that receives the ID of a short URL only acts on the short URLs of the user making the request: one that belongs to another user gets the same `ShortURLNotFoundError` as one that doesn't exist.
