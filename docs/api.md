@@ -24,7 +24,7 @@ The API defines two abstractions, as `Protocol`s, which it receives in `create_a
 
 | Abstraction                                | What it does                                                | Implementation                                                 |
 | ------------------------------------------ | ----------------------------------------------------------- | -------------------------------------------------------------- |
-| [`UseCaseFactory`](#use-cases)             | Builds the use case of a request, with the user making it   | In [`bootstrap`](bootstrap.md)                                 |
+| [`UseCaseFactory`](#use-cases)             | Builds the use case of a request, with the user making it   | [`UseCases`](bootstrap.md#use-cases), in `bootstrap`           |
 | [`AccessTokenVerifier`](#authentication)   | Tells whose an access token is                              | [`JWTAccessTokenVerifier`](infra.md#access-tokens), in `infra` |
 
 ## The application
@@ -90,7 +90,7 @@ FastAPI reads the values of the request before step 1, so a request whose values
 
 `add_route()` raises `LookupError` when `Error` has an error that isn't in [`ERRORS`](#errors), so a new error of a use case can't reach a client as a `500`.
 
-Adding an endpoint is adding it to `ENDPOINTS`, after adding its use case to the `UseCaseFactory` of [`bootstrap`](bootstrap.md), and its new errors, if it has any, to `ERRORS`. A new parameter of `execute()` needs no change in the API, unless it is of a type FastAPI can't read, which needs an entry in `PARAMETER_TYPES`.
+Adding an endpoint is adding it to `ENDPOINTS`, after adding its use case to the [`UseCases`](bootstrap.md#use-cases) of `bootstrap`, and its new errors, if it has any, to `ERRORS`. A new parameter of `execute()` needs no change in the API, unless it is of a type FastAPI can't read, which needs an entry in `PARAMETER_TYPES`.
 
 ## Responses
 
@@ -158,7 +158,7 @@ The token is verified only when the use case asks for the user, and a token that
 
 `use_case_factory.py`
 
-The use cases that receive a `CurrentUser` are built for each request, since the user is the one of the request. `UseCaseFactory.build(use_case, current_user)` returns the use case of the class `use_case`, built with `current_user`, which the endpoint runs. The API doesn't build the use cases itself: [`bootstrap`](bootstrap.md) does, with the implementations of their abstractions.
+The use cases that receive a `CurrentUser` are built for each request, since the user is the one of the request. `UseCaseFactory.build(use_case, current_user)` returns the use case of the class `use_case`, built with `current_user`, which the endpoint runs. The API doesn't build the use cases itself: [`UseCases`](bootstrap.md#use-cases), in `bootstrap`, does, with the implementations of their abstractions.
 
 ## Cursors
 

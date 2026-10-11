@@ -70,6 +70,13 @@ poetry run task test_layers
 poetry run pytest --cov=shortener --cov-report=term-missing
 ```
 
+To run the service, set the environment variables of [Settings](docs/bootstrap.md#settings), with a Postgres database, then apply the migrations and start it:
+
+```bash
+poetry run alembic upgrade head
+poetry run task run
+```
+
 Before changing anything, read [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Documentation
