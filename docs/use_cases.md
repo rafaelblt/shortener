@@ -20,7 +20,8 @@ shortener/use_cases/
 ├── create_shorturl.py       CreateShortURL
 ├── get_shorturl.py          GetShortURL
 ├── list_shorturls.py        ListShortURLs
-└── update_shorturl.py       UpdateShortURL
+├── update_shorturl.py       UpdateShortURL
+└── enable_shorturl.py       EnableShortURL
 ```
 
 ## Abstractions
@@ -223,6 +224,22 @@ There is no pagination: it returns every short URL of the user.
 6. It commits, and returns `Ok` with the `ShortURLDetails` of the short URL.
 
 The target URL and the slug change in a single call so that the change is atomic: each use case begins its own transaction, and changing them in two calls could save the target URL and then fail because the slug is taken.
+
+### EnableShortURL
+
+`enable_shorturl.py`
+
+`EnableShortURL(uow, current_user)` makes a short URL of the user making the request active, with `enable()`.
+
+`execute(id)` returns `Result[ShortURLDetails, EnableShortURLError]`, where `EnableShortURLError` is `NotAuthenticatedError | ShortURLNotFoundError`:
+
+1. When `CurrentUser.get_id()` returns `None`, it returns `Err(NotAuthenticatedError())`. Then an `id` that isn't a `UUID` raises `TypeError`, from `ShortURLID`, before any transaction begins.
+2. It begins a transaction, and reads the short URL through it with `get_by_id()`. When there is none, or it belongs to another user, it returns `Err(ShortURLNotFoundError())`.
+3. It calls `enable()`, saves the short URL, commits, and returns `Ok` with the `ShortURLDetails` of the short URL.
+
+The slug of the short URL doesn't change, so `save()` can't return `SlugTakenError`. If it does, the use case raises `ValueError` with it, through `unwrap()`, without committing.
+
+The status isn't changed by `UpdateShortURL`: [`ShortURLStatus`](domain.md#status) has no `create()` that returns a `ValidationError`, so an invalid status couldn't come back as a `FieldError`. `EnableShortURL` only receives the ID, and follows the method of the domain.
 
 ## Open questions
 
