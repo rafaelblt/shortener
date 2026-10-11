@@ -14,11 +14,11 @@ class ListShortURLs:
         self._shorturls = shorturls
         self._current_user = current_user
 
-    async def execute(
-        self,
-    ) -> Result[tuple[ShortURLDetails, ...], ListShortURLsError]:
+    async def execute(self) -> Result[tuple[ShortURLDetails, ...], ListShortURLsError]:
         user_id = await self._current_user.get_id()
         if user_id is None:
             return Err(NotAuthenticatedError())
         shorturls = await self._shorturls.list_by_owner(user_id)
-        return Ok(tuple(ShortURLDetails.from_entity(shorturl) for shorturl in shorturls))
+        return Ok(
+            tuple(ShortURLDetails.from_entity(shorturl) for shorturl in shorturls)
+        )

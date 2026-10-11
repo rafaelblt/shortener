@@ -133,8 +133,9 @@ async def test_reads_the_shorturl_by_id_through_the_transaction(
 async def test_raises_for_an_id_that_is_not_a_uuid_before_beginning_a_transaction(
     update_shorturl: UpdateShortURL, uow: NonCallableMagicMock, shorturl: ShortURL
 ):
+    not_a_uuid = str(shorturl.id.value)
     with pytest.raises(TypeError):
-        await update_shorturl.execute(str(shorturl.id.value), slug=NEW_SLUG)  # type: ignore
+        await update_shorturl.execute(not_a_uuid, slug=NEW_SLUG)  # type: ignore
     uow.begin.assert_not_called()
 
 

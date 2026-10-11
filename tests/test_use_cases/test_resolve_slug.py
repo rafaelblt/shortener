@@ -48,7 +48,7 @@ async def test_reads_the_shorturl_of_any_non_empty_slug_through_the_transaction(
         pytest.param(None, TypeError, id="None"),
     ],
 )
-async def test_rejects_a_slug_that_is_not_a_non_empty_string_before_beginning_a_transaction(
+async def test_raises_for_a_slug_that_parse_rejects_before_beginning_a_transaction(
     resolve_slug: ResolveSlug,
     uow: NonCallableMagicMock,
     slug: object,
