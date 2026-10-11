@@ -1,1 +1,0 @@
-from .i18n import get_translator

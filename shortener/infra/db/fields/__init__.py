@@ -1,1 +1,0 @@
-from .shorturl_collection import SQLAlchemyShortURLCollection

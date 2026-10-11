@@ -1,2 +1,0 @@
-from .shorturl_create_validator import ShortURLCreateValidator
-from .shorturl_update_validator import ShortURLUpdateValidator

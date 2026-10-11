@@ -1,9 +1,0 @@
-{{ _("Hello, %(user_name)s!") % {"user_name": user_name} }}
-
-{{ _("Thank you for signing up for %(app_name)s.") % {"app_name": app_name} }}
-{{ _("To verify your account, use the link below:") }}
-
-{{ verification_link }}
-
-{{ _("This link will expire in %(expires_minutes)s minutes.") % {"expires_minutes": expires_minutes} }}
-{{ _("If you did not create this account, please ignore this message.") }}
