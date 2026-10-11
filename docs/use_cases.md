@@ -76,7 +76,7 @@ async with uow.begin() as transaction:
 
 A short URL read through `transaction.shorturls` can't be changed by another transaction until this one ends, by commit or rollback. Another transaction that reads the same short URL waits for this one to end, and then reads what it wrote. How the storage keeps this contract is up to the layer that implements it.
 
-That is why every write that depends on a read reads through the transaction, and why the use cases that write don't receive a `ShortURLReader`. `save()` stores the whole short URL, so saving one that was read outside the transaction would write back the old values of whatever another transaction changed in between, with no error: a resolution would be lost, or a short URL would be active again after being disabled. See issue 0007 and issue 0008.
+That is why every write that depends on a read reads through the transaction, and why the use cases that write don't receive a `ShortURLReader`. `save()` stores the whole short URL, so saving one that was read outside the transaction would write back the old values of whatever another transaction changed in between, with no error: a resolution would be lost, or a short URL would be active again after being disabled. The use cases do their part, and keeping the contract is still to be done in `infra` ([issue 0007](issues/0007-concurrent-resolutions-can-lose-resolution-count-increments.md) and [issue 0008](issues/0008-concurrent-writes-can-revert-each-others-changes.md)).
 
 ### Current user
 
