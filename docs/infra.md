@@ -151,4 +151,6 @@ With JWKS, PyJWT fetches the published keys when it needs them, in a thread, sin
 
 ## Open questions
 
-Decisions to make during this phase. There are none at the moment.
+Decisions to make during this phase.
+
+- **Leeway of the times of a token.** `JWTAccessTokenVerifier.verify()` allows no difference between the clock of the issuer and the one of the service when it checks `exp`, `nbf` and `iat` (see [Access tokens](#access-tokens)). Whether to allow one, and how long, is still to be decided.
