@@ -19,7 +19,8 @@ shortener/use_cases/
 ├── resolve_slug.py          ResolveSlug
 ├── create_shorturl.py       CreateShortURL
 ├── get_shorturl.py          GetShortURL
-└── list_shorturls.py        ListShortURLs
+├── list_shorturls.py        ListShortURLs
+└── update_shorturl.py       UpdateShortURL
 ```
 
 ## Abstractions
@@ -205,6 +206,23 @@ The slug of the short URL doesn't change, so `save()` can't return `SlugTakenErr
 2. It reads the short URLs with `list_by_owner()`, with the ID of the user, and returns `Ok` with a tuple of their `ShortURLDetails`, in the order `list_by_owner()` returned them. The tuple is empty when the user has no short URLs.
 
 There is no pagination: it returns every short URL of the user.
+
+### UpdateShortURL
+
+`update_shorturl.py`
+
+`UpdateShortURL(uow, current_user)` changes the target URL, the slug, or both, of a short URL of the user making the request.
+
+`execute(id, target_url=None, slug=None)` returns `Result[ShortURLDetails, UpdateShortURLError]`, where `UpdateShortURLError` is `NotAuthenticatedError | NothingToUpdateError | InvalidInputError | ShortURLNotFoundError | SlugTakenError`. A value that is `None` isn't changed. That isn't ambiguous, since neither the target URL nor the slug can be `None`.
+
+1. When `CurrentUser.get_id()` returns `None`, it returns `Err(NotAuthenticatedError())`, before checking the input.
+2. When `target_url` and `slug` are both `None`, it returns `Err(NothingToUpdateError())`.
+3. It checks the values that aren't `None` like [`CreateShortURL`](#createshorturl) does, and returns `Err(InvalidInputError(...))` when they break their rules. Then an `id` that isn't a `UUID` raises `TypeError`, from `ShortURLID`, before any transaction begins.
+4. It begins a transaction, and reads the short URL through it with `get_by_id()`. When there is none, or it belongs to another user, it returns `Err(ShortURLNotFoundError())`.
+5. It changes the given values, with `change_target_url()` and `change_slug()`, and saves the short URL. When `save()` returns `Err(SlugTakenError(slug))`, it returns it, without committing.
+6. It commits, and returns `Ok` with the `ShortURLDetails` of the short URL.
+
+The target URL and the slug change in a single call so that the change is atomic: each use case begins its own transaction, and changing them in two calls could save the target URL and then fail because the slug is taken.
 
 ## Open questions
 
