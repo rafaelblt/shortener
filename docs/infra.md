@@ -9,6 +9,7 @@ This document describes the infrastructure as it is in the code. Verified bugs t
 ```
 shortener/infra/
 ├── clock.py                       UTCClock
+├── jwt_access_token_verifier.py   JWTAccessTokenVerifier
 └── db/
     ├── tables.py                  metadata, the shorturls table and SLUG_UNIQUE_CONSTRAINT
     ├── unit_of_work.py            SQLAlchemyUnitOfWork and SQLAlchemyTransaction
@@ -123,6 +124,29 @@ A connection lost in the middle of a transaction can also be raised as an `Inter
 `clock.py`
 
 `UTCClock` implements [`Clock`](use_cases.md#clock). `now()` returns the current moment of the system, as a datetime in UTC. The domain accepts any timezone (see [Time](domain.md#time)), and UTC is the one this implementation chooses.
+
+## Access tokens
+
+`jwt_access_token_verifier.py`
+
+`JWTAccessTokenVerifier` verifies access tokens that are JWTs, with PyJWT, and returns the `UserID` of the user each one was issued to. The tokens are issued outside the service (see [Scope](../README.md#scope)). It is built in one of two ways, by where the keys that verify the signatures come from:
+
+| Way                                            | Keys                                                                                                                                  |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `with_key(key, algorithms, issuer, audience)`  | A single key: the secret of the HMAC algorithms (`HS256`, `HS384` and `HS512`), or the public key of the others, in PEM               |
+| `with_jwks(url, algorithms, issuer, audience)` | The keys the issuer publishes at a JWKS URL, each with its key ID (`kid`)                                                             |
+
+`algorithms` are the ones a token may be signed with: any algorithm of PyJWT but `none`, and at least one. Both ways raise `ValueError` when an algorithm isn't one of them. `with_key()` also raises it when the key doesn't suit one of the algorithms: when PyJWT can't load it for the algorithm, such as a public key as the secret of an HMAC algorithm, or when it is shorter than the algorithm needs, such as a secret shorter than the hash of an HMAC algorithm. `with_jwks()` also raises it when the URL isn't `http` or `https`.
+
+`verify(token)` returns the `UserID` of the UUID in the `sub` claim, when the token:
+
+- is a JWT signed with one of `algorithms`: by the key, or by the published key whose `kid` is the one in the header of the token, and whose algorithm is the one of the token;
+- has `exp`, in the future, `iss`, equal to `issuer`, `aud`, equal to `audience` or a list that has it, and `sub`, a string with a UUID;
+- has `nbf` and `iat` in the past, when it has them.
+
+Otherwise, it returns `None`, whatever is wrong with the token. Checking the time allows no leeway, so a clock of the issuer ahead of the one of the service makes a new token not valid yet, for as long as the difference.
+
+With JWKS, PyJWT fetches the published keys when it needs them, in a thread, since it fetches with urllib, which blocks. It keeps them for 5 minutes, and, for a `kid` it doesn't have, fetches them again at most once every 30 seconds, so a token with an unknown `kid` doesn't make every request fetch them. When they can't be fetched, because the URL can't be reached, takes more than 30 seconds or answers an HTTP error, `verify()` raises `UnavailableError` from the error of PyJWT. An answer that is JSON, but not a set of keys, makes `verify()` return `None`, and an answer that isn't JSON raises the error of `json` as it is.
 
 ## Open questions
 
