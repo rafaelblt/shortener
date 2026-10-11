@@ -51,12 +51,12 @@ The restructuring happens layer by layer, from the inside out:
 
 | Layer       | Status                                 |
 | ----------- | -------------------------------------- |
-| `domain`    | **Being restructured (current phase)** |
-| `use_cases` | Waiting                                |
+| `domain`    | Restructured                           |
+| `use_cases` | **Being restructured (current phase)** |
 | `adapters`  | Waiting                                |
 | `infra`     | Waiting                                |
 
-Problems in the upper layers (bugs, broken tests, code that depends on concepts being removed) are ignored until we reach each of them. The scope of the current phase and how to work in it are in [CONTRIBUTING.md](CONTRIBUTING.md#current-phase-domain).
+Problems in the upper layers (bugs, broken tests, code that depends on concepts being removed) are ignored until we reach each of them. The scope of the current phase and how to work in it are in [CONTRIBUTING.md](CONTRIBUTING.md#current-phase-use-cases).
 
 ## Development
 
@@ -66,7 +66,8 @@ Requirements: Python 3.12 and [Poetry](https://python-poetry.org/).
 poetry install
 poetry run task test_shared
 poetry run task test_domain
-poetry run pytest tests/test_shared tests/test_domain --cov=shortener/shared --cov=shortener/domain --cov-report=term-missing
+poetry run task test_use_cases
+poetry run pytest tests/test_shared tests/test_domain tests/test_use_cases --cov=shortener/shared --cov=shortener/domain --cov=shortener/use_cases --cov-report=term-missing
 ```
 
 Before changing anything, read [CONTRIBUTING.md](CONTRIBUTING.md).
@@ -76,5 +77,6 @@ Before changing anything, read [CONTRIBUTING.md](CONTRIBUTING.md).
 - [CONTRIBUTING.md](CONTRIBUTING.md): the current phase, the principles and the conventions for code, tests, comments, documentation, issues and commits. They apply to everyone who changes the project.
 - [AGENTS.md](AGENTS.md): what is specific to agents, and which documents they read for each kind of task.
 - [docs/domain.md](docs/domain.md): what each part of the domain does, as it is in the code, with its rules and open questions.
+- [docs/use_cases.md](docs/use_cases.md): what each use case does, and the abstractions the other layers implement for them, as they are in the code, with their rules and open questions.
 - [docs/shared.md](docs/shared.md): what each part of `shared/` does, as it is in the code.
 - [docs/issues/](docs/issues/README.md): the issues, until the repository is on GitHub.
