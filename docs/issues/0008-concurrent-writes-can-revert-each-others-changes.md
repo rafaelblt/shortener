@@ -1,6 +1,6 @@
 ---
-status: open
-resolution:
+status: closed
+resolution: fixed
 labels: [bug, use_cases, infra]
 ---
 
@@ -22,3 +22,7 @@ Expected, from `docs/domain.md`: a short URL only goes from `DEACTIVATED` to `AC
 The use cases were rebuilt, and `UpdateShortURLUseCase` was removed. Every use case that writes a short URL it has read, `ResolveSlug`, `UpdateShortURL`, `EnableShortURL`, `DisableShortURL` and `DeleteShortURL` (`shortener/use_cases/`), reads it through the `Transaction` it writes in, and the use cases that write don't receive a `ShortURLReader`. The contract of `Transaction` (`docs/use_cases.md`, in Concurrency) says that a short URL read through a transaction can't be changed by another transaction until the first one ends, and that another transaction reading it waits, and then reads what was written. With the contract kept, both cases above run one after the other: the second update reads the value the first one saved, and a resolution that reads the short URL after a deactivation gets `ShortURLDeactivatedError` and saves nothing.
 
 `save()` still stores every field of the short URL. Still to do, in the phase of `infra`: keeping the contract, and testing it. See issue 0007.
+
+## 2026-10-11: Closed as fixed
+
+The reads through a transaction lock the short URL until the transaction ends (see issue 0007), so both cases above run one after the other: the update that waited reads the value the other one saved, and a resolution that waited for a deactivation reads the short URL as `DEACTIVATED`, gets `ShortURLDeactivatedError` and saves nothing. `tests/test_infra/test_db/test_unit_of_work.py` tests that a read through a transaction waits for another transaction that read the same short URL, and then reads what it wrote: the new values, `None` when it was removed and, reading by slug, `None` when its slug changed. See `docs/infra.md#short-urls`. `save()` still stores every field.

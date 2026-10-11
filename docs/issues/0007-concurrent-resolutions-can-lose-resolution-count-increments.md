@@ -1,6 +1,6 @@
 ---
-status: open
-resolution:
+status: closed
+resolution: fixed
 labels: [bug, infra]
 ---
 
@@ -19,3 +19,9 @@ Expected, from `docs/domain.md`: `resolution_count` is the number of times `reso
 `ResolveSlug` (`shortener/use_cases/resolve_slug.py`) now counts the resolution with `resolve()` and saves the whole short URL with `save()`, so the problem described above can happen once `infra` implements the use cases' abstractions. To prevent it, the use case reads the short URL through the `Transaction` it saves in, and the contract of `Transaction` (`docs/use_cases.md`, in Concurrency) says that a short URL read through a transaction can't be changed by another transaction until the first one ends, and that another transaction reading it waits, and then reads what was written. With the contract kept, two concurrent resolutions of the same slug run one after the other, and the count goes up by 2.
 
 Still to do, in the phase of `infra`: keeping that contract, and testing it with two concurrent transactions that resolve the same slug. From the planning of the use cases: `SELECT ... FOR UPDATE` in the reads of a transaction on Postgres, and `BEGIN IMMEDIATE` in the transactions of the unit of work on SQLite, which has no `FOR UPDATE`.
+
+## 2026-10-11: Closed as fixed
+
+`SQLAlchemyShortURLRepository` (`shortener/infra/db/shorturl_repository.py`), the `shorturls` of the transactions of `SQLAlchemyUnitOfWork`, reads with `SELECT ... FOR UPDATE`, which keeps the contract of `Transaction`: the short URL stays locked until the transaction that read it ends, and another transaction that reads it waits, and then reads what was written. Two concurrent resolutions of the same slug run one after the other, and the count goes up by 2. `tests/test_infra/test_db/test_unit_of_work.py` tests it against Postgres, with two transactions that resolve the same short URL. See `docs/infra.md#short-urls`.
+
+The infrastructure runs on Postgres only, and its tests too, so `BEGIN IMMEDIATE` on SQLite, from the planning of the use cases, wasn't needed.

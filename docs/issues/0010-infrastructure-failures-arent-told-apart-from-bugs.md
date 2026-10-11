@@ -27,3 +27,7 @@ Still to do: `UnavailableError`, and its place in the contract of the abstractio
 ## 2026-10-11: `UnavailableError` is in the use cases
 
 `UnavailableError` is in `shortener/use_cases/unavailable_error.py`, and its contract is in `docs/use_cases.md`, in Errors of the abstractions. Nothing raises it yet. Still to do: raising it in the implementations, in the phase of `infra`, and answering 503 to it, in the phase of `adapters`.
+
+## 2026-10-11: The implementations of the database raise `UnavailableError`
+
+The implementations of the database (`shortener/infra/db/`) raise `UnavailableError` from the failures that trying again may fix, which `is_transient()` (`shortener/infra/db/transient_errors.py`) tells apart: a server that can't be reached, a pool with no free connection, a lost connection, and the SQLSTATEs of connection exceptions, insufficient resources, serialization failures, deadlocks, locks not available, canceled queries and shutdowns. Every other error goes through as it is. See `docs/infra.md#failures-of-the-database`. Still to do: answering 503 to it, in the API.
