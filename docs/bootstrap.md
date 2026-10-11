@@ -19,14 +19,14 @@ shortener/bootstrap/
 
 `Settings.from_environment(environment=os.environ)` reads the settings from the environment variables:
 
-| Variable         | Required        | Value                                                                                                                                                 |
-| ---------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DATABASE_URL`   | Yes             | The URL of the Postgres database, with the driver of asyncpg, such as `postgresql+asyncpg://user:password@localhost:5432/shortener`. The [migrations](infra.md#migrations) read it too. |
-| `JWT_ALGORITHMS` | Yes             | The algorithms an access token may be signed with, separated by commas, such as `RS256` or `HS256`                                                    |
-| `JWT_ISSUER`     | Yes             | The issuer of the tokens, which their `iss` claim has to be                                                                                           |
-| `JWT_AUDIENCE`   | Yes             | The audience of the tokens, which their `aud` claim has to be or have                                                                                 |
-| `JWT_KEY`        | One of the two  | The key that verifies the tokens: the secret of the HMAC algorithms, or the public key of the others, in PEM                                          |
-| `JWT_JWKS_URL`   | One of the two  | The URL where the issuer publishes the keys that verify the tokens, as a JWKS                                                                         |
+| Variable         | Required       | Value                                                                                                                                                                                   |
+| ---------------- | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`   | Yes            | The URL of the Postgres database, with the driver of asyncpg, such as `postgresql+asyncpg://user:password@localhost:5432/shortener`. The [migrations](infra.md#migrations) read it too. |
+| `JWT_ALGORITHMS` | Yes            | The algorithms an access token may be signed with, separated by commas, such as `RS256` or `HS256`                                                                                      |
+| `JWT_ISSUER`     | Yes            | The issuer of the tokens, which their `iss` claim has to be                                                                                                                             |
+| `JWT_AUDIENCE`   | Yes            | The audience of the tokens, which their `aud` claim has to be or have                                                                                                                   |
+| `JWT_KEY`        | One of the two | The key that verifies the tokens: the secret of the HMAC algorithms, or the public key of the others, in PEM                                                                            |
+| `JWT_JWKS_URL`   | One of the two | The URL where the issuer publishes the keys that verify the tokens, as a JWKS                                                                                                           |
 
 - A value is stripped of spaces, and an empty one is the same as a variable that isn't set. In `JWT_ALGORITHMS`, an empty item between commas is left out.
 - It raises `SettingsError` when the variables don't make valid settings, with a message that names every problem: a required variable that is missing, a `DATABASE_URL` that isn't a URL of `postgresql+asyncpg`, and both or neither of `JWT_KEY` and `JWT_JWKS_URL`.
@@ -40,12 +40,12 @@ shortener/bootstrap/
 
 `UseCases(uow, shorturls, clock)` implements the [`UseCaseFactory`](api.md#use-cases) of the API. `build(use_case, current_user)` builds a use case with these, and raises `LookupError` for a class that isn't one of them:
 
-| Use case                                                                  | Built with                                   |
-| ------------------------------------------------------------------------- | -------------------------------------------- |
-| `ResolveSlug`                                                             | `uow` and `clock`                            |
-| `CreateShortURL`                                                          | `uow`, `current_user` and `clock`            |
-| `GetShortURL` and `ListShortURLs`                                         | `shorturls`, a `ShortURLReader`, and `current_user` |
-| `UpdateShortURL`, `EnableShortURL`, `DisableShortURL` and `DeleteShortURL` | `uow` and `current_user`                    |
+| Use case                                                                   | Built with                                          |
+| -------------------------------------------------------------------------- | --------------------------------------------------- |
+| `ResolveSlug`                                                              | `uow` and `clock`                                   |
+| `CreateShortURL`                                                           | `uow`, `current_user` and `clock`                   |
+| `GetShortURL` and `ListShortURLs`                                          | `shorturls`, a `ShortURLReader`, and `current_user` |
+| `UpdateShortURL`, `EnableShortURL`, `DisableShortURL` and `DeleteShortURL` | `uow` and `current_user`                            |
 
 The API builds the use case of each request, with the user of the request. Building one doesn't connect to anything.
 

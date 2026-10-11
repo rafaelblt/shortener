@@ -1,6 +1,6 @@
 # Infrastructure
 
-The infrastructure implements the abstractions the other layers define: those of the [use cases](use_cases.md#abstractions), such as storing short URLs, and those of the [API](api.md), such as verifying access tokens. It lives in `shortener/infra/`, and imports only from the use cases, the [domain](domain.md) and [`shortener/shared/`](shared.md). It doesn't read settings or build anything on its own: [`bootstrap`](bootstrap.md) builds its implementations and gives them to the layers that use them.
+The infrastructure implements the abstractions the other layers define: those of the [use cases](use_cases.md#abstractions), such as storing short URLs, and those of the [API](api.md), such as verifying access tokens. It lives in `shortener/infra/`, and imports only from the use cases, the [domain](domain.md) and [`shortener/shared/`](shared.md). It doesn't read settings, and its implementations receive what they use, such as the engine of the database: [`bootstrap`](bootstrap.md) builds them, and gives them to the layers that use them.
 
 This document describes the infrastructure as it is in the code. Verified bugs that aren't fixed yet are [issues](issues/README.md) labeled `infra`, linked from where this document describes the code they affect. Decisions still to be made are in [Open questions](#open-questions).
 
@@ -19,14 +19,14 @@ shortener/infra/
 alembic/                           the migrations of the database
 ```
 
-| Abstraction                                            | Implementation                  |
-| ------------------------------------------------------ | ------------------------------- |
-| [`UnitOfWork`](use_cases.md#unit-of-work)              | `SQLAlchemyUnitOfWork`          |
-| [`Transaction`](use_cases.md#unit-of-work)             | `SQLAlchemyTransaction`         |
-| [`ShortURLRepository`](use_cases.md#reading-and-writing) | `SQLAlchemyShortURLRepository`  |
-| [`ShortURLReader`](use_cases.md#reading-and-writing)   | `SQLAlchemyShortURLReader`      |
-| [`Clock`](use_cases.md#clock)                          | `UTCClock`                      |
-| [`AccessTokenVerifier`](api.md#authentication), of the API | `JWTAccessTokenVerifier`   |
+| Abstraction                                                | Implementation                 |
+| ---------------------------------------------------------- | ------------------------------ |
+| [`UnitOfWork`](use_cases.md#unit-of-work)                  | `SQLAlchemyUnitOfWork`         |
+| [`Transaction`](use_cases.md#unit-of-work)                 | `SQLAlchemyTransaction`        |
+| [`ShortURLRepository`](use_cases.md#reading-and-writing)   | `SQLAlchemyShortURLRepository` |
+| [`ShortURLReader`](use_cases.md#reading-and-writing)       | `SQLAlchemyShortURLReader`     |
+| [`Clock`](use_cases.md#clock)                              | `UTCClock`                     |
+| [`AccessTokenVerifier`](api.md#authentication), of the API | `JWTAccessTokenVerifier`       |
 
 ## Database
 
@@ -36,16 +36,16 @@ The short URLs are stored in Postgres, through the core of SQLAlchemy (tables an
 
 `tables.py`
 
-| Column             | Type                       | Value                                   |
-| ------------------ | -------------------------- | --------------------------------------- |
-| `id`               | `uuid`, primary key        | `shorturl.id.value`                     |
-| `slug`             | `text`, unique             | `shorturl.slug`, as a plain `str`       |
-| `target_url`       | `text`                     | `shorturl.target_url`, as a plain `str` |
-| `owner_id`         | `uuid`                     | `shorturl.owner_id.value`               |
-| `status`           | `text`                     | `shorturl.status.value`, such as `"active"` |
-| `resolution_count` | `bigint`                   | `shorturl.resolution_count`             |
-| `created_at`       | `timestamptz`              | `shorturl.created_at`                   |
-| `last_resolved_at` | `timestamptz`, nullable    | `shorturl.last_resolved_at`             |
+| Column             | Type                    | Value                                       |
+| ------------------ | ----------------------- | ------------------------------------------- |
+| `id`               | `uuid`, primary key     | `shorturl.id.value`                         |
+| `slug`             | `text`, unique          | `shorturl.slug`, as a plain `str`           |
+| `target_url`       | `text`                  | `shorturl.target_url`, as a plain `str`     |
+| `owner_id`         | `uuid`                  | `shorturl.owner_id.value`                   |
+| `status`           | `text`                  | `shorturl.status.value`, such as `"active"` |
+| `resolution_count` | `bigint`                | `shorturl.resolution_count`                 |
+| `created_at`       | `timestamptz`           | `shorturl.created_at`                       |
+| `last_resolved_at` | `timestamptz`, nullable | `shorturl.last_resolved_at`                 |
 
 - The unique constraint of `slug` is named `SLUG_UNIQUE_CONSTRAINT` (`uq_shorturls_slug`), which the repository uses to tell a [taken slug](#short-urls) apart from other conflicts. Postgres compares `text` case-sensitively, so `abc` and `ABC` are different slugs, as they are in the domain.
 - The index `ix_shorturls_owner_id_created_at_id`, on `owner_id`, `created_at` and `id`, serves `list_by_owner()`, which filters by owner in that order.
@@ -77,10 +77,10 @@ A migration is generated by `alembic revision --autogenerate`, against a databas
 
 `SQLAlchemyShortURLRepository(connection)` implements [`ShortURLRepository`](use_cases.md#reading-and-writing), and is the `shorturls` of a `SQLAlchemyTransaction`. `SQLAlchemyShortURLReader(engine)` implements `ShortURLReader`, and reads outside any transaction. Both read with the same statements:
 
-| Method                                  | Rows                                                                                                                                                                  |
-| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `get_by_id(id)`                         | The one whose `id` is `id.value`                                                                                                                                      |
-| `get_by_slug(slug)`                     | The one whose `slug` is `slug`                                                                                                                                        |
+| Method                                  | Rows                                                                                                                                                                                                                |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `get_by_id(id)`                         | The one whose `id` is `id.value`                                                                                                                                                                                    |
+| `get_by_slug(slug)`                     | The one whose `slug` is `slug`                                                                                                                                                                                      |
 | `list_by_owner(owner_id, limit, after)` | Those whose `owner_id` is `owner_id.value`, ordered by `created_at` and then `id`, both descending, up to `limit`. With `after`, only those whose `(created_at, id)` is smaller than `(after.created_at, after.id)` |
 
 A row becomes a `ShortURL` with `ShortURL.restore()`, and its slug and target URL with [`parse()`](domain.md#value-objects), so a value stored under older rules of `create()` still loads.
@@ -92,11 +92,11 @@ The two differ in how they read:
 
 The repository writes with these statements:
 
-| Method             | Statement                                                         |
-| ------------------ | ----------------------------------------------------------------- |
-| `add(shorturl)`    | `INSERT`, with every field                                        |
+| Method             | Statement                                                                              |
+| ------------------ | -------------------------------------------------------------------------------------- |
+| `add(shorturl)`    | `INSERT`, with every field                                                             |
 | `save(shorturl)`   | `UPDATE`, with every field but `id`, of the row whose `id` is the one of the short URL |
-| `remove(shorturl)` | `DELETE` of the row whose `id` is the one of the short URL        |
+| `remove(shorturl)` | `DELETE` of the row whose `id` is the one of the short URL                             |
 
 - `add()` and `save()` run their statement in a savepoint. When it breaks `SLUG_UNIQUE_CONSTRAINT`, the savepoint is rolled back, and they return `Err(SlugTakenError(shorturl.slug))`: only that statement is undone, and the transaction goes on. Any other `IntegrityError`, such as an `id` that is already stored, is raised.
 - Postgres checks the slug when the statement runs. When another transaction wrote the same slug and hasn't ended, the statement waits for it, and only conflicts if that transaction commits.
@@ -108,13 +108,13 @@ The repository writes with these statements:
 
 The implementations of the database raise [`UnavailableError`](use_cases.md#unavailableerror) from the failures that trying again may fix, with `raise UnavailableError() from error`. They do it with the context manager `unavailable_when_transient()`, around getting a connection, every statement and `commit()`. It raises `UnavailableError` when `is_transient(error)` is true, and lets every other error through as it is.
 
-| Failure                                                         | How it is raised                                                                 | Transient                                                                                         |
-| --------------------------------------------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| The server can't be reached, such as a refused connection or a timeout | `OSError`, raised by asyncpg without SQLAlchemy wrapping it                | Yes                                                                                               |
-| No connection of the pool became free within its timeout        | `sqlalchemy.exc.TimeoutError`                                                    | Yes                                                                                               |
-| The connection was lost                                         | A `DBAPIError` whose `connection_invalidated` is true                            | Yes                                                                                               |
-| Postgres answered an error                                      | A `DBAPIError` whose `orig` has the SQLSTATE, or, when connecting, an error of asyncpg that has it | When the SQLSTATE is of the classes `08` (connection exception) or `53` (insufficient resources), or is `40001` (serialization failure), `40P01` (deadlock), `55P03` (lock not available), `57014` (query canceled, such as by `statement_timeout`), `57P01`, `57P02` (shutdowns) or `57P03` (cannot connect now) |
-| Anything else                                                   |                                                                                  | No                                                                                                |
+| Failure                                                                | How it is raised                                                                                   | Transient                                                                                                                                                                                                                                                                                                         |
+| ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The server can't be reached, such as a refused connection or a timeout | `OSError`, raised by asyncpg without SQLAlchemy wrapping it                                        | Yes                                                                                                                                                                                                                                                                                                               |
+| No connection of the pool became free within its timeout               | `sqlalchemy.exc.TimeoutError`                                                                      | Yes                                                                                                                                                                                                                                                                                                               |
+| The connection was lost                                                | A `DBAPIError` whose `connection_invalidated` is true                                              | Yes                                                                                                                                                                                                                                                                                                               |
+| Postgres answered an error                                             | A `DBAPIError` whose `orig` has the SQLSTATE, or, when connecting, an error of asyncpg that has it | When the SQLSTATE is of the classes `08` (connection exception) or `53` (insufficient resources), or is `40001` (serialization failure), `40P01` (deadlock), `55P03` (lock not available), `57014` (query canceled, such as by `statement_timeout`), `57P01`, `57P02` (shutdowns) or `57P03` (cannot connect now) |
+| Anything else                                                          |                                                                                                    | No                                                                                                                                                                                                                                                                                                                |
 
 Errors that trying again won't fix are raised as they are, such as `42P01` (a table that doesn't exist), `28P01` (a wrong password) or `3D000` (a database that doesn't exist).
 
@@ -132,10 +132,10 @@ A connection lost in the middle of a transaction can also be raised as an `Inter
 
 `JWTAccessTokenVerifier` implements the [`AccessTokenVerifier`](api.md#authentication) of the API: it verifies access tokens that are JWTs, with PyJWT, and returns the `UserID` of the user each one was issued to. The tokens are issued outside the service (see [Scope](../README.md#scope)). It is built in one of two ways, by where the keys that verify the signatures come from:
 
-| Way                                            | Keys                                                                                                                                  |
-| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `with_key(key, algorithms, issuer, audience)`  | A single key: the secret of the HMAC algorithms (`HS256`, `HS384` and `HS512`), or the public key of the others, in PEM               |
-| `with_jwks(url, algorithms, issuer, audience)` | The keys the issuer publishes at a JWKS URL, each with its key ID (`kid`)                                                             |
+| Way                                            | Keys                                                                                                                    |
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `with_key(key, algorithms, issuer, audience)`  | A single key: the secret of the HMAC algorithms (`HS256`, `HS384` and `HS512`), or the public key of the others, in PEM |
+| `with_jwks(url, algorithms, issuer, audience)` | The keys the issuer publishes at a JWKS URL, each with its key ID (`kid`)                                               |
 
 `algorithms` are the ones a token may be signed with: any algorithm of PyJWT but `none`, and at least one. Both ways raise `ValueError` when an algorithm isn't one of them. `with_key()` also raises it when the key doesn't suit one of the algorithms: when PyJWT can't load it for the algorithm, such as a public key as the secret of an HMAC algorithm, or when it is shorter than the algorithm needs, such as a secret shorter than the hash of an HMAC algorithm. `with_jwks()` also raises it when the URL isn't `http` or `https`.
 

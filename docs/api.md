@@ -22,10 +22,10 @@ shortener/api/
 
 The API defines two abstractions, as `Protocol`s, which it receives in `create_app()`:
 
-| Abstraction                                | What it does                                                | Implementation                                                 |
-| ------------------------------------------ | ----------------------------------------------------------- | -------------------------------------------------------------- |
-| [`UseCaseFactory`](#use-cases)             | Builds the use case of a request, with the user making it   | [`UseCases`](bootstrap.md#use-cases), in `bootstrap`           |
-| [`AccessTokenVerifier`](#authentication)   | Tells whose an access token is                              | [`JWTAccessTokenVerifier`](infra.md#access-tokens), in `infra` |
+| Abstraction                              | What it does                                              | Implementation                                                 |
+| ---------------------------------------- | --------------------------------------------------------- | -------------------------------------------------------------- |
+| [`UseCaseFactory`](#use-cases)           | Builds the use case of a request, with the user making it | [`UseCases`](bootstrap.md#use-cases), in `bootstrap`           |
+| [`AccessTokenVerifier`](#authentication) | Tells whose an access token is                            | [`JWTAccessTokenVerifier`](infra.md#access-tokens), in `infra` |
 
 ## The application
 
@@ -41,21 +41,21 @@ FastAPI also serves the OpenAPI schema at `/openapi.json`, and its documentation
 
 `ENDPOINTS` declares each endpoint of the API, with the use case it runs:
 
-| Method and path                  | Use case                                                      | Receives                                        | Answers                                                         |
-| -------------------------------- | ------------------------------------------------------------- | ----------------------------------------------- | --------------------------------------------------------------- |
-| `GET /v1/slugs/{slug}`           | [`ResolveSlug`](use_cases.md#resolveslug)                     | `slug`, in the path                             | `307 Temporary Redirect` to the target URL                      |
-| `POST /v1/shorturls`             | [`CreateShortURL`](use_cases.md#createshorturl)               | `target_url` and `slug`, in the body            | `201 Created`, with the `ShortURLDetails`                       |
-| `GET /v1/shorturls`              | [`ListShortURLs`](use_cases.md#listshorturls)                 | `limit` and `cursor`, in the query              | `200 OK`, with a [`ShortURLPageContent`](#cursors)              |
-| `GET /v1/shorturls/{id}`         | [`GetShortURL`](use_cases.md#getshorturl)                     | `id`, in the path                               | `200 OK`, with the `ShortURLDetails`                            |
-| `PATCH /v1/shorturls/{id}`       | [`UpdateShortURL`](use_cases.md#updateshorturl)               | `id`, in the path, `target_url` and `slug`, in the body | `200 OK`, with the `ShortURLDetails`                    |
-| `POST /v1/shorturls/{id}/enable` | [`EnableShortURL`](use_cases.md#enableshorturl-and-disableshorturl)  | `id`, in the path                        | `200 OK`, with the `ShortURLDetails`                            |
-| `POST /v1/shorturls/{id}/disable`| [`DisableShortURL`](use_cases.md#enableshorturl-and-disableshorturl) | `id`, in the path                        | `200 OK`, with the `ShortURLDetails`                            |
-| `DELETE /v1/shorturls/{id}`      | [`DeleteShortURL`](use_cases.md#deleteshorturl)               | `id`, in the path                               | `204 No Content`                                                |
+| Method and path                   | Use case                                                             | Receives                                                | Answers                                            |
+| --------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------- | -------------------------------------------------- |
+| `GET /v1/slugs/{slug}`            | [`ResolveSlug`](use_cases.md#resolveslug)                            | `slug`, in the path                                     | `307 Temporary Redirect` to the target URL         |
+| `POST /v1/shorturls`              | [`CreateShortURL`](use_cases.md#createshorturl)                      | `target_url` and `slug`, in the body                    | `201 Created`, with the `ShortURLDetails`          |
+| `GET /v1/shorturls`               | [`ListShortURLs`](use_cases.md#listshorturls)                        | `limit` and `cursor`, in the query                      | `200 OK`, with a [`ShortURLPageContent`](#cursors) |
+| `GET /v1/shorturls/{id}`          | [`GetShortURL`](use_cases.md#getshorturl)                            | `id`, in the path                                       | `200 OK`, with the `ShortURLDetails`               |
+| `PATCH /v1/shorturls/{id}`        | [`UpdateShortURL`](use_cases.md#updateshorturl)                      | `id`, in the path, `target_url` and `slug`, in the body | `200 OK`, with the `ShortURLDetails`               |
+| `POST /v1/shorturls/{id}/enable`  | [`EnableShortURL`](use_cases.md#enableshorturl-and-disableshorturl)  | `id`, in the path                                       | `200 OK`, with the `ShortURLDetails`               |
+| `POST /v1/shorturls/{id}/disable` | [`DisableShortURL`](use_cases.md#enableshorturl-and-disableshorturl) | `id`, in the path                                       | `200 OK`, with the `ShortURLDetails`               |
+| `DELETE /v1/shorturls/{id}`       | [`DeleteShortURL`](use_cases.md#deleteshorturl)                      | `id`, in the path                                       | `204 No Content`                                   |
 
 What each one receives and answers follows from its use case, by the rules of [How an endpoint works](#how-an-endpoint-works):
 
 - Every endpoint but `GET /v1/slugs/{slug}` reads the [access token](#authentication), since its use case takes a `CurrentUser`.
-- A value of the body that is `null` is the same as one the body leaves out: `slug` takes the default of `execute()`, `None`, so `POST /v1/shorturls` generates the slug, and `PATCH /v1/shorturls/{id}` doesn't change what is `null`. A `PATCH` with no value to change gets `nothing_to_update`.
+- `slug`, and the `target_url` of a `PATCH`, default to `None` in `execute()`, so a `null` is the same as leaving them out: `POST /v1/shorturls` generates the slug, and `PATCH /v1/shorturls/{id}` doesn't change them. A `PATCH` with no value to change gets `nothing_to_update`. The `target_url` of a `POST` has no default, so leaving it out, or sending it as `null`, gets `missing`.
 - `limit` is 20 when the query leaves it out, the default of `ListShortURLs.execute()`.
 - The redirect is temporary, so the clients don't keep it: each visit asks the service again, which counts the resolution, and follows changes of the target URL and deactivations.
 - The JSON of a `ShortURLDetails` has its fields, with the IDs as text, and the datetimes in ISO 8601, with `Z` for UTC.
@@ -70,7 +70,7 @@ What each one receives and answers follows from its use case, by the rules of [H
 
 - When its name is in the path, such as `{id}`, it comes from the path.
 - Otherwise, it comes from the query when the method is `GET` or `DELETE`, and from a field of the JSON object of the body for the other methods.
-- It is required when `execute()` has no default for it. Otherwise, a request that leaves it out gives the default of `execute()`.
+- It is required when `execute()` has no default for it, and a `null` for it in the body is the same as leaving it out. Otherwise, a request that leaves it out gives the default of `execute()`.
 - FastAPI reads it as the type of `execute()`, such as a `UUID` from the text of the path, or an `int` from the text of the query. A type that is in `PARAMETER_TYPES` is read as the type it maps to instead, which is how a request carries a [`ShortURLCursor`](#cursors). In a union, such as `ShortURLCursor | None`, each member is replaced.
 
 Since the name of a parameter of `execute()` is the name of its value in the request, the `field` of a [`FieldError`](use_cases.md#errors-of-the-use-cases) of the use case is the name the client sent.
@@ -98,11 +98,11 @@ Adding an endpoint is adding it to `ENDPOINTS`, after adding its use case to the
 
 A `SuccessResponse` says how an endpoint answers the `Ok` of its use case: its status code, the class of response of FastAPI, the type of what it answers, for the OpenAPI schema and the serialization, and `respond(value)`, which returns it.
 
-| `SuccessResponse`                           | Status                        | Answers                                                                                                                       |
-| ------------------------------------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `JSONContent(status_code=200, encode=None)` | `status_code`                 | The value of `Ok` as JSON. With `encode`, what `encode(value)` returns, whose type is the return type of `encode`               |
-| `NoContent()`                               | `204 No Content`              | Nothing, whatever the value of `Ok`                                                                                           |
-| `Redirect(location)`                        | `307 Temporary Redirect`      | A redirect to the URL `location(value)` returns, in the `Location` header                                                     |
+| `SuccessResponse`                           | Status                   | Answers                                                                                                           |
+| ------------------------------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| `JSONContent(status_code=200, encode=None)` | `status_code`            | The value of `Ok` as JSON. With `encode`, what `encode(value)` returns, whose type is the return type of `encode` |
+| `NoContent()`                               | `204 No Content`         | Nothing, whatever the value of `Ok`                                                                               |
+| `Redirect(location)`                        | `307 Temporary Redirect` | A redirect to the URL `location(value)` returns, in the `Location` header                                         |
 
 FastAPI serializes the dataclasses of the use cases with pydantic: a `UUID` as text, a `datetime` in ISO 8601, and a tuple as a list.
 
@@ -125,18 +125,18 @@ Every error is answered with an `ErrorContent`:
 - `code` tells the clients which error it is, and `message` explains it to a person. Only `code` is part of the contract: the messages can change.
 - `fields` is only there for `invalid_input`. It has an item for each value that breaks its rules, in order, whose `field` is the name of the value in the request, and whose `issues` have the codes of the issues, in order. The codes are the values of [`IssueCode`](shared.md#validation), such as `too_short`, and `missing`, for a required value the request lacks.
 
-| Error                                                  | Status                       | `code`                 |
-| ------------------------------------------------------ | ---------------------------- | ---------------------- |
-| `NotAuthenticatedError`                                | `401 Unauthorized`           | `not_authenticated`    |
-| `InvalidInputError`                                    | `422 Unprocessable Content`  | `invalid_input`        |
-| `NothingToUpdateError`                                 | `422 Unprocessable Content`  | `nothing_to_update`    |
-| `ShortURLNotFoundError`                                | `404 Not Found`              | `shorturl_not_found`   |
-| `ShortURLDeactivatedError`                             | `404 Not Found`              | `shorturl_deactivated` |
-| `SlugTakenError`                                       | `409 Conflict`               | `slug_taken`           |
-| A request whose values FastAPI can't read              | `422 Unprocessable Content`  | `invalid_input`        |
-| A body that isn't valid JSON                           | `400 Bad Request`            | `malformed_body`       |
-| [`UnavailableError`](use_cases.md#unavailableerror), raised | `503 Service Unavailable` | `unavailable`         |
-| Any other exception                                    | `500 Internal Server Error`  | `internal_error`       |
+| Error                                                       | Status                      | `code`                 |
+| ----------------------------------------------------------- | --------------------------- | ---------------------- |
+| `NotAuthenticatedError`                                     | `401 Unauthorized`          | `not_authenticated`    |
+| `InvalidInputError`                                         | `422 Unprocessable Content` | `invalid_input`        |
+| `NothingToUpdateError`                                      | `422 Unprocessable Content` | `nothing_to_update`    |
+| `ShortURLNotFoundError`                                     | `404 Not Found`             | `shorturl_not_found`   |
+| `ShortURLDeactivatedError`                                  | `404 Not Found`             | `shorturl_deactivated` |
+| `SlugTakenError`                                            | `409 Conflict`              | `slug_taken`           |
+| A request whose values FastAPI can't read                   | `422 Unprocessable Content` | `invalid_input`        |
+| A body that isn't valid JSON                                | `400 Bad Request`           | `malformed_body`       |
+| [`UnavailableError`](use_cases.md#unavailableerror), raised | `503 Service Unavailable`   | `unavailable`          |
+| Any other exception                                         | `500 Internal Server Error` | `internal_error`       |
 
 - The errors a use case returns are answered by `error_response(error)`, from `ERRORS`, which maps each class of error to an `ErrorResponse`: its status code, code, message and headers. `response_of(error_type)` raises `LookupError` for a class that isn't there.
 - `401` has the header `WWW-Authenticate: Bearer`.
