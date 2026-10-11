@@ -56,5 +56,6 @@ alembic_upgrade = "alembic upgrade +1"
 alembic_downgrade = "alembic downgrade -1"
 
 [tool.pytest.ini_options]
+asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 filterwarnings = ["ignore::DeprecationWarning:passlib"]
