@@ -2,6 +2,7 @@ import jwt
 import pytest
 
 from datetime import datetime, timedelta, timezone
+from unittest.mock import AsyncMock, Mock
 
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
@@ -64,6 +65,21 @@ def test_create_app_raises_for_settings_that_cannot_verify_tokens():
 
     with pytest.raises(ValueError):
         create_app(settings)
+
+
+async def test_the_application_disposes_its_engine_when_it_stops(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    engine = Mock(dispose=AsyncMock())
+    monkeypatch.setattr(
+        "shortener.bootstrap.app.create_async_engine", Mock(return_value=engine)
+    )
+    app = create_app(SETTINGS)
+
+    async with app.router.lifespan_context(app):
+        engine.dispose.assert_not_awaited()
+
+    engine.dispose.assert_awaited_once()
 
 
 async def test_access_token_verifier_with_a_key_verifies_the_tokens_it_signed(
