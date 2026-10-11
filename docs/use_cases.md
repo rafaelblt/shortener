@@ -14,7 +14,9 @@ shortener/use_cases/
 ├── clock.py                 Clock
 ├── errors.py                NotAuthenticatedError, ShortURLNotFoundError, InvalidInputError,
 │                            FieldError and NothingToUpdateError
-└── shorturl_details.py      ShortURLDetails
+├── shorturl_details.py      ShortURLDetails
+├── resolved_slug.py         ResolvedSlug
+└── resolve_slug.py          ResolveSlug
 ```
 
 ## Abstractions
@@ -128,6 +130,33 @@ Every field of a [`ShortURL`](domain.md#shorturl), as primitives. `ShortURLDetai
 | `resolution_count` | `int`              | `shorturl.resolution_count`                 |
 | `created_at`       | `datetime`         | `shorturl.created_at`                       |
 | `last_resolved_at` | `datetime \| None` | `shorturl.last_resolved_at`                 |
+
+### ResolvedSlug
+
+`resolved_slug.py`
+
+What [`ResolveSlug`](#resolveslug) returns: only `target_url`, as a plain `str`, since that is what the caller needs to redirect, and it already has the slug. `ResolvedSlug.from_target_url(target_url)` builds it from a `TargetURL`.
+
+## Use cases
+
+Each use case is a class whose constructor receives the abstractions it uses, and whose `execute()` carries out the operation. `execute()` returns a `Result`: `Ok` with one of the [results](#results), or `Err` with one of the errors of a union named after the use case, such as `ResolveSlugError`. The errors of the domain and of the abstractions are returned as they are.
+
+A use case that writes commits only when it succeeds. When it returns `Err`, it leaves the transaction without calling `commit()`, which rolls it back.
+
+### ResolveSlug
+
+`resolve_slug.py`
+
+`ResolveSlug(uow, clock)` resolves a slug to its target URL, and counts the resolution. Anyone can resolve a slug, so it doesn't receive a `CurrentUser`.
+
+`execute(slug)` returns `Result[ResolvedSlug, ResolveSlugError]`, where `ResolveSlugError` is `ShortURLNotFoundError | ShortURLDeactivatedError`:
+
+1. It turns `slug` into a `Slug` with [`Slug.parse()`](domain.md#value-objects), so a slug created under older rules still resolves. A `slug` that isn't a `str` raises `TypeError`, and an empty one raises `ValueError`, before any transaction begins.
+2. It begins a transaction and reads the short URL with `get_by_slug()`. When there is none, it returns `Err(ShortURLNotFoundError())`.
+3. It calls `resolve()` with `Clock.now()`. When the short URL is deactivated, `resolve()` returns `Err(ShortURLDeactivatedError())`, and the use case returns it without saving anything.
+4. Otherwise, it saves the short URL, with the resolution counted, commits, and returns `Ok` with the `ResolvedSlug` of the target URL.
+
+The slug of the short URL doesn't change, so `save()` can't return `SlugTakenError`. If it does, the use case raises `ValueError` with it, through `unwrap()`, without committing.
 
 ## Open questions
 
