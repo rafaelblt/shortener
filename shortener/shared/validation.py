@@ -2,7 +2,7 @@ import re
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Callable, Self
+from typing import Any, Callable, Self
 
 from shortener.shared.result import Err, Ok, Result
 
@@ -12,6 +12,8 @@ class IssueCode(Enum):
     TOO_SHORT = "too_short"
     TOO_LONG = "too_long"
     INVALID_FORMAT = "invalid_format"
+    TOO_SMALL = "too_small"
+    TOO_LARGE = "too_large"
 
 
 @dataclass(frozen=True)
@@ -24,18 +26,40 @@ class ValidationError:
     issues: tuple[ValidationIssue, ...]
 
 
-class StringValidation:
+class _Validation[T]:
     """
     Checks a value against chained rules, and records an issue for each rule
-    the value breaks. A value that isn't a str only gets INVALID_TYPE, and the
-    rules are skipped.
+    the value breaks. A value that isn't of the type the subclass validates
+    only gets INVALID_TYPE, and the rules are skipped.
     """
 
     def __init__(self, value: object):
-        self._value = value
+        self._value: Any = value
         self._issues: list[ValidationIssue] = []
-        if not isinstance(value, str):
+        self._has_type = self._is_of_type(value)
+        if not self._has_type:
             self._issues.append(ValidationIssue(IssueCode.INVALID_TYPE))
+
+    @staticmethod
+    def _is_of_type(value: object) -> bool:
+        raise NotImplementedError
+
+    def satisfies(self, rule: Callable[[T], bool], code: IssueCode) -> Self:
+        if self._has_type and not rule(self._value):
+            self._issues.append(ValidationIssue(code))
+        return self
+
+    def result(self) -> Result[T, ValidationError]:
+        if self._issues:
+            return Err(ValidationError(tuple(self._issues)))
+        return Ok(self._value)
+
+
+class StringValidation(_Validation[str]):
+
+    @staticmethod
+    def _is_of_type(value: object) -> bool:
+        return isinstance(value, str)
 
     def min_length(self, length: int) -> Self:
         return self.satisfies(
@@ -53,12 +77,16 @@ class StringValidation:
             IssueCode.INVALID_FORMAT,
         )
 
-    def satisfies(self, rule: Callable[[str], bool], code: IssueCode) -> Self:
-        if isinstance(self._value, str) and not rule(self._value):
-            self._issues.append(ValidationIssue(code))
-        return self
 
-    def result(self) -> Result[str, ValidationError]:
-        if self._issues:
-            return Err(ValidationError(tuple(self._issues)))
-        return Ok(self._value)
+class IntegerValidation(_Validation[int]):
+
+    @staticmethod
+    def _is_of_type(value: object) -> bool:
+        # bool is a subclass of int, but True isn't a number a client means.
+        return isinstance(value, int) and not isinstance(value, bool)
+
+    def min_value(self, minimum: int) -> Self:
+        return self.satisfies(lambda value: value >= minimum, IssueCode.TOO_SMALL)
+
+    def max_value(self, maximum: int) -> Self:
+        return self.satisfies(lambda value: value <= maximum, IssueCode.TOO_LARGE)

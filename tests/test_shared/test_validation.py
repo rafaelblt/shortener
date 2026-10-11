@@ -3,6 +3,7 @@ import pytest
 
 from shortener.shared.result import Ok, Result
 from shortener.shared.validation import (
+    IntegerValidation,
     IssueCode,
     StringValidation,
     ValidationError,
@@ -93,3 +94,42 @@ def test_records_an_issue_for_each_broken_rule_in_the_order_of_the_chain():
     assert result == invalid(
         IssueCode.INVALID_FORMAT, IssueCode.TOO_SHORT, IssueCode.TOO_LONG
     )
+
+
+@pytest.mark.parametrize("value", ["1", 1.0, None, True])
+def test_value_that_is_not_an_integer_only_gets_invalid_type(value: object):
+    result = (
+        IntegerValidation(value)
+        .min_value(10)
+        .satisfies(lambda value: False, IssueCode.INVALID_FORMAT)
+        .result()
+    )
+    assert result == invalid(IssueCode.INVALID_TYPE)
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        pytest.param(2, invalid(IssueCode.TOO_SMALL), id="smaller"),
+        pytest.param(3, Ok(3), id="same value"),
+        pytest.param(4, Ok(4), id="larger"),
+    ],
+)
+def test_min_value_records_too_small_only_for_a_smaller_value(
+    value: int, expected: Result[int, ValidationError]
+):
+    assert IntegerValidation(value).min_value(3).result() == expected
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        pytest.param(2, Ok(2), id="smaller"),
+        pytest.param(3, Ok(3), id="same value"),
+        pytest.param(4, invalid(IssueCode.TOO_LARGE), id="larger"),
+    ],
+)
+def test_max_value_records_too_large_only_for_a_larger_value(
+    value: int, expected: Result[int, ValidationError]
+):
+    assert IntegerValidation(value).max_value(3).result() == expected

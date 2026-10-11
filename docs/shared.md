@@ -9,7 +9,8 @@ This document describes `shortener/shared/` as it is in the code.
 ```
 shortener/shared/
 ├── result.py          Result, Ok and Err
-├── validation.py      StringValidation, ValidationError, ValidationIssue and IssueCode
+├── validation.py      StringValidation, IntegerValidation, ValidationError, ValidationIssue
+│                      and IssueCode
 ├── parsing.py         require_non_empty_string()
 └── type_checks.py     check_parameter_type()
 ```
@@ -35,20 +36,23 @@ match result:
 
 `validation.py`
 
-`StringValidation(value)` validates a value with rules chained one after the other, and `result()` ends the chain:
+`StringValidation(value)` and `IntegerValidation(value)` validate a value with rules chained one after the other, and `result()` ends the chain:
 
 ```python
 StringValidation(value).min_length(3).max_length(30).result()
+IntegerValidation(value).min_value(1).max_value(100).result()
 ```
 
-Each rule records a `ValidationIssue` when the value breaks it, and the chain goes on, so every broken rule is recorded, in the order of the chain. A value that isn't a `str` gets an `INVALID_TYPE` issue when `StringValidation` is created, and every rule is skipped.
+Each rule records a `ValidationIssue` when the value breaks it, and the chain goes on, so every broken rule is recorded, in the order of the chain. A value that isn't of the type the class validates gets an `INVALID_TYPE` issue when the validation is created, and every rule is skipped. `StringValidation` validates a `str`, and `IntegerValidation` an `int`, but not a `bool`, even though `bool` is a subclass of `int`.
 
-| Method                  | Records                                                                                  |
-| ----------------------- | ---------------------------------------------------------------------------------------- |
-| `min_length(length)`    | `TOO_SHORT` when `len(value) < length`                                                   |
-| `max_length(length)`    | `TOO_LONG` when `len(value) > length`                                                    |
-| `matches(pattern)`      | `INVALID_FORMAT` when `pattern.fullmatch(value)` is `None`: the whole value has to match |
-| `satisfies(rule, code)` | `code` when `rule(value)` is false. It adds a rule the methods above don't cover.        |
+| Class               | Method                  | Records                                                                                  |
+| ------------------- | ----------------------- | ---------------------------------------------------------------------------------------- |
+| `StringValidation`  | `min_length(length)`    | `TOO_SHORT` when `len(value) < length`                                                   |
+| `StringValidation`  | `max_length(length)`    | `TOO_LONG` when `len(value) > length`                                                    |
+| `StringValidation`  | `matches(pattern)`      | `INVALID_FORMAT` when `pattern.fullmatch(value)` is `None`: the whole value has to match |
+| `IntegerValidation` | `min_value(minimum)`    | `TOO_SMALL` when `value < minimum`                                                       |
+| `IntegerValidation` | `max_value(maximum)`    | `TOO_LARGE` when `value > maximum`                                                       |
+| Both                | `satisfies(rule, code)` | `code` when `rule(value)` is false. It adds a rule the methods above don't cover.        |
 
 `result()` returns a [`Result`](#result): `Ok(value)` when no issue was recorded. Otherwise, it returns `Err` with a `ValidationError`: a frozen dataclass whose `issues` holds the recorded `ValidationIssue`s, as a tuple. A `ValidationIssue` is a frozen dataclass with a single field, `code`, an `IssueCode`. The codes describe the kind of rule that was broken, not what was validated, so a code means the same thing wherever it comes from:
 
@@ -58,6 +62,8 @@ Each rule records a `ValidationIssue` when the value breaks it, and the chain go
 | `TOO_SHORT`      | `"too_short"`      | is shorter than the minimum length |
 | `TOO_LONG`       | `"too_long"`       | is longer than the maximum length  |
 | `INVALID_FORMAT` | `"invalid_format"` | doesn't have the expected format   |
+| `TOO_SMALL`      | `"too_small"`      | is smaller than the minimum value  |
+| `TOO_LARGE`      | `"too_large"`      | is larger than the maximum value   |
 
 ## Parsing
 
