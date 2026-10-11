@@ -4,7 +4,7 @@ import pytest
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
-from sqlalchemy.exc import ProgrammingError
+from sqlalchemy.exc import IntegrityError, ProgrammingError
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from shortener.domain import (
@@ -253,6 +253,25 @@ async def test_add_returns_slug_taken_when_another_shorturl_has_the_slug(
 
     assert result == Err(SlugTakenError(stored_shorturl.slug))
     assert await reader.get_by_id(same_slug.id) is None
+
+
+async def test_add_raises_when_another_shorturl_has_the_id(
+    uow: SQLAlchemyUnitOfWork, stored_shorturl: ShortURL
+):
+    same_id = ShortURL.restore(
+        id=stored_shorturl.id,
+        slug=Slug("other-slug"),
+        target_url=stored_shorturl.target_url,
+        owner_id=stored_shorturl.owner_id,
+        status=stored_shorturl.status,
+        resolution_count=stored_shorturl.resolution_count,
+        created_at=stored_shorturl.created_at,
+        last_resolved_at=stored_shorturl.last_resolved_at,
+    )
+
+    async with uow.begin() as transaction:
+        with pytest.raises(IntegrityError):
+            await transaction.shorturls.add(same_id)
 
 
 async def test_slugs_that_differ_only_in_case_are_different_slugs(
