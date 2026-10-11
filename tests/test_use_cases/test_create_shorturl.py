@@ -17,6 +17,7 @@ from shortener.use_cases.errors import (
 )
 from shortener.use_cases.shorturl_details import ShortURLDetails
 from shortener.use_cases.shorturl_repository import SlugTakenError
+from shortener.use_cases.unavailable_error import UnavailableError
 from tests.fixtures.shared.validation import invalid
 from tests.fixtures.use_cases.doubles import call_names, record_copies
 
@@ -187,9 +188,9 @@ async def test_raises_without_committing_when_every_generated_slug_is_taken(
 async def test_does_not_retry_when_adding_raises(
     create_shorturl: CreateShortURL, transaction: NonCallableMagicMock
 ):
-    transaction.shorturls.add.side_effect = ConnectionError("the database is down")
+    transaction.shorturls.add.side_effect = UnavailableError()
 
-    with pytest.raises(ConnectionError):
+    with pytest.raises(UnavailableError):
         await create_shorturl.execute(target_url=TARGET_URL)
     transaction.shorturls.add.assert_awaited_once()
     transaction.commit.assert_not_awaited()

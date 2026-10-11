@@ -23,3 +23,7 @@ They will be told apart, by a single exception, `UnavailableError`, in `use_case
 - **In the adapter:** 503 Service Unavailable for `UnavailableError`, and 500 for any other exception. Not 502 or 504, which are for a server acting as a gateway or a proxy.
 
 Still to do: `UnavailableError`, and its place in the contract of the abstractions, in `shortener/use_cases/` and `docs/use_cases.md`; raising it in the implementations, in the phase of `infra`; and answering 503 to it, in the phase of `adapters`.
+
+## 2026-10-11: `UnavailableError` is in the use cases
+
+`UnavailableError` is in `shortener/use_cases/unavailable_error.py`, and its contract is in `docs/use_cases.md`, in Errors of the abstractions. Nothing raises it yet. Still to do: raising it in the implementations, in the phase of `infra`, and answering 503 to it, in the phase of `adapters`.

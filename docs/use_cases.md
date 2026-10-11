@@ -12,6 +12,7 @@ shortener/use_cases/
 ├── unit_of_work.py          UnitOfWork and Transaction
 ├── current_user.py          CurrentUser
 ├── clock.py                 Clock
+├── unavailable_error.py     UnavailableError
 ├── errors.py                NotAuthenticatedError, ShortURLNotFoundError, InvalidInputError,
 │                            FieldError, NothingToUpdateError and collect_field_errors()
 ├── shorturl_details.py      ShortURLDetails
@@ -106,10 +107,23 @@ The errors the callers of the use cases have to handle aren't exceptions: the us
 
 ### Errors of the abstractions
 
-| Kind                                                | Examples                                                    | How it reaches the use case                                                                                       |
-| --------------------------------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Expected: part of the contract of the abstraction   | A slug that is taken, no authenticated user, no short URL   | A value: `Err(SlugTakenError(slug))` from `add()` and `save()`, and `None` from the reads and from `get_id()`     |
-| Unexpected: a failure of the implementation, or a bug | The database is down, a timeout, an error of the driver   | An exception, which the use cases don't catch ([issue 0010](issues/0010-infrastructure-failures-arent-told-apart-from-bugs.md)) |
+| Kind                                                        | Examples                                                                            | How it reaches the use case                                                                                   |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Expected: part of the contract of the abstraction           | A slug that is taken, no authenticated user, no short URL                           | A value: `Err(SlugTakenError(slug))` from `add()` and `save()`, and `None` from the reads and from `get_id()` |
+| Unavailable: a failure that trying again may fix            | The database is down, a timeout, no free connection, a wait for a lock that ran out | [`UnavailableError`](#unavailableerror), which the use cases don't catch                                      |
+| Unexpected: a bug, or a failure that trying again won't fix | A table that doesn't exist, an error in a mapper                                    | The exception the implementation raised, which the use cases don't catch                                      |
+
+#### UnavailableError
+
+`unavailable_error.py`
+
+`UnavailableError` is the exception the implementations of the abstractions raise when they can't do what they were asked now, for a reason that is expected to go away, so trying the operation again may succeed. They raise it with `raise UnavailableError() from error`, so the exception of the library stays in `__cause__`.
+
+- They raise it only for those failures. A failure that trying again won't fix, or that isn't known to go away, is raised as it is: wrapping a bug would tell the caller to try again, and nothing would flag it. The class of the exception of the library isn't always enough to tell them apart: on SQLite, `no such table` and `database is locked` are both an `OperationalError`.
+- It has no subclasses and no fields, since the caller does the same whatever failed. What failed is in `__cause__`.
+- It is an exception, and not an `Err`, since no use case handles it: it goes through `execute()`, and through `async with uow.begin()`, which rolls the transaction back.
+
+With it, the caller tells these failures apart from bugs without importing the exceptions of each library, such as answering 503 to `UnavailableError` and 500 to any other exception. Raising it is still to be done in `infra` ([issue 0010](issues/0010-infrastructure-failures-arent-told-apart-from-bugs.md)).
 
 ### Errors of the use cases
 
