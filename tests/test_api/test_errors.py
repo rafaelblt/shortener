@@ -88,7 +88,9 @@ def test_error_response_names_each_invalid_value_with_the_codes_of_its_issues():
     error = InvalidInputError(
         (
             FieldError("target_url", invalid(IssueCode.INVALID_FORMAT).error),
-            FieldError("slug", invalid(IssueCode.INVALID_FORMAT, IssueCode.TOO_SHORT).error),
+            FieldError(
+                "slug", invalid(IssueCode.INVALID_FORMAT, IssueCode.TOO_SHORT).error
+            ),
         )
     )
 
@@ -96,7 +98,10 @@ def test_error_response_names_each_invalid_value_with_the_codes_of_its_issues():
 
     assert content["fields"] == [
         {"field": "target_url", "issues": [{"code": "invalid_format"}]},
-        {"field": "slug", "issues": [{"code": "invalid_format"}, {"code": "too_short"}]},
+        {
+            "field": "slug",
+            "issues": [{"code": "invalid_format"}, {"code": "too_short"}],
+        },
     ]
 
 
@@ -215,7 +220,9 @@ async def test_answers_internal_error_when_the_use_case_raises_any_other_excepti
     use_cases.double(CreateShortURL).execute.side_effect = RuntimeError()
 
     response = await client.post(
-        "/v1/shorturls", json={"target_url": "https://example.com"}, headers=AUTHORIZATION
+        "/v1/shorturls",
+        json={"target_url": "https://example.com"},
+        headers=AUTHORIZATION,
     )
 
     assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR

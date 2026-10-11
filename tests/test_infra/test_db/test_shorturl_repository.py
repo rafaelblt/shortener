@@ -168,7 +168,9 @@ async def test_list_by_owner_returns_the_shorturls_of_the_owner_newest_first(
     newer_with_smaller_id = shorturl_of(owner_id, JANUARY_2, id=1)
     newer_with_larger_id = shorturl_of(owner_id, JANUARY_2, id=2)
     of_another_user = shorturl_of(other_user_id, JANUARY_2, id=4)
-    await store(uow, older, of_another_user, newer_with_smaller_id, newer_with_larger_id)
+    await store(
+        uow, older, of_another_user, newer_with_smaller_id, newer_with_larger_id
+    )
 
     listed = await reads.list_by_owner(owner_id, limit=10, after=None)
 

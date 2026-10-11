@@ -41,9 +41,11 @@ def test_encode_cursor_returns_text_a_url_carries_as_it_is():
             encoded("2026-01-01T00:00:00+00:00,not-a-uuid"), id="id that isn't a UUID"
         ),
         pytest.param(
-            encoded(f"not-a-datetime,{CURSOR.id}"), id="created_at that isn't a datetime"
+            encoded(f"not-a-datetime,{CURSOR.id}"), id="created_at not a datetime"
         ),
-        pytest.param(encoded(f"2026-01-01T00:00:00,{CURSOR.id}"), id="naive created_at"),
+        pytest.param(
+            encoded(f"2026-01-01T00:00:00,{CURSOR.id}"), id="naive created_at"
+        ),
         pytest.param(
             encoded(f"2026-01-01T00:00:00+00:00,{CURSOR.id},more"), id="more parts"
         ),

@@ -1,8 +1,25 @@
-from sqlalchemy import Insert, Row, Select, Update, delete, insert, select, tuple_, update
+from sqlalchemy import (
+    Insert,
+    Row,
+    Select,
+    Update,
+    delete,
+    insert,
+    select,
+    tuple_,
+    update,
+)
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 
-from shortener.domain import ShortURL, ShortURLID, ShortURLStatus, Slug, TargetURL, UserID
+from shortener.domain import (
+    ShortURL,
+    ShortURLID,
+    ShortURLStatus,
+    Slug,
+    TargetURL,
+    UserID,
+)
 from shortener.infra.db.tables import SLUG_UNIQUE_CONSTRAINT, shorturls
 from shortener.infra.db.transient_errors import unavailable_when_transient
 from shortener.shared.result import Err, Ok, Result

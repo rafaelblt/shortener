@@ -38,7 +38,11 @@ def create_app(
     for endpoint in endpoints:
         add_route(router, endpoint, use_cases, access_token_verifier)
     app.include_router(router)
-    app.add_exception_handler(RequestValidationError, request_error_handler)  # type: ignore
+    # The handlers take the class of exception they handle, which FastAPI
+    # doesn't type.
+    app.add_exception_handler(
+        RequestValidationError, request_error_handler  # type: ignore
+    )
     app.add_exception_handler(UnavailableError, unavailable_handler)  # type: ignore
     app.add_exception_handler(Exception, internal_error_handler)
     return app

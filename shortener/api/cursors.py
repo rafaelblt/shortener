@@ -25,7 +25,9 @@ def decode_cursor(text: str) -> ShortURLCursor | None:
     try:
         padding = "=" * (-len(text) % 4)
         created_at, id = base64.urlsafe_b64decode(text + padding).decode().split(",")
-        cursor = ShortURLCursor(created_at=datetime.fromisoformat(created_at), id=UUID(id))
+        cursor = ShortURLCursor(
+            created_at=datetime.fromisoformat(created_at), id=UUID(id)
+        )
     except ValueError:
         return None
     if cursor.created_at.utcoffset() is None:

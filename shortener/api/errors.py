@@ -153,8 +153,12 @@ async def request_error_handler(
     return _json_response(ERRORS[InvalidInputError], _fields_of_request(details))
 
 
-async def unavailable_handler(request: Request, error: UnavailableError) -> JSONResponse:
-    logger.warning("Answered 503 to %s %s", request.method, request.url.path, exc_info=error)
+async def unavailable_handler(
+    request: Request, error: UnavailableError
+) -> JSONResponse:
+    logger.warning(
+        "Answered 503 to %s %s", request.method, request.url.path, exc_info=error
+    )
     return _json_response(UNAVAILABLE)
 
 

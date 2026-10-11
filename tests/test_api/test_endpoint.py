@@ -133,7 +133,9 @@ async def test_receives_the_parameters_out_of_the_path_from_the_query_for_a_get(
 async def test_gives_the_defaults_of_execute_for_the_values_the_request_lacks(
     client: httpx.AsyncClient, echo: NonCallableMagicMock
 ):
-    await client.put(f"/v1/echoes/{ID}", json={"name": "my-name"}, headers=AUTHORIZATION)
+    await client.put(
+        f"/v1/echoes/{ID}", json={"name": "my-name"}, headers=AUTHORIZATION
+    )
 
     echo.execute.assert_awaited_once_with(id=ID, name="my-name", count=1, cursor=None)
 
@@ -181,7 +183,9 @@ async def test_builds_the_use_case_with_the_user_of_the_access_token(
     echo: NonCallableMagicMock,
     owner_id: UserID,
 ):
-    await client.put(f"/v1/echoes/{ID}", json={"name": "my-name"}, headers=AUTHORIZATION)
+    await client.put(
+        f"/v1/echoes/{ID}", json={"name": "my-name"}, headers=AUTHORIZATION
+    )
 
     assert await use_cases.current_users[0].get_id() == owner_id
     access_token_verifier.verify.assert_awaited_once_with(ACCESS_TOKEN)
@@ -252,7 +256,7 @@ def test_documents_no_body_errors_for_an_endpoint_without_a_body(app: FastAPI):
     assert str(HTTPStatus.UNPROCESSABLE_ENTITY.value) not in responses
 
 
-def test_creating_the_app_raises_for_a_use_case_that_returns_an_error_the_api_does_not_answer(
+def test_creating_the_app_raises_for_an_error_of_a_use_case_the_api_does_not_answer(
     use_cases: UseCaseDoubles, access_token_verifier: NonCallableMagicMock
 ):
     with pytest.raises(LookupError) as raised:

@@ -44,7 +44,8 @@ async def wait_for_a_lock(engine: AsyncEngine, task: asyncio.Task) -> None:
                 waiting = await connection.scalar(
                     text(
                         "SELECT count(*) FROM pg_stat_activity "
-                        "WHERE datname = current_database() AND wait_event_type = 'Lock'"
+                        "WHERE datname = current_database() "
+                        "AND wait_event_type = 'Lock'"
                     )
                 )
             if waiting:
@@ -103,7 +104,7 @@ async def test_leaving_the_block_by_an_exception_rolls_the_writes_back(
 
 
 @pytest.mark.parametrize("read", READS)
-async def test_a_shorturl_read_through_a_transaction_waits_until_another_that_read_it_ends(
+async def test_a_read_through_a_transaction_waits_for_another_that_read_it_to_end(
     uow: SQLAlchemyUnitOfWork,
     engine: AsyncEngine,
     stored_shorturl: ShortURL,
@@ -156,7 +157,7 @@ async def test_a_read_that_waited_returns_none_when_the_other_transaction_remove
     assert await waiting_read is None
 
 
-async def test_a_read_by_slug_that_waited_returns_none_when_the_other_transaction_changed_the_slug(
+async def test_a_read_by_slug_that_waited_returns_none_when_the_slug_changed(
     uow: SQLAlchemyUnitOfWork, engine: AsyncEngine, stored_shorturl: ShortURL
 ):
     async def read_by_old_slug() -> ShortURL | None:

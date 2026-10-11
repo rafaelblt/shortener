@@ -180,7 +180,7 @@ def test_with_key_raises_for_a_public_key_as_the_secret_of_an_hmac_algorithm(
         )
 
 
-async def test_verify_with_jwks_returns_the_user_id_of_a_token_signed_by_a_published_key(
+async def test_verify_with_jwks_returns_the_user_id_of_a_token_of_a_published_key(
     jwks_server: ThreadingHTTPServer, private_key: RSAPrivateKey
 ):
     verifier = JWTAccessTokenVerifier.with_jwks(

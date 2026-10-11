@@ -35,7 +35,9 @@ class Settings:
     access_tokens: AccessTokenSettings
 
     @classmethod
-    def from_environment(cls, environment: Mapping[str, str] = os.environ) -> "Settings":
+    def from_environment(
+        cls, environment: Mapping[str, str] = os.environ
+    ) -> "Settings":
         """
         Raises:
             SettingsError: The variables don't make valid settings. Its message
@@ -50,7 +52,9 @@ class Settings:
         jwks_url = variables.optional("JWT_JWKS_URL")
 
         if database_url and not _uses_the_driver(database_url):
-            variables.problems.append(f"DATABASE_URL must start with {DATABASE_DRIVER}://")
+            variables.problems.append(
+                f"DATABASE_URL must start with {DATABASE_DRIVER}://"
+            )
         if (key is None) == (jwks_url is None):
             variables.problems.append("Set exactly one of JWT_KEY and JWT_JWKS_URL")
         if variables.problems:
