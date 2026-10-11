@@ -18,7 +18,8 @@ shortener/use_cases/
 ├── resolved_slug.py         ResolvedSlug
 ├── resolve_slug.py          ResolveSlug
 ├── create_shorturl.py       CreateShortURL
-└── get_shorturl.py          GetShortURL
+├── get_shorturl.py          GetShortURL
+└── list_shorturls.py        ListShortURLs
 ```
 
 ## Abstractions
@@ -191,6 +192,19 @@ The slug of the short URL doesn't change, so `save()` can't return `SlugTakenErr
 2. It reads the short URL with `get_by_id()`, with `id` as a `ShortURLID`. An `id` that isn't a `UUID` raises `TypeError`, from `ShortURLID`.
 3. When there is no short URL, or it belongs to another user, it returns `Err(ShortURLNotFoundError())`.
 4. Otherwise, it returns `Ok` with the `ShortURLDetails` of the short URL.
+
+### ListShortURLs
+
+`list_shorturls.py`
+
+`ListShortURLs(shorturls, current_user)` lists the short URLs of the user making the request. It only reads, so it receives a `ShortURLReader`, and doesn't begin a transaction.
+
+`execute()` returns `Result[tuple[ShortURLDetails, ...], ListShortURLsError]`, where `ListShortURLsError` is `NotAuthenticatedError`:
+
+1. When `CurrentUser.get_id()` returns `None`, it returns `Err(NotAuthenticatedError())`, without reading anything.
+2. It reads the short URLs with `list_by_owner()`, with the ID of the user, and returns `Ok` with a tuple of their `ShortURLDetails`, in the order `list_by_owner()` returned them. The tuple is empty when the user has no short URLs.
+
+There is no pagination: it returns every short URL of the user.
 
 ## Open questions
 
