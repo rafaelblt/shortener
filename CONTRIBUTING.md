@@ -4,15 +4,13 @@ How to work in this repository. These rules belong to the project and apply to e
 
 The [README](README.md) explains the service's scope, the owner concept, the architecture and the setup.
 
-## Current phase: use cases
+## Current phase: outer layers
 
-The project is being rebuilt layer by layer, from the inside out (see [Current state](README.md#current-state)). The emphasis of this phase is `shortener/use_cases/` and its tests: `tests/test_use_cases/` and the fixtures those tests use. The domain and `shared/` were rebuilt in the previous phase, but they can still change, in a task that needs it or one that fixes their issues. Update this section when the phase changes.
+The project is being rebuilt layer by layer, from the inside out (see [Current state](README.md#current-state)). The domain, `shared/` and the use cases were rebuilt in the previous phases, and the outer layers are rebuilt together in this one: `shortener/api/`, `shortener/infra/` and `shortener/bootstrap/`, and their tests: `tests/test_api/`, `tests/test_infra/`, `tests/test_bootstrap/` and the fixtures those tests use. The inner layers can still change, in a task that needs it or one that fixes their issues. Update this section when the phase changes.
 
-- Don't fix `adapters` or `infra`. Problems in those layers are ignored until we reach them.
-- Changes to the use cases will break the upper layers. That is expected: don't patch them to keep up.
-- This phase is verified with `poetry run task test_shared`, `poetry run task test_domain` and `poetry run task test_use_cases`. The full suite is not a criterion.
-- [docs/use_cases.md](docs/use_cases.md) describes the use cases as they are in the code, with their rules and open questions. Its known bugs are open issues labeled `use_cases`, and fixing them is part of this phase. It has to stay faithful to `shortener/use_cases/` (see [`docs/`](#docs)). If a rule is unclear, ask instead of making one up.
-- [docs/domain.md](docs/domain.md) and [docs/shared.md](docs/shared.md) describe the domain and `shared/`, and have to stay faithful to them in the same way.
+- This phase is verified with `poetry run task test_layers`, which runs the tests of every layer. The tests of `infra` run Postgres in a container, so they need Docker.
+- [docs/api.md](docs/api.md), [docs/infra.md](docs/infra.md) and [docs/bootstrap.md](docs/bootstrap.md) describe the outer layers as they are in the code, with their rules and open questions. Their known bugs are open issues labeled `api`, `infra` or `bootstrap`, and fixing them is part of this phase. They have to stay faithful to the code (see [`docs/`](#docs)). If a rule is unclear, ask instead of making one up.
+- [docs/domain.md](docs/domain.md), [docs/use_cases.md](docs/use_cases.md) and [docs/shared.md](docs/shared.md) describe the inner layers, and have to stay faithful to them in the same way.
 
 ## Principles
 
@@ -52,10 +50,13 @@ Tests are a priority and follow the same principles: simple, organized, readable
 - Every feature comes with tests covering the happy path, the error cases and the boundaries (for example, a slug's minimum and maximum length).
 - One behavior per test. The test's name says which behavior, and in which situation.
 - The structure of `tests/` mirrors that of `shortener/`.
-- A layer's test directory whose tests use fixtures has its own `conftest.py`, which loads them (from `tests/fixtures/<layer>/`) only from its own layer and the layers below it. `shared/` counts as below every layer. That way, a broken upper layer never stops a lower layer's tests from running. `tests/conftest.py` never imports project code.
+- A layer's test directory whose tests use fixtures has its own `conftest.py`, which loads them (from `tests/fixtures/<layer>/`) only from its own layer and the layers below it. `shared/` counts as below every layer, `api` and `infra` aren't below each other, and `bootstrap` is above them both. That way, a broken upper layer never stops a lower layer's tests from running. `tests/conftest.py` never imports project code.
 - Deterministic tests: never rely on the clock, randomness or execution order without controlling them.
 - Test behavior, not implementation details.
+- Each layer is tested on its own, and there are no end-to-end tests for now.
 - A use case is tested with doubles of the abstractions it receives, from `tests/fixtures/use_cases/`, and not with fakes that simulate the database. The test sets what each method of a double returns, then checks what the use case returned and the calls it made. Those calls are part of the use case's behavior, not implementation details: what it asks of the other layers, with which arguments and in which order. Check them with `assert_awaited*`, since a coroutine that is called but never awaited does nothing.
+- An endpoint is tested in the same way, with doubles of the use cases, from `tests/fixtures/api/`, and not with the real use cases. The test sets what `execute()` of a double returns, then checks the response and the arguments the endpoint gave to `execute()`.
+- An implementation in `infra` is tested on its own, against what it implements with: the ones of the database against Postgres in a container, with the migrations applied, and not against SQLite or doubles of the database.
 - Fixing a bug starts with a test that reproduces it.
 
 ## Comments and documentation
@@ -72,7 +73,7 @@ The code should say what it does on its own. Comments are for what it can't say:
 
 ### `docs/`
 
-Markdown documentation, starting simple. The idea is one file per layer, plus one for `shared/`, and for now only these are written: [docs/domain.md](docs/domain.md), [docs/use_cases.md](docs/use_cases.md) and [docs/shared.md](docs/shared.md). When a file grows too large, it becomes a directory with one file per concept (for example, `docs/domain/shorturl.md`).
+Markdown documentation, starting simple. There is one file per layer, plus one for `shared/`: [docs/domain.md](docs/domain.md), [docs/use_cases.md](docs/use_cases.md), [docs/api.md](docs/api.md), [docs/infra.md](docs/infra.md), [docs/bootstrap.md](docs/bootstrap.md) and [docs/shared.md](docs/shared.md). When a file grows too large, it becomes a directory with one file per concept (for example, `docs/domain/shorturl.md`).
 
 **Each document is faithful to the code of its layer.** `docs/domain.md` describes `shortener/domain/` as it is now, not as it should be. A bug that is known but not fixed yet becomes an [issue](#issues), linked from where the document describes the affected code.
 
@@ -117,15 +118,16 @@ Until the repository is on GitHub, issues live in [docs/issues/](docs/issues/REA
 | `style`    | Formatting and imports, with no logic change      |
 | `chore`    | Configuration, dependencies and tasks             |
 
-| Scope                                          | For                                 |
-| ---------------------------------------------- | ----------------------------------- |
-| `domain`, `domain:shorturl`                    | Domain                              |
-| `shared`                                       | Code any layer can use              |
-| `use_cases`                                    | Use cases                           |
-| `adapters:api`                                 | HTTP API                            |
-| `infra:db`, `infra:settings`, `infra:services` | Infrastructure                      |
-| `fixtures`, `utils`, `conftest`                | Test infrastructure (with `test`)   |
-| `issues`                                       | Issue files (with `docs`)           |
+| Scope                                          | For                                          |
+| ---------------------------------------------- | -------------------------------------------- |
+| `domain`, `domain:shorturl`                    | Domain                                       |
+| `shared`                                       | Code any layer can use                       |
+| `use_cases`                                    | Use cases                                    |
+| `api`                                          | HTTP API                                     |
+| `infra`, `infra:db`                            | Infrastructure, and its database             |
+| `bootstrap`                                    | Settings and the assembly of the application |
+| `fixtures`, `utils`, `conftest`                | Test infrastructure (with `test`)            |
+| `issues`                                       | Issue files (with `docs`)                    |
 
 Examples from the history:
 

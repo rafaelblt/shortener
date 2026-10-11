@@ -51,7 +51,7 @@ An issue has two parts.
   | `wont-fix`     | The problem is real, but it was decided not to fix it.            |
   | `obsolete`     | The code it was about was removed or rewritten for another reason. |
 
-- `labels`: one type (`bug`, `refactor` or `question`) and the layers involved (`domain`, `use_cases`, `adapters`, `infra` or `docs`). A new label is added to this list before it is used.
+- `labels`: one type (`bug`, `refactor` or `question`) and the layers involved (`domain`, `use_cases`, `api`, `infra`, `bootstrap` or `docs`, and `adapters`, the name of the API before the restructuring). A new label is added to this list before it is used.
 
 **The content** is everything after the front matter: the title, the opening text and the entries. It is append-only: what is written is never edited or deleted, and new text goes at the end. A correction is a new entry that says what was wrong.
 
