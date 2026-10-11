@@ -13,10 +13,11 @@ shortener/use_cases/
 ├── current_user.py          CurrentUser
 ├── clock.py                 Clock
 ├── errors.py                NotAuthenticatedError, ShortURLNotFoundError, InvalidInputError,
-│                            FieldError and NothingToUpdateError
+│                            FieldError, NothingToUpdateError and collect_field_errors()
 ├── shorturl_details.py      ShortURLDetails
 ├── resolved_slug.py         ResolvedSlug
-└── resolve_slug.py          ResolveSlug
+├── resolve_slug.py          ResolveSlug
+└── create_shorturl.py       CreateShortURL
 ```
 
 ## Abstractions
@@ -110,6 +111,8 @@ Frozen dataclasses, like the [errors of the domain](domain.md#errors), so they c
 | `FieldError`            | `field`: the name of the input value; `error`: its `ValidationError`  | One input value that breaks the rules of its value object, inside an `InvalidInputError`.                   |
 | `NothingToUpdateError`  | None                                                                  | An update was asked for with no value to change.                                                            |
 
+`collect_field_errors(**results)` builds the `FieldError`s of an input. It takes the `Result` of the `create()` of each input value as a keyword argument named after the value, and returns a tuple with a `FieldError` for each `Err`, in the order of the arguments. When every result is `Ok`, the tuple is empty.
+
 ## Results
 
 The use cases don't return entities: they return frozen dataclasses that only hold data, of primitive types.
@@ -157,6 +160,21 @@ A use case that writes commits only when it succeeds. When it returns `Err`, it 
 4. Otherwise, it saves the short URL, with the resolution counted, commits, and returns `Ok` with the `ResolvedSlug` of the target URL.
 
 The slug of the short URL doesn't change, so `save()` can't return `SlugTakenError`. If it does, the use case raises `ValueError` with it, through `unwrap()`, without committing.
+
+### CreateShortURL
+
+`create_shorturl.py`
+
+`CreateShortURL(uow, current_user, clock)` creates a short URL owned by the user making the request.
+
+`execute(target_url, slug=None)` returns `Result[ShortURLDetails, CreateShortURLError]`, where `CreateShortURLError` is `NotAuthenticatedError | InvalidInputError | SlugTakenError`:
+
+1. When `CurrentUser.get_id()` returns `None`, it returns `Err(NotAuthenticatedError())`, before checking the input.
+2. It checks `target_url` with `TargetURL.create()`, and `slug` with `Slug.create()` when it isn't `None`: an empty `slug` is checked like any other. When values break their rules, it returns `Err(InvalidInputError(...))`, with a `FieldError` for each of them, named `target_url` or `slug`, in that order.
+3. It begins a transaction, creates the short URL with `ShortURL.create()`, owned by the user and with `Clock.now()` as `now`, and adds it:
+   - With a `slug`, when `add()` returns `Err(SlugTakenError(slug))`, it returns it, without trying another slug.
+   - Without one, the slug comes from `Slug.generate()`. When `add()` returns `SlugTakenError`, it creates another short URL, with another generated slug, and adds it, up to `MAX_GENERATED_SLUG_ATTEMPTS` (10) attempts. When every generated slug is taken, it raises `RuntimeError`, without committing.
+4. It commits, and returns `Ok` with the `ShortURLDetails` of the short URL.
 
 ## Open questions
 
