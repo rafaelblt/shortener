@@ -208,7 +208,7 @@ The slug of the short URL doesn't change, so `save()` can't return `SlugTakenErr
 1. When `CurrentUser.get_id()` returns `None`, it returns `Err(NotAuthenticatedError())`, without reading anything.
 2. It reads the short URLs with `list_by_owner()`, with the ID of the user, and returns `Ok` with a tuple of their `ShortURLDetails`, in the order `list_by_owner()` returned them. The tuple is empty when the user has no short URLs.
 
-There is no pagination: it returns every short URL of the user.
+There is no pagination: it returns every short URL of the user ([issue 0009](issues/0009-listing-short-urls-has-no-pagination.md)).
 
 ### UpdateShortURL
 
