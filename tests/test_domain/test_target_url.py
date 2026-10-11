@@ -1,9 +1,12 @@
 import pytest
 
+from collections.abc import Callable
+
 from shortener.shared.result import Ok
 from shortener.shared.validation import IssueCode
 from shortener.domain.target_url import TargetURL
 from tests.fixtures.shared.validation import invalid
+from tests.utils.copy_helpers import COPY_FUNCTIONS
 from tests.utils.text_helpers import assert_mentions
 
 
@@ -81,6 +84,16 @@ def test_parse_rejects_an_empty_string_or_a_value_that_is_not_a_string(
     with pytest.raises(error) as raised:
         TargetURL.parse(value)
     assert_mentions(str(raised.value), TargetURL.__name__)
+
+
+@pytest.mark.parametrize("copy_function", COPY_FUNCTIONS)
+def test_a_copy_of_a_parsed_target_url_that_breaks_the_rules_is_an_equal_target_url(
+    copy_function: Callable[[TargetURL], TargetURL],
+):
+    target_url = TargetURL.parse("http://example.com")
+    copied = copy_function(target_url)
+    assert type(copied) is TargetURL
+    assert copied == target_url
 
 
 def test_repr_mentions_the_class_and_the_value():

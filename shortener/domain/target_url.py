@@ -24,6 +24,13 @@ class TargetURL(str):
     def __repr__(self):
         return f"<TargetURL({super().__repr__()})>"
 
+    def __reduce__(self):
+        # copy and pickle rebuild an instance with the constructor, which
+        # would reject a value accepted under older rules. A copy is of a
+        # value that already exists, so it uses parse(). See
+        # docs/domain.md#value-objects
+        return (type(self).parse, (str(self),))
+
     @classmethod
     def create(cls, value: object) -> Result["TargetURL", ValidationError]:
         return (

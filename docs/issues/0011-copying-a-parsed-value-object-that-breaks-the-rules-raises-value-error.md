@@ -1,6 +1,6 @@
 ---
-status: open
-resolution:
+status: closed
+resolution: fixed
 labels: [bug, domain]
 ---
 
@@ -27,3 +27,7 @@ copy.deepcopy(TargetURL.parse("http://example.com"))  # ValueError, with INVALID
 No code of the service copies or pickles them. The tests of the use cases copy short URLs with `record_copies()` (`tests/fixtures/use_cases/doubles.py`), so they can't use one that holds such a value.
 
 Expected, from `docs/domain.md`: "a value accepted under older rules has to keep working". How a copy should rebuild the instance is still to be decided.
+
+## 2026-10-11: Closed as fixed
+
+`Slug` and `TargetURL` define `__reduce__()`, which returns `parse` and the value as a `str`. `copy.copy()`, `copy.deepcopy()` and `pickle` rebuild the instance with `parse()` instead of the constructor, so a copy of a value that breaks the rules of `create()` is an equal instance of the same type. `docs/domain.md`, in Value objects, describes it.

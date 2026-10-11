@@ -44,7 +44,11 @@ The clock is read in one place: `ShortURLID.generate()`, since a UUIDv7 contains
 
 `create()` checks the rules with [`StringValidation`](shared.md#validation), and returns a [`Result`](shared.md#result): `Ok` with the instance, or `Err` with a `ValidationError` that has an issue for each rule the value breaks. Each issue has a code, and the codes are shared by the value objects, so the upper layers handle a `TOO_LONG` the same way, whichever value object returned it. A value that isn't a `str` only gets the `INVALID_TYPE` issue. The rules of each value object are in its section: [Slug](#slug) and [TargetURL](#targeturl).
 
-The rules of `create()` can change, and a value accepted under older rules has to keep working. That is why `parse()` doesn't apply them, and only checks what any value of the type has. But copying or pickling an instance from `parse()` whose value breaks the rules of `create()` raises `ValueError` ([issue 0011](issues/0011-copying-a-parsed-value-object-that-breaks-the-rules-raises-value-error.md)).
+The rules of `create()` can change, and a value accepted under older rules has to keep working. That is why `parse()` doesn't apply them, and only checks what any value of the type has.
+
+For the same reason, a copy is rebuilt with `parse()`. `copy.copy()`, `copy.deepcopy()` and `pickle` rebuild an instance with the constructor by default, which raises `ValueError` for a value that breaks the rules of `create()`. Each value object defines `__reduce__()`, which returns `parse` and the value as a `str`, so a copy is an equal instance of the same type, whether or not the value follows the rules of `create()`.
+
+`__reduce__()` is the same line in `Slug` and `TargetURL`, repeated instead of moved to a shared base (see [Simplicity](../CONTRIBUTING.md#1-simplicity)). If more value objects come to repeat it, consider whether a shared base is worth it.
 
 `ShortURLID`, `UserID` and `ShortURLStatus` don't follow this model: see [IDs](#ids) and [Status](#status).
 

@@ -1,5 +1,7 @@
 import pytest
 
+from collections.abc import Callable
+
 from shortener.shared.result import Ok
 from shortener.shared.validation import IssueCode
 from shortener.domain.slug import (
@@ -11,6 +13,7 @@ from shortener.domain.slug import (
     SLUG_PATTERN,
 )
 from tests.fixtures.shared.validation import invalid
+from tests.utils.copy_helpers import COPY_FUNCTIONS
 from tests.utils.text_helpers import assert_mentions
 
 
@@ -107,6 +110,16 @@ def test_generate_never_breaks_the_rules_of_create():
     # Covers every slug generate() can return, not just the one it returns now.
     assert SLUG_MIN_LENGTH <= RANDOM_SLUG_LENGTH <= SLUG_MAX_LENGTH
     assert SLUG_PATTERN.fullmatch(RANDOM_SLUG_CHARS)
+
+
+@pytest.mark.parametrize("copy_function", COPY_FUNCTIONS)
+def test_a_copy_of_a_parsed_slug_that_breaks_the_rules_is_an_equal_slug(
+    copy_function: Callable[[Slug], Slug],
+):
+    slug = Slug.parse("a")
+    copied = copy_function(slug)
+    assert type(copied) is Slug
+    assert copied == slug
 
 
 def test_repr_mentions_the_class_and_the_value():
