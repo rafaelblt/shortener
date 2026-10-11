@@ -44,7 +44,7 @@ The clock is read in one place: `ShortURLID.generate()`, since a UUIDv7 contains
 
 `create()` checks the rules with [`StringValidation`](shared.md#validation), and returns a [`Result`](shared.md#result): `Ok` with the instance, or `Err` with a `ValidationError` that has an issue for each rule the value breaks. Each issue has a code, and the codes are shared by the value objects, so the upper layers handle a `TOO_LONG` the same way, whichever value object returned it. A value that isn't a `str` only gets the `INVALID_TYPE` issue. The rules of each value object are in its section: [Slug](#slug) and [TargetURL](#targeturl).
 
-The rules of `create()` can change, and a value accepted under older rules has to keep working. That is why `parse()` doesn't apply them, and only checks what any value of the type has.
+The rules of `create()` can change, and a value accepted under older rules has to keep working. That is why `parse()` doesn't apply them, and only checks what any value of the type has. But copying or pickling an instance from `parse()` whose value breaks the rules of `create()` raises `ValueError` ([issue 0011](issues/0011-copying-a-parsed-value-object-that-breaks-the-rules-raises-value-error.md)).
 
 `ShortURLID`, `UserID` and `ShortURLStatus` don't follow this model: see [IDs](#ids) and [Status](#status).
 
