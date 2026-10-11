@@ -8,6 +8,7 @@ This document describes the infrastructure as it is in the code. Verified bugs t
 
 ```
 shortener/infra/
+├── clock.py                       UTCClock
 └── db/
     ├── tables.py                  metadata, the shorturls table and SLUG_UNIQUE_CONSTRAINT
     ├── unit_of_work.py            SQLAlchemyUnitOfWork and SQLAlchemyTransaction
@@ -23,6 +24,7 @@ alembic/                           the migrations of the database
 | [`Transaction`](use_cases.md#unit-of-work)             | `SQLAlchemyTransaction`         |
 | [`ShortURLRepository`](use_cases.md#reading-and-writing) | `SQLAlchemyShortURLRepository`  |
 | [`ShortURLReader`](use_cases.md#reading-and-writing)   | `SQLAlchemyShortURLReader`      |
+| [`Clock`](use_cases.md#clock)                          | `UTCClock`                      |
 
 ## Database
 
@@ -115,6 +117,12 @@ The implementations of the database raise [`UnavailableError`](use_cases.md#unav
 Errors that trying again won't fix are raised as they are, such as `42P01` (a table that doesn't exist), `28P01` (a wrong password) or `3D000` (a database that doesn't exist).
 
 A connection lost in the middle of a transaction can also be raised as an `InternalClientError` of asyncpg, which isn't transient ([issue 0012](issues/0012-a-connection-lost-in-a-transaction-can-be-raised-as-internal-client-error.md)).
+
+## Clock
+
+`clock.py`
+
+`UTCClock` implements [`Clock`](use_cases.md#clock). `now()` returns the current moment of the system, as a datetime in UTC. The domain accepts any timezone (see [Time](domain.md#time)), and UTC is the one this implementation chooses.
 
 ## Open questions
 
