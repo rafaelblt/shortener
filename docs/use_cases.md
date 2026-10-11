@@ -15,6 +15,8 @@ shortener/use_cases/
 ├── errors.py                NotAuthenticatedError, ShortURLNotFoundError, InvalidInputError,
 │                            FieldError, NothingToUpdateError and collect_field_errors()
 ├── shorturl_details.py      ShortURLDetails
+├── shorturl_page.py         ShortURLPage
+├── shorturl_cursor.py       ShortURLCursor
 ├── resolved_slug.py         ResolvedSlug
 ├── resolve_slug.py          ResolveSlug
 ├── create_shorturl.py       CreateShortURL
@@ -36,11 +38,17 @@ The abstractions are `Protocol`s, so the other layers implement them without inh
 
 `ShortURLReader` reads short URLs:
 
-| Method                    | Returns                                                                                        |
-| ------------------------- | ---------------------------------------------------------------------------------------------- |
-| `get_by_id(id)`           | The short URL whose `id` is the given `ShortURLID`, or `None` when there is none.             |
-| `get_by_slug(slug)`       | The short URL whose `slug` is the given `Slug`, or `None` when there is none.                 |
-| `list_by_owner(owner_id)` | A list of the short URLs whose `owner_id` is the given `UserID`, empty when there are none. The order isn't defined. |
+| Method                                  | Returns                                                                                        |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `get_by_id(id)`                         | The short URL whose `id` is the given `ShortURLID`, or `None` when there is none.             |
+| `get_by_slug(slug)`                     | The short URL whose `slug` is the given `Slug`, or `None` when there is none.                 |
+| `list_by_owner(owner_id, limit, after)` | A list of at most `limit` short URLs whose `owner_id` is the given `UserID`, empty when there are none. See [Listing order](#listing-order). |
+
+#### Listing order
+
+`list_by_owner()` returns the short URLs newest first: by `created_at` descending, and by `id` descending among those with the same `created_at`. Every short URL has its own `id`, so the order is total.
+
+`after` is a [`ShortURLCursor`](#shorturlcursor) or `None`. With a cursor, it returns only the short URLs that come after it in this order: those with an earlier `created_at`, or with the same `created_at` and a smaller `id`. It compares the values of the cursor, and doesn't read the short URL they came from, so a cursor keeps working after that short URL is deleted or changed. With `None`, it starts from the newest.
 
 `ShortURLRepository` is a `ShortURLReader` that also writes:
 
@@ -113,15 +121,15 @@ Frozen dataclasses, like the [errors of the domain](domain.md#errors), so they c
 | ----------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | `NotAuthenticatedError` | None                                                                  | The use case requires a user, and there is no authenticated user.                                           |
 | `ShortURLNotFoundError` | None                                                                  | The short URL doesn't exist, or belongs to another user.                                                    |
-| `InvalidInputError`     | `fields`: a tuple of `FieldError`                                     | Values of the input break the rules of their value objects, such as a slug that is too short.               |
-| `FieldError`            | `field`: the name of the input value; `error`: its `ValidationError`  | One input value that breaks the rules of its value object, inside an `InvalidInputError`.                   |
+| `InvalidInputError`     | `fields`: a tuple of `FieldError`                                     | Values of the input break their rules, such as a slug that is too short, or a limit above the maximum.      |
+| `FieldError`            | `field`: the name of the input value; `error`: its `ValidationError`  | One input value that breaks its rules, inside an `InvalidInputError`.                                       |
 | `NothingToUpdateError`  | None                                                                  | An update was asked for with no value to change.                                                            |
 
-`collect_field_errors(**results)` builds the `FieldError`s of an input. It takes the `Result` of the `create()` of each input value as a keyword argument named after the value, and returns a tuple with a `FieldError` for each `Err`, in the order of the arguments. When every result is `Ok`, the tuple is empty.
+`collect_field_errors(**results)` builds the `FieldError`s of an input. It takes the `Result` of the validation of each input value, such as the `create()` of a value object, as a keyword argument named after the value, and returns a tuple with a `FieldError` for each `Err`, in the order of the arguments. When every result is `Ok`, the tuple is empty.
 
 ## Results
 
-The use cases don't return entities: they return frozen dataclasses that only hold data, of primitive types.
+The use cases don't return entities: they return frozen dataclasses that only hold data, of primitive types or other results.
 
 ### ShortURLDetails
 
@@ -139,6 +147,23 @@ Every field of a [`ShortURL`](domain.md#shorturl), as primitives. `ShortURLDetai
 | `resolution_count` | `int`              | `shorturl.resolution_count`                 |
 | `created_at`       | `datetime`         | `shorturl.created_at`                       |
 | `last_resolved_at` | `datetime \| None` | `shorturl.last_resolved_at`                 |
+
+### ShortURLPage
+
+`shorturl_page.py`
+
+What [`ListShortURLs`](#listshorturls) returns: one page of the short URLs of a user.
+
+| Field         | Type                          | Value                                                                |
+| ------------- | ----------------------------- | -------------------------------------------------------------------- |
+| `items`       | `tuple[ShortURLDetails, ...]` | The `ShortURLDetails` of the short URLs of the page, in order        |
+| `next_cursor` | `ShortURLCursor \| None`     | Where the next page starts, or `None` when there is no next page     |
+
+### ShortURLCursor
+
+`shorturl_cursor.py`
+
+The position of a short URL in the [listing order](#listing-order): its `created_at`, as a `datetime`, and its `id`, as a `UUID`. `ShortURLCursor.from_entity(shorturl)` builds it. [`ListShortURLs`](#listshorturls) returns it as the `next_cursor` of a page, and receives it back to read the next one.
 
 ### ResolvedSlug
 
@@ -203,14 +228,18 @@ The slug of the short URL doesn't change, so `save()` can't return `SlugTakenErr
 
 `list_shorturls.py`
 
-`ListShortURLs(shorturls, current_user)` lists the short URLs of the user making the request. It only reads, so it receives a `ShortURLReader`, and doesn't begin a transaction.
+`ListShortURLs(shorturls, current_user)` lists the short URLs of the user making the request, one page at a time. It only reads, so it receives a `ShortURLReader`, and doesn't begin a transaction.
 
-`execute()` returns `Result[tuple[ShortURLDetails, ...], ListShortURLsError]`, where `ListShortURLsError` is `NotAuthenticatedError`:
+`execute(limit=DEFAULT_PAGE_SIZE, cursor=None)` returns `Result[ShortURLPage, ListShortURLsError]`, where `ListShortURLsError` is `NotAuthenticatedError | InvalidInputError`. `limit` is the most short URLs the page holds, `DEFAULT_PAGE_SIZE` (20) by default. `cursor` is the `next_cursor` of the previous page, or `None` for the first page.
 
-1. When `CurrentUser.get_id()` returns `None`, it returns `Err(NotAuthenticatedError())`, without reading anything.
-2. It reads the short URLs with `list_by_owner()`, with the ID of the user, and returns `Ok` with a tuple of their `ShortURLDetails`, in the order `list_by_owner()` returned them. The tuple is empty when the user has no short URLs.
+1. When `CurrentUser.get_id()` returns `None`, it returns `Err(NotAuthenticatedError())`, before checking the input.
+2. It checks `limit` with [`IntegerValidation`](shared.md#validation): an `int`, but not a `bool`, from 1 to `MAX_PAGE_SIZE` (100). When it isn't, it returns `Err(InvalidInputError(...))`, with a `FieldError` named `limit`, whose issue is `INVALID_TYPE`, `TOO_SMALL` or `TOO_LARGE`.
+3. It reads the short URLs of the user after `cursor` with `list_by_owner()`, with `limit + 1` as the limit: the extra short URL only tells whether there is a next page.
+4. It returns `Ok` with a [`ShortURLPage`](#shorturlpage). Its `items` are the `ShortURLDetails` of the first `limit` short URLs read, in the order `list_by_owner()` returned them. When it read more than `limit`, `next_cursor` is the `ShortURLCursor` of the last short URL of the page. Otherwise, it is `None`. A user with no short URLs gets a page with no items and no `next_cursor`.
 
-There is no pagination: it returns every short URL of the user ([issue 0009](issues/0009-listing-short-urls-has-no-pagination.md)).
+`cursor` is given to `list_by_owner()` as it is, without being checked. Turning it into what the client sends and back, and rejecting a malformed one, is up to the adapter.
+
+The listing is paginated from the start, so that a response doesn't grow with the number of short URLs of the user, and the API doesn't have to break its contract to paginate later. It is paginated by cursor, and not by offset, so that a page doesn't skip or repeat short URLs when others are created or deleted between pages.
 
 ### UpdateShortURL
 

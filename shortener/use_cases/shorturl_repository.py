@@ -3,6 +3,7 @@ from typing import Protocol
 
 from shortener.domain import ShortURL, ShortURLID, Slug, UserID
 from shortener.shared.result import Result
+from shortener.use_cases.shorturl_cursor import ShortURLCursor
 
 
 @dataclass(frozen=True)
@@ -15,7 +16,15 @@ class ShortURLReader(Protocol):
 
     async def get_by_slug(self, slug: Slug) -> ShortURL | None: ...
 
-    async def list_by_owner(self, owner_id: UserID) -> list[ShortURL]: ...
+    async def list_by_owner(
+        self, owner_id: UserID, limit: int, after: ShortURLCursor | None
+    ) -> list[ShortURL]:
+        """
+        Returns up to limit short URLs of the owner, newest first: by
+        created_at descending, then by id descending. With after, only the
+        ones that come after it in that order.
+        """
+        ...
 
 
 class ShortURLRepository(ShortURLReader, Protocol):
