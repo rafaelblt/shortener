@@ -1,6 +1,6 @@
 ---
-status: open
-resolution:
+status: closed
+resolution: fixed
 labels: [question, use_cases, adapters, infra]
 ---
 
@@ -31,3 +31,9 @@ Still to do: `UnavailableError`, and its place in the contract of the abstractio
 ## 2026-10-11: The implementations of the database raise `UnavailableError`
 
 The implementations of the database (`shortener/infra/db/`) raise `UnavailableError` from the failures that trying again may fix, which `is_transient()` (`shortener/infra/db/transient_errors.py`) tells apart: a server that can't be reached, a pool with no free connection, a lost connection, and the SQLSTATEs of connection exceptions, insufficient resources, serialization failures, deadlocks, locks not available, canceled queries and shutdowns. Every other error goes through as it is. See `docs/infra.md#failures-of-the-database`. Still to do: answering 503 to it, in the API.
+
+## 2026-10-11: Closed as fixed
+
+The API (`shortener/api/errors.py`) answers `503 Service Unavailable`, with the code `unavailable`, to an `UnavailableError`, and logs it as a warning, with its cause. It answers `500 Internal Server Error`, with the code `internal_error`, to any other exception, which the server logs. The API imports nothing from SQLAlchemy or asyncpg. See `docs/api.md#errors`.
+
+A lost connection can still reach the API as an exception that isn't `UnavailableError`, which is issue 0012.

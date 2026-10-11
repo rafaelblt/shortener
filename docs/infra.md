@@ -26,6 +26,7 @@ alembic/                           the migrations of the database
 | [`ShortURLRepository`](use_cases.md#reading-and-writing) | `SQLAlchemyShortURLRepository`  |
 | [`ShortURLReader`](use_cases.md#reading-and-writing)   | `SQLAlchemyShortURLReader`      |
 | [`Clock`](use_cases.md#clock)                          | `UTCClock`                      |
+| [`AccessTokenVerifier`](api.md#authentication), of the API | `JWTAccessTokenVerifier`   |
 
 ## Database
 
@@ -129,7 +130,7 @@ A connection lost in the middle of a transaction can also be raised as an `Inter
 
 `jwt_access_token_verifier.py`
 
-`JWTAccessTokenVerifier` verifies access tokens that are JWTs, with PyJWT, and returns the `UserID` of the user each one was issued to. The tokens are issued outside the service (see [Scope](../README.md#scope)). It is built in one of two ways, by where the keys that verify the signatures come from:
+`JWTAccessTokenVerifier` implements the [`AccessTokenVerifier`](api.md#authentication) of the API: it verifies access tokens that are JWTs, with PyJWT, and returns the `UserID` of the user each one was issued to. The tokens are issued outside the service (see [Scope](../README.md#scope)). It is built in one of two ways, by where the keys that verify the signatures come from:
 
 | Way                                            | Keys                                                                                                                                  |
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |

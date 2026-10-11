@@ -123,7 +123,7 @@ The errors the callers of the use cases have to handle aren't exceptions: the us
 - It has no subclasses and no fields, since the caller does the same whatever failed. What failed is in `__cause__`.
 - It is an exception, and not an `Err`, since no use case handles it: it goes through `execute()`, and through `async with uow.begin()`, which rolls the transaction back.
 
-With it, the caller tells these failures apart from bugs without importing the exceptions of each library, such as answering 503 to `UnavailableError` and 500 to any other exception. The implementations of the database raise it, as [Failures of the database](infra.md#failures-of-the-database) describes, and answering 503 to it is still to be done in the API ([issue 0010](issues/0010-infrastructure-failures-arent-told-apart-from-bugs.md)).
+With it, the caller tells these failures apart from bugs without importing the exceptions of each library, such as answering 503 to `UnavailableError` and 500 to any other exception. The implementations of the database raise it, as [Failures of the database](infra.md#failures-of-the-database) describes, and the API answers 503 to it (see [Errors](api.md#errors)).
 
 ### Errors of the use cases
 
@@ -251,7 +251,7 @@ The slug of the short URL doesn't change, so `save()` can't return `SlugTakenErr
 3. It reads the short URLs of the user after `cursor` with `list_by_owner()`, with `limit + 1` as the limit: the extra short URL only tells whether there is a next page.
 4. It returns `Ok` with a [`ShortURLPage`](#shorturlpage). Its `items` are the `ShortURLDetails` of the first `limit` short URLs read, in the order `list_by_owner()` returned them. When it read more than `limit`, `next_cursor` is the `ShortURLCursor` of the last short URL of the page. Otherwise, it is `None`. A user with no short URLs gets a page with no items and no `next_cursor`.
 
-`cursor` is given to `list_by_owner()` as it is, without being checked. Turning it into what the client sends and back, and rejecting a malformed one, is up to the adapter.
+`cursor` is given to `list_by_owner()` as it is, without being checked. Turning it into what the client sends and back, and rejecting a malformed one, is up to the API (see [Cursors](api.md#cursors)).
 
 The listing is paginated from the start, so that a response doesn't grow with the number of short URLs of the user, and the API doesn't have to break its contract to paginate later. It is paginated by cursor, and not by offset, so that a page doesn't skip or repeat short URLs when others are created or deleted between pages.
 
