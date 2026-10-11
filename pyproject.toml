@@ -9,16 +9,11 @@ readme = "README.md"
 requires-python = ">=3.12,<4.0"
 dependencies = [
     "fastapi[standard] (>=0.115.8,<0.116.0)",
-    "python-slugify (>=8.0.4,<9.0.0)",
     "sqlalchemy (>=2.0.38,<3.0.0)",
     "alembic (>=1.14.1,<2.0.0)",
-    "passlib[bcrypt] (>=1.7.4,<2.0.0)",
-    "pyjwt (>=2.10.1,<3.0.0)",
-    "email-validator (>=2.2.0,<3.0.0)",
-    "sendgrid (>=6.12.3,<7.0.0)",
-    "jinja2 (>=3.1.6,<4.0.0)",
-    "babel (>=2.17.0,<3.0.0)",
-    "uuid6 (>=2025.0.1,<2026.0.0)"
+    "pyjwt[crypto] (>=2.10.1,<3.0.0)",
+    "uuid6 (>=2025.0.1,<2026.0.0)",
+    "asyncpg (>=0.32.0,<0.33.0)"
 ]
 
 
@@ -30,8 +25,8 @@ build-backend = "poetry.core.masonry.api"
 pytest = "^8.3.4"
 taskipy = "^1.14.1"
 pytest-cov = "^6.0.0"
-aiosqlite = "^0.21.0"
 pytest-asyncio = "^0.25.3"
+testcontainers = "^4.15.0"
 
 [tool.taskipy.tasks]
 run = 'fastapi dev shortener/adapters/api/main.py'
@@ -40,17 +35,10 @@ test = 'pytest --cov=shortener -v'
 test_shared = "pytest -v tests/test_shared/"
 test_domain = "pytest -v tests/test_domain/"
 test_use_cases = "pytest -v tests/test_use_cases/"
-test_adapters = "pytest -v tests/test_adapters/"
+test_api = "pytest -v tests/test_api/"
 test_infra = "pytest -v tests/test_infra/"
-test_fixtures = "pytest -v tests/test_fixtures/"
-test_layers = 'task test_shared && task test_domain && task test_fixtures && task test_use_cases && task test_infra && task test_adapters'
-
-i18n_extract = "pybabel extract -F babel.cfg -o shortener/infra/translations/messages.pot shortener/infra/templates shortener/adapters/api/"
-i18n_init = "pybabel init -i shortener/infra/translations/messages.pot -d shortener/infra/translations -l pt_BR"
-i18n_update = "pybabel update -i shortener/infra/translations/messages.pot -d shortener/infra/translations"
-i18n_compile = "pybabel compile -d shortener/infra/translations"
-i18n_rebuild = "task i18n_extract && task i18n_update && task i18n_compile"
-i18n_clean = "rm -f shortener/infra/translations/messages.pot"
+test_bootstrap = "pytest -v tests/test_bootstrap/"
+test_layers = 'task test_shared && task test_domain && task test_use_cases && task test_api && task test_infra && task test_bootstrap'
 
 alembic_upgrade = "alembic upgrade +1"
 alembic_downgrade = "alembic downgrade -1"
@@ -58,4 +46,3 @@ alembic_downgrade = "alembic downgrade -1"
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
-filterwarnings = ["ignore::DeprecationWarning:passlib"]
