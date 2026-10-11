@@ -17,6 +17,11 @@ def owner_id():
 
 
 @pytest.fixture
+def other_user_id():
+    return UserID(UUID("0199b2c4-7a3e-7c1a-9b5e-3f2d4c6b8a12"))
+
+
+@pytest.fixture
 def normal_shorturl(owner_id, now):
     return ShortURL.create(
         slug=Slug("lorem-ipsum-website"),

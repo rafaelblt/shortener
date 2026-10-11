@@ -17,7 +17,8 @@ shortener/use_cases/
 ├── shorturl_details.py      ShortURLDetails
 ├── resolved_slug.py         ResolvedSlug
 ├── resolve_slug.py          ResolveSlug
-└── create_shorturl.py       CreateShortURL
+├── create_shorturl.py       CreateShortURL
+└── get_shorturl.py          GetShortURL
 ```
 
 ## Abstractions
@@ -146,6 +147,8 @@ Each use case is a class whose constructor receives the abstractions it uses, an
 
 A use case that writes commits only when it succeeds. When it returns `Err`, it leaves the transaction without calling `commit()`, which rolls it back.
 
+A use case that receives the ID of a short URL only acts on the short URLs of the user making the request: one that belongs to another user gets the same `ShortURLNotFoundError` as one that doesn't exist.
+
 ### ResolveSlug
 
 `resolve_slug.py`
@@ -175,6 +178,19 @@ The slug of the short URL doesn't change, so `save()` can't return `SlugTakenErr
    - With a `slug`, when `add()` returns `Err(SlugTakenError(slug))`, it returns it, without trying another slug.
    - Without one, the slug comes from `Slug.generate()`. When `add()` returns `SlugTakenError`, it creates another short URL, with another generated slug, and adds it, up to `MAX_GENERATED_SLUG_ATTEMPTS` (10) attempts. When every generated slug is taken, it raises `RuntimeError`, without committing.
 4. It commits, and returns `Ok` with the `ShortURLDetails` of the short URL.
+
+### GetShortURL
+
+`get_shorturl.py`
+
+`GetShortURL(shorturls, current_user)` returns a short URL of the user making the request. It only reads, so it receives a `ShortURLReader`, and doesn't begin a transaction.
+
+`execute(id)` returns `Result[ShortURLDetails, GetShortURLError]`, where `GetShortURLError` is `NotAuthenticatedError | ShortURLNotFoundError`:
+
+1. When `CurrentUser.get_id()` returns `None`, it returns `Err(NotAuthenticatedError())`, without reading anything.
+2. It reads the short URL with `get_by_id()`, with `id` as a `ShortURLID`. An `id` that isn't a `UUID` raises `TypeError`, from `ShortURLID`.
+3. When there is no short URL, or it belongs to another user, it returns `Err(ShortURLNotFoundError())`.
+4. Otherwise, it returns `Ok` with the `ShortURLDetails` of the short URL.
 
 ## Open questions
 
