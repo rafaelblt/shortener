@@ -114,6 +114,8 @@ The implementations of the database raise [`UnavailableError`](use_cases.md#unav
 
 Errors that trying again won't fix are raised as they are, such as `42P01` (a table that doesn't exist), `28P01` (a wrong password) or `3D000` (a database that doesn't exist).
 
+A connection lost in the middle of a transaction can also be raised as an `InternalClientError` of asyncpg, which isn't transient ([issue 0012](issues/0012-a-connection-lost-in-a-transaction-can-be-raised-as-internal-client-error.md)).
+
 ## Open questions
 
 Decisions to make during this phase. There are none at the moment.
