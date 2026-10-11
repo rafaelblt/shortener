@@ -90,7 +90,7 @@ The abstraction is the user making the request, not the owner: being the owner i
 
 `clock.py`
 
-`Clock.now()` returns the current moment, as a timezone-aware datetime. Its timezone, UTC or any other, is chosen by the implementation, in `infra`. The use cases read the clock only through it, and give its value to the domain as `now` (see [Time](domain.md#time)).
+`Clock.now()` returns the current moment, as a timezone-aware datetime. The use cases don't generate datetimes: they read the clock only through it, and give its value to the domain as `now` (see [Time](domain.md#time)). The domain requires a timezone-aware `now`, so the use cases rely on `Clock` to return one, and don't check it: a naive one raises `ValueError`, from the domain. Which timezone it is in, such as UTC, is guaranteed by the implementation, in `infra`.
 
 ## Errors
 

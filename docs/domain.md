@@ -22,11 +22,11 @@ shortener/domain/
 
 ## Time
 
-No rule of the domain reads the clock. Every operation that depends on the current moment receives it as a `now` argument: `ShortURL.create()` and `resolve()`. This keeps the domain deterministic and leaves the source of time to the use cases.
+No rule of the domain reads the clock. Every operation that depends on the current moment receives it as a `now` argument: `ShortURL.create()` and `resolve()`. This keeps the domain deterministic and leaves the source of time outside it.
 
 Both store `now`, as `created_at` and `last_resolved_at`, so they check it: a `now` that isn't a `datetime`, `None` included, raises `TypeError`, and a naive one raises `ValueError`. `resolve()` checks it before the availability, so it raises even when the short URL isn't available.
 
-The domain only deals with moments in time, not with timezones. It accepts timezone-aware datetimes in any timezone, and doesn't convert them: guaranteeing they are in UTC is up to the layer that provides them. Aware datetimes in different timezones are compared by the moment they represent.
+The domain only deals with moments in time, not with timezones. All it requires of a datetime is that it is timezone-aware: it accepts any timezone, and doesn't convert it. Which timezone the system uses, such as UTC, isn't a rule of the domain: it is guaranteed by the layer that generates the datetime. Aware datetimes in different timezones are compared by the moment they represent.
 
 A datetime is naive, as Python defines it, when its `utcoffset()` returns `None`: it has no `tzinfo`, or its `tzinfo` gives no offset. The domain rejects naive datetimes because they aren't moments in time: comparing one with an aware datetime is always unequal with `==`, and raises `TypeError` with `<`.
 
