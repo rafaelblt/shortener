@@ -26,7 +26,7 @@ from shortener.use_cases.shorturl_cursor import ShortURLCursor
 
 
 # How a request carries the parameters of execute() whose type FastAPI
-# doesn't read on its own. See docs/api.md#parameters
+# doesn't read on its own. See docs/api.md#how-an-endpoint-works
 PARAMETER_TYPES: Final[dict[Any, Any]] = {ShortURLCursor: CursorParameter}
 
 METHODS_WITHOUT_BODY: Final = frozenset({"GET", "DELETE"})
