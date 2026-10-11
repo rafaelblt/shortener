@@ -29,7 +29,7 @@ Simple code, simple features, simple architecture.
 
 Every responsibility in its proper place.
 
-- Each layer has a role (see the [Architecture](README.md#architecture) in the README) and dependencies point inward. The domain imports nothing from `use_cases`, `adapters`, `infra` or any framework. `shared/` is code any layer can use, and imports nothing from the layers.
+- Each layer has a role (see the [Architecture](README.md#architecture) in the README) and dependencies point inward. The domain imports nothing from `use_cases`, `api`, `infra`, `bootstrap` or any framework. `shared/` is code any layer can use, and imports nothing from the layers.
 - One concept per module, and the module's name says what is inside.
 - No repetition: each rule is written in one place and reused.
 - Similar structures follow the same shape. Follow the existing pattern before creating a new one.
