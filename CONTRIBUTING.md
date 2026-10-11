@@ -6,11 +6,10 @@ The [README](README.md) explains the service's scope, the owner concept, the arc
 
 ## Current phase: use cases
 
-The project is being rebuilt layer by layer, from the inside out (see [Current state](README.md#current-state)). The domain and `shared/` were rebuilt in the previous phase. The scope of this one is `shortener/use_cases/` and its tests: `tests/test_use_cases/` and the fixtures those tests use. Update this section when the phase changes.
+The project is being rebuilt layer by layer, from the inside out (see [Current state](README.md#current-state)). The emphasis of this phase is `shortener/use_cases/` and its tests: `tests/test_use_cases/` and the fixtures those tests use. The domain and `shared/` were rebuilt in the previous phase, but they can still change, in a task that needs it or one that fixes their issues. Update this section when the phase changes.
 
 - Don't fix `adapters` or `infra`. Problems in those layers are ignored until we reach them.
 - Changes to the use cases will break the upper layers. That is expected: don't patch them to keep up.
-- A problem found in the domain or in `shared/` becomes an issue, instead of being fixed in passing.
 - This phase is verified with `poetry run task test_shared`, `poetry run task test_domain` and `poetry run task test_use_cases`. The full suite is not a criterion.
 - [docs/use_cases.md](docs/use_cases.md) describes the use cases as they are in the code, with their rules and open questions. Its known bugs are open issues labeled `use_cases`, and fixing them is part of this phase. It has to stay faithful to `shortener/use_cases/` (see [`docs/`](#docs)). If a rule is unclear, ask instead of making one up.
 - [docs/domain.md](docs/domain.md) and [docs/shared.md](docs/shared.md) describe the domain and `shared/`, and have to stay faithful to them in the same way.
@@ -90,7 +89,7 @@ Every task that changes code (a feature, a fix, a refactor, a removal) also cove
 
 ## Issues
 
-Until the repository is on GitHub, issues live in [docs/issues/](docs/issues/README.md), one file per issue. The format, the states and the workflow are described there.
+Until the repository is on GitHub, issues live in [docs/issues/](docs/issues/README.md), one file per issue. When to open one, the format, the states and the workflow are described there.
 
 ## Commits
 

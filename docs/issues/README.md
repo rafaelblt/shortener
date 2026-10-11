@@ -2,6 +2,14 @@
 
 Until the repository is on GitHub, its issues live here, one Markdown file per issue. They follow the GitHub model: an issue has a state that changes, and a conversation that only grows.
 
+## When to open one
+
+An issue records a problem or a question to be handled apart from the task where it came up. Open one for:
+
+- A problem found during a task, but outside its scope, that has to be analyzed and fixed separately. For example, [issue 0011](0011-copying-a-parsed-value-object-that-breaks-the-rules-raises-value-error.md) was found while implementing the plan of the use cases, and was a problem of the domain, which that task didn't cover.
+- A problem complex enough to need a deeper investigation before it is fixed.
+- A problem or a question that can be left for later, because it has little impact for now. For example, [issue 0009](0009-listing-short-urls-has-no-pagination.md): pagination wasn't in the initial plan of the use cases, because it still needed more thought, and it can be added later in the phase.
+
 ## Files
 
 The file name is `<number>-<title-in-kebab-case>.md`, for example `0001-slug-length-error-messages-are-swapped.md`. The number is the issue's ID: a new issue takes the highest number plus one, and numbers are never reused. The file name and the title never change.
