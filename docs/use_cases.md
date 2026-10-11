@@ -101,7 +101,7 @@ The errors the callers of the use cases have to handle aren't exceptions: the us
 | Kind                                                | Examples                                                    | How it reaches the use case                                                                                       |
 | --------------------------------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | Expected: part of the contract of the abstraction   | A slug that is taken, no authenticated user, no short URL   | A value: `Err(SlugTakenError(slug))` from `add()` and `save()`, and `None` from the reads and from `get_id()`     |
-| Unexpected: a failure of the implementation, or a bug | The database is down, a timeout, an error of the driver   | An exception, which the use cases don't catch                                                                     |
+| Unexpected: a failure of the implementation, or a bug | The database is down, a timeout, an error of the driver   | An exception, which the use cases don't catch ([issue 0010](issues/0010-infrastructure-failures-arent-told-apart-from-bugs.md)) |
 
 ### Errors of the use cases
 
