@@ -157,7 +157,7 @@ The destination of the short URL. It is a [value object](#value-objects), and `T
 - one whose scheme isn't `https`. `urlparse` lowercases the scheme, so `HTTPS://example.com` is accepted;
 - one whose netloc is empty, as `https://` or `https:///path`.
 
-Nothing else is checked: the netloc isn't validated, so `https://exa mple.com` is accepted.
+Nothing else is checked: the netloc isn't validated, so `https://exa mple.com` is accepted. Control characters are accepted too, since `urlparse` removes tabs and line breaks before parsing ([issue 0013](issues/0013-target-url-accepts-control-characters.md)).
 
 ### Status
 
