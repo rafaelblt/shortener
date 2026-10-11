@@ -125,21 +125,23 @@ Every error is answered with an `ErrorContent`:
 - `code` tells the clients which error it is, and `message` explains it to a person. Only `code` is part of the contract: the messages can change.
 - `fields` is only there for `invalid_input`. It has an item for each value that breaks its rules, in order, whose `field` is the name of the value in the request, and whose `issues` have the codes of the issues, in order. The codes are the values of [`IssueCode`](shared.md#validation), such as `too_short`, and `missing`, for a required value the request lacks.
 
-| Error                                                       | Status                      | `code`                 |
-| ----------------------------------------------------------- | --------------------------- | ---------------------- |
-| `NotAuthenticatedError`                                     | `401 Unauthorized`          | `not_authenticated`    |
-| `InvalidInputError`                                         | `422 Unprocessable Content` | `invalid_input`        |
-| `NothingToUpdateError`                                      | `422 Unprocessable Content` | `nothing_to_update`    |
-| `ShortURLNotFoundError`                                     | `404 Not Found`             | `shorturl_not_found`   |
-| `ShortURLDeactivatedError`                                  | `404 Not Found`             | `shorturl_deactivated` |
-| `SlugTakenError`                                            | `409 Conflict`              | `slug_taken`           |
-| A request whose values FastAPI can't read                   | `422 Unprocessable Content` | `invalid_input`        |
-| A body that isn't valid JSON                                | `400 Bad Request`           | `malformed_body`       |
-| [`UnavailableError`](use_cases.md#unavailableerror), raised | `503 Service Unavailable`   | `unavailable`          |
-| Any other exception                                         | `500 Internal Server Error` | `internal_error`       |
+| Error                                                       | Status                                    | `code`                            |
+| ----------------------------------------------------------- | ----------------------------------------- | --------------------------------- |
+| `NotAuthenticatedError`                                     | `401 Unauthorized`                        | `not_authenticated`               |
+| `InvalidInputError`                                         | `422 Unprocessable Content`               | `invalid_input`                   |
+| `NothingToUpdateError`                                      | `422 Unprocessable Content`               | `nothing_to_update`               |
+| `ShortURLNotFoundError`                                     | `404 Not Found`                           | `shorturl_not_found`              |
+| `ShortURLDeactivatedError`                                  | `404 Not Found`                           | `shorturl_deactivated`            |
+| `SlugTakenError`                                            | `409 Conflict`                            | `slug_taken`                      |
+| A request whose values FastAPI can't read                   | `422 Unprocessable Content`               | `invalid_input`                   |
+| A body that isn't valid JSON                                | `400 Bad Request`                         | `malformed_body`                  |
+| A path, or a method of a path, that no endpoint has         | `404 Not Found`, `405 Method Not Allowed` | `not_found`, `method_not_allowed` |
+| [`UnavailableError`](use_cases.md#unavailableerror), raised | `503 Service Unavailable`                 | `unavailable`                     |
+| Any other exception                                         | `500 Internal Server Error`               | `internal_error`                  |
 
 - The errors a use case returns are answered by `error_response(error)`, from `ERRORS`, which maps each class of error to an `ErrorResponse`: its status code, code, message and headers. `response_of(error_type)` raises `LookupError` for a class that isn't there.
-- `401` has the header `WWW-Authenticate: Bearer`.
+- `401` has the header `WWW-Authenticate: Bearer`. `405` has the header `Allow` that Starlette gives it, which only has the methods of one of the endpoints of the path, such as `POST` for `PUT /v1/shorturls`.
+- The errors Starlette raises on its own, such as for a path or a method that no endpoint has, are answered by `http_error_handler()`, with their status, and the name of the status as the code.
 - `ShortURLDeactivatedError` is `404`, and not `410 Gone`, since `410` is for a condition that is likely to be permanent, and a deactivated short URL can be enabled again. Its code tells it apart from a short URL that doesn't exist.
 - A request whose values FastAPI can't read, such as an `id` that isn't a UUID, a `limit` that isn't an integer or a `target_url` that isn't a string, gets `invalid_input`, with the same `fields` as the one of a use case. FastAPI names the issues by the types of pydantic: `missing` is kept, a type that is the value of an `IssueCode` is kept, such as the `invalid_format` of a [cursor](#cursors), and any other becomes `invalid_type`.
 - `UnavailableError` is logged as a warning, with the exception and its cause, which say what failed. Starlette raises any other exception again after its response, so the server logs it.

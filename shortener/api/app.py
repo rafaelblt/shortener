@@ -4,11 +4,13 @@ from typing import Final
 
 from fastapi import APIRouter, FastAPI
 from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException
 
 from shortener.api.authentication import AccessTokenVerifier
 from shortener.api.endpoint import Endpoint, add_route
 from shortener.api.endpoints import ENDPOINTS
 from shortener.api.errors import (
+    http_error_handler,
     internal_error_handler,
     request_error_handler,
     unavailable_handler,
@@ -43,6 +45,7 @@ def create_app(
     app.add_exception_handler(
         RequestValidationError, request_error_handler  # type: ignore
     )
+    app.add_exception_handler(HTTPException, http_error_handler)  # type: ignore
     app.add_exception_handler(UnavailableError, unavailable_handler)  # type: ignore
     app.add_exception_handler(Exception, internal_error_handler)
     return app

@@ -184,6 +184,37 @@ async def test_answers_malformed_body_for_a_body_that_is_not_json(
     assert use_cases.current_users == []
 
 
+@pytest.mark.parametrize(
+    "method, url, status, code",
+    [
+        pytest.param(
+            "GET", "/v1/unknown", HTTPStatus.NOT_FOUND, "not_found", id="unknown path"
+        ),
+        pytest.param(
+            "PUT",
+            "/v1/shorturls",
+            HTTPStatus.METHOD_NOT_ALLOWED,
+            "method_not_allowed",
+            id="unknown method",
+        ),
+    ],
+)
+async def test_answers_a_request_that_no_endpoint_takes_with_the_name_of_its_status(
+    client: httpx.AsyncClient, method: str, url: str, status: HTTPStatus, code: str
+):
+    response = await client.request(method, url)
+
+    assert response.status_code == status
+    assert response.json()["code"] == code
+
+
+async def test_keeps_the_headers_starlette_gives_to_its_errors(
+    client: httpx.AsyncClient,
+):
+    response = await client.put("/v1/shorturls")
+    assert "Allow" in response.headers
+
+
 async def test_answers_unavailable_when_the_use_case_raises_unavailable_error(
     client: httpx.AsyncClient, use_cases: UseCaseDoubles
 ):

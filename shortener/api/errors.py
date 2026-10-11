@@ -9,6 +9,7 @@ from fastapi import Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+from starlette.exceptions import HTTPException
 
 from shortener.domain.errors import ShortURLDeactivatedError
 from shortener.shared.validation import IssueCode
@@ -151,6 +152,19 @@ async def request_error_handler(
     if any(detail["type"] == "json_invalid" for detail in details):
         return _json_response(MALFORMED_BODY)
     return _json_response(ERRORS[InvalidInputError], _fields_of_request(details))
+
+
+async def http_error_handler(request: Request, error: HTTPException) -> JSONResponse:
+    """
+    The response to the errors Starlette raises on its own, such as for a
+    path or a method that no endpoint has. Its code is the name of the
+    status, such as not_found.
+    """
+    status = HTTPStatus(error.status_code)
+    response = ErrorResponse(
+        status, status.name.lower(), f"{status.phrase}.", headers=error.headers or {}
+    )
+    return _json_response(response)
 
 
 async def unavailable_handler(
