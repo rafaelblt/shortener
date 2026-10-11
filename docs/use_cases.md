@@ -22,7 +22,8 @@ shortener/use_cases/
 ├── list_shorturls.py        ListShortURLs
 ├── update_shorturl.py       UpdateShortURL
 ├── enable_shorturl.py       EnableShortURL
-└── disable_shorturl.py      DisableShortURL
+├── disable_shorturl.py      DisableShortURL
+└── delete_shorturl.py       DeleteShortURL
 ```
 
 ## Abstractions
@@ -241,6 +242,18 @@ The target URL and the slug change in a single call so that the change is atomic
 The slug of the short URL doesn't change, so `save()` can't return `SlugTakenError`. If it does, the use case raises `ValueError` with it, through `unwrap()`, without committing.
 
 The status isn't changed by `UpdateShortURL`: [`ShortURLStatus`](domain.md#status) has no `create()` that returns a `ValidationError`, so an invalid status couldn't come back as a `FieldError`. These use cases only receive the ID, and follow the methods of the domain. They are almost the same, and that repetition is accepted: two uses don't justify an abstraction.
+
+### DeleteShortURL
+
+`delete_shorturl.py`
+
+`DeleteShortURL(uow, current_user)` deletes a short URL of the user making the request.
+
+`execute(id)` returns `Result[None, DeleteShortURLError]`, where `DeleteShortURLError` is `NotAuthenticatedError | ShortURLNotFoundError`:
+
+1. When `CurrentUser.get_id()` returns `None`, it returns `Err(NotAuthenticatedError())`. Then an `id` that isn't a `UUID` raises `TypeError`, from `ShortURLID`, before any transaction begins.
+2. It begins a transaction, and reads the short URL through it with `get_by_id()`, to check its owner. When there is none, or it belongs to another user, it returns `Err(ShortURLNotFoundError())`.
+3. It removes the short URL with `remove()`, commits, and returns `Ok(None)`.
 
 ## Open questions
 
