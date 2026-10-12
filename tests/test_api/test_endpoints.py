@@ -10,6 +10,7 @@ from pydantic import TypeAdapter
 
 from shortener.api.cursors import decode_cursor, encode_cursor
 from shortener.domain import ShortURL
+from shortener.domain.errors import ShortURLDeactivatedError
 from shortener.shared.result import Err, Ok
 from shortener.use_cases.create_shorturl import CreateShortURL
 from shortener.use_cases.delete_shorturl import DeleteShortURL
@@ -50,6 +51,14 @@ def as_json(value: object) -> Any:
             ResolveSlug,
             {"slug": "my-slug"},
             id="resolve",
+        ),
+        pytest.param(
+            "GET",
+            "/v1/slugs/my-slug/redirect",
+            None,
+            ResolveSlug,
+            {"slug": "my-slug"},
+            id="resolve and redirect",
         ),
         pytest.param(
             "POST",
@@ -209,7 +218,7 @@ async def test_get_shorturls_answers_no_cursor_after_the_last_page(
     assert response.json() == {"items": [], "next_cursor": None}
 
 
-async def test_get_slugs_redirects_to_the_target_url(
+async def test_get_slug_answers_its_target_url(
     client: httpx.AsyncClient, use_cases: UseCaseDoubles
 ):
     use_cases.double(ResolveSlug).execute.return_value = Ok(
@@ -218,8 +227,41 @@ async def test_get_slugs_redirects_to_the_target_url(
 
     response = await client.get("/v1/slugs/my-slug")
 
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == {"target_url": "https://example.com/page"}
+
+
+async def test_get_slug_redirect_redirects_to_its_target_url(
+    client: httpx.AsyncClient, use_cases: UseCaseDoubles
+):
+    use_cases.double(ResolveSlug).execute.return_value = Ok(
+        ResolvedSlug(target_url="https://example.com/page")
+    )
+
+    response = await client.get("/v1/slugs/my-slug/redirect")
+
     assert response.status_code == HTTPStatus.TEMPORARY_REDIRECT
     assert response.headers["Location"] == "https://example.com/page"
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        pytest.param("/v1/slugs/my-slug", id="resolve"),
+        pytest.param("/v1/slugs/my-slug/redirect", id="resolve and redirect"),
+    ],
+)
+async def test_the_endpoints_of_a_slug_tell_a_deactivated_shorturl_apart(
+    client: httpx.AsyncClient, use_cases: UseCaseDoubles, url: str
+):
+    use_cases.double(ResolveSlug).execute.return_value = Err(
+        ShortURLDeactivatedError()
+    )
+
+    response = await client.get(url)
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.json()["code"] == "shorturl_deactivated"
 
 
 async def test_delete_shorturl_answers_no_content(

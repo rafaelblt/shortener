@@ -41,23 +41,26 @@ FastAPI also serves the OpenAPI schema at `/openapi.json`, and its documentation
 
 `ENDPOINTS` declares each endpoint of the API, with the use case it runs:
 
-| Method and path                   | Use case                                                             | Receives                                                | Answers                                            |
-| --------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------- | -------------------------------------------------- |
-| `GET /v1/slugs/{slug}`            | [`ResolveSlug`](use_cases.md#resolveslug)                            | `slug`, in the path                                     | `307 Temporary Redirect` to the target URL         |
-| `POST /v1/shorturls`              | [`CreateShortURL`](use_cases.md#createshorturl)                      | `target_url` and `slug`, in the body                    | `201 Created`, with the `ShortURLDetails`          |
-| `GET /v1/shorturls`               | [`ListShortURLs`](use_cases.md#listshorturls)                        | `limit` and `cursor`, in the query                      | `200 OK`, with a [`ShortURLPageContent`](#cursors) |
-| `GET /v1/shorturls/{id}`          | [`GetShortURL`](use_cases.md#getshorturl)                            | `id`, in the path                                       | `200 OK`, with the `ShortURLDetails`               |
-| `PATCH /v1/shorturls/{id}`        | [`UpdateShortURL`](use_cases.md#updateshorturl)                      | `id`, in the path, `target_url` and `slug`, in the body | `200 OK`, with the `ShortURLDetails`               |
-| `POST /v1/shorturls/{id}/enable`  | [`EnableShortURL`](use_cases.md#enableshorturl-and-disableshorturl)  | `id`, in the path                                       | `200 OK`, with the `ShortURLDetails`               |
-| `POST /v1/shorturls/{id}/disable` | [`DisableShortURL`](use_cases.md#enableshorturl-and-disableshorturl) | `id`, in the path                                       | `200 OK`, with the `ShortURLDetails`               |
-| `DELETE /v1/shorturls/{id}`       | [`DeleteShortURL`](use_cases.md#deleteshorturl)                      | `id`, in the path                                       | `204 No Content`                                   |
+| Method and path                   | Use case                                                             | Receives                                                | Answers                                                    |
+| --------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------- | ---------------------------------------------------------- |
+| `GET /v1/slugs/{slug}`            | [`ResolveSlug`](use_cases.md#resolveslug)                            | `slug`, in the path                                     | `200 OK`, with the `ResolvedSlug`: `{"target_url": "..."}` |
+| `GET /v1/slugs/{slug}/redirect`   | [`ResolveSlug`](use_cases.md#resolveslug), named `RedirectSlug`      | `slug`, in the path                                     | `307 Temporary Redirect` to the target URL                 |
+| `POST /v1/shorturls`              | [`CreateShortURL`](use_cases.md#createshorturl)                      | `target_url` and `slug`, in the body                    | `201 Created`, with the `ShortURLDetails`                  |
+| `GET /v1/shorturls`               | [`ListShortURLs`](use_cases.md#listshorturls)                        | `limit` and `cursor`, in the query                      | `200 OK`, with a [`ShortURLPageContent`](#cursors)         |
+| `GET /v1/shorturls/{id}`          | [`GetShortURL`](use_cases.md#getshorturl)                            | `id`, in the path                                       | `200 OK`, with the `ShortURLDetails`                       |
+| `PATCH /v1/shorturls/{id}`        | [`UpdateShortURL`](use_cases.md#updateshorturl)                      | `id`, in the path, `target_url` and `slug`, in the body | `200 OK`, with the `ShortURLDetails`                       |
+| `POST /v1/shorturls/{id}/enable`  | [`EnableShortURL`](use_cases.md#enableshorturl-and-disableshorturl)  | `id`, in the path                                       | `200 OK`, with the `ShortURLDetails`                       |
+| `POST /v1/shorturls/{id}/disable` | [`DisableShortURL`](use_cases.md#enableshorturl-and-disableshorturl) | `id`, in the path                                       | `200 OK`, with the `ShortURLDetails`                       |
+| `DELETE /v1/shorturls/{id}`       | [`DeleteShortURL`](use_cases.md#deleteshorturl)                      | `id`, in the path                                       | `204 No Content`                                           |
 
 What each one receives and answers follows from its use case, by the rules of [How an endpoint works](#how-an-endpoint-works):
 
-- Every endpoint but `GET /v1/slugs/{slug}` reads the [access token](#authentication), since its use case takes a `CurrentUser`.
+- The two endpoints of a slug run `ResolveSlug`, so both count the resolution. `GET /v1/slugs/{slug}` answers the target URL, for a system that uses the shortener and decides what to do with it, such as showing a page before it redirects. `GET /v1/slugs/{slug}/redirect` redirects to it, for a system that wants the redirect done. The shortener is meant to serve other systems without imposing how they resolve a slug, so it has both.
+- Every endpoint but the two of a slug reads the [access token](#authentication), since its use case takes a `CurrentUser`.
 - `slug`, and the `target_url` of a `PATCH`, default to `None` in `execute()`, so a `null` is the same as leaving them out: `POST /v1/shorturls` generates the slug, and `PATCH /v1/shorturls/{id}` doesn't change them. A `PATCH` with no value to change gets `nothing_to_update`. The `target_url` of a `POST` has no default, so leaving it out, or sending it as `null`, gets `missing`.
 - `limit` is 20 when the query leaves it out, the default of `ListShortURLs.execute()`.
 - The redirect is temporary, so the clients don't keep it: each visit asks the service again, which counts the resolution, and follows changes of the target URL and deactivations.
+- Every route is under `/v1`, so a slug never shares a path with a route of the API, and no slug has to be reserved. A domain of short links, where `/{slug}` redirects, is a proxy in front of the service, which sends `/{slug}` to `/v1/slugs/{slug}/redirect`. The rules of [`Slug.create()`](domain.md#slug) don't allow dots, so a path such as `/favicon.ico` is never the slug of a new short URL.
 - The JSON of a `ShortURLDetails` has its fields, with the IDs as text, and the datetimes in ISO 8601, with `Z` for UTC.
 
 ## How an endpoint works

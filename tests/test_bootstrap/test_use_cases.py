@@ -54,8 +54,8 @@ def use_cases(
 @pytest.mark.parametrize(
     "use_case",
     [
-        pytest.param(endpoint.use_case, id=endpoint.use_case.__name__)
-        for endpoint in ENDPOINTS
+        pytest.param(use_case, id=use_case.__name__)
+        for use_case in dict.fromkeys(endpoint.use_case for endpoint in ENDPOINTS)
     ],
 )
 def test_build_builds_the_use_case_of_each_endpoint(

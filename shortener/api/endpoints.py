@@ -19,7 +19,14 @@ def _target_url(resolved: ResolvedSlug) -> str:
 
 
 ENDPOINTS = (
-    Endpoint("GET", "/slugs/{slug}", ResolveSlug, Redirect(_target_url)),
+    Endpoint("GET", "/slugs/{slug}", ResolveSlug),
+    Endpoint(
+        "GET",
+        "/slugs/{slug}/redirect",
+        ResolveSlug,
+        Redirect(_target_url),
+        name="RedirectSlug",
+    ),
     Endpoint("POST", "/shorturls", CreateShortURL, JSONContent(HTTPStatus.CREATED)),
     Endpoint(
         "GET",
