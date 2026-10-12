@@ -50,10 +50,6 @@ class Echo:
     ) -> Result[Echoed, ShortURLNotFoundError]: ...
 
 
-class EchoFromTheQuery(Echo):
-    """The same use case, for an endpoint that receives a query."""
-
-
 class Public:
     """A use case that doesn't take a CurrentUser."""
 
@@ -77,7 +73,7 @@ def app(
         access_token_verifier=access_token_verifier,
         endpoints=[
             Endpoint("PUT", "/echoes/{id}", Echo),
-            Endpoint("GET", "/echoes/{id}", EchoFromTheQuery),
+            Endpoint("GET", "/echoes/{id}", Echo, name="EchoFromTheQuery"),
             Endpoint("GET", "/public", Public),
         ],
     )
@@ -86,13 +82,6 @@ def app(
 @pytest.fixture
 def echo(use_cases: UseCaseDoubles) -> NonCallableMagicMock:
     echo = use_cases.double(Echo)
-    echo.execute.return_value = Ok(Echoed(name="echoed"))
-    return echo
-
-
-@pytest.fixture
-def echo_from_the_query(use_cases: UseCaseDoubles) -> NonCallableMagicMock:
-    echo = use_cases.double(EchoFromTheQuery)
     echo.execute.return_value = Ok(Echoed(name="echoed"))
     return echo
 
@@ -117,7 +106,7 @@ async def test_receives_the_parameters_of_the_path_from_it_and_the_others_from_t
 
 
 async def test_receives_the_parameters_out_of_the_path_from_the_query_for_a_get(
-    client: httpx.AsyncClient, echo_from_the_query: NonCallableMagicMock
+    client: httpx.AsyncClient, echo: NonCallableMagicMock
 ):
     await client.get(
         f"/v1/echoes/{ID}",
@@ -125,9 +114,7 @@ async def test_receives_the_parameters_out_of_the_path_from_the_query_for_a_get(
         headers=AUTHORIZATION,
     )
 
-    echo_from_the_query.execute.assert_awaited_once_with(
-        id=ID, name="my-name", count=2, cursor=CURSOR
-    )
+    echo.execute.assert_awaited_once_with(id=ID, name="my-name", count=2, cursor=CURSOR)
 
 
 async def test_gives_the_defaults_of_execute_for_the_values_the_request_lacks(
@@ -221,6 +208,13 @@ async def test_ignores_the_access_token_when_the_use_case_takes_no_current_user(
 
     assert await use_cases.current_users[0].get_id() is None
     access_token_verifier.verify.assert_not_awaited()
+
+
+def test_names_the_endpoint_after_its_use_case_unless_it_has_a_name(app: FastAPI):
+    paths = app.openapi()["paths"]
+
+    assert paths["/v1/echoes/{id}"]["put"]["operationId"] == Echo.__name__
+    assert paths["/v1/echoes/{id}"]["get"]["operationId"] == "EchoFromTheQuery"
 
 
 def test_documents_the_access_token_only_where_the_use_case_takes_a_current_user(

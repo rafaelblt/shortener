@@ -43,13 +43,15 @@ _CREDENTIALS: Final = inspect.Parameter(
 class Endpoint:
     """
     An endpoint that runs a use case. What it receives and what it answers
-    come from the use case. See docs/api.md#endpoints
+    come from the use case. Its name is the one of the use case when name is
+    None. See docs/api.md#endpoints
     """
 
     method: str
     path: str
     use_case: type
     response: SuccessResponse = JSONContent()
+    name: str | None = None
 
 
 def add_route(
@@ -62,6 +64,7 @@ def add_route(
     Raises:
         LookupError: The use case may return an error the API doesn't answer.
     """
+    name = endpoint.name or endpoint.use_case.__name__
     parameters = _parameters_of(endpoint)
     ok_type, error_types = _result_types_of(endpoint.use_case)
     takes_a_user = CurrentUser in get_type_hints(endpoint.use_case.__init__).values()
@@ -91,8 +94,8 @@ def add_route(
         response_model=endpoint.response.model(ok_type),
         response_class=endpoint.response.response_class,
         responses=documented_responses(error_types, _request_errors_of(parameters)),
-        name=endpoint.use_case.__name__,
-        operation_id=endpoint.use_case.__name__,
+        name=name,
+        operation_id=name,
     )
 
 

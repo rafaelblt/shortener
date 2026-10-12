@@ -64,7 +64,7 @@ What each one receives and answers follows from its use case, by the rules of [H
 
 `endpoint.py`
 
-`Endpoint(method, path, use_case, response=JSONContent())` declares an endpoint, and `add_route()` adds it to the router of FastAPI. Only the method, the path, the use case and how to answer its `Ok` are declared: what the endpoint receives, who makes the request and how errors are answered come from the use case.
+`Endpoint(method, path, use_case, response=JSONContent(), name=None)` declares an endpoint, and `add_route()` adds it to the router of FastAPI. Only the method, the path, the use case and how to answer its `Ok` are declared, and, when it needs one, a name: what the endpoint receives, who makes the request and how errors are answered come from the use case.
 
 **Parameters.** Each parameter of `execute()` becomes one of the request, with its name, its type and its default:
 
@@ -86,7 +86,7 @@ Since the name of a parameter of `execute()` is the name of its value in the req
 
 FastAPI reads the values of the request before step 1, so a request whose values it can't read gets an [error](#errors) without the use case being built.
 
-**OpenAPI.** The name of the use case is the name and the operation ID of the endpoint, so each use case is in a single endpoint: FastAPI warns about a repeated operation ID. The response of success is the type of `Ok`, from the `Result[Ok, Error]` that `execute()` returns, or the type `response.model()` gives for it. The error responses are those of the errors of `Error`, which is a type alias of a union, such as `CreateShortURLError`, or a single class, grouped by status code, with `422` for the values of the request when the endpoint receives any, `400` when it receives a body, and `503`.
+**OpenAPI.** The name of the endpoint is its name and operation ID, and is the name of its use case when `name` is `None`. Two endpoints of the same use case need different names, since FastAPI warns about a repeated operation ID. The response of success is the type of `Ok`, from the `Result[Ok, Error]` that `execute()` returns, or the type `response.model()` gives for it. The error responses are those of the errors of `Error`, which is a type alias of a union, such as `CreateShortURLError`, or a single class, grouped by status code, with `422` for the values of the request when the endpoint receives any, `400` when it receives a body, and `503`.
 
 `add_route()` raises `LookupError` when `Error` has an error that isn't in [`ERRORS`](#errors), so a new error of a use case can't reach a client as a `500`.
 
