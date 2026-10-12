@@ -145,7 +145,7 @@ Every error is answered with an `ErrorContent`:
 - The errors a use case returns are answered by `error_response(error)`, from `ERRORS`, which maps each class of error to an `ErrorResponse`: its status code, code, message and headers. `response_of(error_type)` raises `LookupError` for a class that isn't there.
 - `401` has the header `WWW-Authenticate: Bearer`. `405` has the header `Allow` that Starlette gives it, which only has the methods of one of the endpoints of the path, such as `POST` for `PUT /v1/shorturls`.
 - The errors Starlette raises on its own, such as for a path or a method that no endpoint has, are answered by `http_error_handler()`, with their status, and the name of the status as the code.
-- `ShortURLDeactivatedError` is `404`, and not `410 Gone`, since `410` is for a condition that is likely to be permanent, and a deactivated short URL can be enabled again. Its code tells it apart from a short URL that doesn't exist.
+- `ShortURLDeactivatedError` is only answered by the two endpoints of a slug, since `ResolveSlug` is the only use case that returns it: `GET /v1/shorturls/{id}` answers the details of a deactivated short URL to its owner, with its `status`. It is `404`, and not `410 Gone`, since `410` is for a condition that is likely to be permanent, and a deactivated short URL can be enabled again. Its code, `shorturl_deactivated`, tells it apart from a short URL that doesn't exist, instead of hiding it as `shorturl_not_found`, so the system that resolves the slug decides what to show, which may be to hide that the short URL exists. Hiding it in the API wouldn't keep the slug secret anyway: creating a short URL with it answers `slug_taken`.
 - A request whose values FastAPI can't read, such as an `id` that isn't a UUID, a `limit` that isn't an integer or a `target_url` that isn't a string, gets `invalid_input`, with the same `fields` as the one of a use case. FastAPI names the issues by the types of pydantic: `missing` is kept, a type that is the value of an `IssueCode` is kept, such as the `invalid_format` of a [cursor](#cursors), and any other becomes `invalid_type`.
 - `UnavailableError` is logged as a warning, with the exception and its cause, which say what failed. Starlette raises any other exception again after its response, so the server logs it.
 
@@ -175,8 +175,10 @@ A [`ShortURLCursor`](use_cases.md#shorturlcursor) travels as an opaque text. `en
 
 `ShortURLPageContent.from_page(page)` is what `GET /v1/shorturls` answers for a [`ShortURLPage`](use_cases.md#shorturlpage): its `items`, and its `next_cursor` encoded, or `None` when there is no next page.
 
+## CORS
+
+The API answers no CORS headers, so a web page of another origin can't call it from the browser, such as with `fetch`. CORS only applies to those calls, and not to navigations, such as following a short link and its redirect. The API is meant to be called by the servers of the systems that use the shortener, and the redirect to be followed by the browser of the user, so neither needs CORS. An application in the browser that calls the API directly, from another origin, would need it, with the origins it allows.
+
 ## Open questions
 
-Decisions to make during this phase.
-
-- **CORS.** The API answers no CORS headers, so a web page of another origin can't call it from the browser. Whether it should, and for which origins, is still to be decided.
+Decisions to make during this phase. There are none at the moment.
