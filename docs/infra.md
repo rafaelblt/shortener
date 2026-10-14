@@ -149,7 +149,7 @@ A connection lost during `commit()` is transient too, even when Postgres committ
 
 Otherwise, it returns `None`, whatever is wrong with the token. Checking the time allows no leeway, so a clock of the issuer ahead of the one of the service makes a new token not valid yet, for as long as the difference.
 
-With JWKS, PyJWT fetches the published keys when it needs them, in a thread, since it fetches with urllib, which blocks. It keeps them for 5 minutes, and, for a `kid` it doesn't have, fetches them again at most once every 30 seconds, so a token with an unknown `kid` doesn't make every request fetch them. When they can't be fetched, because the URL can't be reached, takes more than 30 seconds or answers an HTTP error, `verify()` raises `UnavailableError` from the error of PyJWT. An answer that is JSON, but not a set of keys, makes `verify()` return `None`, and an answer that isn't JSON raises the error of `json` as it is.
+With JWKS, PyJWT fetches the published keys when it needs them, in a thread, since it fetches with urllib, which blocks. It keeps them for 5 minutes, and, for a `kid` it doesn't have, fetches them again at most once every 30 seconds, so a token with an unknown `kid` doesn't make every request fetch them. When they can't be fetched, because the URL can't be reached, takes more than 30 seconds or answers an HTTP error, `verify()` raises `UnavailableError` from the error of PyJWT. An answer that is JSON, but not a set of keys, makes `verify()` return `None`, and an answer that isn't JSON raises the error of `json` as it is ([issue 0019](issues/0019-an-answer-of-the-jwks-url-that-isnt-a-set-of-keys-isnt-raised-as-unavailable.md)).
 
 ## Open questions
 
