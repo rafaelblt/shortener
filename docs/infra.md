@@ -120,6 +120,8 @@ Errors that trying again won't fix are raised as they are, such as `42P01` (a ta
 
 A connection lost in the middle of a transaction can also be raised as an `InternalClientError` of asyncpg, which isn't transient ([issue 0012](issues/0012-a-connection-lost-in-a-transaction-can-be-raised-as-internal-client-error.md)).
 
+A connection lost during `commit()` is transient too, even when Postgres committed the transaction before the connection was lost, so trying again can run a use case twice ([issue 0018](issues/0018-a-commit-whose-result-is-unknown-is-answered-as-unavailable.md)).
+
 ## Clock
 
 `clock.py`
