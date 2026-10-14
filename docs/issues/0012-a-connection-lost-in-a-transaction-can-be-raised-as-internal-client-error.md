@@ -13,3 +13,7 @@ When Postgres ends the session of a transaction that is still open, such as when
 To reproduce: begin a transaction with `SQLAlchemyUnitOfWork`, read a short URL through it, end its session from another connection with `pg_terminate_backend()`, and call `commit()` right away. In 5 attempts, 3 raised `InternalClientError` and 2 `UnavailableError`. Waiting 50 milliseconds before `commit()` raised `UnavailableError` in every attempt.
 
 Expected, from `docs/use_cases.md` (UnavailableError): a lost connection is a failure that trying again may fix, which the implementations raise as `UnavailableError`. With `InternalClientError`, the caller gets the error of a bug. How to tell this `InternalClientError` apart from one that isn't a lost connection is still to be decided.
+
+## 2026-10-13: Decided to take every `InternalClientError` as transient
+
+It can't be told apart by its type, which is the same for every broken state of the protocol of asyncpg, and not by whether the connection is closed, since asyncpg hasn't noticed it yet when it raises it. Matching its message would break with a new version of asyncpg. So `is_transient()` takes every `InternalClientError` as transient. No code of the project raises it, and the connection can't be used after it either way. The cost is that a bug of asyncpg is answered with `503` instead of `500`, still logged with its cause.
