@@ -1,0 +1,11 @@
+**/__pycache__
+**/*.py[cod]
+.git
+.venv
+.coverage
+.pytest_cache
+.ropeproject
+.vscode
+.claude
+tests
+docs

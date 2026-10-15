@@ -77,6 +77,23 @@ poetry run alembic upgrade head
 poetry run task run
 ```
 
+### Running with Docker Compose
+
+To try the API locally without setting anything, [compose.yaml](compose.yaml) runs it with Postgres, the migrations applied and settings that are only good for local tests:
+
+```bash
+docker compose up --build
+```
+
+The API answers at `http://localhost:8000`, with its interactive documentation at `/docs`. The data of the database stays in the volume `db` until `docker compose down -v`.
+
+The service doesn't issue access tokens, so the `token` service issues one the API accepts, valid for a day, for the user of the UUID it receives, or for `00000000-0000-4000-8000-000000000001` without one:
+
+```bash
+TOKEN=$(docker compose run --rm -q token)
+curl -H "Authorization: Bearer $TOKEN" http://localhost:8000/v1/shorturls
+```
+
 Before changing anything, read [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Documentation

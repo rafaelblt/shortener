@@ -1,0 +1,71 @@
+# Runs the service locally, for manual tests, with settings that are only
+# good for that. See README.md#running-with-docker-compose
+
+x-settings: &settings
+  DATABASE_URL: postgresql+asyncpg://shortener:shortener@db:5432/shortener
+  JWT_ALGORITHMS: HS256
+  JWT_ISSUER: shortener-local
+  JWT_AUDIENCE: shortener
+  JWT_KEY: a-local-secret-of-the-shortener-for-docker-compose-only
+
+x-service: &service
+  build: .
+  image: shortener-local
+  environment: *settings
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: shortener
+      POSTGRES_PASSWORD: shortener
+      POSTGRES_DB: shortener
+    volumes:
+      - db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shortener -d shortener"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+
+  migrations:
+    <<: *service
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    <<: *service
+    ports:
+      - "8000:8000"
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+
+  # Issues an access token the api accepts, since the service doesn't issue
+  # them. Only runs with `docker compose run --rm token [user UUID]`.
+  token:
+    build: .
+    profiles: [tools]
+    environment: *settings
+    entrypoint:
+      - python
+      - -c
+      - |
+        import os, sys
+        from datetime import datetime, timedelta, timezone
+        import jwt
+        now = datetime.now(timezone.utc)
+        claims = {
+            "sub": sys.argv[1],
+            "iss": os.environ["JWT_ISSUER"],
+            "aud": os.environ["JWT_AUDIENCE"],
+            "iat": now,
+            "exp": now + timedelta(days=1),
+        }
+        print(jwt.encode(claims, os.environ["JWT_KEY"], algorithm="HS256"))
+    command: ["00000000-0000-4000-8000-000000000001"]
+
+volumes:
+  db:
