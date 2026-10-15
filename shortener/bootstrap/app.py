@@ -60,6 +60,7 @@ def access_token_verifier(settings: AccessTokenSettings) -> JWTAccessTokenVerifi
             settings.issuer,
             settings.audience,
             settings.leeway,
+            settings.jwks_timeout,
         )
     if settings.key is not None:
         return JWTAccessTokenVerifier.with_key(

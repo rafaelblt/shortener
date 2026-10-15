@@ -30,15 +30,17 @@ shortener/bootstrap/
 
 And these optional ones, of numbers, which have a default:
 
-| Variable     | Default | Value                                                                                                                                                                                                    |
-| ------------ | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `JWT_LEEWAY` | 60      | The difference allowed between the clock of the issuer of the tokens and the one of the service, when checking the times of a token, in seconds: 0 or more (see [Access tokens](infra.md#access-tokens)) |
+| Variable           | Default | Value                                                                                                                                                                                                    |
+| ------------------ | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `JWT_JWKS_TIMEOUT` | 5       | The most the service waits for each step of fetching the keys from `JWT_JWKS_URL`, in seconds: more than 0. Only with `JWT_JWKS_URL` (see [Access tokens](infra.md#access-tokens))                       |
+| `JWT_LEEWAY`       | 60      | The difference allowed between the clock of the issuer of the tokens and the one of the service, when checking the times of a token, in seconds: 0 or more (see [Access tokens](infra.md#access-tokens)) |
 
 - A value is stripped of spaces, and an empty one is the same as a variable that isn't set. In `JWT_ALGORITHMS`, an empty item between commas is left out.
 - A number of seconds may have decimals, such as `0.5`.
-- It raises `SettingsError` when the variables don't make valid settings, with a message that names every problem: a required variable that is missing, a `DATABASE_URL` that isn't a URL of `postgresql+asyncpg`, both or neither of `JWT_KEY` and `JWT_JWKS_URL`, and an optional variable that isn't a number, or is out of the range of its table.
-- Otherwise, it returns a `Settings`, with the `database_url`, and the settings of the access tokens in an `AccessTokenSettings`: `algorithms`, as a tuple, `issuer`, `audience`, `key` and `jwks_url`, of which exactly one isn't `None`, and `leeway`, as a `timedelta`. An optional variable that isn't set gets its default, a `DEFAULT_` constant of `settings.py`, which is also the default of its field, so settings built in code can leave it out.
+- It raises `SettingsError` when the variables don't make valid settings, with a message that names every problem: a required variable that is missing, a `DATABASE_URL` that isn't a URL of `postgresql+asyncpg`, both or neither of `JWT_KEY` and `JWT_JWKS_URL`, `JWT_JWKS_TIMEOUT` with `JWT_KEY`, and an optional variable that isn't a number, or is out of the range of its table.
+- Otherwise, it returns a `Settings`, with the `database_url`, and the settings of the access tokens in an `AccessTokenSettings`: `algorithms`, as a tuple, `issuer`, `audience`, `key` and `jwks_url`, of which exactly one isn't `None`, and `leeway` and `jwks_timeout`, as `timedelta`s. An optional variable that isn't set gets its default, a `DEFAULT_` constant of `settings.py`, which is also the default of its field, so settings built in code can leave it out.
 - `JWT_LEEWAY` is a setting because the right value depends on the clock of the issuer of each environment.
+- `JWT_JWKS_TIMEOUT` is 5 seconds by default, instead of the 30 of PyJWT, since each fetch of the keys holds a thread of the default pool of asyncio while it waits. Setting it with `JWT_KEY` is an error, since it is more likely a mistake of whoever set the variables.
 - Whether the algorithms and the key can verify tokens is checked when the application is built, by [`JWTAccessTokenVerifier`](infra.md#access-tokens).
 - It doesn't read a `.env` file. The variables come from the environment of the process, where uvicorn can load a file with `--env-file`.
 
@@ -71,7 +73,7 @@ The API builds the use case of each request, with the user of the request. Build
 
 It raises `SettingsError` for the environment variables, `ValueError` when the settings of the access tokens can't verify tokens, and `LookupError` from the API.
 
-`access_token_verifier(settings)` returns a `JWTAccessTokenVerifier` with the algorithms, the issuer, the audience and the leeway of the settings: `with_jwks()` when `jwks_url` isn't `None`, and `with_key()` otherwise. It raises `SettingsError` when both are `None`, which only settings built in code, and not by `from_environment()`, can be.
+`access_token_verifier(settings)` returns a `JWTAccessTokenVerifier` with the algorithms, the issuer, the audience and the leeway of the settings: `with_jwks()`, with the `jwks_timeout`, when `jwks_url` isn't `None`, and `with_key()` otherwise. It raises `SettingsError` when both are `None`, which only settings built in code, and not by `from_environment()`, can be.
 
 ## Running
 

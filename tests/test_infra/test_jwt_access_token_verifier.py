@@ -1,3 +1,4 @@
+import asyncio
 import json
 import threading
 import jwt
@@ -27,6 +28,7 @@ KEY_ID = "key-1"
 USER_UUID = UUID("0199b2c4-7a3e-7c1a-9b5e-3f2d4c6b8a10")
 UNREACHABLE_JWKS_URL = "http://127.0.0.1:1/jwks.json"
 LEEWAY = timedelta(seconds=60)
+JWKS_TIMEOUT = timedelta(seconds=5)
 
 # Each claim of time, and the direction in which it makes a token not valid:
 # an exp in the past, or an nbf or iat in the future.
@@ -105,9 +107,16 @@ def jwks_url(server: ThreadingHTTPServer) -> str:
     return f"http://127.0.0.1:{server.server_port}/jwks.json"
 
 
-def jwks_verifier(url: str) -> JWTAccessTokenVerifier:
+def jwks_verifier(
+    url: str, timeout: timedelta = JWKS_TIMEOUT
+) -> JWTAccessTokenVerifier:
     return JWTAccessTokenVerifier.with_jwks(
-        url, algorithms=["RS256"], issuer=ISSUER, audience=AUDIENCE, leeway=LEEWAY
+        url,
+        algorithms=["RS256"],
+        issuer=ISSUER,
+        audience=AUDIENCE,
+        leeway=LEEWAY,
+        timeout=timeout,
     )
 
 
@@ -263,6 +272,23 @@ async def test_verify_with_jwks_raises_unavailable_when_the_jwks_url_answers_an_
         await verifier.verify(token)
 
 
+async def test_verify_with_jwks_raises_unavailable_when_the_jwks_url_takes_too_long(
+    silent_server: str, private_key: RSAPrivateKey
+):
+    verifier = jwks_verifier(
+        f"http://{silent_server}/jwks.json", timeout=timedelta(milliseconds=100)
+    )
+    token = jwt.encode(
+        claims(), private_key, algorithm="RS256", headers={"kid": KEY_ID}
+    )
+
+    # The default timeout of PyJWT, 30 seconds, would outlast this one.
+    async with asyncio.timeout(5):
+        with pytest.raises(UnavailableError) as raised:
+            await verifier.verify(token)
+    assert raised.value.__cause__ is not None
+
+
 @pytest.mark.parametrize(
     "body",
     [
@@ -301,5 +327,10 @@ def test_with_jwks_raises_for_a_url_or_algorithms_that_cannot_verify_tokens(
 ):
     with pytest.raises(ValueError):
         JWTAccessTokenVerifier.with_jwks(
-            url, algorithms=algorithms, issuer=ISSUER, audience=AUDIENCE, leeway=LEEWAY
+            url,
+            algorithms=algorithms,
+            issuer=ISSUER,
+            audience=AUDIENCE,
+            leeway=LEEWAY,
+            timeout=JWKS_TIMEOUT,
         )

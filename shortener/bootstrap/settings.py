@@ -12,6 +12,7 @@ from sqlalchemy.exc import ArgumentError
 DATABASE_DRIVER: Final = "postgresql+asyncpg"
 
 DEFAULT_JWT_LEEWAY: Final = timedelta(seconds=60)
+DEFAULT_JWT_JWKS_TIMEOUT: Final = timedelta(seconds=5)
 
 
 class SettingsError(Exception):
@@ -31,6 +32,7 @@ class AccessTokenSettings:
     key: str | None
     jwks_url: str | None
     leeway: timedelta = DEFAULT_JWT_LEEWAY
+    jwks_timeout: timedelta = DEFAULT_JWT_JWKS_TIMEOUT
 
 
 @dataclass(frozen=True)
@@ -57,6 +59,9 @@ class Settings:
         leeway = variables.optional_seconds(
             "JWT_LEEWAY", DEFAULT_JWT_LEEWAY, can_be_zero=True
         )
+        jwks_timeout = variables.optional_seconds(
+            "JWT_JWKS_TIMEOUT", DEFAULT_JWT_JWKS_TIMEOUT
+        )
 
         if database_url and not _uses_the_driver(database_url):
             variables.problems.append(
@@ -64,6 +69,10 @@ class Settings:
             )
         if (key is None) == (jwks_url is None):
             variables.problems.append("Set exactly one of JWT_KEY and JWT_JWKS_URL")
+        if key is not None and variables.optional("JWT_JWKS_TIMEOUT") is not None:
+            variables.problems.append(
+                "Set JWT_JWKS_TIMEOUT only with JWT_JWKS_URL, and not with JWT_KEY"
+            )
         if variables.problems:
             raise SettingsError("; ".join(variables.problems))
 
@@ -76,6 +85,7 @@ class Settings:
                 key=key,
                 jwks_url=jwks_url,
                 leeway=leeway,
+                jwks_timeout=jwks_timeout,
             ),
         )
 

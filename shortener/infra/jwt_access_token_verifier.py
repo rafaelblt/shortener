@@ -64,17 +64,19 @@ class JWTAccessTokenVerifier:
         issuer: str,
         audience: str,
         leeway: timedelta,
+        timeout: timedelta,
     ) -> "JWTAccessTokenVerifier":
         """
         Verifies the tokens with the keys the issuer publishes at a JWKS URL.
-        The leeway is the same as in with_key().
+        The leeway is the same as in with_key(), and the timeout is the most
+        it waits for an answer of the URL.
 
         Raises:
             ValueError: An algorithm isn't supported, or the URL isn't http
                 or https.
         """
         _check_algorithms(algorithms)
-        return cls(_JWKSKeys(url), algorithms, issuer, audience, leeway)
+        return cls(_JWKSKeys(url, timeout), algorithms, issuer, audience, leeway)
 
     async def verify(self, token: str) -> UserID | None:
         """
@@ -115,9 +117,9 @@ class _StaticKey:
 
 class _JWKSKeys:
 
-    def __init__(self, url: str):
+    def __init__(self, url: str, timeout: timedelta):
         try:
-            self._client = _JWKSClient(url)
+            self._client = _JWKSClient(url, timeout=timeout.total_seconds())
         except jwt.PyJWKClientError as error:
             raise ValueError(str(error)) from error
 

@@ -4,6 +4,7 @@ from collections.abc import Callable
 from datetime import timedelta
 
 from shortener.bootstrap.settings import (
+    DEFAULT_JWT_JWKS_TIMEOUT,
     DEFAULT_JWT_LEEWAY,
     AccessTokenSettings,
     Settings,
@@ -26,8 +27,13 @@ MISSING = [pytest.param(None, id="unset"), pytest.param(" ", id="empty")]
 # settings, and its default.
 NUMBERS: dict[str, tuple[Callable[[Settings], object], object]] = {
     "JWT_LEEWAY": (lambda settings: settings.access_tokens.leeway, DEFAULT_JWT_LEEWAY),
+    "JWT_JWKS_TIMEOUT": (
+        lambda settings: settings.access_tokens.jwks_timeout,
+        DEFAULT_JWT_JWKS_TIMEOUT,
+    ),
 }
-SECONDS = ["JWT_LEEWAY"]
+SECONDS = ["JWT_LEEWAY", "JWT_JWKS_TIMEOUT"]
+TIMEOUTS = ["JWT_JWKS_TIMEOUT"]
 
 
 def environment(**changes: str | None) -> dict[str, str]:
@@ -143,6 +149,21 @@ def test_from_environment_raises_naming_a_number_of_seconds_that_isnt_valid(
 def test_from_environment_reads_a_leeway_of_0():
     settings = Settings.from_environment(environment(JWT_LEEWAY="0"))
     assert settings.access_tokens.leeway == timedelta(0)
+
+
+@pytest.mark.parametrize("name", TIMEOUTS)
+def test_from_environment_raises_naming_a_timeout_of_0(name: str):
+    with pytest.raises(SettingsError) as raised:
+        Settings.from_environment(environment(**{name: "0"}))
+    assert_mentions(str(raised.value), name)
+
+
+def test_from_environment_raises_for_a_jwks_timeout_with_a_key():
+    with pytest.raises(SettingsError) as raised:
+        Settings.from_environment(
+            environment(JWT_JWKS_URL=None, JWT_KEY="a-secret", JWT_JWKS_TIMEOUT="5")
+        )
+    assert_mentions(str(raised.value), "JWT_JWKS_TIMEOUT", "JWT_KEY")
 
 
 def test_from_environment_names_every_problem_at_once():

@@ -1,3 +1,4 @@
+import asyncio
 import jwt
 import pytest
 
@@ -126,6 +127,25 @@ async def test_access_token_verifier_with_a_jwks_url_fetches_the_keys_from_it():
 
     with pytest.raises(UnavailableError):
         await access_token_verifier(settings).verify(token)
+
+
+async def test_access_token_verifier_waits_for_the_jwks_url_up_to_the_jwks_timeout(
+    silent_server: str,
+):
+    settings = AccessTokenSettings(
+        algorithms=("RS256",),
+        issuer=KEY_SETTINGS.issuer,
+        audience=KEY_SETTINGS.audience,
+        key=None,
+        jwks_url=f"http://{silent_server}/jwks.json",
+        jwks_timeout=timedelta(milliseconds=100),
+    )
+    token = jwt.encode({"sub": "user"}, SECRET, algorithm="HS256", headers={"kid": "1"})
+
+    # The default timeout of PyJWT, 30 seconds, would outlast this one.
+    async with asyncio.timeout(5):
+        with pytest.raises(UnavailableError):
+            await access_token_verifier(settings).verify(token)
 
 
 def test_access_token_verifier_raises_without_a_key_or_a_jwks_url():
