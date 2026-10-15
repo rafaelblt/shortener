@@ -8,7 +8,7 @@ The [README](README.md) explains the service's scope, the owner concept, the arc
 
 The project is being rebuilt layer by layer, from the inside out (see [Current state](README.md#current-state)). The domain, `shared/` and the use cases were rebuilt in the previous phases, and the outer layers are rebuilt together in this one: `shortener/api/`, `shortener/infra/` and `shortener/bootstrap/`, and their tests: `tests/test_api/`, `tests/test_infra/`, `tests/test_bootstrap/` and the fixtures those tests use. The inner layers can still change, in a task that needs it or one that fixes their issues. Update this section when the phase changes.
 
-- This phase is verified with `poetry run task test_layers`, which runs the tests of every layer. The tests of `infra` run Postgres in a container, so they need Docker.
+- This phase is verified with `poetry run task test_layers`, which runs the tests of every layer. The tests of `infra` and `bootstrap` run Postgres in a container, so they need Docker.
 - [docs/api.md](docs/api.md), [docs/infra.md](docs/infra.md) and [docs/bootstrap.md](docs/bootstrap.md) describe the outer layers as they are in the code, with their rules and open questions. Their known bugs are open issues labeled `api`, `infra` or `bootstrap`, and fixing them is part of this phase. They have to stay faithful to the code (see [`docs/`](#docs)). If a rule is unclear, ask instead of making one up.
 - [docs/domain.md](docs/domain.md), [docs/use_cases.md](docs/use_cases.md) and [docs/shared.md](docs/shared.md) describe the inner layers, and have to stay faithful to them in the same way.
 

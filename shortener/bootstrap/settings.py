@@ -10,7 +10,15 @@ from sqlalchemy.exc import ArgumentError
 
 
 DATABASE_DRIVER: Final = "postgresql+asyncpg"
+# Postgres keeps lock_timeout and statement_timeout in an int of milliseconds.
+POSTGRES_MAX_TIMEOUT: Final = timedelta(milliseconds=2**31 - 1)
 
+DEFAULT_DATABASE_POOL_SIZE: Final = 5
+DEFAULT_DATABASE_MAX_OVERFLOW: Final = 10
+DEFAULT_DATABASE_POOL_TIMEOUT: Final = timedelta(seconds=30)
+DEFAULT_DATABASE_CONNECT_TIMEOUT: Final = timedelta(seconds=10)
+DEFAULT_DATABASE_LOCK_TIMEOUT: Final = timedelta(seconds=5)
+DEFAULT_DATABASE_STATEMENT_TIMEOUT: Final = timedelta(seconds=30)
 DEFAULT_JWT_LEEWAY: Final = timedelta(seconds=60)
 DEFAULT_JWT_JWKS_TIMEOUT: Final = timedelta(seconds=5)
 
@@ -21,7 +29,18 @@ class SettingsError(Exception):
 
 @dataclass(frozen=True)
 class DatabaseSettings:
+    """
+    The database, the pool of its connections, and how long the service waits
+    for it. See docs/bootstrap.md#settings
+    """
+
     url: str
+    pool_size: int = DEFAULT_DATABASE_POOL_SIZE
+    max_overflow: int = DEFAULT_DATABASE_MAX_OVERFLOW
+    pool_timeout: timedelta = DEFAULT_DATABASE_POOL_TIMEOUT
+    connect_timeout: timedelta = DEFAULT_DATABASE_CONNECT_TIMEOUT
+    lock_timeout: timedelta = DEFAULT_DATABASE_LOCK_TIMEOUT
+    statement_timeout: timedelta = DEFAULT_DATABASE_STATEMENT_TIMEOUT
 
 
 @dataclass(frozen=True)
@@ -55,44 +74,66 @@ class Settings:
                 names every problem.
         """
         variables = _Variables(environment)
-        database_url = variables.required("DATABASE_URL")
-        algorithms = variables.required_list("JWT_ALGORITHMS")
-        issuer = variables.required("JWT_ISSUER")
-        audience = variables.required("JWT_AUDIENCE")
-        key = variables.optional("JWT_KEY")
-        jwks_url = variables.optional("JWT_JWKS_URL")
-        leeway = variables.optional_seconds(
-            "JWT_LEEWAY", DEFAULT_JWT_LEEWAY, can_be_zero=True
-        )
-        jwks_timeout = variables.optional_seconds(
-            "JWT_JWKS_TIMEOUT", DEFAULT_JWT_JWKS_TIMEOUT
-        )
-
-        if database_url and not _uses_the_driver(database_url):
-            variables.problems.append(
-                f"DATABASE_URL must start with {DATABASE_DRIVER}://"
-            )
-        if (key is None) == (jwks_url is None):
-            variables.problems.append("Set exactly one of JWT_KEY and JWT_JWKS_URL")
-        if key is not None and variables.optional("JWT_JWKS_TIMEOUT") is not None:
-            variables.problems.append(
-                "Set JWT_JWKS_TIMEOUT only with JWT_JWKS_URL, and not with JWT_KEY"
-            )
+        database = _database_settings(variables)
+        access_tokens = _access_token_settings(variables)
         if variables.problems:
             raise SettingsError("; ".join(variables.problems))
+        return cls(database=database, access_tokens=access_tokens)
 
-        return cls(
-            database=DatabaseSettings(url=database_url),
-            access_tokens=AccessTokenSettings(
-                algorithms=algorithms,
-                issuer=issuer,
-                audience=audience,
-                key=key,
-                jwks_url=jwks_url,
-                leeway=leeway,
-                jwks_timeout=jwks_timeout,
-            ),
+
+def _database_settings(variables: "_Variables") -> DatabaseSettings:
+    url = variables.required("DATABASE_URL")
+    if url and not _uses_the_driver(url):
+        variables.problems.append(f"DATABASE_URL must start with {DATABASE_DRIVER}://")
+    return DatabaseSettings(
+        url=url,
+        pool_size=variables.optional_integer(
+            "DATABASE_POOL_SIZE", DEFAULT_DATABASE_POOL_SIZE, minimum=1
+        ),
+        max_overflow=variables.optional_integer(
+            "DATABASE_MAX_OVERFLOW", DEFAULT_DATABASE_MAX_OVERFLOW, minimum=0
+        ),
+        pool_timeout=variables.optional_seconds(
+            "DATABASE_POOL_TIMEOUT", DEFAULT_DATABASE_POOL_TIMEOUT
+        ),
+        connect_timeout=variables.optional_seconds(
+            "DATABASE_CONNECT_TIMEOUT", DEFAULT_DATABASE_CONNECT_TIMEOUT
+        ),
+        lock_timeout=variables.optional_seconds(
+            "DATABASE_LOCK_TIMEOUT",
+            DEFAULT_DATABASE_LOCK_TIMEOUT,
+            maximum=POSTGRES_MAX_TIMEOUT,
+        ),
+        statement_timeout=variables.optional_seconds(
+            "DATABASE_STATEMENT_TIMEOUT",
+            DEFAULT_DATABASE_STATEMENT_TIMEOUT,
+            maximum=POSTGRES_MAX_TIMEOUT,
+        ),
+    )
+
+
+def _access_token_settings(variables: "_Variables") -> AccessTokenSettings:
+    key = variables.optional("JWT_KEY")
+    jwks_url = variables.optional("JWT_JWKS_URL")
+    if (key is None) == (jwks_url is None):
+        variables.problems.append("Set exactly one of JWT_KEY and JWT_JWKS_URL")
+    if key is not None and variables.optional("JWT_JWKS_TIMEOUT") is not None:
+        variables.problems.append(
+            "Set JWT_JWKS_TIMEOUT only with JWT_JWKS_URL, and not with JWT_KEY"
         )
+    return AccessTokenSettings(
+        algorithms=variables.required_list("JWT_ALGORITHMS"),
+        issuer=variables.required("JWT_ISSUER"),
+        audience=variables.required("JWT_AUDIENCE"),
+        key=key,
+        jwks_url=jwks_url,
+        leeway=variables.optional_seconds(
+            "JWT_LEEWAY", DEFAULT_JWT_LEEWAY, can_be_zero=True
+        ),
+        jwks_timeout=variables.optional_seconds(
+            "JWT_JWKS_TIMEOUT", DEFAULT_JWT_JWKS_TIMEOUT
+        ),
+    )
 
 
 class _Variables:
@@ -125,12 +166,28 @@ class _Variables:
         value = self._environment.get(name, "").strip()
         return value or None
 
+    def optional_integer(self, name: str, default: int, minimum: int) -> int:
+        """An optional variable with a whole number, minimum or more."""
+        value = self.optional(name)
+        if value is None:
+            return default
+        number = _integer(value)
+        if number is None or number < minimum:
+            self.problems.append(f"{name} must be a whole number, {minimum} or more")
+            return default
+        return number
+
     def optional_seconds(
-        self, name: str, default: timedelta, can_be_zero: bool = False
+        self,
+        name: str,
+        default: timedelta,
+        can_be_zero: bool = False,
+        maximum: timedelta = timedelta.max,
     ) -> timedelta:
         """
         An optional variable with a number of seconds, which may have
-        decimals: more than 0, or 0 too when it can be zero.
+        decimals: more than 0, or 0 too when it can be zero, and up to
+        maximum.
         """
         value = self.optional(name)
         if value is None:
@@ -139,11 +196,20 @@ class _Variables:
         # A microsecond, the resolution of timedelta, is the least time more
         # than 0.
         least = timedelta(0) if can_be_zero else timedelta.resolution
-        if seconds is None or seconds < least:
+        if seconds is None or not least <= seconds <= maximum:
             requirement = "0 or more" if can_be_zero else "more than 0"
+            if maximum < timedelta.max:
+                requirement += f", up to {maximum.total_seconds()}"
             self.problems.append(f"{name} must be a number of seconds, {requirement}")
             return default
         return seconds
+
+
+def _integer(value: str) -> int | None:
+    try:
+        return int(value)
+    except ValueError:
+        return None
 
 
 def _seconds(value: str) -> timedelta | None:

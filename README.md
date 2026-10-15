@@ -62,7 +62,7 @@ The scope of the current phase and how to work in it are in [CONTRIBUTING.md](CO
 
 ## Development
 
-Requirements: Python 3.12, [Poetry](https://python-poetry.org/), and Docker, which the tests of `infra` use to run Postgres.
+Requirements: Python 3.12, [Poetry](https://python-poetry.org/), and Docker, which the tests of `infra` and `bootstrap` use to run Postgres.
 
 ```bash
 poetry install

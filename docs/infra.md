@@ -87,7 +87,7 @@ A row becomes a `ShortURL` with `ShortURL.restore()`, and its slug and target UR
 
 The two differ in how they read:
 
-- **The repository of a transaction** reads with `SELECT ... FOR UPDATE`, which keeps the [contract of concurrency](use_cases.md#concurrency): the rows it reads stay locked until the transaction ends, and another transaction that reads them through its own repository waits until then. When the first one commits, Postgres reads the rows again for the one that waited, which gets what the first one wrote: the new values, `None` when it removed the short URL, and, reading by slug, `None` when it changed the slug. When the first one rolls back, the one that waited reads the rows as they were. `list_by_owner()` locks every row it returns. No `lock_timeout` is set, so a read waits as long as the transaction that holds the lock lasts.
+- **The repository of a transaction** reads with `SELECT ... FOR UPDATE`, which keeps the [contract of concurrency](use_cases.md#concurrency): the rows it reads stay locked until the transaction ends, and another transaction that reads them through its own repository waits until then. When the first one commits, Postgres reads the rows again for the one that waited, which gets what the first one wrote: the new values, `None` when it removed the short URL, and, reading by slug, `None` when it changed the slug. When the first one rolls back, the one that waited reads the rows as they were. `list_by_owner()` locks every row it returns. A read waits for the lock up to the `lock_timeout` of the connection, which [`bootstrap`](bootstrap.md#the-application) sets, and then raises `UnavailableError`, since Postgres answers `55P03`, which is [transient](#failures-of-the-database).
 - **The reader** runs each read in a connection of its own, without `FOR UPDATE`: it doesn't wait for locks, and reads only what was committed.
 
 The repository writes with these statements:
@@ -99,7 +99,7 @@ The repository writes with these statements:
 | `remove(shorturl)` | `DELETE` of the row whose `id` is the one of the short URL                             |
 
 - `add()` and `save()` run their statement in a savepoint. When it breaks `SLUG_UNIQUE_CONSTRAINT`, the savepoint is rolled back, and they return `Err(SlugTakenError(shorturl.slug))`: only that statement is undone, and the transaction goes on. Any other `IntegrityError`, such as an `id` that is already stored, is raised.
-- Postgres checks the slug when the statement runs. When another transaction wrote the same slug and hasn't ended, the statement waits for it, and only conflicts if that transaction commits.
+- Postgres checks the slug when the statement runs. When another transaction wrote the same slug and hasn't ended, the statement waits for it, up to the `lock_timeout`, and only conflicts if that transaction commits.
 - `save()` and `remove()` of a short URL that isn't stored change nothing, and raise nothing.
 
 ### Failures of the database
