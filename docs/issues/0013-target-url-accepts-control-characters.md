@@ -1,6 +1,6 @@
 ---
-status: open
-resolution:
+status: closed
+resolution: fixed
 labels: [question, domain]
 ---
 
@@ -27,3 +27,14 @@ Decided that `TargetURL.create()` rejects control characters, with `INVALID_FORM
 ## 2026-10-14: Decided to lean to rejecting more characters
 
 Which characters `TargetURL.create()` rejects is decided when the issue is fixed, rejecting more rather than fewer when in doubt, since accepting a character later is easier than rejecting one that is already accepted. The ones considered so far are those of C0 (U+0000 to U+001F), DEL (U+007F), those of C1 (U+0080 to U+009F) and the space, which `docs/domain.md` (TargetURL) says is accepted.
+
+## 2026-10-14: Closed as fixed
+
+`TargetURL.create()` returns `Err` with `INVALID_FORMAT` for a value with a character that `str.isprintable()` is false for, or with a space. It checks them before `urlparse`, which removes some of them. `isprintable()` is false for the characters of the Unicode categories Other and Separator, except the space, so the characters rejected, and why, are:
+
+- C0 (U+0000 to U+001F) and DEL (U+007F): parsers of URLs remove tabs and line breaks, so the URL leads somewhere other than the one the owner sees, a line break can inject a header in a system that writes the URL in one without encoding it, and Postgres can't store a NUL.
+- C1 (U+0080 to U+009F): they are control characters too, which are invisible and mean nothing in a URL.
+- The space (U+0020): a URL has no spaces, which are percent-encoded. Browsers remove the ones at the ends of a URL, encode the ones in the path, and don't open one with a space in the host. So `https://exa mple.com`, which `docs/domain.md` said was accepted, isn't anymore.
+- The rest of the categories Other and Separator, which weren't among the ones considered: format characters, such as the soft hyphen, the zero width space and the right-to-left override, surrogates, private use and unassigned code points, and the other spaces and separators, such as the no-break space and the line separator. They are invisible or mean nothing in a URL, and can make it look other than where it leads, so they are rejected by the criterion of the previous entry.
+
+Letters of any script, symbols and emoji are still accepted. `parse()` still accepts any non-empty string, so a target URL stored with one of these characters still loads. `docs/domain.md`, in TargetURL, describes it.

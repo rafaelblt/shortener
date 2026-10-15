@@ -58,8 +58,19 @@ class TargetURL(str):
 
 
 def _is_https_url_with_host(value: str) -> bool:
+    # urlparse removes some of these characters before parsing, so they are
+    # checked first.
+    if not _is_printable_without_spaces(value):
+        return False
     try:
         parsed = urlparse(value)
     except ValueError:
         return False
     return parsed.scheme == "https" and bool(parsed.netloc)
+
+
+def _is_printable_without_spaces(value: str) -> bool:
+    # isprintable() is false for the characters of the Unicode categories
+    # Other, such as control characters, and Separator, except the space.
+    # See docs/domain.md#targeturl
+    return value.isprintable() and " " not in value

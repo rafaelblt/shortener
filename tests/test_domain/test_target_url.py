@@ -15,6 +15,8 @@ from tests.utils.text_helpers import assert_mentions
     [
         pytest.param("https://www.example.com/path?query=1", id="path and query"),
         pytest.param("HTTPS://example.com", id="uppercase scheme"),
+        pytest.param("https://例え.jp/パス", id="letters of other scripts"),
+        pytest.param("https://example.com/a%20b", id="percent-encoded space"),
     ],
 )
 def test_create_returns_ok_with_a_target_url_of_a_valid_value(value: str):
@@ -44,6 +46,33 @@ def test_create_returns_err_with_an_issue_for_each_broken_rule(
     assert TargetURL.create(value) == invalid(*codes)
 
 
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param("https://example.com/\x00", id="NUL, the first of C0"),
+        pytest.param("https://exa\tmple.com", id="tab"),
+        pytest.param("https://example.com/\r\nSet-Cookie: x=1", id="line break"),
+        pytest.param("https://example.com/\x1f", id="the last of C0"),
+        pytest.param("https://example.com/\x7f", id="DEL"),
+        pytest.param("https://example.com/\x80", id="the first of C1"),
+        pytest.param("https://example.com/\x9f", id="the last of C1"),
+        pytest.param("https://exa mple.com", id="space"),
+        pytest.param(" https://example.com", id="leading space"),
+        pytest.param("https://example.com/\xa0", id="no-break space"),
+        pytest.param("https://example.com/\u2028", id="line separator"),
+        pytest.param("https://exa\xadmple.com", id="soft hyphen"),
+        pytest.param("https://example.com/\u202e", id="right-to-left override"),
+        pytest.param("https://example.com/\ud800", id="surrogate"),
+        pytest.param("https://example.com/\ue000", id="private use"),
+        pytest.param("https://example.com/\uffff", id="noncharacter"),
+    ],
+)
+def test_create_returns_invalid_format_for_a_character_that_isnt_printable_or_a_space(
+    value: str,
+):
+    assert TargetURL.create(value) == invalid(IssueCode.INVALID_FORMAT)
+
+
 def test_constructor_returns_a_target_url_with_the_value():
     target_url = TargetURL("https://example.com")
     assert isinstance(target_url, TargetURL)
@@ -62,6 +91,7 @@ def test_constructor_raises_value_error_with_the_validation_error():
         pytest.param("https://example.com", id="valid"),
         pytest.param("http://example.com", id="http"),
         pytest.param("https://", id="no host"),
+        pytest.param("https://example.com/\r\n", id="line break"),
     ],
 )
 def test_parse_returns_a_target_url_of_any_non_empty_string(value: str):
