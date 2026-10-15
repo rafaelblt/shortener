@@ -1,6 +1,6 @@
 ---
-status: open
-resolution:
+status: closed
+resolution: fixed
 labels: [bug, infra]
 ---
 
@@ -18,3 +18,9 @@ Neither is a problem of the token, and the service can't tell a wrong setting fr
 ## 2026-10-13: Decided to raise `UnavailableError`
 
 Both answers are a failure to fetch the keys, like an HTTP error, so `verify()` raises `UnavailableError` from them, and the API answers `503`. A token whose `kid` isn't in a valid set of keys is still not valid, and `verify()` still returns `None` for it.
+
+## 2026-10-14: Closed as fixed
+
+`verify()` raises `UnavailableError` when the answer of the JWKS URL isn't a set of signing keys: it isn't JSON, isn't a JSON object, has no key PyJWT can use, or has no signing key with a `kid`. The API answers `503`. `PyJWKClient` raises `PyJWKClientError` both for some of those answers and for a `kid` that isn't in the set, so `JWTAccessTokenVerifier` uses a subclass of it whose `get_signing_keys()`, which every fetch of the keys goes through, raises `UnavailableError` from its errors. A token whose `kid` isn't in a valid set is still not valid, and `verify()` still returns `None` for it.
+
+PyJWT keeps a set of keys without a signing key for 5 minutes, as any other set, so `verify()` raises `UnavailableError` until then, without fetching the keys again. It doesn't keep the other answers. `docs/infra.md`, in Access tokens, describes it.

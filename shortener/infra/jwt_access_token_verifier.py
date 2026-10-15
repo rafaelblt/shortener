@@ -65,7 +65,8 @@ class JWTAccessTokenVerifier:
         Returns None when the token isn't valid.
 
         Raises:
-            UnavailableError: The keys couldn't be fetched from the JWKS URL.
+            UnavailableError: The keys couldn't be fetched from the JWKS URL,
+                or its answer isn't a set of keys.
         """
         try:
             key = await self._keys.key_for(token)
@@ -99,18 +100,30 @@ class _JWKSKeys:
 
     def __init__(self, url: str):
         try:
-            self._client = jwt.PyJWKClient(url)
+            self._client = _JWKSClient(url)
         except jwt.PyJWKClientError as error:
             raise ValueError(str(error)) from error
 
     async def key_for(self, token: str) -> jwt.PyJWK:
         # PyJWKClient fetches the keys with urllib, which blocks, so it runs
         # in a thread.
+        return await asyncio.to_thread(self._client.get_signing_key_from_jwt, token)
+
+
+class _JWKSClient(jwt.PyJWKClient):
+    """
+    Raises UnavailableError when the keys can't be fetched, or the answer
+    isn't a set of keys, so that PyJWKClientError only means that the key ID
+    of the token isn't in the set. See docs/infra.md#access-tokens
+    """
+
+    def get_signing_keys(self, refresh: bool = False) -> list[jwt.PyJWK]:
+        # get_signing_key() gets the keys here, also when it fetches them
+        # again for a key ID that isn't in the set.
         try:
-            return await asyncio.to_thread(
-                self._client.get_signing_key_from_jwt, token
-            )
-        except jwt.PyJWKClientConnectionError as error:
+            return super().get_signing_keys(refresh)
+        except (jwt.PyJWTError, ValueError) as error:
+            # json raises ValueError for an answer that isn't JSON.
             raise UnavailableError() from error
 
 

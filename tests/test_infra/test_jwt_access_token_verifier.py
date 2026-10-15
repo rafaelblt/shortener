@@ -66,8 +66,8 @@ def public_key_pem(private_key: RSAPrivateKey) -> str:
 @pytest.fixture
 def jwks_server(private_key: RSAPrivateKey) -> Iterator[ThreadingHTTPServer]:
     """
-    Serves the public key as a JWKS at /jwks.json, or answers status, when
-    it is set.
+    Serves the public key as a JWKS at /jwks.json, or answers status and
+    body, when they are set.
     """
     jwk = RSAAlgorithm.to_jwk(private_key.public_key(), as_dict=True)
     jwks = {"keys": [{**jwk, "kid": KEY_ID, "use": "sig", "alg": "RS256"}]}
@@ -75,7 +75,7 @@ def jwks_server(private_key: RSAPrivateKey) -> Iterator[ThreadingHTTPServer]:
     class Handler(BaseHTTPRequestHandler):
         def do_GET(self) -> None:
             status = getattr(self.server, "status", HTTPStatus.OK)
-            body = json.dumps(jwks).encode()
+            body = getattr(self.server, "body", json.dumps(jwks).encode())
             self.send_response(status)
             self.send_header("Content-Type", "application/json")
             self.end_headers()
@@ -234,6 +234,34 @@ async def test_verify_with_jwks_raises_unavailable_when_the_jwks_url_answers_an_
 
     with pytest.raises(UnavailableError):
         await verifier.verify(token)
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        pytest.param(b"<html>Moved</html>", id="not JSON"),
+        pytest.param(b"[]", id="JSON that isn't an object"),
+        pytest.param(b"{}", id="object without keys"),
+        pytest.param(b'{"keys": [{"kty": "RSA"}]}', id="no key that can be used"),
+        pytest.param(
+            b'{"keys": [{"kty": "oct", "k": "c2VjcmV0"}]}', id="no key with a key ID"
+        ),
+    ],
+)
+async def test_verify_with_jwks_raises_unavailable_when_the_jwks_url_answers_no_keys(
+    jwks_server: ThreadingHTTPServer, private_key: RSAPrivateKey, body: bytes
+):
+    jwks_server.body = body  # type: ignore
+    verifier = JWTAccessTokenVerifier.with_jwks(
+        jwks_url(jwks_server), algorithms=["RS256"], issuer=ISSUER, audience=AUDIENCE
+    )
+    token = jwt.encode(
+        claims(), private_key, algorithm="RS256", headers={"kid": KEY_ID}
+    )
+
+    with pytest.raises(UnavailableError) as raised:
+        await verifier.verify(token)
+    assert raised.value.__cause__ is not None
 
 
 @pytest.mark.parametrize(
