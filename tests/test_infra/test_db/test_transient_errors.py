@@ -1,5 +1,6 @@
 import pytest
 
+from asyncpg.exceptions import InternalClientError
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.exc import TimeoutError as PoolTimeoutError
 
@@ -43,6 +44,12 @@ def wrapped(sqlstate: str | None, connection_invalidated: bool = False) -> DBAPI
         pytest.param(ConnectionRefusedError(), id="refused connection"),
         pytest.param(TimeoutError(), id="timeout"),
         pytest.param(PoolTimeoutError(), id="no free connection in the pool"),
+        pytest.param(
+            InternalClientError(
+                "cannot switch to state 15; another operation (2) is in progress"
+            ),
+            id="broken state of asyncpg, such as after a lost connection",
+        ),
     ],
 )
 def test_is_transient_for_a_failure_that_trying_again_may_fix(error: Exception):

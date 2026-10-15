@@ -1,6 +1,6 @@
 ---
-status: open
-resolution:
+status: closed
+resolution: fixed
 labels: [bug, infra]
 ---
 
@@ -17,3 +17,9 @@ Expected, from `docs/use_cases.md` (UnavailableError): a lost connection is a fa
 ## 2026-10-13: Decided to take every `InternalClientError` as transient
 
 It can't be told apart by its type, which is the same for every broken state of the protocol of asyncpg, and not by whether the connection is closed, since asyncpg hasn't noticed it yet when it raises it. Matching its message would break with a new version of asyncpg. So `is_transient()` takes every `InternalClientError` as transient. No code of the project raises it, and the connection can't be used after it either way. The cost is that a bug of asyncpg is answered with `503` instead of `500`, still logged with its cause.
+
+## 2026-10-14: Closed as fixed
+
+`is_transient()` takes every `InternalClientError` of asyncpg as transient, so `unavailable_when_transient()` raises `UnavailableError` from it, and the API answers `503`. It is imported from `asyncpg.exceptions`, which exposes it, and not from the private module where it is defined.
+
+SQLAlchemy doesn't invalidate the connection, which goes back to the pool when the transaction ends. Checked against Postgres 17, ending the session of a connection and committing right away, as above: in 30 attempts, 29 raised `InternalClientError`, and the next use of the engine worked every time, since `pool_pre_ping` replaces the connection. Without `pool_pre_ping`, the next use failed every time. `docs/infra.md`, in Failures of the database, describes it.

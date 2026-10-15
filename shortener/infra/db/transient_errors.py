@@ -2,6 +2,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import Final
 
+from asyncpg.exceptions import InternalClientError
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.exc import TimeoutError as PoolTimeoutError
 
@@ -43,8 +44,10 @@ def unavailable_when_transient() -> Iterator[None]:
 
 def is_transient(error: Exception) -> bool:
     # asyncpg raises OSError when it can't reach the server, such as for a
-    # refused connection or a timeout, without SQLAlchemy wrapping it.
-    if isinstance(error, (OSError, PoolTimeoutError)):
+    # refused connection or a timeout, and InternalClientError for a broken
+    # state of its protocol, such as after a lost connection, without
+    # SQLAlchemy wrapping them.
+    if isinstance(error, (OSError, PoolTimeoutError, InternalClientError)):
         return True
     if isinstance(error, DBAPIError):
         if error.connection_invalidated:
