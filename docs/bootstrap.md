@@ -8,7 +8,7 @@ This document describes `bootstrap` as it is in the code. Verified bugs that are
 
 ```
 shortener/bootstrap/
-├── settings.py    Settings, AccessTokenSettings and SettingsError
+├── settings.py    Settings, DatabaseSettings, AccessTokenSettings and SettingsError
 ├── use_cases.py   UseCases
 └── app.py         create_app() and access_token_verifier()
 ```
@@ -38,7 +38,7 @@ And these optional ones, of numbers, which have a default:
 - A value is stripped of spaces, and an empty one is the same as a variable that isn't set. In `JWT_ALGORITHMS`, an empty item between commas is left out.
 - A number of seconds may have decimals, such as `0.5`.
 - It raises `SettingsError` when the variables don't make valid settings, with a message that names every problem: a required variable that is missing, a `DATABASE_URL` that isn't a URL of `postgresql+asyncpg`, both or neither of `JWT_KEY` and `JWT_JWKS_URL`, `JWT_JWKS_TIMEOUT` with `JWT_KEY`, and an optional variable that isn't a number, or is out of the range of its table.
-- Otherwise, it returns a `Settings`, with the `database_url`, and the settings of the access tokens in an `AccessTokenSettings`: `algorithms`, as a tuple, `issuer`, `audience`, `key` and `jwks_url`, of which exactly one isn't `None`, and `leeway` and `jwks_timeout`, as `timedelta`s. An optional variable that isn't set gets its default, a `DEFAULT_` constant of `settings.py`, which is also the default of its field, so settings built in code can leave it out.
+- Otherwise, it returns a `Settings`, with the settings of the database in a `DatabaseSettings`, whose `url` is `DATABASE_URL`, and the settings of the access tokens in an `AccessTokenSettings`: `algorithms`, as a tuple, `issuer`, `audience`, `key` and `jwks_url`, of which exactly one isn't `None`, and `leeway` and `jwks_timeout`, as `timedelta`s. An optional variable that isn't set gets its default, a `DEFAULT_` constant of `settings.py`, which is also the default of its field, so settings built in code can leave it out.
 - `JWT_LEEWAY` is a setting because the right value depends on the clock of the issuer of each environment.
 - `JWT_JWKS_TIMEOUT` is 5 seconds by default, instead of the 30 of PyJWT, since each fetch of the keys holds a thread of the default pool of asyncio while it waits. Setting it with `JWT_KEY` is an error, since it is more likely a mistake of whoever set the variables.
 - Whether the algorithms and the key can verify tokens is checked when the application is built, by [`JWTAccessTokenVerifier`](infra.md#access-tokens).

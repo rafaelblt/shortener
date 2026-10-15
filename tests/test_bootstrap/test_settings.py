@@ -7,6 +7,7 @@ from shortener.bootstrap.settings import (
     DEFAULT_JWT_JWKS_TIMEOUT,
     DEFAULT_JWT_LEEWAY,
     AccessTokenSettings,
+    DatabaseSettings,
     Settings,
     SettingsError,
 )
@@ -47,7 +48,9 @@ def environment(**changes: str | None) -> dict[str, str]:
 
 def test_from_environment_reads_the_settings_from_the_variables():
     assert Settings.from_environment(ENVIRONMENT) == Settings(
-        database_url="postgresql+asyncpg://user:password@localhost:5432/shortener",
+        database=DatabaseSettings(
+            url="postgresql+asyncpg://user:password@localhost:5432/shortener"
+        ),
         access_tokens=AccessTokenSettings(
             algorithms=("RS256",),
             issuer="https://issuer.example.com",

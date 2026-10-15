@@ -20,6 +20,11 @@ class SettingsError(Exception):
 
 
 @dataclass(frozen=True)
+class DatabaseSettings:
+    url: str
+
+
+@dataclass(frozen=True)
 class AccessTokenSettings:
     """
     How to verify access tokens. Settings.from_environment() sets exactly one
@@ -37,7 +42,7 @@ class AccessTokenSettings:
 
 @dataclass(frozen=True)
 class Settings:
-    database_url: str
+    database: DatabaseSettings
     access_tokens: AccessTokenSettings
 
     @classmethod
@@ -77,7 +82,7 @@ class Settings:
             raise SettingsError("; ".join(variables.problems))
 
         return cls(
-            database_url=database_url,
+            database=DatabaseSettings(url=database_url),
             access_tokens=AccessTokenSettings(
                 algorithms=algorithms,
                 issuer=issuer,

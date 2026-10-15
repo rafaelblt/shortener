@@ -11,7 +11,12 @@ from fastapi.routing import APIRoute
 
 from shortener.api.endpoints import ENDPOINTS
 from shortener.bootstrap.app import access_token_verifier, create_app
-from shortener.bootstrap.settings import AccessTokenSettings, Settings, SettingsError
+from shortener.bootstrap.settings import (
+    AccessTokenSettings,
+    DatabaseSettings,
+    Settings,
+    SettingsError,
+)
 from shortener.domain import UserID
 from shortener.use_cases.unavailable_error import UnavailableError
 
@@ -25,7 +30,9 @@ KEY_SETTINGS = AccessTokenSettings(
     jwks_url=None,
 )
 SETTINGS = Settings(
-    database_url="postgresql+asyncpg://user:password@localhost:5432/shortener",
+    database=DatabaseSettings(
+        url="postgresql+asyncpg://user:password@localhost:5432/shortener"
+    ),
     access_tokens=KEY_SETTINGS,
 )
 
@@ -56,7 +63,7 @@ def test_create_app_returns_the_api_with_every_endpoint():
 def test_create_app_without_settings_reads_them_from_the_environment(
     monkeypatch: pytest.MonkeyPatch,
 ):
-    monkeypatch.setenv("DATABASE_URL", SETTINGS.database_url)
+    monkeypatch.setenv("DATABASE_URL", SETTINGS.database.url)
     monkeypatch.setenv("JWT_ALGORITHMS", "HS256")
     monkeypatch.setenv("JWT_ISSUER", KEY_SETTINGS.issuer)
     monkeypatch.setenv("JWT_AUDIENCE", KEY_SETTINGS.audience)
@@ -68,7 +75,7 @@ def test_create_app_without_settings_reads_them_from_the_environment(
 
 def test_create_app_raises_for_settings_that_cannot_verify_tokens():
     settings = Settings(
-        database_url=SETTINGS.database_url,
+        database=SETTINGS.database,
         access_tokens=AccessTokenSettings(
             algorithms=("HS256",),
             issuer=KEY_SETTINGS.issuer,

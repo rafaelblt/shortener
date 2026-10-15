@@ -28,7 +28,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     # The engine connects only when it is first used, and pre_ping replaces
     # the connections the server closed while they waited in the pool.
-    engine = create_async_engine(settings.database_url, pool_pre_ping=True)
+    engine = create_async_engine(settings.database.url, pool_pre_ping=True)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
