@@ -1,6 +1,7 @@
 import jwt
 import pytest
 
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, Mock
 
@@ -30,6 +31,19 @@ SETTINGS = Settings(
 
 def paths_of(app: FastAPI) -> set[str]:
     return {route.path for route in app.routes if isinstance(route, APIRoute)}
+
+
+def hs256_token(user_id: UserID, expires_at: datetime) -> str:
+    return jwt.encode(
+        {
+            "sub": str(user_id),
+            "iss": KEY_SETTINGS.issuer,
+            "aud": KEY_SETTINGS.audience,
+            "exp": expires_at,
+        },
+        SECRET,
+        algorithm="HS256",
+    )
 
 
 def test_create_app_returns_the_api_with_every_endpoint():
@@ -85,18 +99,19 @@ async def test_the_application_disposes_its_engine_when_it_stops(
 async def test_access_token_verifier_with_a_key_verifies_the_tokens_it_signed(
     owner_id: UserID,
 ):
-    token = jwt.encode(
-        {
-            "sub": str(owner_id),
-            "iss": KEY_SETTINGS.issuer,
-            "aud": KEY_SETTINGS.audience,
-            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
-        },
-        SECRET,
-        algorithm="HS256",
-    )
-
+    token = hs256_token(owner_id, datetime.now(timezone.utc) + timedelta(hours=1))
     assert await access_token_verifier(KEY_SETTINGS).verify(token) == owner_id
+
+
+async def test_access_token_verifier_allows_the_leeway_of_the_settings(
+    owner_id: UserID,
+):
+    token = hs256_token(owner_id, datetime.now(timezone.utc) - timedelta(seconds=30))
+    lenient = replace(KEY_SETTINGS, leeway=timedelta(seconds=60))
+    strict = replace(KEY_SETTINGS, leeway=timedelta(0))
+
+    assert await access_token_verifier(lenient).verify(token) == owner_id
+    assert await access_token_verifier(strict).verify(token) is None
 
 
 async def test_access_token_verifier_with_a_jwks_url_fetches_the_keys_from_it():

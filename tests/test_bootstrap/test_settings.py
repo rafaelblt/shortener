@@ -1,6 +1,14 @@
 import pytest
 
-from shortener.bootstrap.settings import AccessTokenSettings, Settings, SettingsError
+from collections.abc import Callable
+from datetime import timedelta
+
+from shortener.bootstrap.settings import (
+    DEFAULT_JWT_LEEWAY,
+    AccessTokenSettings,
+    Settings,
+    SettingsError,
+)
 from tests.utils.text_helpers import assert_mentions
 
 
@@ -12,6 +20,14 @@ ENVIRONMENT = {
     "JWT_JWKS_URL": "https://issuer.example.com/jwks.json",
 }
 REQUIRED = ["DATABASE_URL", "JWT_ALGORITHMS", "JWT_ISSUER", "JWT_AUDIENCE"]
+MISSING = [pytest.param(None, id="unset"), pytest.param(" ", id="empty")]
+
+# How to read the value of each optional variable with a number from the
+# settings, and its default.
+NUMBERS: dict[str, tuple[Callable[[Settings], object], object]] = {
+    "JWT_LEEWAY": (lambda settings: settings.access_tokens.leeway, DEFAULT_JWT_LEEWAY),
+}
+SECONDS = ["JWT_LEEWAY"]
 
 
 def environment(**changes: str | None) -> dict[str, str]:
@@ -51,9 +67,7 @@ def test_from_environment_reads_the_algorithms_separated_by_commas():
 
 
 @pytest.mark.parametrize("name", REQUIRED)
-@pytest.mark.parametrize(
-    "value", [pytest.param(None, id="unset"), pytest.param(" ", id="empty")]
-)
+@pytest.mark.parametrize("value", MISSING)
 def test_from_environment_raises_naming_a_required_variable_that_is_missing(
     name: str, value: str | None
 ):
@@ -98,6 +112,37 @@ def test_from_environment_raises_for_a_database_url_without_asyncpg(database_url
     with pytest.raises(SettingsError) as raised:
         Settings.from_environment(environment(DATABASE_URL=database_url))
     assert_mentions(str(raised.value), "DATABASE_URL")
+
+
+@pytest.mark.parametrize("name", NUMBERS)
+@pytest.mark.parametrize("value", MISSING)
+def test_from_environment_uses_the_default_of_an_optional_number_that_is_missing(
+    name: str, value: str | None
+):
+    read, default = NUMBERS[name]
+    assert read(Settings.from_environment(environment(**{name: value}))) == default
+
+
+@pytest.mark.parametrize("name", SECONDS)
+def test_from_environment_reads_a_number_of_seconds_with_decimals(name: str):
+    read, _ = NUMBERS[name]
+    settings = Settings.from_environment(environment(**{name: " 0.25 "}))
+    assert read(settings) == timedelta(milliseconds=250)
+
+
+@pytest.mark.parametrize("name", SECONDS)
+@pytest.mark.parametrize("value", ["5s", "-0.000001", "nan", "inf", "1e20"])
+def test_from_environment_raises_naming_a_number_of_seconds_that_isnt_valid(
+    name: str, value: str
+):
+    with pytest.raises(SettingsError) as raised:
+        Settings.from_environment(environment(**{name: value}))
+    assert_mentions(str(raised.value), name)
+
+
+def test_from_environment_reads_a_leeway_of_0():
+    settings = Settings.from_environment(environment(JWT_LEEWAY="0"))
+    assert settings.access_tokens.leeway == timedelta(0)
 
 
 def test_from_environment_names_every_problem_at_once():

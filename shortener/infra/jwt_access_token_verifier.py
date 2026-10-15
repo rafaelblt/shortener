@@ -1,6 +1,7 @@
 import asyncio
 
 from collections.abc import Sequence
+from datetime import timedelta
 from typing import Any, Protocol
 from uuid import UUID
 
@@ -24,19 +25,28 @@ class JWTAccessTokenVerifier:
         algorithms: Sequence[str],
         issuer: str,
         audience: str,
+        leeway: timedelta,
     ):
         self._keys = keys
         self._algorithms = list(algorithms)
         self._issuer = issuer
         self._audience = audience
+        self._leeway = leeway
 
     @classmethod
     def with_key(
-        cls, key: str, algorithms: Sequence[str], issuer: str, audience: str
+        cls,
+        key: str,
+        algorithms: Sequence[str],
+        issuer: str,
+        audience: str,
+        leeway: timedelta,
     ) -> "JWTAccessTokenVerifier":
         """
         Verifies the tokens with a single key: the secret of the HMAC
-        algorithms, or the public key of the others, in PEM.
+        algorithms, or the public key of the others, in PEM. The leeway is
+        the difference allowed between the clock of the issuer and the one of
+        the service.
 
         Raises:
             ValueError: An algorithm isn't supported, or the key doesn't suit
@@ -44,21 +54,27 @@ class JWTAccessTokenVerifier:
         """
         _check_algorithms(algorithms)
         _check_key(key, algorithms)
-        return cls(_StaticKey(key), algorithms, issuer, audience)
+        return cls(_StaticKey(key), algorithms, issuer, audience, leeway)
 
     @classmethod
     def with_jwks(
-        cls, url: str, algorithms: Sequence[str], issuer: str, audience: str
+        cls,
+        url: str,
+        algorithms: Sequence[str],
+        issuer: str,
+        audience: str,
+        leeway: timedelta,
     ) -> "JWTAccessTokenVerifier":
         """
         Verifies the tokens with the keys the issuer publishes at a JWKS URL.
+        The leeway is the same as in with_key().
 
         Raises:
             ValueError: An algorithm isn't supported, or the URL isn't http
                 or https.
         """
         _check_algorithms(algorithms)
-        return cls(_JWKSKeys(url), algorithms, issuer, audience)
+        return cls(_JWKSKeys(url), algorithms, issuer, audience, leeway)
 
     async def verify(self, token: str) -> UserID | None:
         """
@@ -76,6 +92,7 @@ class JWTAccessTokenVerifier:
                 algorithms=self._algorithms,
                 issuer=self._issuer,
                 audience=self._audience,
+                leeway=self._leeway,
                 options={"require": ["exp", "sub"]},
             )
         except jwt.PyJWTError:

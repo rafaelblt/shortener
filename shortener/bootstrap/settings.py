@@ -2,6 +2,7 @@ import os
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from datetime import timedelta
 from typing import Final
 
 from sqlalchemy.engine import make_url
@@ -9,6 +10,8 @@ from sqlalchemy.exc import ArgumentError
 
 
 DATABASE_DRIVER: Final = "postgresql+asyncpg"
+
+DEFAULT_JWT_LEEWAY: Final = timedelta(seconds=60)
 
 
 class SettingsError(Exception):
@@ -27,6 +30,7 @@ class AccessTokenSettings:
     audience: str
     key: str | None
     jwks_url: str | None
+    leeway: timedelta = DEFAULT_JWT_LEEWAY
 
 
 @dataclass(frozen=True)
@@ -50,6 +54,9 @@ class Settings:
         audience = variables.required("JWT_AUDIENCE")
         key = variables.optional("JWT_KEY")
         jwks_url = variables.optional("JWT_JWKS_URL")
+        leeway = variables.optional_seconds(
+            "JWT_LEEWAY", DEFAULT_JWT_LEEWAY, can_be_zero=True
+        )
 
         if database_url and not _uses_the_driver(database_url):
             variables.problems.append(
@@ -68,6 +75,7 @@ class Settings:
                 audience=audience,
                 key=key,
                 jwks_url=jwks_url,
+                leeway=leeway,
             ),
         )
 
@@ -101,6 +109,36 @@ class _Variables:
         # An empty variable is the same as one that isn't set.
         value = self._environment.get(name, "").strip()
         return value or None
+
+    def optional_seconds(
+        self, name: str, default: timedelta, can_be_zero: bool = False
+    ) -> timedelta:
+        """
+        An optional variable with a number of seconds, which may have
+        decimals: more than 0, or 0 too when it can be zero.
+        """
+        value = self.optional(name)
+        if value is None:
+            return default
+        seconds = _seconds(value)
+        # A microsecond, the resolution of timedelta, is the least time more
+        # than 0.
+        least = timedelta(0) if can_be_zero else timedelta.resolution
+        if seconds is None or seconds < least:
+            requirement = "0 or more" if can_be_zero else "more than 0"
+            self.problems.append(f"{name} must be a number of seconds, {requirement}")
+            return default
+        return seconds
+
+
+def _seconds(value: str) -> timedelta | None:
+    try:
+        return timedelta(seconds=float(value))
+    except (ValueError, OverflowError):
+        # float() raises ValueError for a value that isn't a number, and
+        # timedelta raises it for nan, and OverflowError for inf or a number
+        # too large.
+        return None
 
 
 def _uses_the_driver(database_url: str) -> bool:

@@ -26,6 +26,15 @@ SECRET = "a-secret-long-enough-for-hs256-signatures"
 KEY_ID = "key-1"
 USER_UUID = UUID("0199b2c4-7a3e-7c1a-9b5e-3f2d4c6b8a10")
 UNREACHABLE_JWKS_URL = "http://127.0.0.1:1/jwks.json"
+LEEWAY = timedelta(seconds=60)
+
+# Each claim of time, and the direction in which it makes a token not valid:
+# an exp in the past, or an nbf or iat in the future.
+TIME_CLAIMS = [
+    pytest.param("exp", -1, id="exp in the past"),
+    pytest.param("nbf", 1, id="nbf in the future"),
+    pytest.param("iat", 1, id="iat in the future"),
+]
 
 
 def claims(**changes: Any) -> dict[str, Any]:
@@ -96,10 +105,16 @@ def jwks_url(server: ThreadingHTTPServer) -> str:
     return f"http://127.0.0.1:{server.server_port}/jwks.json"
 
 
+def jwks_verifier(url: str) -> JWTAccessTokenVerifier:
+    return JWTAccessTokenVerifier.with_jwks(
+        url, algorithms=["RS256"], issuer=ISSUER, audience=AUDIENCE, leeway=LEEWAY
+    )
+
+
 @pytest.fixture
 def hs256_verifier() -> JWTAccessTokenVerifier:
     return JWTAccessTokenVerifier.with_key(
-        SECRET, algorithms=["HS256"], issuer=ISSUER, audience=AUDIENCE
+        SECRET, algorithms=["HS256"], issuer=ISSUER, audience=AUDIENCE, leeway=LEEWAY
     )
 
 
@@ -112,10 +127,6 @@ async def test_verify_returns_the_user_id_of_the_subject_of_a_valid_token(
 @pytest.mark.parametrize(
     "token",
     [
-        pytest.param(
-            hs256_token(exp=datetime.now(timezone.utc) - timedelta(minutes=1)),
-            id="expired",
-        ),
         pytest.param(hs256_token(exp=None), id="without exp"),
         pytest.param(hs256_token(iss="https://other.example.com"), id="other issuer"),
         pytest.param(hs256_token(iss=None), id="without iss"),
@@ -141,11 +152,31 @@ async def test_verify_returns_none_for_a_token_that_is_not_valid(
     assert await hs256_verifier.verify(token) is None
 
 
+@pytest.mark.parametrize("claim, direction", TIME_CLAIMS)
+async def test_verify_allows_a_time_off_by_less_than_the_leeway(
+    hs256_verifier: JWTAccessTokenVerifier, claim: str, direction: int
+):
+    token = hs256_token(**{claim: datetime.now(timezone.utc) + direction * LEEWAY / 2})
+    assert await hs256_verifier.verify(token) == UserID(USER_UUID)
+
+
+@pytest.mark.parametrize("claim, direction", TIME_CLAIMS)
+async def test_verify_returns_none_for_a_time_off_by_more_than_the_leeway(
+    hs256_verifier: JWTAccessTokenVerifier, claim: str, direction: int
+):
+    token = hs256_token(**{claim: datetime.now(timezone.utc) + direction * LEEWAY * 2})
+    assert await hs256_verifier.verify(token) is None
+
+
 async def test_verify_with_a_public_key_returns_the_user_id_of_a_valid_token(
     private_key: RSAPrivateKey, public_key_pem: str
 ):
     verifier = JWTAccessTokenVerifier.with_key(
-        public_key_pem, algorithms=["RS256"], issuer=ISSUER, audience=AUDIENCE
+        public_key_pem,
+        algorithms=["RS256"],
+        issuer=ISSUER,
+        audience=AUDIENCE,
+        leeway=LEEWAY,
     )
     token = jwt.encode(claims(), private_key, algorithm="RS256")
 
@@ -167,7 +198,7 @@ def test_with_key_raises_for_algorithms_or_a_key_that_cannot_verify_tokens(
 ):
     with pytest.raises(ValueError):
         JWTAccessTokenVerifier.with_key(
-            key, algorithms=algorithms, issuer=ISSUER, audience=AUDIENCE
+            key, algorithms=algorithms, issuer=ISSUER, audience=AUDIENCE, leeway=LEEWAY
         )
 
 
@@ -176,16 +207,18 @@ def test_with_key_raises_for_a_public_key_as_the_secret_of_an_hmac_algorithm(
 ):
     with pytest.raises(ValueError):
         JWTAccessTokenVerifier.with_key(
-            public_key_pem, algorithms=["HS256"], issuer=ISSUER, audience=AUDIENCE
+            public_key_pem,
+            algorithms=["HS256"],
+            issuer=ISSUER,
+            audience=AUDIENCE,
+            leeway=LEEWAY,
         )
 
 
 async def test_verify_with_jwks_returns_the_user_id_of_a_token_of_a_published_key(
     jwks_server: ThreadingHTTPServer, private_key: RSAPrivateKey
 ):
-    verifier = JWTAccessTokenVerifier.with_jwks(
-        jwks_url(jwks_server), algorithms=["RS256"], issuer=ISSUER, audience=AUDIENCE
-    )
+    verifier = jwks_verifier(jwks_url(jwks_server))
     token = jwt.encode(
         claims(), private_key, algorithm="RS256", headers={"kid": KEY_ID}
     )
@@ -196,9 +229,7 @@ async def test_verify_with_jwks_returns_the_user_id_of_a_token_of_a_published_ke
 async def test_verify_with_jwks_returns_none_for_a_key_id_that_is_not_published(
     jwks_server: ThreadingHTTPServer, private_key: RSAPrivateKey
 ):
-    verifier = JWTAccessTokenVerifier.with_jwks(
-        jwks_url(jwks_server), algorithms=["RS256"], issuer=ISSUER, audience=AUDIENCE
-    )
+    verifier = jwks_verifier(jwks_url(jwks_server))
     token = jwt.encode(
         claims(), private_key, algorithm="RS256", headers={"kid": "other-key"}
     )
@@ -209,9 +240,7 @@ async def test_verify_with_jwks_returns_none_for_a_key_id_that_is_not_published(
 async def test_verify_with_jwks_raises_unavailable_when_the_keys_cannot_be_fetched(
     private_key: RSAPrivateKey,
 ):
-    verifier = JWTAccessTokenVerifier.with_jwks(
-        UNREACHABLE_JWKS_URL, algorithms=["RS256"], issuer=ISSUER, audience=AUDIENCE
-    )
+    verifier = jwks_verifier(UNREACHABLE_JWKS_URL)
     token = jwt.encode(
         claims(), private_key, algorithm="RS256", headers={"kid": KEY_ID}
     )
@@ -225,9 +254,7 @@ async def test_verify_with_jwks_raises_unavailable_when_the_jwks_url_answers_an_
     jwks_server: ThreadingHTTPServer, private_key: RSAPrivateKey
 ):
     jwks_server.status = HTTPStatus.SERVICE_UNAVAILABLE  # type: ignore
-    verifier = JWTAccessTokenVerifier.with_jwks(
-        jwks_url(jwks_server), algorithms=["RS256"], issuer=ISSUER, audience=AUDIENCE
-    )
+    verifier = jwks_verifier(jwks_url(jwks_server))
     token = jwt.encode(
         claims(), private_key, algorithm="RS256", headers={"kid": KEY_ID}
     )
@@ -252,9 +279,7 @@ async def test_verify_with_jwks_raises_unavailable_when_the_jwks_url_answers_no_
     jwks_server: ThreadingHTTPServer, private_key: RSAPrivateKey, body: bytes
 ):
     jwks_server.body = body  # type: ignore
-    verifier = JWTAccessTokenVerifier.with_jwks(
-        jwks_url(jwks_server), algorithms=["RS256"], issuer=ISSUER, audience=AUDIENCE
-    )
+    verifier = jwks_verifier(jwks_url(jwks_server))
     token = jwt.encode(
         claims(), private_key, algorithm="RS256", headers={"kid": KEY_ID}
     )
@@ -276,5 +301,5 @@ def test_with_jwks_raises_for_a_url_or_algorithms_that_cannot_verify_tokens(
 ):
     with pytest.raises(ValueError):
         JWTAccessTokenVerifier.with_jwks(
-            url, algorithms=algorithms, issuer=ISSUER, audience=AUDIENCE
+            url, algorithms=algorithms, issuer=ISSUER, audience=AUDIENCE, leeway=LEEWAY
         )

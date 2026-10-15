@@ -55,10 +55,18 @@ def access_token_verifier(settings: AccessTokenSettings) -> JWTAccessTokenVerifi
     """
     if settings.jwks_url is not None:
         return JWTAccessTokenVerifier.with_jwks(
-            settings.jwks_url, settings.algorithms, settings.issuer, settings.audience
+            settings.jwks_url,
+            settings.algorithms,
+            settings.issuer,
+            settings.audience,
+            settings.leeway,
         )
     if settings.key is not None:
         return JWTAccessTokenVerifier.with_key(
-            settings.key, settings.algorithms, settings.issuer, settings.audience
+            settings.key,
+            settings.algorithms,
+            settings.issuer,
+            settings.audience,
+            settings.leeway,
         )
     raise SettingsError("The settings of the access tokens need a key or a JWKS URL")

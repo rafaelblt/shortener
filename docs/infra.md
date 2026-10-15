@@ -135,20 +135,20 @@ A connection lost during `commit()` is transient too, even when Postgres committ
 
 `JWTAccessTokenVerifier` implements the [`AccessTokenVerifier`](api.md#authentication) of the API: it verifies access tokens that are JWTs, with PyJWT, and returns the `UserID` of the user each one was issued to. The tokens are issued outside the service (see [Scope](../README.md#scope)). It is built in one of two ways, by where the keys that verify the signatures come from:
 
-| Way                                            | Keys                                                                                                                    |
-| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `with_key(key, algorithms, issuer, audience)`  | A single key: the secret of the HMAC algorithms (`HS256`, `HS384` and `HS512`), or the public key of the others, in PEM |
-| `with_jwks(url, algorithms, issuer, audience)` | The keys the issuer publishes at a JWKS URL, each with its key ID (`kid`)                                               |
+| Way                                                    | Keys                                                                                                                    |
+| ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| `with_key(key, algorithms, issuer, audience, leeway)`  | A single key: the secret of the HMAC algorithms (`HS256`, `HS384` and `HS512`), or the public key of the others, in PEM |
+| `with_jwks(url, algorithms, issuer, audience, leeway)` | The keys the issuer publishes at a JWKS URL, each with its key ID (`kid`)                                               |
 
-`algorithms` are the ones a token may be signed with: any algorithm of PyJWT but `none`, and at least one. Both ways raise `ValueError` when an algorithm isn't one of them. `with_key()` also raises it when the key doesn't suit one of the algorithms: when PyJWT can't load it for the algorithm, such as a public key as the secret of an HMAC algorithm, or when it is shorter than the algorithm needs, such as a secret shorter than the hash of an HMAC algorithm. `with_jwks()` also raises it when the URL isn't `http` or `https`.
+`algorithms` are the ones a token may be signed with: any algorithm of PyJWT but `none`, and at least one. Both ways raise `ValueError` when an algorithm isn't one of them. `with_key()` also raises it when the key doesn't suit one of the algorithms: when PyJWT can't load it for the algorithm, such as a public key as the secret of an HMAC algorithm, or when it is shorter than the algorithm needs, such as a secret shorter than the hash of an HMAC algorithm. `with_jwks()` also raises it when the URL isn't `http` or `https`. `leeway`, a `timedelta`, is the difference allowed between the clock of the issuer and the one of the service, when checking the times of a token.
 
 `verify(token)` returns the `UserID` of the UUID in the `sub` claim, when the token:
 
 - is a JWT signed with one of `algorithms`: by the key, or by the published key whose `kid` is the one in the header of the token, and whose algorithm is the one of the token;
-- has `exp`, in the future, `iss`, equal to `issuer`, `aud`, equal to `audience` or a list that has it, and `sub`, a string with a UUID;
-- has `nbf` and `iat` in the past, when it has them.
+- has `exp`, `iss`, equal to `issuer`, `aud`, equal to `audience` or a list that has it, and `sub`, a string with a UUID;
+- has an `exp` later than the current time minus `leeway`, and `nbf` and `iat`, when it has them, no later than the current time plus `leeway`.
 
-Otherwise, it returns `None`, whatever is wrong with the token. Checking the time allows no leeway, so a clock of the issuer ahead of the one of the service makes a new token not valid yet, for as long as the difference.
+Otherwise, it returns `None`, whatever is wrong with the token. Without the leeway, a clock of the issuer ahead of the one of the service would make a new token not valid yet, for as long as the difference. With it, a token is also accepted for up to `leeway` after its `exp`.
 
 With JWKS, PyJWT fetches the published keys when it needs them, in a thread, since it fetches with urllib, which blocks. It keeps them for 5 minutes, and, for a `kid` it doesn't have, fetches them again at most once every 30 seconds, so a token with an unknown `kid` doesn't make every request fetch them. `verify()` raises `UnavailableError`, from the error of PyJWT or of `json`, when the keys can't be fetched, because the URL can't be reached, takes more than 30 seconds or answers an HTTP error, and when the answer isn't a set of signing keys: it isn't JSON, isn't a JSON object, has no key PyJWT can use, or has no signing key with a `kid`. Neither is a problem of the token, and the service can't tell a wrong setting from a failure of the issuer. A token whose `kid` isn't in a set of signing keys is still not valid, and `verify()` returns `None` for it. PyJWT raises `PyJWKClientError` for both, so the verifier uses a subclass of `PyJWKClient` whose `get_signing_keys()`, which every fetch of the keys goes through, raises `UnavailableError` from its errors.
 
@@ -156,6 +156,4 @@ PyJWT keeps a set of keys without a signing key for 5 minutes, as any other set,
 
 ## Open questions
 
-Decisions to make during this phase.
-
-- **Leeway of the times of a token.** `JWTAccessTokenVerifier.verify()` allows no difference between the clock of the issuer and the one of the service when it checks `exp`, `nbf` and `iat` (see [Access tokens](#access-tokens)). Whether to allow one, and how long, is still to be decided.
+Decisions to make during this phase. There are none at the moment.
