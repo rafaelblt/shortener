@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from http import HTTPStatus
 from typing import Any
 
-from shortener.api.errors import error_response
+from shortener.api.errors import ErrorResponse, documented_responses, error_response
 from shortener.domain import Slug
 from shortener.domain.errors import ShortURLDeactivatedError
 from shortener.shared.validation import IssueCode
@@ -121,6 +121,28 @@ def test_error_response_raises_for_an_error_the_api_does_not_answer():
     with pytest.raises(LookupError) as raised:
         error_response(UnansweredError())
     assert_mentions(str(raised.value), UnansweredError.__name__)
+
+
+def test_documented_responses_documents_the_headers_of_every_error_of_a_status():
+    errors = [
+        ErrorResponse(
+            HTTPStatus.CONFLICT,
+            "first_conflict",
+            "The first conflict.",
+            header_descriptions={"First-Header": "The first header."},
+        ),
+        ErrorResponse(
+            HTTPStatus.CONFLICT,
+            "second_conflict",
+            "The second conflict.",
+            header_descriptions={"Second-Header": "The second header."},
+        ),
+    ]
+
+    responses = documented_responses(errors)
+
+    headers = responses[HTTPStatus.CONFLICT]["headers"]
+    assert set(headers) == {"First-Header", "Second-Header"}
 
 
 @pytest.mark.parametrize(

@@ -13,6 +13,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from starlette.exceptions import HTTPException
 
+from shortener.api.openapi import documented_headers
 from shortener.api.rate_limit import TooManyRequestsError
 from shortener.domain.errors import ShortURLDeactivatedError
 from shortener.shared.validation import IssueCode
@@ -41,6 +42,9 @@ class ErrorResponse:
     code: str
     message: str
     headers: Mapping[str, str] = field(default_factory=dict)
+    # The headers it answers, with the description of each one, for the
+    # OpenAPI schema.
+    header_descriptions: Mapping[str, str] = field(default_factory=dict)
 
 
 # Every error a use case may return, and how the API answers it. An endpoint
@@ -52,6 +56,9 @@ ERRORS: Final[Mapping[type, ErrorResponse]] = {
         "not_authenticated",
         "The request needs a valid access token.",
         headers={"WWW-Authenticate": "Bearer"},
+        header_descriptions={
+            "WWW-Authenticate": "The scheme of the access token, Bearer."
+        },
     ),
     InvalidInputError: ErrorResponse(
         HTTPStatus.UNPROCESSABLE_ENTITY,
@@ -80,6 +87,9 @@ TOO_MANY_REQUESTS: Final = ErrorResponse(
     HTTPStatus.TOO_MANY_REQUESTS,
     "too_many_requests",
     "The client made too many requests. Try again later.",
+    header_descriptions={
+        "Retry-After": "The seconds until the client can make requests again."
+    },
 )
 UNAVAILABLE: Final = ErrorResponse(
     HTTPStatus.SERVICE_UNAVAILABLE,
@@ -135,7 +145,7 @@ def documented_responses(
 ) -> dict[int | str, dict[str, Any]]:
     """
     The error responses of a route, for the OpenAPI schema: those of errors
-    and UNAVAILABLE, grouped by status code.
+    and UNAVAILABLE, grouped by status code, with the headers they describe.
     """
     errors = [*errors, UNAVAILABLE]
     by_status: dict[int, dict[str, ErrorResponse]] = {}
@@ -147,8 +157,17 @@ def documented_responses(
             "description": " ".join(
                 f"`{error.code}`: {error.message}" for error in by_code.values()
             ),
+            **documented_headers(_header_descriptions_of(by_code.values())),
         }
         for status_code, by_code in by_status.items()
+    }
+
+
+def _header_descriptions_of(errors: Iterable[ErrorResponse]) -> dict[str, str]:
+    return {
+        name: description
+        for error in errors
+        for name, description in error.header_descriptions.items()
     }
 
 

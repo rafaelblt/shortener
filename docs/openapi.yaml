@@ -39,6 +39,11 @@ paths:
         '429':
           description: '`too_many_requests`: The client made too many requests. Try
             again later.'
+          headers:
+            Retry-After:
+              description: The seconds until the client can make requests again.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -86,6 +91,11 @@ paths:
         '429':
           description: '`too_many_requests`: The client made too many requests. Try
             again later.'
+          headers:
+            Retry-After:
+              description: The seconds until the client can make requests again.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -124,6 +134,11 @@ paths:
                 type: string
         '401':
           description: '`not_authenticated`: The request needs a valid access token.'
+          headers:
+            WWW-Authenticate:
+              description: The scheme of the access token, Bearer.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -149,6 +164,11 @@ paths:
         '429':
           description: '`too_many_requests`: The client made too many requests. Try
             again later.'
+          headers:
+            Retry-After:
+              description: The seconds until the client can make requests again.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -191,6 +211,11 @@ paths:
                 $ref: '#/components/schemas/ShortURLPageContent'
         '401':
           description: '`not_authenticated`: The request needs a valid access token.'
+          headers:
+            WWW-Authenticate:
+              description: The scheme of the access token, Bearer.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -204,6 +229,11 @@ paths:
         '429':
           description: '`too_many_requests`: The client made too many requests. Try
             again later.'
+          headers:
+            Retry-After:
+              description: The seconds until the client can make requests again.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -239,6 +269,11 @@ paths:
                 $ref: '#/components/schemas/ShortURLDetails'
         '401':
           description: '`not_authenticated`: The request needs a valid access token.'
+          headers:
+            WWW-Authenticate:
+              description: The scheme of the access token, Bearer.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -258,6 +293,11 @@ paths:
         '429':
           description: '`too_many_requests`: The client made too many requests. Try
             again later.'
+          headers:
+            Retry-After:
+              description: The seconds until the client can make requests again.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -297,6 +337,11 @@ paths:
                 $ref: '#/components/schemas/ShortURLDetails'
         '401':
           description: '`not_authenticated`: The request needs a valid access token.'
+          headers:
+            WWW-Authenticate:
+              description: The scheme of the access token, Bearer.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -329,6 +374,11 @@ paths:
         '429':
           description: '`too_many_requests`: The client made too many requests. Try
             again later.'
+          headers:
+            Retry-After:
+              description: The seconds until the client can make requests again.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -359,6 +409,11 @@ paths:
           description: No Content
         '401':
           description: '`not_authenticated`: The request needs a valid access token.'
+          headers:
+            WWW-Authenticate:
+              description: The scheme of the access token, Bearer.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -378,6 +433,11 @@ paths:
         '429':
           description: '`too_many_requests`: The client made too many requests. Try
             again later.'
+          headers:
+            Retry-After:
+              description: The seconds until the client can make requests again.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -413,6 +473,11 @@ paths:
                 $ref: '#/components/schemas/ShortURLDetails'
         '401':
           description: '`not_authenticated`: The request needs a valid access token.'
+          headers:
+            WWW-Authenticate:
+              description: The scheme of the access token, Bearer.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -432,6 +497,11 @@ paths:
         '429':
           description: '`too_many_requests`: The client made too many requests. Try
             again later.'
+          headers:
+            Retry-After:
+              description: The seconds until the client can make requests again.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -467,6 +537,11 @@ paths:
                 $ref: '#/components/schemas/ShortURLDetails'
         '401':
           description: '`not_authenticated`: The request needs a valid access token.'
+          headers:
+            WWW-Authenticate:
+              description: The scheme of the access token, Bearer.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -486,6 +561,11 @@ paths:
         '429':
           description: '`too_many_requests`: The client made too many requests. Try
             again later.'
+          headers:
+            Retry-After:
+              description: The seconds until the client can make requests again.
+              schema:
+                type: string
           content:
             application/json:
               schema:
