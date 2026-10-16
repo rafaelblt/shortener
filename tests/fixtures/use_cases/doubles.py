@@ -43,6 +43,7 @@ def transaction() -> NonCallableMagicMock:
     shorturls.add.return_value = Ok(None)
     shorturls.save.return_value = Ok(None)
     shorturls.remove.return_value = None
+    shorturls.remove_by_owner.return_value = None
 
     transaction = create_autospec(Transaction, instance=True)
     # create_autospec doesn't create the attributes a Protocol only annotates.
