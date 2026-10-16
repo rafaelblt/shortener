@@ -1,6 +1,6 @@
 # Bootstrap
 
-`bootstrap` assembles the application: it reads the settings, builds the implementations of [`infra`](infra.md), builds the [use cases](use_cases.md) with them, and gives them to the [API](api.md). It lives in `shortener/bootstrap/`, and is the only layer that imports from every other one.
+`bootstrap` assembles the application: it reads the settings, builds the implementations of [`infra`](infra.md), builds the [use cases](use_cases.md) with them, and gives them to the [API](api.md) and to the [consumer](consumer.md), which run as two processes. It lives in `shortener/bootstrap/`, and is the only layer that imports from every other one.
 
 This document describes `bootstrap` as it is in the code. Verified bugs that aren't fixed yet are [issues](issues/README.md) labeled `bootstrap`, linked from where this document describes the code they affect. Decisions still to be made are in [Open questions](#open-questions).
 
@@ -8,10 +8,11 @@ This document describes `bootstrap` as it is in the code. Verified bugs that are
 
 ```
 shortener/bootstrap/
-├── settings.py    Settings, DatabaseSettings, AccessTokenSettings, RateLimitSettings and
-│                  SettingsError
+├── settings.py    Settings, ConsumerSettings, DatabaseSettings, AccessTokenSettings,
+│                  RateLimitSettings and SettingsError
 ├── use_cases.py   UseCases
-└── app.py         create_app() and access_token_verifier()
+├── app.py         create_app(), database_engine() and access_token_verifier()
+└── consumer.py    run_consumer() and main()
 ```
 
 ## Settings
@@ -54,6 +55,16 @@ And these optional ones, of numbers, which have a default:
 - Whether the algorithms and the key can verify tokens is checked when the application is built, by [`JWTAccessTokenVerifier`](infra.md#access-tokens).
 - It doesn't read a `.env` file. The variables come from the environment of the process, where uvicorn can load a file with `--env-file`.
 
+`ConsumerSettings.from_environment(environment=os.environ)` reads the settings of the [consumer](#the-consumer), which has no access tokens or rate limit, so it doesn't read their variables:
+
+| Variable       | Required | Value                                                                                                                 |
+| -------------- | -------- | --------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL` | Yes      | The same as in `Settings`                                                                                             |
+| `RABBITMQ_URL` | Yes      | The URL of RabbitMQ, `amqp` or `amqps`, such as `amqp://user:password@localhost:5672/`, where `/` is the virtual host |
+
+- It reads the optional variables of the database as `Settings` does, with the same defaults and rules.
+- It raises `SettingsError` like `Settings`, also for a `RABBITMQ_URL` that isn't `amqp` or `amqps`. Otherwise, it returns a `ConsumerSettings`, with the settings of the database in a `DatabaseSettings`, and `rabbitmq_url`, as it is.
+
 ## Use cases
 
 `use_cases.py`
@@ -94,6 +105,21 @@ The implementations of the database raise `UnavailableError` from these timeouts
 
 `access_token_verifier(settings)` returns a `JWTAccessTokenVerifier` with the algorithms, the issuer, the audience and the leeway of the settings: `with_jwks()`, with the `jwks_timeout`, when `jwks_url` isn't `None`, and `with_key()` otherwise. It raises `SettingsError` when both are `None`, which only settings built in code, and not by `from_environment()`, can be.
 
+## The consumer
+
+`consumer.py`
+
+`run_consumer(stop, settings=None)` runs the [consumer](consumer.md) until `stop`, an `asyncio.Event`, is set:
+
+1. It reads the settings from the environment variables when `settings` is `None`.
+2. It creates the engine of the database with [`database_engine()`](#the-application), and builds a [`UserDeletedHandler`](consumer.md#handling) with `DeleteShortURLsOfUser`, on a `SQLAlchemyUnitOfWork` on that engine.
+3. It connects to `RABBITMQ_URL` with `connect_robust()` of aio-pika, and starts consuming with [`consume()`](consumer.md#consuming).
+4. When `stop` is set, it closes the connection, and returns. RabbitMQ puts a message that wasn't acknowledged by then back in the queue, so it is handled again.
+
+It disposes the engine when it returns or raises. It raises `SettingsError` for the environment variables, and the `AMQPConnectionError` of aio-pika when RabbitMQ can't be reached when it starts. After that, a lost connection doesn't raise: aio-pika connects again, every 5 seconds, until it succeeds, and the consumer goes on.
+
+`main()` runs `run_consumer()` until the process gets `SIGINT` or `SIGTERM`, which set `stop`, and logs at the level `INFO`, to the standard error, with the default format of `logging`.
+
 ## Running
 
 The application runs with uvicorn, which calls `create_app()` as a factory:
@@ -104,6 +130,14 @@ poetry run uvicorn shortener.bootstrap.app:create_app --factory --host 0.0.0.0 -
 ```
 
 `poetry run task run` runs it with `--reload`, for development. Both need the [environment variables](#settings).
+
+The [consumer](#the-consumer) runs as a process of its own, with the same image and the variables of `ConsumerSettings`, apart from the API, so a failure of one doesn't stop the other, and each one runs as many processes as it needs:
+
+```bash
+poetry run python -m shortener.bootstrap.consumer
+```
+
+`poetry run task consume` runs the same. More than one process of the consumer can run at once: RabbitMQ delivers each message to only one of them.
 
 Uvicorn gives the API the address of the client of each request, which the [rate limit](api.md#rate-limit) counts. Behind a proxy, that is the address of the proxy, unless uvicorn trusts it: then it takes the address of the client from the `X-Forwarded-For` header the proxy sends. Uvicorn trusts the addresses of its `--forwarded-allow-ips` option, or of the `FORWARDED_ALLOW_IPS` environment variable, which are only `127.0.0.1` when neither is set. So behind a proxy at another address, set one of them to the address of the proxy, or every request through it counts under that address. Trusting a client that can reach the service without the proxy would let it send any address in `X-Forwarded-For`.
 

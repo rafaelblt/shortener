@@ -15,7 +15,8 @@ The restructuring goes back to the original idea: **a URL shortener, and nothing
 The service:
 
 - creates, reads, lists, updates and deletes short URLs;
-- resolves a slug to its target URL.
+- resolves a slug to its target URL;
+- deletes the short URLs of a user when it receives the event of the deletion of the user.
 
 The service does **not** handle:
 
@@ -26,7 +27,7 @@ The service does **not** handle:
 
 Every short URL has an owner: there are no anonymous short URLs. The owner is only a reference. The service knows who owns each short URL, but nothing else about the user.
 
-The owner's identity comes from an access token, a JWT issued outside the service, which the service only validates, and user deletions will arrive as external events. The details are in [docs/domain.md](docs/domain.md#owner) and [docs/api.md](docs/api.md#authentication).
+The owner's identity comes from an access token, a JWT issued outside the service, which the service only validates, and user deletions arrive as events, published to RabbitMQ by the system responsible for the identities of the users. The details are in [docs/domain.md](docs/domain.md#owner), [docs/api.md](docs/api.md#authentication) and [docs/consumer.md](docs/consumer.md).
 
 ## Principles
 
@@ -82,21 +83,33 @@ poetry run alembic upgrade head
 poetry run task run
 ```
 
+The consumer of the events runs as a process of its own, with the environment variables of [ConsumerSettings](docs/bootstrap.md#settings), with the same database and a RabbitMQ:
+
+```bash
+poetry run task consume
+```
+
 ### Running with Docker Compose
 
-To try the API locally without setting anything, [compose.yaml](compose.yaml) runs it with Postgres, the migrations applied and settings that are only good for local tests:
+To try the service locally without setting anything, [compose.yaml](compose.yaml) runs the API and the consumer with Postgres, RabbitMQ, the migrations applied and settings that are only good for local tests:
 
 ```bash
 docker compose up --build
 ```
 
-The API answers at `http://localhost:8000`, as its OpenAPI schema, [docs/openapi.yaml](docs/openapi.yaml), describes. The data of the database stays in the volume `db` until `docker compose down -v`.
+The API answers at `http://localhost:8000`, as its OpenAPI schema, [docs/openapi.yaml](docs/openapi.yaml), describes, and the management page of RabbitMQ, which shows its queues, at `http://localhost:15672`, with the user `shortener` and the password `shortener`. The data of the database and of RabbitMQ stays in the volumes `db` and `rabbitmq` until `docker compose down -v`.
 
 The service doesn't issue access tokens, so the `token` service issues one the API accepts, valid for a day, for the user of the UUID it receives, or for `00000000-0000-4000-8000-000000000001` without one:
 
 ```bash
 TOKEN=$(docker compose run --rm -q token)
 curl -H "Authorization: Bearer $TOKEN" http://localhost:8000/v1/shorturls
+```
+
+The issuer of the events doesn't exist yet either, so the `user-deleted` service publishes the [event](docs/consumer.md#the-event) of the deletion of the user of the UUID it receives, or of `00000000-0000-4000-8000-000000000001` without one, and the consumer deletes the short URLs of that user:
+
+```bash
+docker compose run --rm -q user-deleted
 ```
 
 Before changing anything, read [CONTRIBUTING.md](CONTRIBUTING.md).

@@ -16,6 +16,7 @@ from shortener.bootstrap.settings import (
     DEFAULT_RATE_LIMIT_WINDOW,
     POSTGRES_MAX_TIMEOUT,
     AccessTokenSettings,
+    ConsumerSettings,
     DatabaseSettings,
     Settings,
     SettingsError,
@@ -259,3 +260,61 @@ def test_from_environment_names_every_problem_at_once():
     with pytest.raises(SettingsError) as raised:
         Settings.from_environment({})
     assert_mentions(str(raised.value), *REQUIRED, "JWT_KEY", "JWT_JWKS_URL")
+
+
+CONSUMER_ENVIRONMENT = {
+    "DATABASE_URL": "postgresql+asyncpg://user:password@localhost:5432/shortener",
+    "RABBITMQ_URL": "amqp://user:password@localhost:5672/",
+}
+
+
+def consumer_environment(**changes: str | None) -> dict[str, str]:
+    """CONSUMER_ENVIRONMENT, with the changes, like environment()."""
+    return {
+        name: value
+        for name, value in {**CONSUMER_ENVIRONMENT, **changes}.items()
+        if value is not None
+    }
+
+
+def test_consumer_settings_from_environment_reads_the_settings_from_the_variables():
+    assert ConsumerSettings.from_environment(CONSUMER_ENVIRONMENT) == ConsumerSettings(
+        database=DatabaseSettings(
+            url="postgresql+asyncpg://user:password@localhost:5432/shortener"
+        ),
+        rabbitmq_url="amqp://user:password@localhost:5672/",
+    )
+
+
+def test_consumer_settings_from_environment_reads_the_optional_numbers_of_the_database():
+    settings = ConsumerSettings.from_environment(
+        consumer_environment(DATABASE_POOL_SIZE="2")
+    )
+    assert settings.database.pool_size == 2
+
+
+@pytest.mark.parametrize("name", ["DATABASE_URL", "RABBITMQ_URL"])
+@pytest.mark.parametrize("value", MISSING)
+def test_consumer_settings_from_environment_raises_naming_a_required_variable_that_is_missing(
+    name: str, value: str | None
+):
+    with pytest.raises(SettingsError) as raised:
+        ConsumerSettings.from_environment(consumer_environment(**{name: value}))
+    assert_mentions(str(raised.value), name)
+
+
+def test_consumer_settings_from_environment_reads_an_amqps_url():
+    url = "amqps://user:password@rabbitmq.example.com/"
+    settings = ConsumerSettings.from_environment(consumer_environment(RABBITMQ_URL=url))
+    assert settings.rabbitmq_url == url
+
+
+@pytest.mark.parametrize(
+    "url", ["http://localhost:5672/", "localhost:5672", "amqp://[localhost"]
+)
+def test_consumer_settings_from_environment_raises_for_a_url_that_is_not_of_amqp(
+    url: str,
+):
+    with pytest.raises(SettingsError) as raised:
+        ConsumerSettings.from_environment(consumer_environment(RABBITMQ_URL=url))
+    assert_mentions(str(raised.value), "RABBITMQ_URL")

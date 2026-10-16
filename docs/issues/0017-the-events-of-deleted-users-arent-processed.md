@@ -1,6 +1,6 @@
 ---
-status: open
-resolution:
+status: closed
+resolution: fixed
 labels: [todo, use_cases, infra, consumer, bootstrap]
 ---
 
@@ -29,3 +29,12 @@ The events arrive through RabbitMQ. Their issuer doesn't exist yet: it will be a
   - `bootstrap`: the URL of RabbitMQ in the settings, and the consumer as a process of its own, apart from the API, with the same image.
 
 A short URL that the user creates after the event is processed, with an access token that is still valid, is issue 0024.
+
+## 2026-10-16: Closed as fixed
+
+The service consumes the events of deleted users from RabbitMQ, as decided above:
+
+- `DeleteShortURLsOfUser` (`shortener/use_cases/delete_shorturls_of_user.py`) deletes every short URL of a user, with the new `remove_by_owner()` of `ShortURLRepository`, which `SQLAlchemyShortURLRepository` implements with a single `DELETE`. See `docs/use_cases.md#deleteshorturlsofuser`.
+- The new layer `shortener/consumer/` declares the exchange, the queue and the dead-letter queue, and handles each message with the use case. A message is requeued after `RETRY_DELAY` (5 seconds) when the deletion raises `UnavailableError`, and only one message at a time is unacknowledged. See `docs/consumer.md`.
+- `bootstrap` runs the consumer as a process of its own, `python -m shortener.bootstrap.consumer`, with the new `ConsumerSettings`, which read `DATABASE_URL` and `RABBITMQ_URL`. See `docs/bootstrap.md#the-consumer`.
+- `compose.yaml` runs RabbitMQ and the consumer, and the `user-deleted` service publishes an event, for local tests.

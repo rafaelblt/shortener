@@ -127,7 +127,7 @@ Being the owner is a role that a user has in relation to a short URL, not an ide
 Two things happen outside the domain, but shape this rule:
 
 - The owner's identity comes from a JWT validated in the upper layers, whose subject is the owner's UUID. The client never provides the owner directly.
-- When a user is deleted, an external event will trigger the deletion of their short URLs. Until the event is processed, those short URLs keep working with an owner that no longer exists. This window is accepted because it doesn't harm the shortener.
+- When a user is deleted, an external event triggers the deletion of their short URLs (see [Consumer](consumer.md)). Until the event is processed, those short URLs keep working with an owner that no longer exists. This window is accepted because it doesn't harm the shortener.
 
 ### Slug
 

@@ -32,6 +32,7 @@ pyyaml = "^6.0.2"
 
 [tool.taskipy.tasks]
 run = 'uvicorn shortener.bootstrap.app:create_app --factory --reload'
+consume = 'python -m shortener.bootstrap.consumer'
 
 test = 'pytest --cov=shortener -v'
 test_shared = "pytest -v tests/test_shared/"

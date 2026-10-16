@@ -4,12 +4,14 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Final
+from urllib.parse import urlsplit
 
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import ArgumentError
 
 
 DATABASE_DRIVER: Final = "postgresql+asyncpg"
+RABBITMQ_SCHEMES: Final = ("amqp", "amqps")
 # Postgres keeps lock_timeout and statement_timeout in an int of milliseconds.
 POSTGRES_MAX_TIMEOUT: Final = timedelta(milliseconds=2**31 - 1)
 
@@ -98,6 +100,33 @@ class Settings:
         )
 
 
+@dataclass(frozen=True)
+class ConsumerSettings:
+    """
+    The settings of the consumer, which has no access tokens or rate limit.
+    See docs/bootstrap.md#settings
+    """
+
+    database: DatabaseSettings
+    rabbitmq_url: str
+
+    @classmethod
+    def from_environment(
+        cls, environment: Mapping[str, str] = os.environ
+    ) -> "ConsumerSettings":
+        """
+        Raises:
+            SettingsError: The variables don't make valid settings. Its message
+                names every problem.
+        """
+        variables = _Variables(environment)
+        database = _database_settings(variables)
+        rabbitmq_url = _rabbitmq_url(variables)
+        if variables.problems:
+            raise SettingsError("; ".join(variables.problems))
+        return cls(database=database, rabbitmq_url=rabbitmq_url)
+
+
 def _database_settings(variables: "_Variables") -> DatabaseSettings:
     url = variables.required("DATABASE_URL")
     if url and not _uses_the_driver(url):
@@ -151,6 +180,13 @@ def _access_token_settings(variables: "_Variables") -> AccessTokenSettings:
             "JWT_JWKS_TIMEOUT", DEFAULT_JWT_JWKS_TIMEOUT
         ),
     )
+
+
+def _rabbitmq_url(variables: "_Variables") -> str:
+    url = variables.required("RABBITMQ_URL")
+    if url and _scheme(url) not in RABBITMQ_SCHEMES:
+        variables.problems.append("RABBITMQ_URL must start with amqp:// or amqps://")
+    return url
 
 
 def _rate_limit_settings(variables: "_Variables") -> RateLimitSettings:
@@ -247,6 +283,15 @@ def _seconds(value: str) -> timedelta | None:
         # float() raises ValueError for a value that isn't a number, and
         # timedelta raises it for nan, and OverflowError for inf or a number
         # too large.
+        return None
+
+
+def _scheme(url: str) -> str | None:
+    try:
+        return urlsplit(url).scheme
+    except ValueError:
+        # urlsplit raises it for a URL it can't split, such as one with an
+        # unclosed bracket in the host.
         return None
 
 

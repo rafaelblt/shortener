@@ -7,6 +7,7 @@ x-settings: &settings
   JWT_ISSUER: shortener-local
   JWT_AUDIENCE: shortener
   JWT_KEY: a-local-secret-of-the-shortener-for-docker-compose-only
+  RABBITMQ_URL: amqp://shortener:shortener@rabbitmq:5672/
 
 x-service: &service
   build: .
@@ -28,6 +29,23 @@ services:
       timeout: 5s
       retries: 15
 
+  rabbitmq:
+    # With the management plugin, whose page, at http://localhost:15672, shows
+    # the queues, such as the dead-letter queue.
+    image: rabbitmq:4-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: shortener
+      RABBITMQ_DEFAULT_PASS: shortener
+    ports:
+      - "15672:15672"
+    volumes:
+      - rabbitmq:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 10s
+      retries: 20
+
   migrations:
     <<: *service
     command: ["alembic", "upgrade", "head"]
@@ -42,6 +60,15 @@ services:
     depends_on:
       migrations:
         condition: service_completed_successfully
+
+  consumer:
+    <<: *service
+    command: ["python", "-m", "shortener.bootstrap.consumer"]
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
 
   # Issues an access token the api accepts, since the service doesn't issue
   # them. Only runs with `docker compose run --rm token [user UUID]`.
@@ -67,5 +94,39 @@ services:
         print(jwt.encode(claims, os.environ["JWT_KEY"], algorithm="HS256"))
     command: ["00000000-0000-4000-8000-000000000001"]
 
+  # Publishes the event of the deletion of the user of the UUID it receives,
+  # or of 00000000-0000-4000-8000-000000000001 without one, as the issuer of
+  # the events would. Only runs with
+  # `docker compose run --rm user-deleted [user UUID]`.
+  user-deleted:
+    build: .
+    profiles: [tools]
+    environment: *settings
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    entrypoint:
+      - python
+      - -c
+      - |
+        import asyncio, json, os, sys
+        import aio_pika
+        async def publish():
+            connection = await aio_pika.connect(os.environ["RABBITMQ_URL"])
+            async with connection:
+                channel = await connection.channel()
+                exchange = await channel.declare_exchange(
+                    "users", aio_pika.ExchangeType.TOPIC, durable=True
+                )
+                message = aio_pika.Message(
+                    json.dumps({"user_id": sys.argv[1]}).encode(),
+                    content_type="application/json",
+                    delivery_mode=aio_pika.DeliveryMode.PERSISTENT,
+                )
+                await exchange.publish(message, routing_key="user.deleted")
+        asyncio.run(publish())
+    command: ["00000000-0000-4000-8000-000000000001"]
+
 volumes:
   db:
+  rabbitmq:
