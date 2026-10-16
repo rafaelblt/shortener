@@ -41,10 +41,22 @@ SETTINGS = Settings(
     ),
     access_tokens=KEY_SETTINGS,
 )
+UNREACHABLE_DATABASE_URL = "postgresql+asyncpg://user:password@127.0.0.1:1/database"
 
 
 def paths_of(app: FastAPI) -> set[str]:
     return {route.path for route in app.routes if isinstance(route, APIRoute)}
+
+
+async def check_health(settings: Settings) -> httpx.Response:
+    """Asks the application of the settings for its health, then stops it."""
+    app = create_app(settings)
+    async with app.router.lifespan_context(app):
+        transport = httpx.ASGITransport(app=app)
+        async with httpx.AsyncClient(
+            transport=transport, base_url="http://test"
+        ) as client:
+            return await client.get("/v1/health")
 
 
 def hs256_token(user_id: UserID, expires_at: datetime) -> str:
@@ -60,10 +72,10 @@ def hs256_token(user_id: UserID, expires_at: datetime) -> str:
     )
 
 
-def test_create_app_returns_the_api_with_every_endpoint():
+def test_create_app_returns_the_api_with_every_endpoint_and_the_health_check():
     assert paths_of(create_app(SETTINGS)) == {
         f"/v1{endpoint.path}" for endpoint in ENDPOINTS
-    }
+    } | {"/v1/health"}
 
 
 def test_create_app_without_settings_reads_them_from_the_environment(
@@ -125,6 +137,18 @@ async def test_the_application_disposes_its_engine_when_it_stops(
         engine.dispose.assert_not_awaited()
 
     engine.dispose.assert_awaited_once()
+
+
+async def test_the_health_check_passes_when_its_database_answers(database_url: str):
+    settings = replace(SETTINGS, database=DatabaseSettings(database_url))
+
+    assert (await check_health(settings)).status_code == HTTPStatus.NO_CONTENT
+
+
+async def test_the_health_check_fails_when_its_database_is_unreachable():
+    settings = replace(SETTINGS, database=DatabaseSettings(UNREACHABLE_DATABASE_URL))
+
+    assert (await check_health(settings)).status_code == HTTPStatus.SERVICE_UNAVAILABLE
 
 
 async def test_database_engine_sets_the_lock_and_statement_timeouts_of_its_connections(

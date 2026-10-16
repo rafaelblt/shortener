@@ -80,7 +80,7 @@ The API builds the use case of each request, with the user of the request. Build
 3. It builds `UseCases` with `SQLAlchemyUnitOfWork` and `SQLAlchemyShortURLReader`, on that engine, and `UTCClock`.
 4. It builds the verifier of access tokens with `access_token_verifier()`.
 5. It builds an `InMemoryRateLimiter` with the `requests` and the `window` of the settings of the rate limit, and the same `UTCClock`.
-6. It returns the application of [`create_app()`](api.md#the-application) of the API, with a lifespan that disposes the engine when the application stops.
+6. It returns the application of [`create_app()`](api.md#the-application) of the API, with `SQLAlchemyHealthCheck`, on that engine, as its [health check](api.md#health-check), and a lifespan that disposes the engine when the application stops.
 
 It raises `SettingsError` for the environment variables, `ValueError` when the settings of the access tokens can't verify tokens, and `LookupError` from the API.
 

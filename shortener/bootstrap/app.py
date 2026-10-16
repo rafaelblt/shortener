@@ -16,6 +16,7 @@ from shortener.bootstrap.settings import (
 )
 from shortener.bootstrap.use_cases import UseCases
 from shortener.infra.clock import UTCClock
+from shortener.infra.db.health_check import SQLAlchemyHealthCheck
 from shortener.infra.db.shorturl_repository import SQLAlchemyShortURLReader
 from shortener.infra.db.unit_of_work import SQLAlchemyUnitOfWork
 from shortener.infra.in_memory_rate_limiter import InMemoryRateLimiter
@@ -54,6 +55,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         rate_limiter=InMemoryRateLimiter(
             settings.rate_limit.requests, settings.rate_limit.window, clock
         ),
+        health_check=SQLAlchemyHealthCheck(engine),
         lifespan=lifespan,
     )
 

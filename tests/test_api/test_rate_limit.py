@@ -124,6 +124,15 @@ async def test_does_not_limit_the_documentation(
     over_the_limit.hit.assert_not_called()
 
 
+async def test_does_not_limit_the_health_check(
+    client: httpx.AsyncClient, over_the_limit: NonCallableMagicMock
+):
+    response = await client.get("/v1/health")
+
+    assert response.status_code == HTTPStatus.NO_CONTENT
+    over_the_limit.hit.assert_not_called()
+
+
 async def test_does_not_limit_a_request_without_the_address_of_its_client(
     app: FastAPI,
     over_the_limit: NonCallableMagicMock,

@@ -13,9 +13,11 @@ from shortener.api.cursors import CursorParameter
 from shortener.api.errors import (
     ERRORS,
     MALFORMED_BODY,
+    TOO_MANY_REQUESTS,
     ErrorResponse,
     documented_responses,
     error_response,
+    response_of,
 )
 from shortener.api.responses import JSONContent, SuccessResponse
 from shortener.api.use_case_factory import UseCaseFactory
@@ -93,7 +95,13 @@ def add_route(
         status_code=endpoint.response.status_code,
         response_model=endpoint.response.model(ok_type),
         response_class=endpoint.response.response_class,
-        responses=documented_responses(error_types, _request_errors_of(parameters)),
+        responses=documented_responses(
+            [
+                *map(response_of, error_types),
+                *_request_errors_of(parameters),
+                TOO_MANY_REQUESTS,
+            ]
+        ),
         name=name,
         operation_id=name,
     )

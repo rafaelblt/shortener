@@ -131,19 +131,13 @@ def error_response(error: object) -> JSONResponse:
 
 
 def documented_responses(
-    error_types: Iterable[type], request_errors: Iterable[ErrorResponse]
+    errors: Iterable[ErrorResponse],
 ) -> dict[int | str, dict[str, Any]]:
     """
-    The error responses of an endpoint, for the OpenAPI schema: those of the
-    errors of its use case, those of request_errors, TOO_MANY_REQUESTS and
-    UNAVAILABLE, grouped by status code.
+    The error responses of a route, for the OpenAPI schema: those of errors
+    and UNAVAILABLE, grouped by status code.
     """
-    errors = [
-        *map(response_of, error_types),
-        *request_errors,
-        TOO_MANY_REQUESTS,
-        UNAVAILABLE,
-    ]
+    errors = [*errors, UNAVAILABLE]
     by_status: dict[int, dict[str, ErrorResponse]] = {}
     for error in errors:
         by_status.setdefault(error.status_code, {})[error.code] = error

@@ -16,24 +16,26 @@ shortener/api/
 │                              handlers of exceptions
 ├── authentication.py          AccessTokenVerifier and AccessTokenCurrentUser
 ├── rate_limit.py              RateLimiter, TooManyRequestsError and limit_by_ip()
+├── health_check.py            HealthCheck and add_health_check_route()
 ├── use_case_factory.py        UseCaseFactory
 ├── cursors.py                 encode_cursor(), decode_cursor() and CursorParameter
 └── shorturl_page_content.py   ShortURLPageContent
 ```
 
-The API defines three abstractions, as `Protocol`s, which it receives in `create_app()`:
+The API defines four abstractions, as `Protocol`s, which it receives in `create_app()`:
 
 | Abstraction                              | What it does                                                                 | Implementation                                                 |
 | ---------------------------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------- |
 | [`UseCaseFactory`](#use-cases)           | Builds the use case of a request, with the user making it                    | [`UseCases`](bootstrap.md#use-cases), in `bootstrap`           |
 | [`AccessTokenVerifier`](#authentication) | Tells whose an access token is                                               | [`JWTAccessTokenVerifier`](infra.md#access-tokens), in `infra` |
 | [`RateLimiter`](#rate-limit)             | Counts the requests of each IP address, and tells when one is over its limit | [`InMemoryRateLimiter`](infra.md#rate-limit), in `infra`       |
+| [`HealthCheck`](#health-check)           | Tells whether the service is able to answer                                  | [`SQLAlchemyHealthCheck`](infra.md#health-check), in `infra`   |
 
 ## The application
 
 `app.py`
 
-`create_app(use_cases, access_token_verifier, rate_limiter, endpoints=ENDPOINTS, lifespan=None)` returns the FastAPI application. It adds a route for each [endpoint](#endpoints), under `PREFIX` (`/v1`), with the [rate limit](#rate-limit) of `rate_limiter`, and the handlers of the exceptions that become [errors](#errors). `lifespan` is the one of FastAPI, for what has to run when the application starts and stops. It raises `LookupError` when the use case of an endpoint may return an error the API doesn't answer (see [How an endpoint works](#how-an-endpoint-works)), so the application doesn't start.
+`create_app(use_cases, access_token_verifier, rate_limiter, health_check, endpoints=ENDPOINTS, lifespan=None)` returns the FastAPI application. It adds a route for each [endpoint](#endpoints), and the one of the [health check](#health-check), under `PREFIX` (`/v1`), with the [rate limit](#rate-limit) of `rate_limiter` on the endpoints, and the handlers of the exceptions that become [errors](#errors). `lifespan` is the one of FastAPI, for what has to run when the application starts and stops. It raises `LookupError` when the use case of an endpoint may return an error the API doesn't answer (see [How an endpoint works](#how-an-endpoint-works)), so the application doesn't start.
 
 FastAPI also serves the OpenAPI schema at `/openapi.json`, and its documentation at `/docs` and `/redoc`, out of the prefix.
 
@@ -166,7 +168,7 @@ The token is verified only when the use case asks for the user, and a token that
 
 `rate_limit.py`
 
-Every endpoint counts each request under the IP address of its client, and a request over the limit of its IP address gets `too_many_requests`, without its use case being built. The endpoints share the count, so the requests of an IP address to any of them add up. The documentation of FastAPI, `/openapi.json`, `/docs` and `/redoc`, isn't limited, and neither is a path that no endpoint has.
+Every endpoint counts each request under the IP address of its client, and a request over the limit of its IP address gets `too_many_requests`, without its use case being built. The endpoints share the count, so the requests of an IP address to any of them add up. The [health check](#health-check) isn't limited, nor is the documentation of FastAPI, `/openapi.json`, `/docs` and `/redoc`, nor a path that no endpoint has.
 
 The API counts the requests through the `RateLimiter` abstraction. Its `hit(key)` counts a request of the key, and returns `None` when the key is within its limit, and otherwise how long until the key can make requests again, as a `timedelta`. The limit, and how the requests are counted, are up to the implementation, [`InMemoryRateLimiter`](infra.md#rate-limit), which [`bootstrap`](bootstrap.md#the-application) builds with the limit of the [settings](bootstrap.md#settings).
 
@@ -181,6 +183,21 @@ The API counts the requests through the `RateLimiter` abstraction. Its `hit(key)
 `use_case_factory.py`
 
 The use cases that receive a `CurrentUser` are built for each request, since the user is the one of the request. `UseCaseFactory.build(use_case, current_user)` returns the use case of the class `use_case`, built with `current_user`, which the endpoint runs. The API doesn't build the use cases itself: [`UseCases`](bootstrap.md#use-cases), in `bootstrap`, does, with the implementations of their abstractions.
+
+## Health check
+
+`health_check.py`
+
+`GET /v1/health` tells an orchestrator or a load balancer whether the service is able to answer. It isn't one of `ENDPOINTS`, since it runs no use case: `add_health_check_route(router, health_check)` adds it, and it awaits `check()` of the `HealthCheck` that `create_app()` receives. `check()` returns when the service is able to answer, and raises `UnavailableError` when something it needs to answer is unavailable.
+
+| `check()`                  | Answers                                            |
+| -------------------------- | -------------------------------------------------- |
+| Returns                    | `204 No Content`                                   |
+| Raises `UnavailableError`  | `503 Service Unavailable`, with `unavailable`      |
+| Raises any other exception | `500 Internal Server Error`, with `internal_error` |
+
+- It doesn't read the access token, and it isn't [rate limited](#rate-limit), so an orchestrator or a load balancer that checks it often doesn't get `too_many_requests`. The OpenAPI schema documents it as `CheckHealth`, with `204` and `503`.
+- [`SQLAlchemyHealthCheck`](infra.md#health-check), the implementation `bootstrap` gives it, checks that the database answers. So, as a liveness probe, one that restarts the service when it fails, a failure of the database would restart the service too.
 
 ## Cursors
 

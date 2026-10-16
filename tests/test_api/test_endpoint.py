@@ -69,11 +69,13 @@ def app(
     use_cases: UseCaseDoubles,
     access_token_verifier: NonCallableMagicMock,
     rate_limiter: NonCallableMagicMock,
+    health_check: NonCallableMagicMock,
 ) -> FastAPI:
     return create_app(
         use_cases=use_cases,
         access_token_verifier=access_token_verifier,
         rate_limiter=rate_limiter,
+        health_check=health_check,
         endpoints=[
             Endpoint("PUT", "/echoes/{id}", Echo),
             Endpoint("GET", "/echoes/{id}", Echo, name="EchoFromTheQuery"),
@@ -258,12 +260,14 @@ def test_creating_the_app_raises_for_an_error_of_a_use_case_the_api_does_not_ans
     use_cases: UseCaseDoubles,
     access_token_verifier: NonCallableMagicMock,
     rate_limiter: NonCallableMagicMock,
+    health_check: NonCallableMagicMock,
 ):
     with pytest.raises(LookupError) as raised:
         create_app(
             use_cases=use_cases,
             access_token_verifier=access_token_verifier,
             rate_limiter=rate_limiter,
+            health_check=health_check,
             endpoints=[Endpoint("GET", "/unanswered", Unanswered)],
         )
     assert_mentions(str(raised.value), UnansweredError.__name__)

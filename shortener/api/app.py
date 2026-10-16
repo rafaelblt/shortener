@@ -17,6 +17,7 @@ from shortener.api.errors import (
     unavailable_handler,
 )
 from shortener.api.rate_limit import RateLimiter, TooManyRequestsError, limit_by_ip
+from shortener.api.health_check import HealthCheck, add_health_check_route
 from shortener.api.use_case_factory import UseCaseFactory
 from shortener.use_cases.unavailable_error import UnavailableError
 
@@ -30,6 +31,7 @@ def create_app(
     use_cases: UseCaseFactory,
     access_token_verifier: AccessTokenVerifier,
     rate_limiter: RateLimiter,
+    health_check: HealthCheck,
     endpoints: Sequence[Endpoint] = ENDPOINTS,
     lifespan: Lifespan | None = None,
 ) -> FastAPI:
@@ -43,6 +45,11 @@ def create_app(
     for endpoint in endpoints:
         add_route(router, endpoint, use_cases, access_token_verifier)
     app.include_router(router)
+    # Out of the rate limit, so an orchestrator or a load balancer that checks
+    # the health often doesn't get too_many_requests.
+    health_router = APIRouter(prefix=PREFIX)
+    add_health_check_route(health_router, health_check)
+    app.include_router(health_router)
     # The handlers take the class of exception they handle, which FastAPI
     # doesn't type.
     app.add_exception_handler(

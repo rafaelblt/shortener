@@ -5,6 +5,7 @@ from unittest.mock import NonCallableMagicMock, create_autospec
 
 from shortener.api.authentication import AccessTokenVerifier
 from shortener.api.rate_limit import RateLimiter
+from shortener.api.health_check import HealthCheck
 from shortener.domain import UserID
 from shortener.use_cases.current_user import CurrentUser
 
@@ -53,3 +54,9 @@ def rate_limiter() -> NonCallableMagicMock:
     rate_limiter = create_autospec(RateLimiter, instance=True)
     rate_limiter.hit.return_value = None
     return rate_limiter
+
+
+@pytest.fixture
+def health_check() -> NonCallableMagicMock:
+    """Passes, unless a test sets check() to raise."""
+    return create_autospec(HealthCheck, instance=True)

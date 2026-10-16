@@ -15,6 +15,7 @@ shortener/infra/
     ├── tables.py                  metadata, the shorturls table and SLUG_UNIQUE_CONSTRAINT
     ├── unit_of_work.py            SQLAlchemyUnitOfWork and SQLAlchemyTransaction
     ├── shorturl_repository.py     SQLAlchemyShortURLRepository and SQLAlchemyShortURLReader
+    ├── health_check.py            SQLAlchemyHealthCheck
     └── transient_errors.py        unavailable_when_transient() and is_transient()
 
 alembic/                           the migrations of the database
@@ -29,6 +30,7 @@ alembic/                           the migrations of the database
 | [`Clock`](use_cases.md#clock)                              | `UTCClock`                     |
 | [`AccessTokenVerifier`](api.md#authentication), of the API | `JWTAccessTokenVerifier`       |
 | [`RateLimiter`](api.md#rate-limit), of the API             | `InMemoryRateLimiter`          |
+| [`HealthCheck`](api.md#health-check), of the API           | `SQLAlchemyHealthCheck`        |
 
 ## Database
 
@@ -103,6 +105,15 @@ The repository writes with these statements:
 - `add()` and `save()` run their statement in a savepoint. When it breaks `SLUG_UNIQUE_CONSTRAINT`, the savepoint is rolled back, and they return `Err(SlugTakenError(shorturl.slug))`: only that statement is undone, and the transaction goes on. Any other `IntegrityError`, such as an `id` that is already stored, is raised.
 - Postgres checks the slug when the statement runs. When another transaction wrote the same slug and hasn't ended, the statement waits for it, up to the `lock_timeout`, and only conflicts if that transaction commits.
 - `save()` and `remove()` of a short URL that isn't stored change nothing, and raise nothing.
+
+### Health check
+
+`health_check.py`
+
+`SQLAlchemyHealthCheck(engine)` implements the [`HealthCheck`](api.md#health-check) of the API. `check()` takes a connection from the pool of the engine, runs `SELECT 1` on it, and returns it to the pool.
+
+- It raises `UnavailableError` when the database can't answer for a [transient](#failures-of-the-database) failure, such as a server that can't be reached, and the other errors as they are, such as the `InvalidCatalogNameError` of asyncpg, when connecting to a database that doesn't exist.
+- It waits as the reads of the short URLs do: up to the `pool_timeout` for a connection, when they are all in use, and up to the `connect_timeout` to connect (see [The application](bootstrap.md#the-application)).
 
 ### Failures of the database
 
