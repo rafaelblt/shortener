@@ -120,7 +120,7 @@ A `SuccessResponse` says how an endpoint answers the `Ok` of its use case: its s
 
 FastAPI serializes the dataclasses of the use cases with pydantic: a `UUID` as text, a `datetime` in ISO 8601, and a tuple as a list. `Created` returns a `JSONResponse`, which FastAPI doesn't serialize, so it serializes the value itself, with pydantic, in the same way.
 
-The `Location` headers aren't in the [OpenAPI schema](#openapi).
+The `Location` headers aren't in the [OpenAPI schema](#openapi) ([issue 0020](issues/0020-the-openapi-schema-has-no-location-headers.md)).
 
 ## Errors
 
