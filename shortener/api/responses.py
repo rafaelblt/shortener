@@ -1,4 +1,4 @@
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from http import HTTPStatus
 from typing import Any, ClassVar, Protocol, get_type_hints
@@ -12,6 +12,9 @@ class SuccessResponse(Protocol):
 
     status_code: HTTPStatus
     response_class: ClassVar[type[Response]]
+    # The headers it answers, with the description of each one, for the
+    # OpenAPI schema.
+    header_descriptions: ClassVar[Mapping[str, str]]
 
     def model(self, ok_type: Any) -> Any:
         """The type of what respond() returns, for FastAPI, or None for none."""
@@ -27,6 +30,7 @@ class JSONContent:
     status_code: HTTPStatus = HTTPStatus.OK
     encode: Callable[[Any], object] | None = None
     response_class: ClassVar[type[Response]] = JSONResponse
+    header_descriptions: ClassVar[Mapping[str, str]] = {}
 
     def model(self, ok_type: Any) -> Any:
         if self.encode is None:
@@ -47,6 +51,9 @@ class Created:
     location: Callable[[Any], str]
     status_code: HTTPStatus = HTTPStatus.CREATED
     response_class: ClassVar[type[Response]] = JSONResponse
+    header_descriptions: ClassVar[Mapping[str, str]] = {
+        "Location": "The URL of what the request created."
+    }
 
     def model(self, ok_type: Any) -> Any:
         return ok_type
@@ -67,6 +74,7 @@ class NoContent:
 
     status_code: HTTPStatus = HTTPStatus.NO_CONTENT
     response_class: ClassVar[type[Response]] = Response
+    header_descriptions: ClassVar[Mapping[str, str]] = {}
 
     def model(self, ok_type: Any) -> None:
         return None
@@ -82,6 +90,9 @@ class Redirect:
     location: Callable[[Any], str]
     status_code: HTTPStatus = HTTPStatus.TEMPORARY_REDIRECT
     response_class: ClassVar[type[Response]] = RedirectResponse
+    header_descriptions: ClassVar[Mapping[str, str]] = {
+        "Location": "The URL the request is redirected to."
+    }
 
     def model(self, ok_type: Any) -> None:
         return None

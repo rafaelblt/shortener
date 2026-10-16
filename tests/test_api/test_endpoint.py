@@ -12,6 +12,7 @@ from fastapi import FastAPI
 from shortener.api.app import create_app
 from shortener.api.cursors import encode_cursor
 from shortener.api.endpoint import Endpoint
+from shortener.api.responses import Created
 from shortener.domain import UserID
 from shortener.shared.result import Err, Ok, Result
 from shortener.use_cases.clock import Clock
@@ -80,6 +81,15 @@ def app(
         health_check=health_check,
         endpoints=[
             Endpoint("PUT", "/echoes/{id}", Echo, summary=SUMMARY, tag=TAG),
+            Endpoint(
+                "POST",
+                "/echoes",
+                Echo,
+                Created(lambda echoed: f"/v1/echoes/{echoed.name}"),
+                summary="Create an echo",
+                tag=TAG,
+                name="CreateEcho",
+            ),
             Endpoint(
                 "GET",
                 "/echoes/{id}",
@@ -276,6 +286,13 @@ def test_describes_the_response_of_ok_by_its_status(app: FastAPI):
     responses = app.openapi()["paths"]["/v1/echoes/{id}"]["put"]["responses"]
 
     assert responses[str(HTTPStatus.OK.value)]["description"] == HTTPStatus.OK.phrase
+
+
+def test_documents_the_headers_of_its_response_of_ok(app: FastAPI):
+    responses = app.openapi()["paths"]["/v1/echoes"]["post"]["responses"]
+
+    headers = responses[str(HTTPStatus.CREATED.value)]["headers"]
+    assert set(headers) == set(Created.header_descriptions)
 
 
 def test_documents_no_body_errors_for_an_endpoint_without_a_body(app: FastAPI):

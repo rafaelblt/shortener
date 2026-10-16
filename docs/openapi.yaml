@@ -65,6 +65,11 @@ paths:
       responses:
         '307':
           description: Temporary Redirect
+          headers:
+            Location:
+              description: The URL the request is redirected to.
+              schema:
+                type: string
         '404':
           description: '`shorturl_not_found`: The short URL doesn''t exist. `shorturl_deactivated`:
             The short URL is deactivated.'
@@ -112,6 +117,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ShortURLDetails'
+          headers:
+            Location:
+              description: The URL of what the request created.
+              schema:
+                type: string
         '401':
           description: '`not_authenticated`: The request needs a valid access token.'
           content:

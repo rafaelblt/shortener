@@ -15,6 +15,7 @@ shortener/api/
 ├── responses.py               SuccessResponse, JSONContent, Created, NoContent and Redirect
 ├── errors.py                  ERRORS, ErrorResponse, ErrorContent, error_response() and the
 │                              handlers of exceptions
+├── openapi.py                 documented_headers()
 ├── authentication.py          AccessTokenVerifier and AccessTokenCurrentUser
 ├── rate_limit.py              RateLimiter, TooManyRequestsError and limit_by_ip()
 ├── health_check.py            HealthCheck and add_health_check_route()
@@ -43,6 +44,8 @@ The API defines four abstractions, as `Protocol`s, which it receives in `create_
 The API doesn't serve its OpenAPI schema, nor the documentation of FastAPI: `/openapi.json`, `/docs` and `/redoc` answer `not_found`, like any path that no endpoint has. The schema is in [openapi.yaml](openapi.yaml), which `poetry run task openapi` writes from what `create_app()` gives, and a test of `tests/test_api/test_app.py` fails when the file isn't the schema of the code. So a change to what the API receives or answers, such as an endpoint, a parameter or an error, comes with the file written again.
 
 Whoever consumes the API reads the schema where its code is, without running the API, opens it in any tool that previews OpenAPI or gives it to an agent, and sees its changes in the diff. And the API running in production doesn't expose it.
+
+`documented_headers(descriptions)`, in `openapi.py`, returns the headers of a response for the schema, from the description of each one, with the value of each one as a text. It returns nothing for no headers, since FastAPI would document an empty set of them. The [responses of success](#responses) describe their headers with it.
 
 ## Endpoints
 
@@ -100,7 +103,7 @@ Since the name of a parameter of `execute()` is the name of its value in the req
 
 FastAPI reads the values of the request before step 1, so a request whose values it can't read gets an [error](#errors) without the use case being built. It runs the [rate limit](#rate-limit) after parsing the JSON of the body and before reading the values, so a request over the limit gets `too_many_requests` even when its values can't be read.
 
-**OpenAPI.** The name of the endpoint is its name and operation ID, and is the name of its use case when `name` is `None`. Two endpoints of the same use case need different names, since FastAPI warns about a repeated operation ID. Its summary is the `summary` it declares, such as `Create a short URL`, which every endpoint has, since FastAPI would otherwise make one from the name with `str.title()`, such as `Resolveslug`. Its tag is the `tag` it declares, which groups it with the endpoints of the same resource. The response of success is the type of `Ok`, from the `Result[Ok, Error]` that `execute()` returns, or the type `response.model()` gives for it, and its description is the phrase of its status, such as `Created`. The error responses are those of the errors of `Error`, which is a type alias of a union, such as `CreateShortURLError`, or a single class, grouped by status code, with `422` for the values of the request when the endpoint receives any, `400` when it receives a body, and `429` and `503`.
+**OpenAPI.** The name of the endpoint is its name and operation ID, and is the name of its use case when `name` is `None`. Two endpoints of the same use case need different names, since FastAPI warns about a repeated operation ID. Its summary is the `summary` it declares, such as `Create a short URL`, which every endpoint has, since FastAPI would otherwise make one from the name with `str.title()`, such as `Resolveslug`. Its tag is the `tag` it declares, which groups it with the endpoints of the same resource. The response of success is the type of `Ok`, from the `Result[Ok, Error]` that `execute()` returns, or the type `response.model()` gives for it, and its description is the phrase of its status, such as `Created`, with the headers `response` describes. The error responses are those of the errors of `Error`, which is a type alias of a union, such as `CreateShortURLError`, or a single class, grouped by status code, with `422` for the values of the request when the endpoint receives any, `400` when it receives a body, and `429` and `503`.
 
 `add_route()` raises `LookupError` when `Error` has an error that isn't in [`ERRORS`](#errors), so a new error of a use case can't reach a client as a `500`.
 
@@ -110,7 +113,7 @@ Adding an endpoint is adding it to `ENDPOINTS`, after adding its use case to the
 
 `responses.py`
 
-A `SuccessResponse` says how an endpoint answers the `Ok` of its use case: its status code, the class of response of FastAPI, the type of what it answers, for the OpenAPI schema and the serialization, and `respond(value)`, which returns it.
+A `SuccessResponse` says how an endpoint answers the `Ok` of its use case: its status code, the class of response of FastAPI, the type of what it answers, for the OpenAPI schema and the serialization, `header_descriptions`, with the description of each header it answers, also for the schema, and `respond(value)`, which returns it.
 
 | `SuccessResponse`                           | Status                   | Answers                                                                                                           |
 | ------------------------------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------- |
@@ -121,7 +124,7 @@ A `SuccessResponse` says how an endpoint answers the `Ok` of its use case: its s
 
 FastAPI serializes the dataclasses of the use cases with pydantic: a `UUID` as text, a `datetime` in ISO 8601, and a tuple as a list. `Created` returns a `JSONResponse`, which FastAPI doesn't serialize, so it serializes the value itself, with pydantic, in the same way.
 
-The `Location` headers aren't in the [OpenAPI schema](#openapi) ([issue 0020](issues/0020-the-openapi-schema-has-no-location-headers.md)).
+`Created` and `Redirect` describe their `Location` in `header_descriptions`, and `JSONContent` and `NoContent` describe no header.
 
 ## Errors
 

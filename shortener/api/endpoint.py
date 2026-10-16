@@ -19,6 +19,7 @@ from shortener.api.errors import (
     error_response,
     response_of,
 )
+from shortener.api.openapi import documented_headers
 from shortener.api.responses import JSONContent, SuccessResponse
 from shortener.api.use_case_factory import UseCaseFactory
 from shortener.shared.result import Err, Ok
@@ -99,13 +100,18 @@ def add_route(
         response_model=endpoint.response.model(ok_type),
         response_class=endpoint.response.response_class,
         response_description=endpoint.response.status_code.phrase,
-        responses=documented_responses(
-            [
-                *map(response_of, error_types),
-                *_request_errors_of(parameters),
-                TOO_MANY_REQUESTS,
-            ]
-        ),
+        responses={
+            endpoint.response.status_code: documented_headers(
+                endpoint.response.header_descriptions
+            ),
+            **documented_responses(
+                [
+                    *map(response_of, error_types),
+                    *_request_errors_of(parameters),
+                    TOO_MANY_REQUESTS,
+                ]
+            ),
+        },
         summary=endpoint.summary,
         tags=[endpoint.tag],
         name=name,
