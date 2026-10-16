@@ -20,7 +20,7 @@ def wrapped(sqlstate: str | None, connection_invalidated: bool = False) -> DBAPI
     return DBAPIError(
         "SELECT 1",
         None,
-        DriverError(sqlstate),  # type: ignore
+        DriverError(sqlstate),
         connection_invalidated=connection_invalidated,
     )
 

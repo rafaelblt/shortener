@@ -1,7 +1,7 @@
 import inspect
 import re
 
-from dataclasses import KW_ONLY, dataclass
+from dataclasses import KW_ONLY, dataclass, field
 from types import UnionType
 from typing import Annotated, Any, Final, Union, get_args, get_origin, get_type_hints
 
@@ -58,7 +58,7 @@ class Endpoint:
     method: str
     path: str
     use_case: type
-    response: SuccessResponse = JSONContent()
+    response: SuccessResponse = field(default_factory=JSONContent)
     _: KW_ONLY
     summary: str
     tag: str
@@ -94,7 +94,7 @@ def add_route(
                 return error_response(error)
 
     # FastAPI reads what to receive from the signature of the function.
-    run.__signature__ = inspect.Signature(  # type: ignore
+    run.__signature__ = inspect.Signature(  # type: ignore[attr-defined]
         [*parameters, _CREDENTIALS] if takes_a_user else parameters
     )
     router.add_api_route(
@@ -152,7 +152,8 @@ def _source(method: str, is_in_path: bool) -> params.Param | params.Body:
 
 def _received_type(type_: Any) -> Any:
     if get_origin(type_) in (Union, UnionType):
-        return Union[tuple(_received_type(member) for member in get_args(type_))]
+        # Union[] builds the union from a tuple of members, which | can't.
+        return Union[tuple(_received_type(member) for member in get_args(type_))]  # noqa: UP007
     return PARAMETER_TYPES.get(type_, type_)
 
 

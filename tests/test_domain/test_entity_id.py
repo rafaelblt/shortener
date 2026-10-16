@@ -36,7 +36,7 @@ def test_has_the_same_hash_as_an_id_with_the_same_value():
 def test_is_immutable():
     entity_id = EntityID(VALUE)
     with pytest.raises(FrozenInstanceError):
-        entity_id.value = OTHER_VALUE  # type: ignore
+        entity_id.value = OTHER_VALUE  # type: ignore[misc]
 
 
 def test_str_is_the_uuid_string():

@@ -51,7 +51,7 @@ async def test_raises_for_an_id_that_is_not_a_uuid_before_beginning_a_transactio
     delete_shorturl: DeleteShortURL, uow: NonCallableMagicMock, shorturl: ShortURL
 ):
     with pytest.raises(TypeError):
-        await delete_shorturl.execute(str(shorturl.id.value))  # type: ignore
+        await delete_shorturl.execute(str(shorturl.id.value))  # type: ignore[arg-type]
     uow.begin.assert_not_called()
 
 

@@ -124,4 +124,5 @@ async def test_logs_another_exception_of_the_deletion_as_an_error(
 
     [record] = caplog.records
     assert record.levelno == logging.ERROR
-    assert record.exc_info is not None and record.exc_info[1] is error
+    assert record.exc_info is not None
+    assert record.exc_info[1] is error

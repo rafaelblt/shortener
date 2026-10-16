@@ -73,4 +73,4 @@ def test_from_entity_only_holds_primitives():
 def test_is_immutable():
     details = ShortURLDetails.from_entity(restore(LAST_RESOLVED_AT))
     with pytest.raises(FrozenInstanceError):
-        details.slug = "other-slug"  # type: ignore
+        details.slug = "other-slug"  # type: ignore[misc]

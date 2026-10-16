@@ -24,7 +24,7 @@ class UnknownOffset(tzinfo):
 
 
 NAIVE_DATETIMES = [
-    pytest.param(datetime(2006, 6, 6), id="no tzinfo"),
+    pytest.param(datetime(2006, 6, 6), id="no tzinfo"),  # noqa: DTZ001
     pytest.param(datetime(2006, 6, 6, tzinfo=UnknownOffset()), id="unknown offset"),
 ]
 
@@ -92,7 +92,7 @@ def test_create_rejects_a_now_that_is_not_a_datetime(owner_id: UserID):
             slug=Slug("my-slug"),
             target_url=TargetURL("https://example.com"),
             owner_id=owner_id,
-            now=None,  # type: ignore
+            now=None,  # type: ignore[arg-type]
         )
     assert_mentions(
         str(raised.value), "created_at", datetime.__name__, type(None).__name__
@@ -158,7 +158,7 @@ def test_restore_rejects_a_negative_resolution_count(fields: dict[str, Any]):
 
 def test_restore_takes_keyword_arguments_only(fields: dict[str, Any]):
     with pytest.raises(TypeError):
-        ShortURL.restore(*fields.values())  # type: ignore
+        ShortURL.restore(*fields.values())  # type: ignore[call-arg]
 
 
 @pytest.mark.parametrize("change, field, new_value", CHANGES)
@@ -203,7 +203,7 @@ def test_resolve_sets_last_resolved_at_to_now(normal_shorturl: ShortURL, now: da
 
 def test_resolve_rejects_a_now_that_is_not_a_datetime(normal_shorturl: ShortURL):
     with pytest.raises(TypeError) as raised:
-        normal_shorturl.resolve(None)  # type: ignore
+        normal_shorturl.resolve(None)  # type: ignore[arg-type]
     assert_mentions(str(raised.value), "now", datetime.__name__, type(None).__name__)
 
 
@@ -218,7 +218,7 @@ def test_resolve_rejects_a_naive_now(normal_shorturl: ShortURL, naive: datetime)
     "now, error",
     [
         pytest.param(None, TypeError, id="not a datetime"),
-        pytest.param(datetime(2006, 6, 6), ValueError, id="naive"),
+        pytest.param(datetime(2006, 6, 6), ValueError, id="naive"),  # noqa: DTZ001
     ],
 )
 def test_resolve_checks_now_before_the_status(

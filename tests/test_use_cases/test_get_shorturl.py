@@ -51,7 +51,7 @@ async def test_raises_for_an_id_that_is_not_a_uuid(
     get_shorturl: GetShortURL, shorturl: ShortURL
 ):
     with pytest.raises(TypeError):
-        await get_shorturl.execute(str(shorturl.id.value))  # type: ignore
+        await get_shorturl.execute(str(shorturl.id.value))  # type: ignore[arg-type]
 
 
 async def test_returns_not_found_when_no_shorturl_has_the_id(

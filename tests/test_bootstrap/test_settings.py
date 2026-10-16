@@ -286,7 +286,7 @@ def test_consumer_settings_from_environment_reads_the_settings_from_the_variable
     )
 
 
-def test_consumer_settings_from_environment_reads_the_optional_numbers_of_the_database():
+def test_consumer_settings_from_environment_reads_the_optional_numbers():
     settings = ConsumerSettings.from_environment(
         consumer_environment(DATABASE_POOL_SIZE="2")
     )
@@ -295,7 +295,7 @@ def test_consumer_settings_from_environment_reads_the_optional_numbers_of_the_da
 
 @pytest.mark.parametrize("name", ["DATABASE_URL", "RABBITMQ_URL"])
 @pytest.mark.parametrize("value", MISSING)
-def test_consumer_settings_from_environment_raises_naming_a_required_variable_that_is_missing(
+def test_consumer_settings_from_environment_raises_naming_a_missing_variable(
     name: str, value: str | None
 ):
     with pytest.raises(SettingsError) as raised:

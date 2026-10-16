@@ -261,7 +261,7 @@ async def test_verify_with_jwks_raises_unavailable_when_the_keys_cannot_be_fetch
 async def test_verify_with_jwks_raises_unavailable_when_the_jwks_url_answers_an_error(
     jwks_server: ThreadingHTTPServer, private_key: RSAPrivateKey
 ):
-    jwks_server.status = HTTPStatus.SERVICE_UNAVAILABLE  # type: ignore
+    jwks_server.status = HTTPStatus.SERVICE_UNAVAILABLE  # type: ignore[attr-defined]
     verifier = jwks_verifier(jwks_url(jwks_server))
     token = jwt.encode(
         claims(), private_key, algorithm="RS256", headers={"kid": KEY_ID}
@@ -303,7 +303,7 @@ async def test_verify_with_jwks_raises_unavailable_when_the_jwks_url_takes_too_l
 async def test_verify_with_jwks_raises_unavailable_when_the_jwks_url_answers_no_keys(
     jwks_server: ThreadingHTTPServer, private_key: RSAPrivateKey, body: bytes
 ):
-    jwks_server.body = body  # type: ignore
+    jwks_server.body = body  # type: ignore[attr-defined]
     verifier = jwks_verifier(jwks_url(jwks_server))
     token = jwt.encode(
         claims(), private_key, algorithm="RS256", headers={"kid": KEY_ID}

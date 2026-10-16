@@ -60,13 +60,13 @@ def create_app(
     # doesn't type.
     app.add_exception_handler(
         RequestValidationError,
-        request_error_handler,  # type: ignore
+        request_error_handler,  # type: ignore[arg-type]
     )
-    app.add_exception_handler(HTTPException, http_error_handler)  # type: ignore
+    app.add_exception_handler(HTTPException, http_error_handler)  # type: ignore[arg-type]
     app.add_exception_handler(
         TooManyRequestsError,
-        too_many_requests_handler,  # type: ignore
+        too_many_requests_handler,  # type: ignore[arg-type]
     )
-    app.add_exception_handler(UnavailableError, unavailable_handler)  # type: ignore
+    app.add_exception_handler(UnavailableError, unavailable_handler)  # type: ignore[arg-type]
     app.add_exception_handler(Exception, internal_error_handler)
     return app

@@ -53,7 +53,7 @@ async def test_raises_for_a_slug_that_parse_rejects_before_beginning_a_transacti
     error: type[Exception],
 ):
     with pytest.raises(error):
-        await resolve_slug.execute(slug)  # type: ignore
+        await resolve_slug.execute(slug)  # type: ignore[arg-type]
     uow.begin.assert_not_called()
 
 

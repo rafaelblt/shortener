@@ -15,4 +15,4 @@ def test_from_target_url_keeps_the_target_url_as_a_plain_string():
 def test_is_immutable():
     resolved = ResolvedSlug.from_target_url(TargetURL("https://example.com"))
     with pytest.raises(FrozenInstanceError):
-        resolved.target_url = "https://other.example.com"  # type: ignore
+        resolved.target_url = "https://other.example.com"  # type: ignore[misc]

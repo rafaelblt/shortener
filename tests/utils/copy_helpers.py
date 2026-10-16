@@ -1,15 +1,10 @@
 import copy
 import pickle
 
-from typing import TypeVar
-
 import pytest
 
 
-T = TypeVar("T")
-
-
-def pickled(value: T) -> T:
+def pickled[T](value: T) -> T:
     return pickle.loads(pickle.dumps(value))
 
 

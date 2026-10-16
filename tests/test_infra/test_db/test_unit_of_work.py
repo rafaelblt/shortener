@@ -96,7 +96,9 @@ async def test_leaving_the_block_by_an_exception_rolls_the_writes_back(
     reader: SQLAlchemyShortURLReader,
     normal_shorturl: ShortURL,
 ):
-    with pytest.raises(RuntimeError):
+    # The block raises on purpose, and pytest.raises checks that begin()
+    # doesn't swallow the exception.
+    with pytest.raises(RuntimeError):  # noqa: PT012
         async with uow.begin() as transaction:
             await transaction.shorturls.add(normal_shorturl)
             raise RuntimeError

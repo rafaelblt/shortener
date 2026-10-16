@@ -1,14 +1,13 @@
 from datetime import datetime
 
+from shortener.domain.errors import ShortURLDeactivatedError
+from shortener.domain.shorturl_id import ShortURLID
+from shortener.domain.slug import Slug
+from shortener.domain.status import ShortURLStatus
+from shortener.domain.target_url import TargetURL
+from shortener.domain.user_id import UserID
 from shortener.shared.result import Err, Ok, Result
 from shortener.shared.type_checks import check_parameter_type
-
-from .errors import ShortURLDeactivatedError
-from .shorturl_id import ShortURLID
-from .slug import Slug
-from .status import ShortURLStatus
-from .target_url import TargetURL
-from .user_id import UserID
 
 
 class ShortURL:

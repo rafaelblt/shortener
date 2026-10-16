@@ -12,7 +12,7 @@ def delete_shorturls_of_user(uow: NonCallableMagicMock) -> DeleteShortURLsOfUser
     return DeleteShortURLsOfUser(uow=uow)
 
 
-async def test_removes_the_shorturls_of_the_user_through_the_transaction_and_then_commits(
+async def test_removes_the_shorturls_of_the_user_and_then_commits(
     delete_shorturls_of_user: DeleteShortURLsOfUser,
     transaction: NonCallableMagicMock,
     owner_id: UserID,
@@ -30,5 +30,5 @@ async def test_raises_for_a_user_id_that_is_not_a_uuid_before_beginning_a_transa
     owner_id: UserID,
 ):
     with pytest.raises(TypeError):
-        await delete_shorturls_of_user.execute(str(owner_id.value))  # type: ignore
+        await delete_shorturls_of_user.execute(str(owner_id.value))  # type: ignore[arg-type]
     uow.begin.assert_not_called()

@@ -17,4 +17,4 @@ def test_from_entity_keeps_the_creation_moment_and_the_id_of_the_shorturl(
 def test_is_immutable(normal_shorturl: ShortURL, old_shorturl: ShortURL):
     cursor = ShortURLCursor.from_entity(normal_shorturl)
     with pytest.raises(FrozenInstanceError):
-        cursor.created_at = old_shorturl.created_at  # type: ignore
+        cursor.created_at = old_shorturl.created_at  # type: ignore[misc]

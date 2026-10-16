@@ -73,7 +73,7 @@ async def test_returns_invalid_input_for_an_invalid_limit_without_reading(
     limit: object,
     code: IssueCode,
 ):
-    result = await list_shorturls.execute(limit=limit)  # type: ignore
+    result = await list_shorturls.execute(limit=limit)  # type: ignore[arg-type]
 
     field_error = FieldError("limit", invalid(code).error)
     assert result == Err(InvalidInputError((field_error,)))

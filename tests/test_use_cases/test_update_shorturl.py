@@ -135,7 +135,7 @@ async def test_raises_for_an_id_that_is_not_a_uuid_before_beginning_a_transactio
 ):
     not_a_uuid = str(shorturl.id.value)
     with pytest.raises(TypeError):
-        await update_shorturl.execute(not_a_uuid, slug=NEW_SLUG)  # type: ignore
+        await update_shorturl.execute(not_a_uuid, slug=NEW_SLUG)  # type: ignore[arg-type]
     uow.begin.assert_not_called()
 
 

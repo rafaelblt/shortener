@@ -1,1 +1,1 @@
-from .shorturls import *
+from tests.fixtures.domain.shorturls import *
