@@ -1,8 +1,9 @@
 import copy
-import pytest
 
 from datetime import datetime
 from unittest.mock import DEFAULT, AsyncMock, NonCallableMagicMock, create_autospec
+
+import pytest
 
 from shortener.domain import ShortURL, UserID
 from shortener.shared.result import Ok

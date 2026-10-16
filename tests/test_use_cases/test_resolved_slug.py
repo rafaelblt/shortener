@@ -1,6 +1,6 @@
-import pytest
-
 from dataclasses import FrozenInstanceError
+
+import pytest
 
 from shortener.domain import TargetURL
 from shortener.use_cases.resolved_slug import ResolvedSlug

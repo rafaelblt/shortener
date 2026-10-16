@@ -1,11 +1,12 @@
-import httpx
 import json
 import logging
-import pytest
 
 from dataclasses import dataclass
 from http import HTTPStatus
 from typing import Any
+
+import httpx
+import pytest
 
 from shortener.api.errors import ErrorResponse, documented_responses, error_response
 from shortener.domain import Slug

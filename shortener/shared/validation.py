@@ -1,8 +1,9 @@
 import re
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, Self
+from typing import Any, Self
 
 from shortener.shared.result import Err, Ok, Result
 
@@ -56,20 +57,15 @@ class _Validation[T]:
 
 
 class StringValidation(_Validation[str]):
-
     @staticmethod
     def _is_of_type(value: object) -> bool:
         return isinstance(value, str)
 
     def min_length(self, length: int) -> Self:
-        return self.satisfies(
-            lambda value: len(value) >= length, IssueCode.TOO_SHORT
-        )
+        return self.satisfies(lambda value: len(value) >= length, IssueCode.TOO_SHORT)
 
     def max_length(self, length: int) -> Self:
-        return self.satisfies(
-            lambda value: len(value) <= length, IssueCode.TOO_LONG
-        )
+        return self.satisfies(lambda value: len(value) <= length, IssueCode.TOO_LONG)
 
     def matches(self, pattern: re.Pattern[str]) -> Self:
         return self.satisfies(
@@ -79,7 +75,6 @@ class StringValidation(_Validation[str]):
 
 
 class IntegerValidation(_Validation[int]):
-
     @staticmethod
     def _is_of_type(value: object) -> bool:
         # bool is a subclass of int, but True isn't a number a client means.

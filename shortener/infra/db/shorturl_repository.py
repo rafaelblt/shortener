@@ -179,6 +179,5 @@ def _is_slug_taken(error: IntegrityError) -> bool:
     # The dialect of SQLAlchemy raises its error from the one of asyncpg, and
     # only the one of asyncpg names the constraint.
     return (
-        getattr(error.orig.__cause__, "constraint_name", None)
-        == SLUG_UNIQUE_CONSTRAINT
+        getattr(error.orig.__cause__, "constraint_name", None) == SLUG_UNIQUE_CONSTRAINT
     )

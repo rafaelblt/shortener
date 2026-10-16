@@ -77,9 +77,8 @@ def test_is_not_transient_for_a_failure_that_trying_again_would_not_fix(
 def test_unavailable_when_transient_raises_unavailable_from_a_transient_error():
     error = wrapped("57014")
 
-    with pytest.raises(UnavailableError) as raised:
-        with unavailable_when_transient():
-            raise error
+    with pytest.raises(UnavailableError) as raised, unavailable_when_transient():
+        raise error
 
     assert raised.value.__cause__ is error
 
@@ -87,8 +86,7 @@ def test_unavailable_when_transient_raises_unavailable_from_a_transient_error():
 def test_unavailable_when_transient_lets_any_other_error_through():
     error = wrapped("42P01")
 
-    with pytest.raises(DBAPIError) as raised:
-        with unavailable_when_transient():
-            raise error
+    with pytest.raises(DBAPIError) as raised, unavailable_when_transient():
+        raise error
 
     assert raised.value is error

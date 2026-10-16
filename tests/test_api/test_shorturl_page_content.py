@@ -1,7 +1,7 @@
-import pytest
-
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import UUID
+
+import pytest
 
 from shortener.api.cursors import decode_cursor
 from shortener.api.shorturl_page_content import ShortURLPageContent
@@ -12,7 +12,7 @@ from shortener.use_cases.shorturl_page import ShortURLPage
 
 
 CURSOR = ShortURLCursor(
-    created_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+    created_at=datetime(2026, 1, 1, tzinfo=UTC),
     id=UUID("0199b2c4-7a3e-7c1a-9b5e-3f2d4c6b8a20"),
 )
 

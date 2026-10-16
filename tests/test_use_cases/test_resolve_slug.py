@@ -1,7 +1,7 @@
-import pytest
-
 from datetime import datetime
 from unittest.mock import NonCallableMagicMock
+
+import pytest
 
 from shortener.domain import ShortURL, Slug
 from shortener.domain.errors import ShortURLDeactivatedError
@@ -14,9 +14,7 @@ from tests.fixtures.use_cases.doubles import call_names, record_copies
 
 
 @pytest.fixture
-def resolve_slug(
-    uow: NonCallableMagicMock, clock: NonCallableMagicMock
-) -> ResolveSlug:
+def resolve_slug(uow: NonCallableMagicMock, clock: NonCallableMagicMock) -> ResolveSlug:
     return ResolveSlug(uow=uow, clock=clock)
 
 

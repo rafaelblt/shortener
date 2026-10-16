@@ -1,8 +1,8 @@
-import httpx
-import pytest
-
 from collections.abc import AsyncIterator
 from unittest.mock import NonCallableMagicMock
+
+import httpx
+import pytest
 
 from fastapi import FastAPI
 

@@ -11,7 +11,6 @@ type ResolveSlugError = ShortURLNotFoundError | ShortURLDeactivatedError
 
 
 class ResolveSlug:
-
     def __init__(self, uow: UnitOfWork, clock: Clock):
         self._uow = uow
         self._clock = clock

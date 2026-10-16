@@ -1,8 +1,9 @@
-import aio_pika
 import asyncio
-import pytest
 
 from collections.abc import AsyncIterator, Iterator
+
+import aio_pika
+import pytest
 
 from aio_pika.abc import AbstractChannel, AbstractConnection, AbstractIncomingMessage
 from testcontainers.core.container import DockerContainer

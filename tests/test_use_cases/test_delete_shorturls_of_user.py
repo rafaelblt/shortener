@@ -1,6 +1,6 @@
-import pytest
-
 from unittest.mock import NonCallableMagicMock
+
+import pytest
 
 from shortener.domain import UserID
 from shortener.use_cases.delete_shorturls_of_user import DeleteShortURLsOfUser

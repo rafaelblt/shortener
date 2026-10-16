@@ -1,8 +1,8 @@
-import pytest
-
 from typing import Any
 from unittest.mock import NonCallableMagicMock
 from uuid import UUID
+
+import pytest
 
 from shortener.api.endpoints import ENDPOINTS
 from shortener.bootstrap.use_cases import UseCases

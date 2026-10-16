@@ -1,9 +1,9 @@
-import httpx
-import pytest
-
 from datetime import timedelta
 from http import HTTPStatus
 from unittest.mock import NonCallableMagicMock
+
+import httpx
+import pytest
 
 from fastapi import FastAPI
 

@@ -107,7 +107,6 @@ class _SigningKeys(Protocol):
 
 
 class _StaticKey:
-
     def __init__(self, key: str):
         self._key = key
 
@@ -116,7 +115,6 @@ class _StaticKey:
 
 
 class _JWKSKeys:
-
     def __init__(self, url: str, timeout: timedelta):
         try:
             self._client = _JWKSClient(url, timeout=timeout.total_seconds())

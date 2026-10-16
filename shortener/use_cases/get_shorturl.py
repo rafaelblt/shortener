@@ -12,7 +12,6 @@ type GetShortURLError = NotAuthenticatedError | ShortURLNotFoundError
 
 
 class GetShortURL:
-
     def __init__(self, shorturls: ShortURLReader, current_user: CurrentUser):
         self._shorturls = shorturls
         self._current_user = current_user

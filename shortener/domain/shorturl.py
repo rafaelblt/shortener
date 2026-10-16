@@ -1,20 +1,17 @@
-from typing import Optional
-
 from datetime import datetime
 
 from shortener.shared.result import Err, Ok, Result
 from shortener.shared.type_checks import check_parameter_type
 
-from .slug import Slug
-from .target_url import TargetURL
-from .status import ShortURLStatus
-from .shorturl_id import ShortURLID
-from .user_id import UserID
 from .errors import ShortURLDeactivatedError
+from .shorturl_id import ShortURLID
+from .slug import Slug
+from .status import ShortURLStatus
+from .target_url import TargetURL
+from .user_id import UserID
 
 
 class ShortURL:
-
     def __init__(
         self,
         id: ShortURLID,
@@ -24,7 +21,7 @@ class ShortURL:
         status: ShortURLStatus,
         resolution_count: int,
         created_at: datetime,
-        last_resolved_at: Optional[datetime],
+        last_resolved_at: datetime | None,
     ):
         _check_attribute_type("id", id, ShortURLID)
         _check_attribute_type("slug", slug, Slug)
@@ -77,7 +74,7 @@ class ShortURL:
         status: ShortURLStatus,
         resolution_count: int,
         created_at: datetime,
-        last_resolved_at: Optional[datetime],
+        last_resolved_at: datetime | None,
     ) -> "ShortURL":
         """
         Rebuilds a short URL that already exists, such as one loaded from the
@@ -94,7 +91,6 @@ class ShortURL:
             created_at=created_at,
             last_resolved_at=last_resolved_at,
         )
-
 
     @property
     def id(self) -> ShortURLID:
@@ -125,9 +121,8 @@ class ShortURL:
         return self._created_at
 
     @property
-    def last_resolved_at(self) -> Optional[datetime]:
+    def last_resolved_at(self) -> datetime | None:
         return self._last_resolved_at
-
 
     def change_slug(self, new_slug: Slug):
         _check_attribute_type("slug", new_slug, Slug)
@@ -136,7 +131,6 @@ class ShortURL:
     def change_target_url(self, new_target_url: TargetURL):
         _check_attribute_type("target_url", new_target_url, TargetURL)
         self._target_url = new_target_url
-
 
     def resolve(self, now: datetime) -> Result[TargetURL, ShortURLDeactivatedError]:
         """

@@ -8,7 +8,6 @@ from shortener.infra.db.transient_errors import unavailable_when_transient
 
 
 class SQLAlchemyTransaction:
-
     def __init__(self, connection: AsyncConnection):
         self._connection = connection
         self.shorturls = SQLAlchemyShortURLRepository(connection)
@@ -19,7 +18,6 @@ class SQLAlchemyTransaction:
 
 
 class SQLAlchemyUnitOfWork:
-
     def __init__(self, engine: AsyncEngine):
         self._engine = engine
 

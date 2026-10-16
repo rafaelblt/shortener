@@ -1,7 +1,7 @@
-import pytest
-
 from dataclasses import FrozenInstanceError
 from uuid import UUID
+
+import pytest
 
 from shortener.domain.entity_id import EntityID
 from tests.utils.text_helpers import assert_mentions

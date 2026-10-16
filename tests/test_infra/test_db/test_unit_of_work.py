@@ -1,8 +1,9 @@
 import asyncio
-import pytest
 
+from collections.abc import Awaitable, Callable
 from datetime import datetime
-from typing import Awaitable, Callable
+
+import pytest
 
 from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError
@@ -203,4 +204,3 @@ async def test_a_read_raises_unavailable_when_the_wait_for_a_lock_runs_out(
         assert isinstance(raised.value.__cause__, DBAPIError)
     finally:
         await impatient_engine.dispose()
-

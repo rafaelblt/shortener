@@ -1,6 +1,6 @@
-import pytest
-
 from unittest.mock import NonCallableMagicMock
+
+import pytest
 
 from shortener.domain import ShortURL, UserID
 from shortener.shared.result import Err, Ok

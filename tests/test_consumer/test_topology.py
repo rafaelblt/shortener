@@ -38,7 +38,9 @@ async def test_a_message_rejected_without_requeuing_goes_to_the_dead_letter_queu
     assert (await receive(channel, DEAD_LETTER_QUEUE)).body == b"event"
 
 
-async def test_declaring_again_keeps_the_messages_of_the_queue(channel: AbstractChannel):
+async def test_declaring_again_keeps_the_messages_of_the_queue(
+    channel: AbstractChannel,
+):
     await declare_queue(channel)
     await publish(channel, b"event")
 

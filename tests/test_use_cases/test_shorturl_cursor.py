@@ -1,6 +1,6 @@
-import pytest
-
 from dataclasses import FrozenInstanceError
+
+import pytest
 
 from shortener.domain import ShortURL
 from shortener.use_cases.shorturl_cursor import ShortURLCursor

@@ -1,11 +1,11 @@
-import httpx
-import pytest
-
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from http import HTTPStatus
 from unittest.mock import NonCallableMagicMock
 from uuid import UUID
+
+import httpx
+import pytest
 
 from fastapi import FastAPI
 
@@ -24,7 +24,7 @@ from tests.utils.text_helpers import assert_mentions
 
 
 ID = UUID("0199b2c4-7a3e-7c1a-9b5e-3f2d4c6b8a20")
-CURSOR = ShortURLCursor(created_at=datetime(2026, 1, 1, tzinfo=timezone.utc), id=ID)
+CURSOR = ShortURLCursor(created_at=datetime(2026, 1, 1, tzinfo=UTC), id=ID)
 SUMMARY = "Echo the values of the request"
 TAG = "Echoes"
 

@@ -21,7 +21,6 @@ type CreateShortURLError = NotAuthenticatedError | InvalidInputError | SlugTaken
 
 
 class CreateShortURL:
-
     def __init__(self, uow: UnitOfWork, current_user: CurrentUser, clock: Clock):
         self._uow = uow
         self._current_user = current_user

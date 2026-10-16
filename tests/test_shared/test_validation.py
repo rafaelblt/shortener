@@ -1,4 +1,5 @@
 import re
+
 import pytest
 
 from shortener.shared.result import Ok, Result
@@ -58,7 +59,9 @@ def test_max_length_records_too_long_only_for_a_longer_value(
     "value, expected",
     [
         pytest.param("abc", Ok("abc"), id="whole value"),
-        pytest.param("abc!", invalid(IssueCode.INVALID_FORMAT), id="trailing character"),
+        pytest.param(
+            "abc!", invalid(IssueCode.INVALID_FORMAT), id="trailing character"
+        ),
         pytest.param("!abc", invalid(IssueCode.INVALID_FORMAT), id="leading character"),
         pytest.param("abc\n", invalid(IssueCode.INVALID_FORMAT), id="trailing newline"),
     ],
@@ -79,7 +82,9 @@ def test_matches_records_invalid_format_unless_the_whole_value_matches(
 def test_satisfies_records_the_given_code_only_when_the_rule_is_broken(
     value: str, expected: Result[str, ValidationError]
 ):
-    validation = StringValidation(value).satisfies(str.islower, IssueCode.INVALID_FORMAT)
+    validation = StringValidation(value).satisfies(
+        str.islower, IssueCode.INVALID_FORMAT
+    )
     assert validation.result() == expected
 
 

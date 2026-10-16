@@ -25,7 +25,6 @@ type UpdateShortURLError = (
 
 
 class UpdateShortURL:
-
     def __init__(self, uow: UnitOfWork, current_user: CurrentUser):
         self._uow = uow
         self._current_user = current_user

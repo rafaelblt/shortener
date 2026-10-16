@@ -1,9 +1,10 @@
 import asyncio
 import logging
-import pytest
 
 from datetime import timedelta
 from unittest.mock import NonCallableMagicMock
+
+import pytest
 
 from shortener.consumer.user_deleted_handler import UserDeletedHandler
 from shortener.domain import UserID
@@ -44,8 +45,8 @@ async def test_acknowledges_the_message_only_after_deleting(
     message: NonCallableMagicMock,
 ):
     acknowledged_before_deleting: list[bool] = []
-    delete_shorturls_of_user.execute.side_effect = (
-        lambda user_id: acknowledged_before_deleting.append(message.ack.called)
+    delete_shorturls_of_user.execute.side_effect = lambda user_id: (
+        acknowledged_before_deleting.append(message.ack.called)
     )
 
     await handler.handle(message)
@@ -83,7 +84,9 @@ async def test_waits_the_retry_delay_before_requeuing(
     delete_shorturls_of_user: NonCallableMagicMock, message: NonCallableMagicMock
 ):
     delete_shorturls_of_user.execute.side_effect = UnavailableError()
-    handler = UserDeletedHandler(delete_shorturls_of_user, retry_delay=timedelta(hours=1))
+    handler = UserDeletedHandler(
+        delete_shorturls_of_user, retry_delay=timedelta(hours=1)
+    )
 
     handling = asyncio.create_task(handler.handle(message))
     for _ in range(10):

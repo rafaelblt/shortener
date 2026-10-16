@@ -10,7 +10,9 @@ from shortener.consumer.user_deleted_handler import UserDeletedHandler
 from tests.fixtures.consumer.rabbitmq import count_ready, publish
 
 
-def handler_that_keeps(messages: asyncio.Queue[AbstractIncomingMessage]) -> NonCallableMagicMock:
+def handler_that_keeps(
+    messages: asyncio.Queue[AbstractIncomingMessage],
+) -> NonCallableMagicMock:
     """A handler that keeps each message, without acknowledging it."""
     handler = create_autospec(UserDeletedHandler, instance=True)
     handler.handle.side_effect = messages.put

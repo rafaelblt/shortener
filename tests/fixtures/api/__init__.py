@@ -1,2 +1,2 @@
-from .doubles import *
 from .client import *
+from .doubles import *

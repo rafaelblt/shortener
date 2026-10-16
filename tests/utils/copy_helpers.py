@@ -1,8 +1,9 @@
 import copy
 import pickle
-import pytest
 
 from typing import TypeVar
+
+import pytest
 
 
 T = TypeVar("T")

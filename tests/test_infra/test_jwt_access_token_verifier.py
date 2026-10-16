@@ -1,15 +1,16 @@
 import asyncio
 import json
 import threading
-import jwt
-import pytest
 
 from collections.abc import Iterator
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 from uuid import UUID
+
+import jwt
+import pytest
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -45,12 +46,10 @@ def claims(**changes: Any) -> dict[str, Any]:
         "sub": str(USER_UUID),
         "iss": ISSUER,
         "aud": AUDIENCE,
-        "exp": datetime.now(timezone.utc) + timedelta(hours=1),
+        "exp": datetime.now(UTC) + timedelta(hours=1),
     }
     return {
-        name: value
-        for name, value in {**valid, **changes}.items()
-        if value is not None
+        name: value for name, value in {**valid, **changes}.items() if value is not None
     }
 
 
@@ -165,7 +164,7 @@ async def test_verify_returns_none_for_a_token_that_is_not_valid(
 async def test_verify_allows_a_time_off_by_less_than_the_leeway(
     hs256_verifier: JWTAccessTokenVerifier, claim: str, direction: int
 ):
-    token = hs256_token(**{claim: datetime.now(timezone.utc) + direction * LEEWAY / 2})
+    token = hs256_token(**{claim: datetime.now(UTC) + direction * LEEWAY / 2})
     assert await hs256_verifier.verify(token) == UserID(USER_UUID)
 
 
@@ -173,7 +172,7 @@ async def test_verify_allows_a_time_off_by_less_than_the_leeway(
 async def test_verify_returns_none_for_a_time_off_by_more_than_the_leeway(
     hs256_verifier: JWTAccessTokenVerifier, claim: str, direction: int
 ):
-    token = hs256_token(**{claim: datetime.now(timezone.utc) + direction * LEEWAY * 2})
+    token = hs256_token(**{claim: datetime.now(UTC) + direction * LEEWAY * 2})
     assert await hs256_verifier.verify(token) is None
 
 

@@ -1,14 +1,14 @@
-import pytest
-
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import UUID
 
-from shortener.domain import ShortURL, TargetURL, Slug, UserID
+import pytest
+
+from shortener.domain import ShortURL, Slug, TargetURL, UserID
 
 
 @pytest.fixture
 def now():
-    return datetime(year=2026, month=1, day=1, tzinfo=timezone.utc)
+    return datetime(year=2026, month=1, day=1, tzinfo=UTC)
 
 
 @pytest.fixture
@@ -47,7 +47,7 @@ def old_shorturl(owner_id):
         slug=Slug("old-site"),
         target_url=TargetURL("https://google.com"),
         owner_id=owner_id,
-        now=datetime(year=2000, month=1, day=1, tzinfo=timezone.utc),
+        now=datetime(year=2000, month=1, day=1, tzinfo=UTC),
     )
 
 

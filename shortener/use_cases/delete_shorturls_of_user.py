@@ -5,7 +5,6 @@ from shortener.use_cases.unit_of_work import UnitOfWork
 
 
 class DeleteShortURLsOfUser:
-
     def __init__(self, uow: UnitOfWork):
         self._uow = uow
 

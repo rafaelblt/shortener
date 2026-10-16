@@ -1,9 +1,10 @@
 import base64
-import pytest
 
 from datetime import datetime, timedelta, timezone
 from urllib.parse import quote
 from uuid import UUID
+
+import pytest
 
 from shortener.api.cursors import decode_cursor, encode_cursor
 from shortener.use_cases.shorturl_cursor import ShortURLCursor

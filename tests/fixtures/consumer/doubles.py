@@ -1,6 +1,6 @@
-import pytest
-
 from unittest.mock import NonCallableMagicMock, create_autospec
+
+import pytest
 
 from aio_pika.abc import AbstractIncomingMessage
 

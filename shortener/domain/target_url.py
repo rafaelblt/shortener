@@ -10,7 +10,6 @@ from shortener.shared.validation import (
 
 
 class TargetURL(str):
-
     def __new__(cls, value: str) -> "TargetURL":
         """
         Prefer create(), which returns the broken rules instead of raising.

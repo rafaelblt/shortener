@@ -1,17 +1,17 @@
-import pytest
-
 from collections.abc import Callable
 
-from shortener.shared.result import Ok
-from shortener.shared.validation import IssueCode
+import pytest
+
 from shortener.domain.slug import (
-    Slug,
     RANDOM_SLUG_CHARS,
     RANDOM_SLUG_LENGTH,
     SLUG_MAX_LENGTH,
     SLUG_MIN_LENGTH,
     SLUG_PATTERN,
+    Slug,
 )
+from shortener.shared.result import Ok
+from shortener.shared.validation import IssueCode
 from tests.fixtures.shared.validation import invalid
 from tests.utils.copy_helpers import COPY_FUNCTIONS
 from tests.utils.text_helpers import assert_mentions
@@ -34,7 +34,9 @@ def test_create_returns_ok_with_a_slug_of_a_valid_value(value: str):
 @pytest.mark.parametrize(
     "value, codes",
     [
-        pytest.param("a" * (SLUG_MIN_LENGTH - 1), [IssueCode.TOO_SHORT], id="too short"),
+        pytest.param(
+            "a" * (SLUG_MIN_LENGTH - 1), [IssueCode.TOO_SHORT], id="too short"
+        ),
         pytest.param("a" * (SLUG_MAX_LENGTH + 1), [IssueCode.TOO_LONG], id="too long"),
         pytest.param("dot.slug", [IssueCode.INVALID_FORMAT], id="dot"),
         pytest.param("with space", [IssueCode.INVALID_FORMAT], id="space"),

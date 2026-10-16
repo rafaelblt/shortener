@@ -1,12 +1,13 @@
 import asyncio
+
+from dataclasses import replace
+from datetime import UTC, datetime, timedelta
+from http import HTTPStatus
+from unittest.mock import AsyncMock, Mock
+
 import httpx
 import jwt
 import pytest
-
-from dataclasses import replace
-from datetime import datetime, timedelta, timezone
-from http import HTTPStatus
-from unittest.mock import AsyncMock, Mock
 
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
@@ -220,14 +221,14 @@ async def test_database_engine_waits_to_connect_up_to_the_connect_timeout(
 async def test_access_token_verifier_with_a_key_verifies_the_tokens_it_signed(
     owner_id: UserID,
 ):
-    token = hs256_token(owner_id, datetime.now(timezone.utc) + timedelta(hours=1))
+    token = hs256_token(owner_id, datetime.now(UTC) + timedelta(hours=1))
     assert await access_token_verifier(KEY_SETTINGS).verify(token) == owner_id
 
 
 async def test_access_token_verifier_allows_the_leeway_of_the_settings(
     owner_id: UserID,
 ):
-    token = hs256_token(owner_id, datetime.now(timezone.utc) - timedelta(seconds=30))
+    token = hs256_token(owner_id, datetime.now(UTC) - timedelta(seconds=30))
     lenient = replace(KEY_SETTINGS, leeway=timedelta(seconds=60))
     strict = replace(KEY_SETTINGS, leeway=timedelta(0))
 

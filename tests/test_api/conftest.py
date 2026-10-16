@@ -1,2 +1,2 @@
-from tests.fixtures.domain import *
 from tests.fixtures.api import *
+from tests.fixtures.domain import *

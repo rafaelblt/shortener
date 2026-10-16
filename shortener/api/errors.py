@@ -260,4 +260,3 @@ def _issue_code(detail: Any) -> str:
     if detail["type"] == MISSING or detail["type"] in _ISSUE_CODES:
         return detail["type"]
     return IssueCode.INVALID_TYPE.value
-

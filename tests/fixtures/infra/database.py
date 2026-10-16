@@ -1,7 +1,7 @@
-import pytest
-
 from collections.abc import AsyncIterator, Iterator
 from pathlib import Path
+
+import pytest
 
 from alembic import command
 from alembic.config import Config

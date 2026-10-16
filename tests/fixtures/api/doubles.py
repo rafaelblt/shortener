@@ -1,11 +1,11 @@
-import pytest
-
 from typing import Any
 from unittest.mock import NonCallableMagicMock, create_autospec
 
+import pytest
+
 from shortener.api.authentication import AccessTokenVerifier
-from shortener.api.rate_limit import RateLimiter
 from shortener.api.health_check import HealthCheck
+from shortener.api.rate_limit import RateLimiter
 from shortener.domain import UserID
 from shortener.use_cases.current_user import CurrentUser
 

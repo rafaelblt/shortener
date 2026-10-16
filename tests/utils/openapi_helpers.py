@@ -3,11 +3,11 @@ Writes the OpenAPI schema of the API to docs/openapi.yaml, with
 `poetry run task openapi`. See docs/api.md#openapi
 """
 
-import yaml
-
 from pathlib import Path
 from typing import Final
 from unittest.mock import create_autospec
+
+import yaml
 
 from fastapi import FastAPI
 

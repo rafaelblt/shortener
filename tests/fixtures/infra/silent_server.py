@@ -1,7 +1,8 @@
 import socket
-import pytest
 
 from collections.abc import Iterator
+
+import pytest
 
 
 @pytest.fixture

@@ -1,8 +1,9 @@
 import asyncio
-import pytest
 
 from datetime import datetime
 from unittest.mock import AsyncMock, Mock
+
+import pytest
 
 from aio_pika.abc import AbstractChannel
 from aio_pika.exceptions import AMQPConnectionError

@@ -1,16 +1,17 @@
-import pytest
-
-from datetime import datetime, timedelta, timezone, tzinfo
-from typing import Any, Callable
+from collections.abc import Callable
+from datetime import UTC, datetime, timedelta, timezone, tzinfo
+from typing import Any
 from uuid import UUID
+
+import pytest
 
 from shortener.domain import (
     ShortURL,
     ShortURLID,
     ShortURLStatus,
-    UserID,
     Slug,
     TargetURL,
+    UserID,
 )
 from shortener.domain.errors import ShortURLDeactivatedError
 from shortener.shared.result import Err, Ok
@@ -49,8 +50,8 @@ def fields(owner_id: UserID) -> dict[str, Any]:
         "owner_id": owner_id,
         "status": ShortURLStatus.DEACTIVATED,
         "resolution_count": 5,
-        "created_at": datetime(2002, 2, 2, tzinfo=timezone.utc),
-        "last_resolved_at": datetime(2004, 4, 4, tzinfo=timezone.utc),
+        "created_at": datetime(2002, 2, 2, tzinfo=UTC),
+        "last_resolved_at": datetime(2004, 4, 4, tzinfo=UTC),
     }
 
 
@@ -91,7 +92,7 @@ def test_create_rejects_a_now_that_is_not_a_datetime(owner_id: UserID):
             slug=Slug("my-slug"),
             target_url=TargetURL("https://example.com"),
             owner_id=owner_id,
-            now=None, # type: ignore
+            now=None,  # type: ignore
         )
     assert_mentions(
         str(raised.value), "created_at", datetime.__name__, type(None).__name__
@@ -157,7 +158,7 @@ def test_restore_rejects_a_negative_resolution_count(fields: dict[str, Any]):
 
 def test_restore_takes_keyword_arguments_only(fields: dict[str, Any]):
     with pytest.raises(TypeError):
-        ShortURL.restore(*fields.values()) # type: ignore
+        ShortURL.restore(*fields.values())  # type: ignore
 
 
 @pytest.mark.parametrize("change, field, new_value", CHANGES)
@@ -180,9 +181,7 @@ def test_change_rejects_a_value_of_another_type(
 ):
     with pytest.raises(TypeError) as raised:
         change(normal_shorturl, "a plain str")
-    assert_mentions(
-        str(raised.value), field, type(new_value).__name__, str.__name__
-    )
+    assert_mentions(str(raised.value), field, type(new_value).__name__, str.__name__)
 
 
 def test_resolve_returns_the_target_url(normal_shorturl: ShortURL, now: datetime):
@@ -204,7 +203,7 @@ def test_resolve_sets_last_resolved_at_to_now(normal_shorturl: ShortURL, now: da
 
 def test_resolve_rejects_a_now_that_is_not_a_datetime(normal_shorturl: ShortURL):
     with pytest.raises(TypeError) as raised:
-        normal_shorturl.resolve(None) # type: ignore
+        normal_shorturl.resolve(None)  # type: ignore
     assert_mentions(str(raised.value), "now", datetime.__name__, type(None).__name__)
 
 

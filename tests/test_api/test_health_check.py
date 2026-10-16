@@ -1,7 +1,7 @@
-import httpx
-
 from http import HTTPStatus
 from unittest.mock import NonCallableMagicMock
+
+import httpx
 
 from fastapi import FastAPI
 

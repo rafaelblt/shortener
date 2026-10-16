@@ -1,8 +1,8 @@
-import pytest
-
 from dataclasses import FrozenInstanceError
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import UUID
+
+import pytest
 
 from shortener.domain import (
     ShortURL,
@@ -17,8 +17,8 @@ from shortener.use_cases.shorturl_details import ShortURLDetails
 
 ID = UUID("0199b2c4-7a3e-7c1a-9b5e-3f2d4c6b8a11")
 OWNER_ID = UUID("0199b2c4-7a3e-7c1a-9b5e-3f2d4c6b8a10")
-CREATED_AT = datetime(2002, 2, 2, tzinfo=timezone.utc)
-LAST_RESOLVED_AT = datetime(2004, 4, 4, tzinfo=timezone.utc)
+CREATED_AT = datetime(2002, 2, 2, tzinfo=UTC)
+LAST_RESOLVED_AT = datetime(2004, 4, 4, tzinfo=UTC)
 
 
 def restore(last_resolved_at: datetime | None) -> ShortURL:

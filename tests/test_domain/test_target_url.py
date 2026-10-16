@@ -1,10 +1,10 @@
-import pytest
-
 from collections.abc import Callable
 
+import pytest
+
+from shortener.domain.target_url import TargetURL
 from shortener.shared.result import Ok
 from shortener.shared.validation import IssueCode
-from shortener.domain.target_url import TargetURL
 from tests.fixtures.shared.validation import invalid
 from tests.utils.copy_helpers import COPY_FUNCTIONS
 from tests.utils.text_helpers import assert_mentions
@@ -34,7 +34,9 @@ def test_create_returns_ok_with_a_target_url_of_a_valid_value(value: str):
         pytest.param("", [IssueCode.INVALID_FORMAT], id="empty"),
         pytest.param("https://", [IssueCode.INVALID_FORMAT], id="no host"),
         pytest.param("https://?", [IssueCode.INVALID_FORMAT], id="query without host"),
-        pytest.param("https:///path", [IssueCode.INVALID_FORMAT], id="path without host"),
+        pytest.param(
+            "https:///path", [IssueCode.INVALID_FORMAT], id="path without host"
+        ),
         pytest.param("https://[invalid", [IssueCode.INVALID_FORMAT], id="unparsable"),
         pytest.param(123, [IssueCode.INVALID_TYPE], id="int"),
         pytest.param(None, [IssueCode.INVALID_TYPE], id="None"),

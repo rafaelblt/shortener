@@ -1,8 +1,9 @@
 import asyncio
-import pytest
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from uuid import UUID
+
+import pytest
 
 from sqlalchemy.exc import IntegrityError, ProgrammingError
 from sqlalchemy.ext.asyncio import create_async_engine
@@ -26,8 +27,8 @@ from tests.utils.shorturl_helpers import fields_of
 
 
 UNREACHABLE_DATABASE_URL = "postgresql+asyncpg://user:password@127.0.0.1:1/database"
-JANUARY_1 = datetime(2026, 1, 1, tzinfo=timezone.utc)
-JANUARY_2 = datetime(2026, 1, 2, tzinfo=timezone.utc)
+JANUARY_1 = datetime(2026, 1, 1, tzinfo=UTC)
+JANUARY_2 = datetime(2026, 1, 2, tzinfo=UTC)
 
 
 class TransactionReads:
@@ -74,7 +75,7 @@ def changed_shorturl(owner_id: UserID) -> ShortURL:
         created_at=datetime(
             2026, 1, 1, 12, 30, 15, 123456, tzinfo=timezone(timedelta(hours=-3))
         ),
-        last_resolved_at=datetime(2026, 1, 2, tzinfo=timezone.utc),
+        last_resolved_at=datetime(2026, 1, 2, tzinfo=UTC),
     )
 
 

@@ -1,7 +1,8 @@
-import aio_pika
 import asyncio
 import logging
 import signal
+
+import aio_pika
 
 from shortener.bootstrap.app import database_engine
 from shortener.bootstrap.settings import ConsumerSettings

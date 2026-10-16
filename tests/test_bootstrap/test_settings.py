@@ -1,7 +1,7 @@
-import pytest
-
 from collections.abc import Callable
 from datetime import timedelta
+
+import pytest
 
 from shortener.bootstrap.settings import (
     DEFAULT_DATABASE_CONNECT_TIMEOUT,

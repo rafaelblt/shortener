@@ -1,7 +1,7 @@
-import pytest
-
 from datetime import datetime, timedelta
 from unittest.mock import NonCallableMagicMock, create_autospec
+
+import pytest
 
 from shortener.infra.in_memory_rate_limiter import InMemoryRateLimiter
 from shortener.use_cases.clock import Clock

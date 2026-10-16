@@ -21,7 +21,6 @@ type ListShortURLsError = NotAuthenticatedError | InvalidInputError
 
 
 class ListShortURLs:
-
     def __init__(self, shorturls: ShortURLReader, current_user: CurrentUser):
         self._shorturls = shorturls
         self._current_user = current_user

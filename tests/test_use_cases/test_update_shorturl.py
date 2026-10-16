@@ -1,7 +1,7 @@
-import pytest
-
 from datetime import datetime
 from unittest.mock import NonCallableMagicMock
+
+import pytest
 
 from shortener.domain import ShortURL, ShortURLID, Slug, TargetURL, UserID
 from shortener.shared.result import Err, Ok

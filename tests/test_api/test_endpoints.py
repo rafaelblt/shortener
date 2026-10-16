@@ -1,10 +1,10 @@
-import httpx
-import pytest
-
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from http import HTTPStatus
 from typing import Any
 from uuid import UUID
+
+import httpx
+import pytest
 
 from pydantic import TypeAdapter
 
@@ -29,7 +29,7 @@ from tests.fixtures.api.doubles import AUTHORIZATION, UseCaseDoubles
 
 
 ID = UUID("0199b2c4-7a3e-7c1a-9b5e-3f2d4c6b8a20")
-CURSOR = ShortURLCursor(created_at=datetime(2026, 1, 1, tzinfo=timezone.utc), id=ID)
+CURSOR = ShortURLCursor(created_at=datetime(2026, 1, 1, tzinfo=UTC), id=ID)
 
 
 @pytest.fixture
@@ -266,9 +266,7 @@ async def test_get_slug_redirect_redirects_to_its_target_url(
 async def test_the_endpoints_of_a_slug_tell_a_deactivated_shorturl_apart(
     client: httpx.AsyncClient, use_cases: UseCaseDoubles, url: str
 ):
-    use_cases.double(ResolveSlug).execute.return_value = Err(
-        ShortURLDeactivatedError()
-    )
+    use_cases.double(ResolveSlug).execute.return_value = Err(ShortURLDeactivatedError())
 
     response = await client.get(url)
 
