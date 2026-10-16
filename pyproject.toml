@@ -41,6 +41,7 @@ consume = 'python -m shortener.bootstrap.consumer'
 lint = "ruff check && ruff format --check"
 format = "ruff check --fix-only && ruff format"
 typecheck = "mypy"
+imports = "lint-imports"
 
 test = 'pytest --cov=shortener -v'
 test_shared = "pytest -v tests/test_shared/"
@@ -133,6 +134,96 @@ disable_error_code = ["empty-body"]
 [[tool.mypy.overrides]]
 module = ["asyncpg", "asyncpg.*"]
 ignore_missing_imports = true
+
+[tool.importlinter]
+root_packages = ["shortener", "tests"]
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "The layers depend inward"
+type = "layers"
+layers = [
+    "shortener.bootstrap",
+    "shortener.api | shortener.consumer | shortener.infra",
+    "shortener.use_cases",
+    "shortener.domain",
+    "shortener.shared",
+]
+
+[[tool.importlinter.contracts]]
+name = "The domain, the use cases and shared use no framework"
+type = "forbidden"
+source_modules = ["shortener.domain", "shortener.use_cases", "shortener.shared"]
+forbidden_modules = [
+    "aio_pika",
+    "alembic",
+    "asyncpg",
+    "fastapi",
+    "jwt",
+    "pydantic",
+    "sqlalchemy",
+    "starlette",
+]
+
+[[tool.importlinter.contracts]]
+name = "The entry points reach the database and the access tokens through abstractions"
+type = "forbidden"
+source_modules = ["shortener.api", "shortener.consumer"]
+forbidden_modules = ["asyncpg", "jwt", "sqlalchemy"]
+
+[[tool.importlinter.contracts]]
+name = "The tests of shared import no layer"
+type = "forbidden"
+source_modules = ["tests.test_shared", "tests.fixtures.shared"]
+forbidden_modules = [
+    "shortener.domain",
+    "shortener.use_cases",
+    "shortener.api",
+    "shortener.consumer",
+    "shortener.infra",
+    "shortener.bootstrap",
+]
+
+[[tool.importlinter.contracts]]
+name = "The tests of the domain import no layer above it"
+type = "forbidden"
+source_modules = ["tests.test_domain", "tests.fixtures.domain"]
+forbidden_modules = [
+    "shortener.use_cases",
+    "shortener.api",
+    "shortener.consumer",
+    "shortener.infra",
+    "shortener.bootstrap",
+]
+
+[[tool.importlinter.contracts]]
+name = "The tests of the use cases import no layer above them"
+type = "forbidden"
+source_modules = ["tests.test_use_cases", "tests.fixtures.use_cases"]
+forbidden_modules = [
+    "shortener.api",
+    "shortener.consumer",
+    "shortener.infra",
+    "shortener.bootstrap",
+]
+
+[[tool.importlinter.contracts]]
+name = "The tests of the API import neither its siblings nor bootstrap"
+type = "forbidden"
+source_modules = ["tests.test_api", "tests.fixtures.api"]
+forbidden_modules = ["shortener.consumer", "shortener.infra", "shortener.bootstrap"]
+
+[[tool.importlinter.contracts]]
+name = "The tests of the consumer import neither its siblings nor bootstrap"
+type = "forbidden"
+source_modules = ["tests.test_consumer", "tests.fixtures.consumer"]
+forbidden_modules = ["shortener.api", "shortener.infra", "shortener.bootstrap"]
+
+[[tool.importlinter.contracts]]
+name = "The tests of infra import neither its siblings nor bootstrap"
+type = "forbidden"
+source_modules = ["tests.test_infra", "tests.fixtures.infra"]
+forbidden_modules = ["shortener.api", "shortener.consumer", "shortener.bootstrap"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
