@@ -4,7 +4,7 @@ from shortener.domain import UserID
 
 
 class CurrentUser(Protocol):
-    """The user making the request. See docs/use_cases.md#current-user"""
+    """The user making the request. See docs/architecture/use_cases.md#current-user"""
 
     async def get_id(self) -> UserID | None:
         """

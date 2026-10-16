@@ -15,7 +15,7 @@ async def consume(connection: AbstractConnection, handler: UserDeletedHandler) -
     """
     Starts consuming the queue of the service on a channel of the connection,
     and returns. The messages are handled until the connection is closed.
-    See docs/consumer.md#consuming
+    See docs/architecture/consumer.md#consuming
     """
     channel = await connection.channel()
     await channel.set_qos(prefetch_count=PREFETCH_COUNT)

@@ -36,7 +36,7 @@ class Slug(str):
         # copy and pickle rebuild an instance with the constructor, which
         # would reject a value accepted under older rules. A copy is of a
         # value that already exists, so it uses parse(). See
-        # docs/domain.md#value-objects
+        # docs/architecture/domain.md#value-objects
         return (type(self).parse, (str(self),))
 
     @classmethod
@@ -54,7 +54,7 @@ class Slug(str):
     def parse(cls, value: object) -> "Slug":
         """
         Only checks that the value is a non-empty str, so a slug created under
-        older rules is still accepted. See docs/domain.md#value-objects
+        older rules is still accepted. See docs/architecture/domain.md#value-objects
 
         Raises:
             TypeError: The value isn't a str.

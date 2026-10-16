@@ -6,7 +6,7 @@ from uuid import UUID
 def parse_user_id(body: bytes) -> UUID | None:
     """
     The ID of the deleted user in the body of a message, or None when the body
-    isn't the one of the event. See docs/consumer.md#the-event
+    isn't the one of the event. See docs/architecture/consumer.md#the-event
     """
     try:
         content = json.loads(body)

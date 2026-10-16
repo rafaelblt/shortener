@@ -14,7 +14,7 @@ from shortener.use_cases.shorturl_cursor import ShortURLCursor
 def encode_cursor(cursor: ShortURLCursor) -> str:
     """
     The cursor as the text a client sends back. It is meant to be opaque, so
-    the encoding can change. See docs/api.md#cursors
+    the encoding can change. See docs/architecture/api.md#cursors
     """
     text = f"{cursor.created_at.isoformat()},{cursor.id}"
     return base64.urlsafe_b64encode(text.encode()).decode().rstrip("=")

@@ -20,7 +20,7 @@ from shortener.use_cases.update_shorturl import UpdateShortURL
 class UseCases:
     """
     The UseCaseFactory of the API, which builds each use case with the
-    implementations of its abstractions. See docs/bootstrap.md#use-cases
+    implementations of its abstractions. See docs/architecture/bootstrap.md#use-cases
     """
 
     uow: UnitOfWork

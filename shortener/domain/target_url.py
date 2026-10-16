@@ -28,7 +28,7 @@ class TargetURL(str):
         # copy and pickle rebuild an instance with the constructor, which
         # would reject a value accepted under older rules. A copy is of a
         # value that already exists, so it uses parse(). See
-        # docs/domain.md#value-objects
+        # docs/architecture/domain.md#value-objects
         return (type(self).parse, (str(self),))
 
     @classmethod
@@ -44,7 +44,8 @@ class TargetURL(str):
     def parse(cls, value: object) -> "TargetURL":
         """
         Only checks that the value is a non-empty str, so a target URL created
-        under older rules is still accepted. See docs/domain.md#value-objects
+        under older rules is still accepted.
+        See docs/architecture/domain.md#value-objects
 
         Raises:
             TypeError: The value isn't a str.
@@ -72,5 +73,5 @@ def _is_https_url_with_host(value: str) -> bool:
 def _is_printable_without_spaces(value: str) -> bool:
     # isprintable() is false for the characters of the Unicode categories
     # Other, such as control characters, and Separator, except the space.
-    # See docs/domain.md#targeturl
+    # See docs/architecture/domain.md#targeturl
     return value.isprintable() and " " not in value

@@ -2,8 +2,6 @@
 
 The domain is the core of the shortener: the rules that hold regardless of database, HTTP or framework. It lives in `shortener/domain/` and imports nothing from the other layers, only from [`shortener/shared/`](shared.md). It doesn't define the repository: its interface belongs to the layer that uses it.
 
-This document describes the domain as it is in the code. Verified bugs that aren't fixed yet are [issues](issues/README.md) labeled `domain`, linked from where this document describes the code they affect. Decisions still to be made are in [Open questions](#open-questions).
-
 ## Overview
 
 There is a single central concept: the **short URL**, a short slug that points to a target URL and belongs to an owner.
@@ -48,7 +46,7 @@ The rules of `create()` can change, and a value accepted under older rules has t
 
 For the same reason, a copy is rebuilt with `parse()`. `copy.copy()`, `copy.deepcopy()` and `pickle` rebuild an instance with the constructor by default, which raises `ValueError` for a value that breaks the rules of `create()`. Each value object defines `__reduce__()`, which returns `parse` and the value as a `str`, so a copy is an equal instance of the same type, whether or not the value follows the rules of `create()`.
 
-`__reduce__()` is the same line in `Slug` and `TargetURL`, repeated instead of moved to a shared base (see [Simplicity](../CONTRIBUTING.md#1-simplicity)). If more value objects come to repeat it, consider whether a shared base is worth it.
+`__reduce__()` is the same line in `Slug` and `TargetURL`, repeated instead of moved to a shared base (see [Simplicity](../../CONTRIBUTING.md#simplicity)). If more value objects come to repeat it, consider whether a shared base is worth it.
 
 `ShortURLID`, `UserID` and `ShortURLStatus` don't follow this model: see [IDs](#ids) and [Status](#status).
 
@@ -209,7 +207,3 @@ Wrong types or values given to the domain's code. They are programming errors, n
 ### Parsing errors
 
 `parse()` of `Slug` and `TargetURL` raises `TypeError` for a value that isn't a `str`, and `ValueError` for an empty one. See [Value objects](#value-objects).
-
-## Open questions
-
-Decisions to make during this phase. There are none at the moment.

@@ -2,8 +2,6 @@
 
 The use cases orchestrate the [domain](domain.md) for each operation of the service. They live in `shortener/use_cases/`, and import only from the domain and from [`shortener/shared/`](shared.md). What they need from the other layers, such as storing short URLs or knowing who makes the request, they define as [abstractions](#abstractions), which the other layers implement.
 
-This document describes the use cases as they are in the code. Verified bugs that aren't fixed yet are [issues](issues/README.md) labeled `use_cases`, linked from where this document describes the code they affect. Decisions still to be made are in [Open questions](#open-questions).
-
 ## Overview
 
 ```
@@ -80,7 +78,7 @@ async with uow.begin() as transaction:
     await transaction.commit()
 ```
 
-- `transaction.shorturls` is a `ShortURLRepository` whose reads and writes are part of the transaction.
+- `transaction.shorturls`, a read-only property, is a `ShortURLRepository` whose reads and writes are part of the transaction.
 - `commit()` makes the writes of the transaction permanent. Committing is explicit: leaving the block without calling `commit()`, by a `return` or by an exception, rolls the transaction back.
 
 #### Concurrency
@@ -314,7 +312,3 @@ The status isn't changed by `UpdateShortURL`: [`ShortURLStatus`](domain.md#statu
 2. It begins a transaction, removes the short URLs of the user with `remove_by_owner()`, and commits.
 
 A user with no short URLs isn't an error, so running it again for the same user, such as for an event that is received twice, does the same as running it once.
-
-## Open questions
-
-Decisions to make during this phase. There are none at the moment.

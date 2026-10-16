@@ -78,7 +78,7 @@ class ShortURL:
         """
         Rebuilds a short URL that already exists, such as one loaded from the
         database. It repeats the parameters of the constructor on purpose. See
-        docs/domain.md#creating-and-restoring
+        docs/architecture/domain.md#creating-and-restoring
         """
         return cls(
             id=id,

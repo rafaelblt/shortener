@@ -5,7 +5,7 @@ from shortener.infra.db.transient_errors import unavailable_when_transient
 
 
 class SQLAlchemyHealthCheck:
-    """Checks that the database answers. See docs/infra.md#health-check"""
+    """Checks that the database answers. See docs/architecture/infra.md#health-check"""
 
     def __init__(self, engine: AsyncEngine):
         self._engine = engine

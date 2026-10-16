@@ -38,7 +38,7 @@ from shortener.use_cases.shorturl_cursor import ShortURLCursor
 
 
 # How a request carries the parameters of execute() whose type FastAPI
-# doesn't read on its own. See docs/api.md#how-an-endpoint-works
+# doesn't read on its own. See docs/architecture/api.md#how-an-endpoint-works
 PARAMETER_TYPES: Final[dict[Any, Any]] = {ShortURLCursor: CursorParameter}
 
 METHODS_WITHOUT_BODY: Final = frozenset({"GET", "DELETE"})
@@ -70,7 +70,7 @@ class Endpoint:
     """
     An endpoint that runs a use case. What it receives and what it answers
     come from the use case. Its name is the one of the use case when name is
-    None. See docs/api.md#endpoints
+    None. See docs/architecture/api.md#endpoints
     """
 
     method: str

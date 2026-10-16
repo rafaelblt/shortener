@@ -25,7 +25,7 @@ class TooManyRequestsError(Exception):
 def limit_by_ip(rate_limiter: RateLimiter) -> Callable[[Request], Awaitable[None]]:
     """
     A dependency of FastAPI that counts each request under the IP address of
-    its client. See docs/api.md#rate-limit
+    its client. See docs/architecture/api.md#rate-limit
     """
 
     # Async, so FastAPI runs it in the event loop, and not in a thread, where

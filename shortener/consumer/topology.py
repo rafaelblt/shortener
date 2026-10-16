@@ -14,7 +14,7 @@ async def declare_queue(channel: AbstractChannel) -> AbstractQueue:
     """
     Declares the exchange of the events, the queue of the service, bound to
     it, and the dead-letter queue, and returns the queue of the service.
-    See docs/consumer.md#topology
+    See docs/architecture/consumer.md#topology
     """
     exchange = await channel.declare_exchange(
         EXCHANGE, ExchangeType.TOPIC, durable=True

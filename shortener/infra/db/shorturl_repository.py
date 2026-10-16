@@ -32,7 +32,7 @@ from shortener.use_cases.shorturl_repository import SlugTakenError
 class SQLAlchemyShortURLRepository:
     """
     The shorturls of a transaction. What it reads stays locked until the
-    transaction ends. See docs/use_cases.md#concurrency
+    transaction ends. See docs/architecture/use_cases.md#concurrency
     """
 
     def __init__(self, connection: AsyncConnection):
@@ -85,7 +85,7 @@ class SQLAlchemyShortURLRepository:
         self, statement: Insert | Update, slug: Slug
     ) -> Result[None, SlugTakenError]:
         # In a savepoint, a taken slug rolls back only this write, and the
-        # transaction goes on. See docs/use_cases.md#reading-and-writing
+        # transaction goes on. See docs/architecture/use_cases.md#reading-and-writing
         try:
             with unavailable_when_transient():
                 async with self._connection.begin_nested():
@@ -163,7 +163,7 @@ def _columns(shorturl: ShortURL) -> dict[str, object]:
 
 def _to_shorturl(row: Row[Any]) -> ShortURL:
     # parse(), and not create(), since a stored value may have been created
-    # under older rules. See docs/domain.md#value-objects
+    # under older rules. See docs/architecture/domain.md#value-objects
     return ShortURL.restore(
         id=ShortURLID(row.id),
         slug=Slug.parse(row.slug),

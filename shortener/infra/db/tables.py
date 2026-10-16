@@ -22,7 +22,8 @@ shorturls = Table(
     metadata,
     Column("id", Uuid, primary_key=True),
     # The lengths of a slug and of a target URL are rules of create(), which
-    # can change, so the columns don't limit them. See docs/domain.md#value-objects
+    # can change, so the columns don't limit them.
+    # See docs/architecture/domain.md#value-objects
     Column("slug", Text, nullable=False),
     Column("target_url", Text, nullable=False),
     Column("owner_id", Uuid, nullable=False),

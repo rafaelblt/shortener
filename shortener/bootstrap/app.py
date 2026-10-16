@@ -19,7 +19,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     """
     The application, with the settings, or with the ones of the environment
     variables when there are none. Uvicorn runs it as a factory.
-    See docs/bootstrap.md#running
+    See docs/service/running.md#the-processes
 
     Raises:
         SettingsError: The environment variables don't make valid settings.

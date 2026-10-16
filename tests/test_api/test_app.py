@@ -23,5 +23,5 @@ async def test_does_not_serve_the_documentation(client: httpx.AsyncClient, url: 
 
 def test_the_openapi_file_has_the_schema_of_the_app(app: FastAPI):
     assert OPENAPI_FILE.read_text() == openapi_yaml(app), (
-        "docs/openapi.yaml is out of date, run `poetry run task openapi`"
+        "docs/service/openapi.yaml is out of date, run `poetry run task openapi`"
     )

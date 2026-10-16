@@ -30,7 +30,7 @@ class ShortURLReader(Protocol):
 class ShortURLRepository(ShortURLReader, Protocol):
     """
     Only exists as the shorturls of a Transaction, so the use cases can't
-    write outside of one. See docs/use_cases.md#reading-and-writing
+    write outside of one. See docs/architecture/use_cases.md#reading-and-writing
     """
 
     async def add(self, shorturl: ShortURL) -> Result[None, SlugTakenError]:

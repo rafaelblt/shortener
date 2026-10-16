@@ -32,7 +32,7 @@ def unavailable_when_transient() -> Iterator[None]:
     """
     Raises UnavailableError from an error of the database that trying again
     may fix. Any other error goes through as it is.
-    See docs/infra.md#failures-of-the-database
+    See docs/architecture/infra.md#failures-of-the-database
     """
     try:
         yield

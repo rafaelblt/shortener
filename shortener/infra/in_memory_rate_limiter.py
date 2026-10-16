@@ -6,7 +6,7 @@ from shortener.use_cases.clock import Clock
 class InMemoryRateLimiter:
     """
     Allows each key up to a number of requests in each window of time, and
-    counts them in the memory of the process. See docs/infra.md#rate-limit
+    counts them in the memory of the process. See docs/architecture/infra.md#rate-limit
     """
 
     def __init__(self, requests: int, window: timedelta, clock: Clock):

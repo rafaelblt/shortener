@@ -21,7 +21,7 @@ class HealthCheck(Protocol):
 def add_health_check_route(router: APIRouter, health_check: HealthCheck) -> None:
     """
     Adds GET /health, which answers 204 when health_check passes.
-    See docs/api.md#health-check
+    See docs/architecture/api.md#health-check
     """
     response = NoContent()
 

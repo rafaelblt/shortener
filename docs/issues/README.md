@@ -53,7 +53,7 @@ An issue has two parts.
 
 - `labels`: one type (`bug`, `refactor`, `question` or `todo`) and the layers involved (`domain`, `use_cases`, `api`, `consumer`, `infra`, `bootstrap` or `docs`, and `adapters`, the name of the API before the restructuring). A new label is added to this list before it is used.
 
-**The content** is everything after the front matter: the title, the opening text and the entries. It is append-only: what is written is never edited or deleted, and new text goes at the end. A correction is a new entry that says what was wrong.
+**The content** is everything after the front matter: the title, the opening text and the entries. It is append-only: what is written is never edited or deleted, and new text goes at the end. A correction is a new entry that says what was wrong. Its links lead to where things were when they were written, and aren't updated when a document or a heading moves.
 
 - The opening text starts with the date, and describes what was observed: what happens, how to reproduce it and where in the code. It states the expected behavior only when something already defines it, such as an error message, a docstring or the documentation. Otherwise, it says that it is still to be decided.
 - Each entry has a `## <date>: <summary>` heading. Every change of `status` or `resolution` comes with an entry whose summary says it, such as `Closed as fixed` or `Reopened`, and whose text explains it: what changed in the code, which issue it duplicates, what the check found.

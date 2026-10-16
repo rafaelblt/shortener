@@ -20,7 +20,7 @@ if config.config_file_name is not None:
 def database_url() -> str:
     # Whoever runs the migrations from code, such as the tests, sets
     # sqlalchemy.url. The command line takes it from the environment, like
-    # the application. See docs/infra.md#migrations
+    # the application. See docs/architecture/infra.md#migrations
     return config.get_main_option("sqlalchemy.url") or os.environ["DATABASE_URL"]
 
 

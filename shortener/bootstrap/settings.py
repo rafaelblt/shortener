@@ -35,7 +35,7 @@ class SettingsError(Exception):
 class DatabaseSettings:
     """
     The database, the pool of its connections, and how long the service waits
-    for it. See docs/bootstrap.md#settings
+    for it. See docs/architecture/bootstrap.md#settings
     """
 
     url: str
@@ -51,7 +51,7 @@ class DatabaseSettings:
 class AccessTokenSettings:
     """
     How to verify access tokens. Settings.from_environment() sets exactly one
-    of key and jwks_url. See docs/bootstrap.md#settings
+    of key and jwks_url. See docs/architecture/bootstrap.md#settings
     """
 
     algorithms: tuple[str, ...]
@@ -67,7 +67,7 @@ class AccessTokenSettings:
 class RateLimitSettings:
     """
     How many requests each IP address can make in each window of time.
-    See docs/bootstrap.md#settings
+    See docs/architecture/bootstrap.md#settings
     """
 
     requests: int = DEFAULT_RATE_LIMIT_REQUESTS
@@ -104,7 +104,7 @@ class Settings:
 class ConsumerSettings:
     """
     The settings of the consumer, which has no access tokens or rate limit.
-    See docs/bootstrap.md#settings
+    See docs/architecture/bootstrap.md#settings
     """
 
     database: DatabaseSettings

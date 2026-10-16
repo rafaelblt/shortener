@@ -2,13 +2,11 @@
 
 Back end of a URL shortener, exposed through an HTTP API.
 
-> **Under restructuring.** The current code has flaws (bugs, fragile or missing tests, concepts that don't belong in a URL shortener) and is being rebuilt layer by layer, starting with the domain. See [Current state](#current-state).
-
 ## Background
 
 The project started as a URL shortener and, over time, piled up responsibilities: user sign-up and login, refresh tokens, plans, emails, templates and translations. That pulled it away from its goal and eventually stalled its development.
 
-The restructuring goes back to the original idea: **a URL shortener, and nothing else**.
+It was then rebuilt, layer by layer, from the inside out, around the original idea: **a URL shortener, and nothing else**. Every layer has been rebuilt. What is known to be wrong or missing is in the [open issues](docs/issues/README.md#listing).
 
 ## Scope
 
@@ -27,67 +25,45 @@ The service does **not** handle:
 
 Every short URL has an owner: there are no anonymous short URLs. The owner is only a reference. The service knows who owns each short URL, but nothing else about the user.
 
-The owner's identity comes from an access token, a JWT issued outside the service, which the service only validates, and user deletions arrive as events, published to RabbitMQ by the system responsible for the identities of the users. The details are in [docs/domain.md](docs/domain.md#owner), [docs/api.md](docs/api.md#authentication) and [docs/consumer.md](docs/consumer.md).
+The owner's identity comes from an access token, a JWT issued outside the service, which the service only validates, and user deletions arrive as events, published to RabbitMQ by the system responsible for the identities of the users. The details are in [Owner](docs/architecture/domain.md#owner), [Access tokens](docs/service/api.md#access-tokens) and [Events](docs/service/events.md).
 
-## Principles
+## How it fits
 
-In order of priority: simplicity, organization, readability and tests. What each one means in practice, and the conventions for comments, documentation, issues and commits, are in [CONTRIBUTING.md](CONTRIBUTING.md).
+```
+systems that use the shortener ── HTTP ──▶ API ─────────┐
+                                                        ├──▶ Postgres
+the system of the identities ─ RabbitMQ ─▶ consumer ────┘
+of the users
+```
+
+The service is two processes, from the same image: the API, which answers the requests of the systems that use the shortener, and the consumer, which handles the events. Both use the same Postgres database. The system of the identities of the users issues the access tokens the API verifies, and publishes the deletions of the users the consumer handles. How the processes run is in [Running](docs/service/running.md).
 
 ## Architecture
 
 ```
 shortener/
-├── domain/      the shortener's rules
+├── domain/      the rules of the short URLs
 ├── use_cases/   orchestrates the domain for each operation
-├── api/         an entry point to the service: the HTTP API, with FastAPI
+├── api/         an entry point: the HTTP API, with FastAPI
 ├── consumer/    the other entry point: the events of RabbitMQ, with aio-pika
-├── infra/       implements the abstractions of the other layers: database, clock, access tokens,
+├── infra/       implements what the other layers need from outside: database, clock, access tokens,
 │                rate limit
-├── bootstrap/   the settings, and the assembly of the layers into the application
+├── bootstrap/   reads the settings, and assembles the layers into the two processes
 └── shared/      code any layer can use
 ```
 
-Dependencies point inward, toward the domain. The domain imports nothing from the other layers. `api`, `consumer` and `infra` import the inner layers, and not each other: `bootstrap` is the only layer that imports them, to assemble them. Any layer can import `shared/`, which imports nothing from the layers.
-
-## Current state
-
-The restructuring happens layer by layer, from the inside out, and the outer layers are rebuilt together:
-
-| Layer       | Status                                 |
-| ----------- | -------------------------------------- |
-| `domain`    | Restructured                           |
-| `use_cases` | Restructured                           |
-| `api`       | **Being restructured (current phase)** |
-| `consumer`  | **New (current phase)**                |
-| `infra`     | **Being restructured (current phase)** |
-| `bootstrap` | **Being restructured (current phase)** |
-
-The scope of the current phase and how to work in it are in [CONTRIBUTING.md](CONTRIBUTING.md#current-phase-outer-layers).
+Dependencies point inward, toward the domain, and a check fails when they don't. The details are in [docs/architecture/](docs/architecture/README.md).
 
 ## Development
 
-Requirements: Python 3.12, [Poetry](https://python-poetry.org/), and Docker, which the tests of `infra`, `consumer` and `bootstrap` use to run Postgres and RabbitMQ.
+Requirements: Python 3.12, [Poetry](https://python-poetry.org/), and Docker, which the tests use to run Postgres and RabbitMQ.
 
 ```bash
 poetry install
-poetry run task test_layers
-poetry run pytest --cov=shortener --cov-report=term-missing
+poetry run task check
 ```
 
-The CI, in [.github/workflows/ci.yml](.github/workflows/ci.yml), runs on every push to `main` and every pull request: it checks that `poetry.lock` matches `pyproject.toml`, runs `poetry run task test_layers` and builds the Docker image.
-
-To run the service, set the environment variables of [Settings](docs/bootstrap.md#settings), with a Postgres database, then apply the migrations and start it:
-
-```bash
-poetry run alembic upgrade head
-poetry run task run
-```
-
-The consumer of the events runs as a process of its own, with the environment variables of [ConsumerSettings](docs/bootstrap.md#settings), with the same database and a RabbitMQ:
-
-```bash
-poetry run task consume
-```
+`poetry run task check` runs the formatter, the linter, the type checker, the checks of the architecture and the tests, as the CI does. Before changing anything, read [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### Running with Docker Compose
 
@@ -97,7 +73,7 @@ To try the service locally without setting anything, [compose.yaml](compose.yaml
 docker compose up --build
 ```
 
-The API answers at `http://localhost:8000`, as its OpenAPI schema, [docs/openapi.yaml](docs/openapi.yaml), describes, and the management page of RabbitMQ, which shows its queues, at `http://localhost:15672`, with the user `shortener` and the password `shortener`. The data of the database and of RabbitMQ stays in the volumes `db` and `rabbitmq` until `docker compose down -v`.
+The API answers at `http://localhost:8000`, as [its documentation](docs/service/api.md) describes, and the management page of RabbitMQ, which shows its queues, at `http://localhost:15672`, with the user `shortener` and the password `shortener`. The data of the database and of RabbitMQ stays in the volumes `db` and `rabbitmq` until `docker compose down -v`.
 
 The service doesn't issue access tokens, so the `token` service issues one the API accepts, valid for a day, for the user of the UUID it receives, or for `00000000-0000-4000-8000-000000000001` without one:
 
@@ -106,24 +82,18 @@ TOKEN=$(docker compose run --rm -q token)
 curl -H "Authorization: Bearer $TOKEN" http://localhost:8000/v1/shorturls
 ```
 
-The issuer of the events doesn't exist yet either, so the `user-deleted` service publishes the [event](docs/consumer.md#the-event) of the deletion of the user of the UUID it receives, or of `00000000-0000-4000-8000-000000000001` without one, and the consumer deletes the short URLs of that user:
+The issuer of the events doesn't exist yet either, so the `user-deleted` service publishes the [event](docs/service/events.md#the-message) of the deletion of the user of the UUID it receives, or of `00000000-0000-4000-8000-000000000001` without one, and the consumer deletes the short URLs of that user:
 
 ```bash
 docker compose run --rm -q user-deleted
 ```
 
-Before changing anything, read [CONTRIBUTING.md](CONTRIBUTING.md).
+To run the service in another way, its settings are in [Configuration](docs/service/configuration.md), and its processes in [Running](docs/service/running.md).
 
 ## Documentation
 
-- [CONTRIBUTING.md](CONTRIBUTING.md): the current phase, the principles and the conventions for code, tests, comments, documentation, issues and commits. They apply to everyone who changes the project.
-- [AGENTS.md](AGENTS.md): what is specific to agents, and which documents they read for each kind of task.
-- [docs/domain.md](docs/domain.md): what each part of the domain does, as it is in the code, with its rules and open questions.
-- [docs/use_cases.md](docs/use_cases.md): what each use case does, and the abstractions the other layers implement for them, as they are in the code, with their rules and open questions.
-- [docs/api.md](docs/api.md): how the API turns the use cases into endpoints, its endpoints, errors and authentication, as they are in the code, with their rules and open questions.
-- [docs/openapi.yaml](docs/openapi.yaml): the OpenAPI schema of the API, written from the code with `poetry run task openapi`.
-- [docs/consumer.md](docs/consumer.md): how the consumer turns the events into use cases, the contract of the events, and how their messages are handled, as they are in the code, with their rules and open questions.
-- [docs/infra.md](docs/infra.md): the implementations of the abstractions, as they are in the code, with their rules and open questions.
-- [docs/bootstrap.md](docs/bootstrap.md): the settings, and how the application is assembled and run, as they are in the code.
-- [docs/shared.md](docs/shared.md): what each part of `shared/` does, as it is in the code.
+- [CONTRIBUTING.md](CONTRIBUTING.md): how to work in the project, person or agent: the principles, the checks, and the conventions of the tests, comments, documents, issues and commits.
+- [AGENTS.md](AGENTS.md): what is specific to agents.
+- [docs/service/](docs/service/api.md): what the service does, seen from outside: its [API](docs/service/api.md), with its [OpenAPI schema](docs/service/openapi.yaml), its [events](docs/service/events.md), its [configuration](docs/service/configuration.md) and [how it runs](docs/service/running.md).
+- [docs/architecture/](docs/architecture/README.md): how the code does it: the layers, and one document per layer.
 - [docs/issues/](docs/issues/README.md): the issues, until the repository is on GitHub.

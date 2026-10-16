@@ -10,7 +10,7 @@ from shortener.bootstrap.settings import DatabaseSettings
 def database_engine(settings: DatabaseSettings) -> AsyncEngine:
     """
     The engine of the database, with the pool and the timeouts of the
-    settings. See docs/bootstrap.md#the-database
+    settings. See docs/architecture/bootstrap.md#the-database
     """
     # The engine connects only when it is first used, and pre_ping replaces
     # the connections the server closed while they waited in the pool.

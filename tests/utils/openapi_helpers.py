@@ -1,6 +1,6 @@
 """
-Writes the OpenAPI schema of the API to docs/openapi.yaml, with
-`poetry run task openapi`. See docs/api.md#openapi
+Writes the OpenAPI schema of the API to docs/service/openapi.yaml, with
+`poetry run task openapi`. See docs/architecture/api.md#openapi
 """
 
 from pathlib import Path
@@ -18,7 +18,7 @@ from shortener.api.rate_limit import RateLimiter
 from tests.fixtures.api.doubles import UseCaseDoubles
 
 
-OPENAPI_FILE: Final = Path(__file__).parents[2] / "docs" / "openapi.yaml"
+OPENAPI_FILE: Final = Path(__file__).parents[2] / "docs" / "service" / "openapi.yaml"
 
 
 def openapi_yaml(app: FastAPI) -> str:

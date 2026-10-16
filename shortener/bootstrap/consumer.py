@@ -21,7 +21,7 @@ async def run_consumer(
     """
     Consumes the events until stop is set, with the settings, or with the ones
     of the environment variables when there are none.
-    See docs/bootstrap.md#the-consumer
+    See docs/architecture/bootstrap.md#the-consumer
 
     Raises:
         SettingsError: The environment variables don't make valid settings.

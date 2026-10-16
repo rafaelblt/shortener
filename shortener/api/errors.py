@@ -49,7 +49,7 @@ class ErrorResponse:
 
 # Every error a use case may return, and how the API answers it. An endpoint
 # whose use case returns an error that isn't here fails to be added.
-# See docs/api.md#errors
+# See docs/architecture/api.md#errors
 ERRORS: Final[Mapping[type, ErrorResponse]] = {
     NotAuthenticatedError: ErrorResponse(
         HTTPStatus.UNAUTHORIZED,

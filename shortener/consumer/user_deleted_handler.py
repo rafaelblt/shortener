@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 class UserDeletedHandler:
     """
     Acknowledges a message only after its short URLs are deleted, and rejects
-    the ones it can't process. See docs/consumer.md#handling
+    the ones it can't process. See docs/architecture/consumer.md#handling
     """
 
     def __init__(

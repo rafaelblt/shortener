@@ -8,7 +8,10 @@ from pydantic import TypeAdapter
 
 
 class SuccessResponse(Protocol):
-    """How an endpoint answers the Ok of its use case. See docs/api.md#responses"""
+    """
+    How an endpoint answers the Ok of its use case.
+    See docs/architecture/api.md#responses
+    """
 
     response_class: ClassVar[type[Response]]
     # The headers it answers, with the description of each one, for the

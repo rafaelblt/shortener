@@ -16,7 +16,8 @@ from shortener.use_cases.unavailable_error import UnavailableError
 class JWTAccessTokenVerifier:
     """
     Verifies access tokens that are JWTs, whose subject is the UUID of the
-    user. Build it with with_key() or with_jwks(). See docs/infra.md#access-tokens
+    user. Build it with with_key() or with_jwks().
+    See docs/architecture/infra.md#access-tokens
     """
 
     def __init__(
@@ -131,7 +132,7 @@ class _JWKSClient(jwt.PyJWKClient):
     """
     Raises UnavailableError when the keys can't be fetched, or the answer
     isn't a set of keys, so that PyJWKClientError only means that the key ID
-    of the token isn't in the set. See docs/infra.md#access-tokens
+    of the token isn't in the set. See docs/architecture/infra.md#access-tokens
     """
 
     def get_signing_keys(self, refresh: bool = False) -> list[jwt.PyJWK]:

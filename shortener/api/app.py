@@ -38,8 +38,8 @@ def create_app(
         LookupError: The use case of an endpoint may return an error the API
             doesn't answer.
     """
-    # The OpenAPI schema is in docs/openapi.yaml instead of being served.
-    # See docs/api.md#openapi
+    # The OpenAPI schema is in docs/service/openapi.yaml instead of being served.
+    # See docs/architecture/api.md#openapi
     app = FastAPI(
         title="Shortener",
         lifespan=lifespan,

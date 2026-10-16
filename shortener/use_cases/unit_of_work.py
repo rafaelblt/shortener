@@ -7,7 +7,7 @@ from shortener.use_cases.shorturl_repository import ShortURLRepository
 class Transaction(Protocol):
     """
     A short URL read through a transaction can't be changed by another
-    transaction until this one ends. See docs/use_cases.md#concurrency
+    transaction until this one ends. See docs/architecture/use_cases.md#concurrency
     """
 
     @property

@@ -1,8 +1,6 @@
 # Shared
 
-`shortener/shared/` holds code that any layer can use, because it isn't about a layer or a concept of the shortener. It imports nothing from the layers (`domain`, `use_cases`, `api`, `infra` and `bootstrap`).
-
-This document describes `shortener/shared/` as it is in the code.
+`shortener/shared/` holds code that any layer can use, because it isn't about a layer or a concept of the shortener. It imports no layer.
 
 ## Overview
 
