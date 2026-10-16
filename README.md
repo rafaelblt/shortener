@@ -38,14 +38,15 @@ In order of priority: simplicity, organization, readability and tests. What each
 shortener/
 ├── domain/      the shortener's rules
 ├── use_cases/   orchestrates the domain for each operation
-├── api/         the entry point to the service: the HTTP API, with FastAPI
+├── api/         an entry point to the service: the HTTP API, with FastAPI
+├── consumer/    the other entry point: the events of RabbitMQ, with aio-pika
 ├── infra/       implements the abstractions of the other layers: database, clock, access tokens,
 │                rate limit
 ├── bootstrap/   the settings, and the assembly of the layers into the application
 └── shared/      code any layer can use
 ```
 
-Dependencies point inward, toward the domain. The domain imports nothing from the other layers. `api` and `infra` import the inner layers, and not each other: `bootstrap` is the only layer that imports both, to assemble them. Any layer can import `shared/`, which imports nothing from the layers.
+Dependencies point inward, toward the domain. The domain imports nothing from the other layers. `api`, `consumer` and `infra` import the inner layers, and not each other: `bootstrap` is the only layer that imports them, to assemble them. Any layer can import `shared/`, which imports nothing from the layers.
 
 ## Current state
 
@@ -56,6 +57,7 @@ The restructuring happens layer by layer, from the inside out, and the outer lay
 | `domain`    | Restructured                           |
 | `use_cases` | Restructured                           |
 | `api`       | **Being restructured (current phase)** |
+| `consumer`  | **New (current phase)**                |
 | `infra`     | **Being restructured (current phase)** |
 | `bootstrap` | **Being restructured (current phase)** |
 
@@ -63,7 +65,7 @@ The scope of the current phase and how to work in it are in [CONTRIBUTING.md](CO
 
 ## Development
 
-Requirements: Python 3.12, [Poetry](https://python-poetry.org/), and Docker, which the tests of `infra` and `bootstrap` use to run Postgres.
+Requirements: Python 3.12, [Poetry](https://python-poetry.org/), and Docker, which the tests of `infra`, `consumer` and `bootstrap` use to run Postgres and RabbitMQ.
 
 ```bash
 poetry install
@@ -107,6 +109,7 @@ Before changing anything, read [CONTRIBUTING.md](CONTRIBUTING.md).
 - [docs/use_cases.md](docs/use_cases.md): what each use case does, and the abstractions the other layers implement for them, as they are in the code, with their rules and open questions.
 - [docs/api.md](docs/api.md): how the API turns the use cases into endpoints, its endpoints, errors and authentication, as they are in the code, with their rules and open questions.
 - [docs/openapi.yaml](docs/openapi.yaml): the OpenAPI schema of the API, written from the code with `poetry run task openapi`.
+- [docs/consumer.md](docs/consumer.md): how the consumer turns the events into use cases, the contract of the events, and how their messages are handled, as they are in the code, with their rules and open questions.
 - [docs/infra.md](docs/infra.md): the implementations of the abstractions, as they are in the code, with their rules and open questions.
 - [docs/bootstrap.md](docs/bootstrap.md): the settings, and how the application is assembled and run, as they are in the code.
 - [docs/shared.md](docs/shared.md): what each part of `shared/` does, as it is in the code.

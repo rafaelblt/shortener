@@ -306,7 +306,7 @@ The status isn't changed by `UpdateShortURL`: [`ShortURLStatus`](domain.md#statu
 
 `delete_shorturls_of_user.py`
 
-`DeleteShortURLsOfUser(uow)` deletes every short URL of a user, when the user is deleted (see [Owner](domain.md#owner)). The service runs it when it receives the event of the deletion, and not a user, so it doesn't receive a `CurrentUser`.
+`DeleteShortURLsOfUser(uow)` deletes every short URL of a user, when the user is deleted (see [Owner](domain.md#owner)). The service runs it when it receives the event of the deletion, from the [consumer](consumer.md#handling), and not a user, so it doesn't receive a `CurrentUser`.
 
 `execute(user_id)` returns `None`:
 
