@@ -6,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  tests:
+  check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -16,9 +16,9 @@ jobs:
       - run: pip install poetry==2.5.1
       - run: poetry check --lock
       - run: poetry install --no-interaction
-      # The tests of infra and bootstrap run Postgres in a container, with the
-      # Docker of the runner.
-      - run: poetry run task test_layers
+      # The same checks as locally. The tests of infra, consumer and bootstrap
+      # run Postgres and RabbitMQ in containers, with the Docker of the runner.
+      - run: poetry run task check
 
   image:
     runs-on: ubuntu-latest
