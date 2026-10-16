@@ -67,6 +67,12 @@ class SQLAlchemyShortURLRepository:
                 delete(shorturls).where(shorturls.c.id == shorturl.id.value)
             )
 
+    async def remove_by_owner(self, owner_id: UserID) -> None:
+        with unavailable_when_transient():
+            await self._connection.execute(
+                delete(shorturls).where(shorturls.c.owner_id == owner_id.value)
+            )
+
     async def _read(self, statement: Select) -> list[ShortURL]:
         with unavailable_when_transient():
             result = await self._connection.execute(statement.with_for_update())

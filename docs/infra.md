@@ -96,15 +96,17 @@ The two differ in how they read:
 
 The repository writes with these statements:
 
-| Method             | Statement                                                                              |
-| ------------------ | -------------------------------------------------------------------------------------- |
-| `add(shorturl)`    | `INSERT`, with every field                                                             |
-| `save(shorturl)`   | `UPDATE`, with every field but `id`, of the row whose `id` is the one of the short URL |
-| `remove(shorturl)` | `DELETE` of the row whose `id` is the one of the short URL                             |
+| Method                      | Statement                                                                              |
+| --------------------------- | -------------------------------------------------------------------------------------- |
+| `add(shorturl)`             | `INSERT`, with every field                                                             |
+| `save(shorturl)`            | `UPDATE`, with every field but `id`, of the row whose `id` is the one of the short URL |
+| `remove(shorturl)`          | `DELETE` of the row whose `id` is the one of the short URL                             |
+| `remove_by_owner(owner_id)` | `DELETE` of the rows whose `owner_id` is `owner_id.value`                              |
 
 - `add()` and `save()` run their statement in a savepoint. When it breaks `SLUG_UNIQUE_CONSTRAINT`, the savepoint is rolled back, and they return `Err(SlugTakenError(shorturl.slug))`: only that statement is undone, and the transaction goes on. Any other `IntegrityError`, such as an `id` that is already stored, is raised.
 - Postgres checks the slug when the statement runs. When another transaction wrote the same slug and hasn't ended, the statement waits for it, up to the `lock_timeout`, and only conflicts if that transaction commits.
-- `save()` and `remove()` of a short URL that isn't stored change nothing, and raise nothing.
+- `save()` and `remove()` of a short URL that isn't stored change nothing, and raise nothing, nor does `remove_by_owner()` of an owner without short URLs.
+- `remove_by_owner()` deletes the rows in a single statement, which waits for the ones another transaction read through its repository, up to the `lock_timeout`, like a read, and then raises `UnavailableError`.
 
 ### Health check
 

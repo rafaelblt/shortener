@@ -411,6 +411,32 @@ async def test_remove_deletes_only_the_shorturl(
     assert await reader.get_by_id(other_shorturl.id) is not None
 
 
+async def test_remove_by_owner_deletes_every_shorturl_of_the_owner_and_only_them(
+    uow: SQLAlchemyUnitOfWork,
+    reader: SQLAlchemyShortURLReader,
+    owner_id: UserID,
+    other_user_id: UserID,
+):
+    shorturls_of_the_owner = [shorturl_of(owner_id, JANUARY_1, id) for id in (1, 2)]
+    shorturl_of_another_user = shorturl_of(other_user_id, JANUARY_1, 3)
+    await store(uow, *shorturls_of_the_owner, shorturl_of_another_user)
+
+    async with uow.begin() as transaction:
+        await transaction.shorturls.remove_by_owner(owner_id)
+        await transaction.commit()
+
+    assert await reader.list_by_owner(owner_id, 10, None) == []
+    assert await reader.get_by_id(shorturl_of_another_user.id) is not None
+
+
+async def test_remove_by_owner_raises_nothing_for_an_owner_without_shorturls(
+    uow: SQLAlchemyUnitOfWork, owner_id: UserID
+):
+    async with uow.begin() as transaction:
+        await transaction.shorturls.remove_by_owner(owner_id)
+        await transaction.commit()
+
+
 async def test_the_reader_does_not_wait_for_a_shorturl_a_transaction_read(
     uow: SQLAlchemyUnitOfWork,
     reader: SQLAlchemyShortURLReader,
