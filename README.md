@@ -71,6 +71,8 @@ poetry run task test_layers
 poetry run pytest --cov=shortener --cov-report=term-missing
 ```
 
+The CI, in [.github/workflows/ci.yml](.github/workflows/ci.yml), runs on every push to `main` and every pull request: it checks that `poetry.lock` matches `pyproject.toml`, runs `poetry run task test_layers` and builds the Docker image.
+
 To run the service, set the environment variables of [Settings](docs/bootstrap.md#settings), with a Postgres database, then apply the migrations and start it:
 
 ```bash

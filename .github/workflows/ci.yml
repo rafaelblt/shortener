@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - run: pip install poetry==2.5.1
+      - run: poetry check --lock
+      - run: poetry install --no-interaction
+      # The tests of infra and bootstrap run Postgres in a container, with the
+      # Docker of the runner.
+      - run: poetry run task test_layers
+
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build .
