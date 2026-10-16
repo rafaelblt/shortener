@@ -92,7 +92,7 @@ What each one receives and answers follows from its use case, by the rules of [H
 
 Since the name of a parameter of `execute()` is the name of its value in the request, the `field` of a [`FieldError`](use_cases.md#errors-of-the-use-cases) of the use case is the name the client sent.
 
-**Access token.** When the constructor of the use case takes a `CurrentUser`, the endpoint reads the `Authorization` header, with the `Bearer` scheme, and the OpenAPI schema says the endpoint takes a bearer token. Otherwise, it doesn't read the header.
+**Access token.** When the constructor of the use case takes a `CurrentUser`, the endpoint reads the `Authorization` header, with the `Bearer` scheme, and the OpenAPI schema says the endpoint takes a bearer token, `AccessToken`, in the format of a JWT, the one [`JWTAccessTokenVerifier`](infra.md#access-tokens) verifies. Otherwise, it doesn't read the header.
 
 **Running.** For each request, the endpoint:
 

@@ -113,7 +113,7 @@ paths:
       summary: Create a short URL
       operationId: CreateShortURL
       security:
-      - HTTPBearer: []
+      - AccessToken: []
       requestBody:
         required: true
         content:
@@ -185,7 +185,7 @@ paths:
       summary: List the short URLs of the user
       operationId: ListShortURLs
       security:
-      - HTTPBearer: []
+      - AccessToken: []
       parameters:
       - name: limit
         in: query
@@ -251,7 +251,7 @@ paths:
       summary: Get a short URL
       operationId: GetShortURL
       security:
-      - HTTPBearer: []
+      - AccessToken: []
       parameters:
       - name: id
         in: path
@@ -314,7 +314,7 @@ paths:
       summary: Update a short URL
       operationId: UpdateShortURL
       security:
-      - HTTPBearer: []
+      - AccessToken: []
       parameters:
       - name: id
         in: path
@@ -395,7 +395,7 @@ paths:
       summary: Delete a short URL
       operationId: DeleteShortURL
       security:
-      - HTTPBearer: []
+      - AccessToken: []
       parameters:
       - name: id
         in: path
@@ -455,7 +455,7 @@ paths:
       summary: Enable a short URL
       operationId: EnableShortURL
       security:
-      - HTTPBearer: []
+      - AccessToken: []
       parameters:
       - name: id
         in: path
@@ -519,7 +519,7 @@ paths:
       summary: Disable a short URL
       operationId: DisableShortURL
       security:
-      - HTTPBearer: []
+      - AccessToken: []
       parameters:
       - name: id
         in: path
@@ -736,6 +736,8 @@ components:
       - next_cursor
       title: ShortURLPageContent
   securitySchemes:
-    HTTPBearer:
+    AccessToken:
       type: http
+      description: The access token of the user, issued outside the service.
       scheme: bearer
+      bearerFormat: JWT

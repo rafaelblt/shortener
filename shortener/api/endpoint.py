@@ -34,7 +34,12 @@ PARAMETER_TYPES: Final[dict[Any, Any]] = {ShortURLCursor: CursorParameter}
 
 METHODS_WITHOUT_BODY: Final = frozenset({"GET", "DELETE"})
 
-_bearer = HTTPBearer(auto_error=False)
+_bearer = HTTPBearer(
+    scheme_name="AccessToken",
+    bearerFormat="JWT",
+    description="The access token of the user, issued outside the service.",
+    auto_error=False,
+)
 _CREDENTIALS: Final = inspect.Parameter(
     "_credentials",
     inspect.Parameter.KEYWORD_ONLY,
