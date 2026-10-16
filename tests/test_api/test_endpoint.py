@@ -24,6 +24,7 @@ from tests.utils.text_helpers import assert_mentions
 
 ID = UUID("0199b2c4-7a3e-7c1a-9b5e-3f2d4c6b8a20")
 CURSOR = ShortURLCursor(created_at=datetime(2026, 1, 1, tzinfo=timezone.utc), id=ID)
+SUMMARY = "Echo the values of the request"
 
 
 @dataclass(frozen=True)
@@ -77,9 +78,15 @@ def app(
         rate_limiter=rate_limiter,
         health_check=health_check,
         endpoints=[
-            Endpoint("PUT", "/echoes/{id}", Echo),
-            Endpoint("GET", "/echoes/{id}", Echo, name="EchoFromTheQuery"),
-            Endpoint("GET", "/public", Public),
+            Endpoint("PUT", "/echoes/{id}", Echo, summary=SUMMARY),
+            Endpoint(
+                "GET",
+                "/echoes/{id}",
+                Echo,
+                summary="Echo the values of the query",
+                name="EchoFromTheQuery",
+            ),
+            Endpoint("GET", "/public", Public, summary="Run a public use case"),
         ],
     )
 
@@ -222,6 +229,12 @@ def test_names_the_endpoint_after_its_use_case_unless_it_has_a_name(app: FastAPI
     assert paths["/v1/echoes/{id}"]["get"]["operationId"] == "EchoFromTheQuery"
 
 
+def test_documents_the_summary_of_the_endpoint(app: FastAPI):
+    operation = app.openapi()["paths"]["/v1/echoes/{id}"]["put"]
+
+    assert operation["summary"] == SUMMARY
+
+
 def test_documents_the_access_token_only_where_the_use_case_takes_a_current_user(
     app: FastAPI,
 ):
@@ -268,6 +281,8 @@ def test_creating_the_app_raises_for_an_error_of_a_use_case_the_api_does_not_ans
             access_token_verifier=access_token_verifier,
             rate_limiter=rate_limiter,
             health_check=health_check,
-            endpoints=[Endpoint("GET", "/unanswered", Unanswered)],
+            endpoints=[
+                Endpoint("GET", "/unanswered", Unanswered, summary="Answer nothing")
+            ],
         )
     assert_mentions(str(raised.value), UnansweredError.__name__)

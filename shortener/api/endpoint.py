@@ -1,7 +1,7 @@
 import inspect
 import re
 
-from dataclasses import dataclass
+from dataclasses import KW_ONLY, dataclass
 from types import UnionType
 from typing import Annotated, Any, Final, Union, get_args, get_origin, get_type_hints
 
@@ -53,6 +53,8 @@ class Endpoint:
     path: str
     use_case: type
     response: SuccessResponse = JSONContent()
+    _: KW_ONLY
+    summary: str
     name: str | None = None
 
 
@@ -102,6 +104,7 @@ def add_route(
                 TOO_MANY_REQUESTS,
             ]
         ),
+        summary=endpoint.summary,
         name=name,
         operation_id=name,
     )

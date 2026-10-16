@@ -5,7 +5,7 @@ info:
 paths:
   /v1/slugs/{slug}:
     get:
-      summary: Resolveslug
+      summary: Resolve a slug
       operationId: ResolveSlug
       parameters:
       - name: slug
@@ -49,7 +49,7 @@ paths:
                 $ref: '#/components/schemas/ErrorContent'
   /v1/slugs/{slug}/redirect:
     get:
-      summary: Redirectslug
+      summary: Redirect to the target URL of a slug
       operationId: RedirectSlug
       parameters:
       - name: slug
@@ -89,7 +89,7 @@ paths:
                 $ref: '#/components/schemas/ErrorContent'
   /v1/shorturls:
     post:
-      summary: Createshorturl
+      summary: Create a short URL
       operationId: CreateShortURL
       security:
       - HTTPBearer: []
@@ -144,7 +144,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorContent'
     get:
-      summary: Listshorturls
+      summary: List the short URLs of the user
       operationId: ListShortURLs
       security:
       - HTTPBearer: []
@@ -198,7 +198,7 @@ paths:
                 $ref: '#/components/schemas/ErrorContent'
   /v1/shorturls/{id}:
     get:
-      summary: Getshorturl
+      summary: Get a short URL
       operationId: GetShortURL
       security:
       - HTTPBearer: []
@@ -249,7 +249,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorContent'
     patch:
-      summary: Updateshorturl
+      summary: Update a short URL
       operationId: UpdateShortURL
       security:
       - HTTPBearer: []
@@ -318,7 +318,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorContent'
     delete:
-      summary: Deleteshorturl
+      summary: Delete a short URL
       operationId: DeleteShortURL
       security:
       - HTTPBearer: []
@@ -366,7 +366,7 @@ paths:
                 $ref: '#/components/schemas/ErrorContent'
   /v1/shorturls/{id}/enable:
     post:
-      summary: Enableshorturl
+      summary: Enable a short URL
       operationId: EnableShortURL
       security:
       - HTTPBearer: []
@@ -418,7 +418,7 @@ paths:
                 $ref: '#/components/schemas/ErrorContent'
   /v1/shorturls/{id}/disable:
     post:
-      summary: Disableshorturl
+      summary: Disable a short URL
       operationId: DisableShortURL
       security:
       - HTTPBearer: []
@@ -470,7 +470,7 @@ paths:
                 $ref: '#/components/schemas/ErrorContent'
   /v1/health:
     get:
-      summary: Checkhealth
+      summary: Check the health of the service
       operationId: CheckHealth
       responses:
         '204':

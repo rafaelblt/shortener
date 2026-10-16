@@ -28,24 +28,48 @@ def _shorturl_location(details: ShortURLDetails) -> str:
 
 
 ENDPOINTS = (
-    Endpoint("GET", "/slugs/{slug}", ResolveSlug),
+    Endpoint("GET", "/slugs/{slug}", ResolveSlug, summary="Resolve a slug"),
     Endpoint(
         "GET",
         "/slugs/{slug}/redirect",
         ResolveSlug,
         Redirect(_target_url),
+        summary="Redirect to the target URL of a slug",
         name="RedirectSlug",
     ),
-    Endpoint("POST", "/shorturls", CreateShortURL, Created(_shorturl_location)),
+    Endpoint(
+        "POST",
+        "/shorturls",
+        CreateShortURL,
+        Created(_shorturl_location),
+        summary="Create a short URL",
+    ),
     Endpoint(
         "GET",
         "/shorturls",
         ListShortURLs,
         JSONContent(encode=ShortURLPageContent.from_page),
+        summary="List the short URLs of the user",
     ),
-    Endpoint("GET", _SHORTURL_PATH, GetShortURL),
-    Endpoint("PATCH", _SHORTURL_PATH, UpdateShortURL),
-    Endpoint("POST", f"{_SHORTURL_PATH}/enable", EnableShortURL),
-    Endpoint("POST", f"{_SHORTURL_PATH}/disable", DisableShortURL),
-    Endpoint("DELETE", _SHORTURL_PATH, DeleteShortURL, NoContent()),
+    Endpoint("GET", _SHORTURL_PATH, GetShortURL, summary="Get a short URL"),
+    Endpoint("PATCH", _SHORTURL_PATH, UpdateShortURL, summary="Update a short URL"),
+    Endpoint(
+        "POST",
+        f"{_SHORTURL_PATH}/enable",
+        EnableShortURL,
+        summary="Enable a short URL",
+    ),
+    Endpoint(
+        "POST",
+        f"{_SHORTURL_PATH}/disable",
+        DisableShortURL,
+        summary="Disable a short URL",
+    ),
+    Endpoint(
+        "DELETE",
+        _SHORTURL_PATH,
+        DeleteShortURL,
+        NoContent(),
+        summary="Delete a short URL",
+    ),
 )

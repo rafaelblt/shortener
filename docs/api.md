@@ -77,7 +77,7 @@ What each one receives and answers follows from its use case, by the rules of [H
 
 `endpoint.py`
 
-`Endpoint(method, path, use_case, response=JSONContent(), name=None)` declares an endpoint, and `add_route()` adds it to the router of FastAPI. Only the method, the path, the use case and how to answer its `Ok` are declared, and, when it needs one, a name: what the endpoint receives, who makes the request and how errors are answered come from the use case.
+`Endpoint(method, path, use_case, response=JSONContent(), *, summary, name=None)` declares an endpoint, and `add_route()` adds it to the router of FastAPI. Only the method, the path, the use case, how to answer its `Ok` and a summary are declared, and, when it needs one, a name: what the endpoint receives, who makes the request and how errors are answered come from the use case.
 
 **Parameters.** Each parameter of `execute()` becomes one of the request, with its name, its type and its default:
 
@@ -99,7 +99,7 @@ Since the name of a parameter of `execute()` is the name of its value in the req
 
 FastAPI reads the values of the request before step 1, so a request whose values it can't read gets an [error](#errors) without the use case being built. It runs the [rate limit](#rate-limit) after parsing the JSON of the body and before reading the values, so a request over the limit gets `too_many_requests` even when its values can't be read.
 
-**OpenAPI.** The name of the endpoint is its name and operation ID, and is the name of its use case when `name` is `None`. Two endpoints of the same use case need different names, since FastAPI warns about a repeated operation ID. The response of success is the type of `Ok`, from the `Result[Ok, Error]` that `execute()` returns, or the type `response.model()` gives for it. The error responses are those of the errors of `Error`, which is a type alias of a union, such as `CreateShortURLError`, or a single class, grouped by status code, with `422` for the values of the request when the endpoint receives any, `400` when it receives a body, and `429` and `503`.
+**OpenAPI.** The name of the endpoint is its name and operation ID, and is the name of its use case when `name` is `None`. Two endpoints of the same use case need different names, since FastAPI warns about a repeated operation ID. Its summary is the `summary` it declares, such as `Create a short URL`, which every endpoint has, since FastAPI would otherwise make one from the name with `str.title()`, such as `Resolveslug`. The response of success is the type of `Ok`, from the `Result[Ok, Error]` that `execute()` returns, or the type `response.model()` gives for it. The error responses are those of the errors of `Error`, which is a type alias of a union, such as `CreateShortURLError`, or a single class, grouped by status code, with `422` for the values of the request when the endpoint receives any, `400` when it receives a body, and `429` and `503`.
 
 `add_route()` raises `LookupError` when `Error` has an error that isn't in [`ERRORS`](#errors), so a new error of a use case can't reach a client as a `500`.
 
@@ -205,7 +205,7 @@ The use cases that receive a `CurrentUser` are built for each request, since the
 | Raises `UnavailableError`  | `503 Service Unavailable`, with `unavailable`      |
 | Raises any other exception | `500 Internal Server Error`, with `internal_error` |
 
-- It doesn't read the access token, and it isn't [rate limited](#rate-limit), so an orchestrator or a load balancer that checks it often doesn't get `too_many_requests`. The OpenAPI schema documents it as `CheckHealth`, with `204` and `503`.
+- It doesn't read the access token, and it isn't [rate limited](#rate-limit), so an orchestrator or a load balancer that checks it often doesn't get `too_many_requests`. The OpenAPI schema documents it as `CheckHealth`, with a summary, `204` and `503`.
 - [`SQLAlchemyHealthCheck`](infra.md#health-check), the implementation `bootstrap` gives it, checks that the database answers. So, as a liveness probe, one that restarts the service when it fails, a failure of the database would restart the service too.
 
 ## Cursors
