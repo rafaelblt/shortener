@@ -17,6 +17,8 @@ from shortener.use_cases.update_shorturl import UpdateShortURL
 
 
 _SHORTURL_PATH: Final = "/shorturls/{id}"
+_SLUGS_TAG: Final = "Slugs"
+_SHORTURLS_TAG: Final = "Short URLs"
 
 
 def _target_url(resolved: ResolvedSlug) -> str:
@@ -28,13 +30,20 @@ def _shorturl_location(details: ShortURLDetails) -> str:
 
 
 ENDPOINTS = (
-    Endpoint("GET", "/slugs/{slug}", ResolveSlug, summary="Resolve a slug"),
+    Endpoint(
+        "GET",
+        "/slugs/{slug}",
+        ResolveSlug,
+        summary="Resolve a slug",
+        tag=_SLUGS_TAG,
+    ),
     Endpoint(
         "GET",
         "/slugs/{slug}/redirect",
         ResolveSlug,
         Redirect(_target_url),
         summary="Redirect to the target URL of a slug",
+        tag=_SLUGS_TAG,
         name="RedirectSlug",
     ),
     Endpoint(
@@ -43,6 +52,7 @@ ENDPOINTS = (
         CreateShortURL,
         Created(_shorturl_location),
         summary="Create a short URL",
+        tag=_SHORTURLS_TAG,
     ),
     Endpoint(
         "GET",
@@ -50,20 +60,35 @@ ENDPOINTS = (
         ListShortURLs,
         JSONContent(encode=ShortURLPageContent.from_page),
         summary="List the short URLs of the user",
+        tag=_SHORTURLS_TAG,
     ),
-    Endpoint("GET", _SHORTURL_PATH, GetShortURL, summary="Get a short URL"),
-    Endpoint("PATCH", _SHORTURL_PATH, UpdateShortURL, summary="Update a short URL"),
+    Endpoint(
+        "GET",
+        _SHORTURL_PATH,
+        GetShortURL,
+        summary="Get a short URL",
+        tag=_SHORTURLS_TAG,
+    ),
+    Endpoint(
+        "PATCH",
+        _SHORTURL_PATH,
+        UpdateShortURL,
+        summary="Update a short URL",
+        tag=_SHORTURLS_TAG,
+    ),
     Endpoint(
         "POST",
         f"{_SHORTURL_PATH}/enable",
         EnableShortURL,
         summary="Enable a short URL",
+        tag=_SHORTURLS_TAG,
     ),
     Endpoint(
         "POST",
         f"{_SHORTURL_PATH}/disable",
         DisableShortURL,
         summary="Disable a short URL",
+        tag=_SHORTURLS_TAG,
     ),
     Endpoint(
         "DELETE",
@@ -71,5 +96,6 @@ ENDPOINTS = (
         DeleteShortURL,
         NoContent(),
         summary="Delete a short URL",
+        tag=_SHORTURLS_TAG,
     ),
 )

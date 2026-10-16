@@ -55,6 +55,7 @@ class Endpoint:
     response: SuccessResponse = JSONContent()
     _: KW_ONLY
     summary: str
+    tag: str
     name: str | None = None
 
 
@@ -105,6 +106,7 @@ def add_route(
             ]
         ),
         summary=endpoint.summary,
+        tags=[endpoint.tag],
         name=name,
         operation_id=name,
     )

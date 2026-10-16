@@ -5,6 +5,8 @@ info:
 paths:
   /v1/slugs/{slug}:
     get:
+      tags:
+      - Slugs
       summary: Resolve a slug
       operationId: ResolveSlug
       parameters:
@@ -49,6 +51,8 @@ paths:
                 $ref: '#/components/schemas/ErrorContent'
   /v1/slugs/{slug}/redirect:
     get:
+      tags:
+      - Slugs
       summary: Redirect to the target URL of a slug
       operationId: RedirectSlug
       parameters:
@@ -89,6 +93,8 @@ paths:
                 $ref: '#/components/schemas/ErrorContent'
   /v1/shorturls:
     post:
+      tags:
+      - Short URLs
       summary: Create a short URL
       operationId: CreateShortURL
       security:
@@ -144,6 +150,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorContent'
     get:
+      tags:
+      - Short URLs
       summary: List the short URLs of the user
       operationId: ListShortURLs
       security:
@@ -198,6 +206,8 @@ paths:
                 $ref: '#/components/schemas/ErrorContent'
   /v1/shorturls/{id}:
     get:
+      tags:
+      - Short URLs
       summary: Get a short URL
       operationId: GetShortURL
       security:
@@ -249,6 +259,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorContent'
     patch:
+      tags:
+      - Short URLs
       summary: Update a short URL
       operationId: UpdateShortURL
       security:
@@ -318,6 +330,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorContent'
     delete:
+      tags:
+      - Short URLs
       summary: Delete a short URL
       operationId: DeleteShortURL
       security:
@@ -366,6 +380,8 @@ paths:
                 $ref: '#/components/schemas/ErrorContent'
   /v1/shorturls/{id}/enable:
     post:
+      tags:
+      - Short URLs
       summary: Enable a short URL
       operationId: EnableShortURL
       security:
@@ -418,6 +434,8 @@ paths:
                 $ref: '#/components/schemas/ErrorContent'
   /v1/shorturls/{id}/disable:
     post:
+      tags:
+      - Short URLs
       summary: Disable a short URL
       operationId: DisableShortURL
       security:
@@ -470,6 +488,8 @@ paths:
                 $ref: '#/components/schemas/ErrorContent'
   /v1/health:
     get:
+      tags:
+      - Health
       summary: Check the health of the service
       operationId: CheckHealth
       responses:

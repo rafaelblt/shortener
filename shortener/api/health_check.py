@@ -38,6 +38,7 @@ def add_health_check_route(router: APIRouter, health_check: HealthCheck) -> None
         response_class=response.response_class,
         responses=documented_responses([]),
         summary="Check the health of the service",
+        tags=["Health"],
         name="CheckHealth",
         operation_id="CheckHealth",
     )
