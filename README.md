@@ -86,7 +86,7 @@ To try the API locally without setting anything, [compose.yaml](compose.yaml) ru
 docker compose up --build
 ```
 
-The API answers at `http://localhost:8000`, with its interactive documentation at `/docs`. The data of the database stays in the volume `db` until `docker compose down -v`.
+The API answers at `http://localhost:8000`, as its OpenAPI schema, [docs/openapi.yaml](docs/openapi.yaml), describes. The data of the database stays in the volume `db` until `docker compose down -v`.
 
 The service doesn't issue access tokens, so the `token` service issues one the API accepts, valid for a day, for the user of the UUID it receives, or for `00000000-0000-4000-8000-000000000001` without one:
 
@@ -104,6 +104,7 @@ Before changing anything, read [CONTRIBUTING.md](CONTRIBUTING.md).
 - [docs/domain.md](docs/domain.md): what each part of the domain does, as it is in the code, with its rules and open questions.
 - [docs/use_cases.md](docs/use_cases.md): what each use case does, and the abstractions the other layers implement for them, as they are in the code, with their rules and open questions.
 - [docs/api.md](docs/api.md): how the API turns the use cases into endpoints, its endpoints, errors and authentication, as they are in the code, with their rules and open questions.
+- [docs/openapi.yaml](docs/openapi.yaml): the OpenAPI schema of the API, written from the code with `poetry run task openapi`.
 - [docs/infra.md](docs/infra.md): the implementations of the abstractions, as they are in the code, with their rules and open questions.
 - [docs/bootstrap.md](docs/bootstrap.md): the settings, and how the application is assembled and run, as they are in the code.
 - [docs/shared.md](docs/shared.md): what each part of `shared/` does, as it is in the code.

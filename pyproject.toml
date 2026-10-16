@@ -27,6 +27,7 @@ taskipy = "^1.14.1"
 pytest-cov = "^6.0.0"
 pytest-asyncio = "^0.25.3"
 testcontainers = "^4.15.0"
+pyyaml = "^6.0.2"
 
 [tool.taskipy.tasks]
 run = 'uvicorn shortener.bootstrap.app:create_app --factory --reload'
@@ -39,6 +40,8 @@ test_api = "pytest -v tests/test_api/"
 test_infra = "pytest -v tests/test_infra/"
 test_bootstrap = "pytest -v tests/test_bootstrap/"
 test_layers = 'task test_shared && task test_domain && task test_use_cases && task test_api && task test_infra && task test_bootstrap'
+
+openapi = "python -m tests.utils.openapi_helpers"
 
 alembic_upgrade = "alembic upgrade +1"
 alembic_downgrade = "alembic downgrade -1"

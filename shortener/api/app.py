@@ -40,7 +40,15 @@ def create_app(
         LookupError: The use case of an endpoint may return an error the API
             doesn't answer.
     """
-    app = FastAPI(title="Shortener", lifespan=lifespan)
+    # The OpenAPI schema is in docs/openapi.yaml instead of being served.
+    # See docs/api.md#openapi
+    app = FastAPI(
+        title="Shortener",
+        lifespan=lifespan,
+        openapi_url=None,
+        docs_url=None,
+        redoc_url=None,
+    )
     router = APIRouter(prefix=PREFIX, dependencies=[Depends(limit_by_ip(rate_limiter))])
     for endpoint in endpoints:
         add_route(router, endpoint, use_cases, access_token_verifier)

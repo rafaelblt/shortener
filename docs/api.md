@@ -37,7 +37,11 @@ The API defines four abstractions, as `Protocol`s, which it receives in `create_
 
 `create_app(use_cases, access_token_verifier, rate_limiter, health_check, endpoints=ENDPOINTS, lifespan=None)` returns the FastAPI application. It adds a route for each [endpoint](#endpoints), and the one of the [health check](#health-check), under `PREFIX` (`/v1`), with the [rate limit](#rate-limit) of `rate_limiter` on the endpoints, and the handlers of the exceptions that become [errors](#errors). `lifespan` is the one of FastAPI, for what has to run when the application starts and stops. It raises `LookupError` when the use case of an endpoint may return an error the API doesn't answer (see [How an endpoint works](#how-an-endpoint-works)), so the application doesn't start.
 
-FastAPI also serves the OpenAPI schema at `/openapi.json`, and its documentation at `/docs` and `/redoc`, out of the prefix.
+## OpenAPI
+
+The API doesn't serve its OpenAPI schema, nor the documentation of FastAPI: `/openapi.json`, `/docs` and `/redoc` answer `not_found`, like any path that no endpoint has. The schema is in [openapi.yaml](openapi.yaml), which `poetry run task openapi` writes from what `create_app()` gives, and a test of `tests/test_api/test_app.py` fails when the file isn't the schema of the code. So a change to what the API receives or answers, such as an endpoint, a parameter or an error, comes with the file written again.
+
+Whoever consumes the API reads the schema where its code is, without running the API, opens it in any tool that previews OpenAPI or gives it to an agent, and sees its changes in the diff. And the API running in production doesn't expose it.
 
 ## Endpoints
 
@@ -97,7 +101,7 @@ FastAPI reads the values of the request before step 1, so a request whose values
 
 `add_route()` raises `LookupError` when `Error` has an error that isn't in [`ERRORS`](#errors), so a new error of a use case can't reach a client as a `500`.
 
-Adding an endpoint is adding it to `ENDPOINTS`, after adding its use case to the [`UseCases`](bootstrap.md#use-cases) of `bootstrap`, and its new errors, if it has any, to `ERRORS`. A new parameter of `execute()` needs no change in the API, unless it is of a type FastAPI can't read, which needs an entry in `PARAMETER_TYPES`.
+Adding an endpoint is adding it to `ENDPOINTS`, after adding its use case to the [`UseCases`](bootstrap.md#use-cases) of `bootstrap`, and its new errors, if it has any, to `ERRORS`, then writing the [OpenAPI schema](#openapi) again. A new parameter of `execute()` needs no change in the API, unless it is of a type FastAPI can't read, which needs an entry in `PARAMETER_TYPES`.
 
 ## Responses
 
@@ -168,7 +172,7 @@ The token is verified only when the use case asks for the user, and a token that
 
 `rate_limit.py`
 
-Every endpoint counts each request under the IP address of its client, and a request over the limit of its IP address gets `too_many_requests`, without its use case being built. The endpoints share the count, so the requests of an IP address to any of them add up. The [health check](#health-check) isn't limited, nor is the documentation of FastAPI, `/openapi.json`, `/docs` and `/redoc`, nor a path that no endpoint has.
+Every endpoint counts each request under the IP address of its client, and a request over the limit of its IP address gets `too_many_requests`, without its use case being built. The endpoints share the count, so the requests of an IP address to any of them add up. The [health check](#health-check) isn't limited, nor is a path that no endpoint has.
 
 The API counts the requests through the `RateLimiter` abstraction. Its `hit(key)` counts a request of the key, and returns `None` when the key is within its limit, and otherwise how long until the key can make requests again, as a `timedelta`. The limit, and how the requests are counted, are up to the implementation, [`InMemoryRateLimiter`](infra.md#rate-limit), which [`bootstrap`](bootstrap.md#the-application) builds with the limit of the [settings](bootstrap.md#settings).
 

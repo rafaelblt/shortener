@@ -1,0 +1,631 @@
+openapi: 3.1.0
+info:
+  title: Shortener
+  version: 0.1.0
+paths:
+  /v1/slugs/{slug}:
+    get:
+      summary: Resolveslug
+      operationId: ResolveSlug
+      parameters:
+      - name: slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Slug
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResolvedSlug'
+        '404':
+          description: '`shorturl_not_found`: The short URL doesn''t exist. `shorturl_deactivated`:
+            The short URL is deactivated.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+        '422':
+          description: '`invalid_input`: Values of the request break their rules.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+        '429':
+          description: '`too_many_requests`: The client made too many requests. Try
+            again later.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+        '503':
+          description: '`unavailable`: The service can''t answer now. Try again later.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+  /v1/slugs/{slug}/redirect:
+    get:
+      summary: Redirectslug
+      operationId: RedirectSlug
+      parameters:
+      - name: slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Slug
+      responses:
+        '307':
+          description: Successful Response
+        '404':
+          description: '`shorturl_not_found`: The short URL doesn''t exist. `shorturl_deactivated`:
+            The short URL is deactivated.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+        '422':
+          description: '`invalid_input`: Values of the request break their rules.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+        '429':
+          description: '`too_many_requests`: The client made too many requests. Try
+            again later.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+        '503':
+          description: '`unavailable`: The service can''t answer now. Try again later.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+  /v1/shorturls:
+    post:
+      summary: Createshorturl
+      operationId: CreateShortURL
+      security:
+      - HTTPBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Body_CreateShortURL'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShortURLDetails'
+        '401':
+          description: '`not_authenticated`: The request needs a valid access token.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+        '422':
+          description: '`invalid_input`: Values of the request break their rules.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+        '409':
+          description: '`slug_taken`: Another short URL has the slug.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+        '400':
+          description: '`malformed_body`: The body isn''t valid JSON.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+        '429':
+          description: '`too_many_requests`: The client made too many requests. Try
+            again later.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+        '503':
+          description: '`unavailable`: The service can''t answer now. Try again later.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+    get:
+      summary: Listshorturls
+      operationId: ListShortURLs
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+          title: Limit
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Cursor
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShortURLPageContent'
+        '401':
+          description: '`not_authenticated`: The request needs a valid access token.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+        '422':
+          description: '`invalid_input`: Values of the request break their rules.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+        '429':
+          description: '`too_many_requests`: The client made too many requests. Try
+            again later.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+        '503':
+          description: '`unavailable`: The service can''t answer now. Try again later.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+  /v1/shorturls/{id}:
+    get:
+      summary: Getshorturl
+      operationId: GetShortURL
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShortURLDetails'
+        '401':
+          description: '`not_authenticated`: The request needs a valid access token.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+        '404':
+          description: '`shorturl_not_found`: The short URL doesn''t exist.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+        '422':
+          description: '`invalid_input`: Values of the request break their rules.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+        '429':
+          description: '`too_many_requests`: The client made too many requests. Try
+            again later.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+        '503':
+          description: '`unavailable`: The service can''t answer now. Try again later.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+    patch:
+      summary: Updateshorturl
+      operationId: UpdateShortURL
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Body_UpdateShortURL'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShortURLDetails'
+        '401':
+          description: '`not_authenticated`: The request needs a valid access token.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+        '422':
+          description: '`nothing_to_update`: The request has no value to change. `invalid_input`:
+            Values of the request break their rules.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+        '404':
+          description: '`shorturl_not_found`: The short URL doesn''t exist.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+        '409':
+          description: '`slug_taken`: Another short URL has the slug.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+        '400':
+          description: '`malformed_body`: The body isn''t valid JSON.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+        '429':
+          description: '`too_many_requests`: The client made too many requests. Try
+            again later.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+        '503':
+          description: '`unavailable`: The service can''t answer now. Try again later.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+    delete:
+      summary: Deleteshorturl
+      operationId: DeleteShortURL
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '204':
+          description: Successful Response
+        '401':
+          description: '`not_authenticated`: The request needs a valid access token.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+        '404':
+          description: '`shorturl_not_found`: The short URL doesn''t exist.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+        '422':
+          description: '`invalid_input`: Values of the request break their rules.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+        '429':
+          description: '`too_many_requests`: The client made too many requests. Try
+            again later.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+        '503':
+          description: '`unavailable`: The service can''t answer now. Try again later.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+  /v1/shorturls/{id}/enable:
+    post:
+      summary: Enableshorturl
+      operationId: EnableShortURL
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShortURLDetails'
+        '401':
+          description: '`not_authenticated`: The request needs a valid access token.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+        '404':
+          description: '`shorturl_not_found`: The short URL doesn''t exist.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+        '422':
+          description: '`invalid_input`: Values of the request break their rules.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+        '429':
+          description: '`too_many_requests`: The client made too many requests. Try
+            again later.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+        '503':
+          description: '`unavailable`: The service can''t answer now. Try again later.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+  /v1/shorturls/{id}/disable:
+    post:
+      summary: Disableshorturl
+      operationId: DisableShortURL
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShortURLDetails'
+        '401':
+          description: '`not_authenticated`: The request needs a valid access token.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+        '404':
+          description: '`shorturl_not_found`: The short URL doesn''t exist.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+        '422':
+          description: '`invalid_input`: Values of the request break their rules.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+        '429':
+          description: '`too_many_requests`: The client made too many requests. Try
+            again later.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+        '503':
+          description: '`unavailable`: The service can''t answer now. Try again later.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+  /v1/health:
+    get:
+      summary: Checkhealth
+      operationId: CheckHealth
+      responses:
+        '204':
+          description: Successful Response
+        '503':
+          description: '`unavailable`: The service can''t answer now. Try again later.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorContent'
+components:
+  schemas:
+    Body_CreateShortURL:
+      properties:
+        target_url:
+          type: string
+          title: Target Url
+        slug:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Slug
+      type: object
+      required:
+      - target_url
+      title: Body_CreateShortURL
+    Body_UpdateShortURL:
+      properties:
+        target_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Target Url
+        slug:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Slug
+      type: object
+      title: Body_UpdateShortURL
+    ErrorContent:
+      properties:
+        code:
+          type: string
+          title: Code
+        message:
+          type: string
+          title: Message
+        fields:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/FieldContent'
+            type: array
+          - type: 'null'
+          title: Fields
+      type: object
+      required:
+      - code
+      - message
+      title: ErrorContent
+      description: The content of every error response.
+    FieldContent:
+      properties:
+        field:
+          type: string
+          title: Field
+        issues:
+          items:
+            $ref: '#/components/schemas/IssueContent'
+          type: array
+          title: Issues
+      type: object
+      required:
+      - field
+      - issues
+      title: FieldContent
+    IssueContent:
+      properties:
+        code:
+          type: string
+          title: Code
+      type: object
+      required:
+      - code
+      title: IssueContent
+    ResolvedSlug:
+      properties:
+        target_url:
+          type: string
+          title: Target Url
+      type: object
+      required:
+      - target_url
+      title: ResolvedSlug
+    ShortURLDetails:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        slug:
+          type: string
+          title: Slug
+        target_url:
+          type: string
+          title: Target Url
+        owner_id:
+          type: string
+          format: uuid
+          title: Owner Id
+        status:
+          type: string
+          title: Status
+        resolution_count:
+          type: integer
+          title: Resolution Count
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        last_resolved_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Resolved At
+      type: object
+      required:
+      - id
+      - slug
+      - target_url
+      - owner_id
+      - status
+      - resolution_count
+      - created_at
+      - last_resolved_at
+      title: ShortURLDetails
+    ShortURLPageContent:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/ShortURLDetails'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+      type: object
+      required:
+      - items
+      - next_cursor
+      title: ShortURLPageContent
+  securitySchemes:
+    HTTPBearer:
+      type: http
+      scheme: bearer

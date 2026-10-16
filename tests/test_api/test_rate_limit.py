@@ -114,16 +114,6 @@ async def test_limits_a_request_whose_values_cannot_be_read(
     assert response.status_code == HTTPStatus.TOO_MANY_REQUESTS
 
 
-@pytest.mark.parametrize("url", ["/openapi.json", "/docs", "/redoc"])
-async def test_does_not_limit_the_documentation(
-    client: httpx.AsyncClient, over_the_limit: NonCallableMagicMock, url: str
-):
-    response = await client.get(url)
-
-    assert response.status_code == HTTPStatus.OK
-    over_the_limit.hit.assert_not_called()
-
-
 async def test_does_not_limit_the_health_check(
     client: httpx.AsyncClient, over_the_limit: NonCallableMagicMock
 ):
