@@ -1,6 +1,6 @@
 ---
-status: open
-resolution:
+status: closed
+resolution: fixed
 labels: [question, api, infra, bootstrap]
 ---
 
@@ -30,3 +30,19 @@ Some of them say that a type hint doesn't match what the code does:
 - `tests/test_bootstrap/conftest.py:3` imports a fixture `uow` whose type differs from a fixture of the same name.
 - `tests/test_bootstrap/test_app.py:173`: `dict()` of the rows of a query.
 - asyncpg has no type hints, so its imports are reported (`shortener/infra/db/transient_errors.py`, `tests/test_infra/test_db/test_transient_errors.py` and `tests/test_infra/test_db/test_health_check.py`), and PyYAML needs the package `types-PyYAML` (`tests/utils/openapi_helpers.py`).
+
+## 2026-10-16: Closed as fixed
+
+mypy checks the type hints, with `poetry run task typecheck`, as `pyproject.toml` configures it:
+
+- `shortener/` and `alembic/` with its strict mode, so every function of the code has type hints, and they are checked.
+- The tests with its strict mode too, but without needing type hints, and with the bodies of the functions that have none checked. They compare values of different types and pass values of the wrong type on purpose, and their doubles return `Any`, so `strict_equality` and `warn_return_any` are off for them, and so is `empty-body`, for the classes of `tests/test_api/test_endpoint.py`, which only have signatures.
+- asyncpg has no type hints, so its imports aren't checked, and `types-PyYAML` has the ones of PyYAML.
+
+What it found was fixed:
+
+- `SuccessResponse` and `Transaction` declare `status_code` and `shorturls` as read-only properties, so their implementations, whose attributes are read-only or of a subtype, implement them, and `SQLAlchemyUnitOfWork` is a `UnitOfWork`.
+- `Endpoint.use_case` is a `type[UseCase]`, a `Protocol` of `shortener/api/endpoint.py` whose `execute()` returns a `Result`, so the endpoint knows the types of what it runs.
+- `is_transient()` keeps the error of a `DBAPIError` in a variable of its own, `_is_slug_taken()` handles an `IntegrityError` without `orig`, and `_select_by_owner()` compares the columns with a tuple of values instead of `tuple_()` of values.
+- The functions of the domain that had no type hints have them.
+- In the tests, each value of the wrong type passed on purpose is typed `Any` or has a `type: ignore` with its code, and `tests/test_bootstrap/conftest.py` imports from `tests.fixtures.infra` only the fixtures the tests of bootstrap use, since its `uow` and the one of `tests.fixtures.use_cases` have the same name.

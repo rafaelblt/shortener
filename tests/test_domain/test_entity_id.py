@@ -1,4 +1,5 @@
 from dataclasses import FrozenInstanceError
+from typing import Any
 from uuid import UUID
 
 import pytest
@@ -16,7 +17,7 @@ def test_keeps_the_value():
 
 
 @pytest.mark.parametrize("value", [str(VALUE), VALUE.int, None])
-def test_rejects_a_value_that_is_not_a_uuid(value: object):
+def test_rejects_a_value_that_is_not_a_uuid(value: Any):
     with pytest.raises(TypeError) as raised:
         EntityID(value)
     assert_mentions(

@@ -123,11 +123,11 @@ class ShortURL:
     def last_resolved_at(self) -> datetime | None:
         return self._last_resolved_at
 
-    def change_slug(self, new_slug: Slug):
+    def change_slug(self, new_slug: Slug) -> None:
         _check_attribute_type("slug", new_slug, Slug)
         self._slug = new_slug
 
-    def change_target_url(self, new_target_url: TargetURL):
+    def change_target_url(self, new_target_url: TargetURL) -> None:
         _check_attribute_type("target_url", new_target_url, TargetURL)
         self._target_url = new_target_url
 
@@ -148,13 +148,13 @@ class ShortURL:
         self._last_resolved_at = now
         return Ok(self.target_url)
 
-    def enable(self):
+    def enable(self) -> None:
         self._status = ShortURLStatus.ACTIVE
 
-    def disable(self):
+    def disable(self) -> None:
         self._status = ShortURLStatus.DEACTIVATED
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f"<ShortURL id={self.id}, slug={self.slug}, target_url={self.target_url}>"
         )

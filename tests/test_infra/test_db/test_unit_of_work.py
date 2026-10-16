@@ -37,7 +37,7 @@ READS = [
 ]
 
 
-async def wait_for_a_lock(engine: AsyncEngine, task: asyncio.Task) -> None:
+async def wait_for_a_lock(engine: AsyncEngine, task: asyncio.Task[object]) -> None:
     """Returns once a session of the database waits for a lock, or the task ends."""
     async with asyncio.timeout(10):
         while not task.done():

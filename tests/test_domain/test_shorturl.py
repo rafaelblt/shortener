@@ -22,6 +22,12 @@ class UnknownOffset(tzinfo):
     def utcoffset(self, dt: datetime | None) -> None:
         return None
 
+    def dst(self, dt: datetime | None) -> None:
+        return None
+
+    def tzname(self, dt: datetime | None) -> None:
+        return None
+
 
 NAIVE_DATETIMES = [
     pytest.param(datetime(2006, 6, 6), id="no tzinfo"),  # noqa: DTZ001

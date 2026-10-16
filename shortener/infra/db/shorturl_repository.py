@@ -1,3 +1,5 @@
+from typing import Any
+
 from sqlalchemy import (
     Insert,
     Row,
@@ -73,7 +75,7 @@ class SQLAlchemyShortURLRepository:
                 delete(shorturls).where(shorturls.c.owner_id == owner_id.value)
             )
 
-    async def _read(self, statement: Select) -> list[ShortURL]:
+    async def _read(self, statement: Select[Any]) -> list[ShortURL]:
         with unavailable_when_transient():
             result = await self._connection.execute(statement.with_for_update())
             rows = result.all()
@@ -112,24 +114,24 @@ class SQLAlchemyShortURLReader:
     ) -> list[ShortURL]:
         return await self._read(_select_by_owner(owner_id, limit, after))
 
-    async def _read(self, statement: Select) -> list[ShortURL]:
+    async def _read(self, statement: Select[Any]) -> list[ShortURL]:
         with unavailable_when_transient():
             async with self._engine.connect() as connection:
                 rows = (await connection.execute(statement)).all()
         return [_to_shorturl(row) for row in rows]
 
 
-def _select_by_id(id: ShortURLID) -> Select:
+def _select_by_id(id: ShortURLID) -> Select[Any]:
     return select(shorturls).where(shorturls.c.id == id.value)
 
 
-def _select_by_slug(slug: Slug) -> Select:
+def _select_by_slug(slug: Slug) -> Select[Any]:
     return select(shorturls).where(shorturls.c.slug == str(slug))
 
 
 def _select_by_owner(
     owner_id: UserID, limit: int, after: ShortURLCursor | None
-) -> Select:
+) -> Select[Any]:
     statement = (
         select(shorturls)
         .where(shorturls.c.owner_id == owner_id.value)
@@ -139,8 +141,7 @@ def _select_by_owner(
     if after is None:
         return statement
     return statement.where(
-        tuple_(shorturls.c.created_at, shorturls.c.id)
-        < tuple_(after.created_at, after.id)
+        tuple_(shorturls.c.created_at, shorturls.c.id) < (after.created_at, after.id)
     )
 
 
@@ -160,7 +161,7 @@ def _columns(shorturl: ShortURL) -> dict[str, object]:
     }
 
 
-def _to_shorturl(row: Row) -> ShortURL:
+def _to_shorturl(row: Row[Any]) -> ShortURL:
     # parse(), and not create(), since a stored value may have been created
     # under older rules. See docs/domain.md#value-objects
     return ShortURL.restore(
@@ -178,6 +179,5 @@ def _to_shorturl(row: Row) -> ShortURL:
 def _is_slug_taken(error: IntegrityError) -> bool:
     # The dialect of SQLAlchemy raises its error from the one of asyncpg, and
     # only the one of asyncpg names the constraint.
-    return (
-        getattr(error.orig.__cause__, "constraint_name", None) == SLUG_UNIQUE_CONSTRAINT
-    )
+    asyncpg_error = getattr(error.orig, "__cause__", None)
+    return getattr(asyncpg_error, "constraint_name", None) == SLUG_UNIQUE_CONSTRAINT

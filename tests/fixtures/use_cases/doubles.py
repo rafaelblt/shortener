@@ -47,8 +47,9 @@ def transaction() -> NonCallableMagicMock:
     shorturls.remove_by_owner.return_value = None
 
     transaction = create_autospec(Transaction, instance=True)
-    # create_autospec doesn't create the attributes a Protocol only annotates.
-    # Assigned here, the calls to shorturls are recorded with the transaction's.
+    # create_autospec makes shorturls, a property, a MagicMock without the
+    # methods of ShortURLRepository. Assigned here, it is a double of the
+    # repository, whose calls are recorded with the transaction's.
     transaction.shorturls = shorturls
     transaction.commit.return_value = None
     return transaction

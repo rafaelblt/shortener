@@ -49,11 +49,12 @@ def is_transient(error: Exception) -> bool:
     # SQLAlchemy wrapping them.
     if isinstance(error, (OSError, PoolTimeoutError, InternalClientError)):
         return True
+    with_sqlstate: BaseException | None = error
     if isinstance(error, DBAPIError):
         if error.connection_invalidated:
             return True
-        error = error.orig
-    sqlstate = getattr(error, "sqlstate", None)
+        with_sqlstate = error.orig
+    sqlstate = getattr(with_sqlstate, "sqlstate", None)
     if not isinstance(sqlstate, str):
         return False
     return (

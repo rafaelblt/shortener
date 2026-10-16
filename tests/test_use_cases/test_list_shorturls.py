@@ -1,3 +1,4 @@
+from typing import Any
 from unittest.mock import NonCallableMagicMock
 
 import pytest
@@ -92,7 +93,7 @@ async def test_reads_one_more_shorturl_of_the_user_than_the_limit(
     list_shorturls: ListShortURLs,
     shorturl_reader: NonCallableMagicMock,
     owner_id: UserID,
-    arguments: dict[str, int],
+    arguments: dict[str, Any],
     expected_read_limit: int,
 ):
     await list_shorturls.execute(**arguments)

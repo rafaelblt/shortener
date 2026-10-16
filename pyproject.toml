@@ -40,6 +40,7 @@ consume = 'python -m shortener.bootstrap.consumer'
 
 lint = "ruff check && ruff format --check"
 format = "ruff check --fix-only && ruff format"
+typecheck = "mypy"
 
 test = 'pytest --cov=shortener -v'
 test_shared = "pytest -v tests/test_shared/"
@@ -110,6 +111,28 @@ ban-relative-imports = "all"
 
 [tool.ruff.lint.flake8-pytest-style]
 parametrize-names-type = "csv"
+
+[tool.mypy]
+files = ["shortener", "tests", "alembic"]
+strict = true
+enable_error_code = ["ignore-without-code", "possibly-undefined", "truthy-bool"]
+
+[[tool.mypy.overrides]]
+# The bodies of the tests are checked, but the tests need no type hints. They
+# compare values of different types, and pass wrong ones, on purpose, and
+# their doubles return Any.
+module = ["tests.*"]
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+disallow_untyped_calls = false
+check_untyped_defs = true
+strict_equality = false
+warn_return_any = false
+disable_error_code = ["empty-body"]
+
+[[tool.mypy.overrides]]
+module = ["asyncpg", "asyncpg.*"]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

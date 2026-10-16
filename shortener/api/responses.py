@@ -10,11 +10,13 @@ from pydantic import TypeAdapter
 class SuccessResponse(Protocol):
     """How an endpoint answers the Ok of its use case. See docs/api.md#responses"""
 
-    status_code: HTTPStatus
     response_class: ClassVar[type[Response]]
     # The headers it answers, with the description of each one, for the
     # OpenAPI schema.
     header_descriptions: ClassVar[Mapping[str, str]]
+
+    @property
+    def status_code(self) -> HTTPStatus: ...
 
     def model(self, ok_type: Any) -> Any:
         """The type of what respond() returns, for FastAPI, or None for none."""

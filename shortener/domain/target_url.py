@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from urllib.parse import urlparse
 
 from shortener.shared.parsing import require_non_empty_string
@@ -20,10 +21,10 @@ class TargetURL(str):
         """
         return cls.create(value).unwrap()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<TargetURL({super().__repr__()})>"
 
-    def __reduce__(self):
+    def __reduce__(self) -> tuple[Callable[[object], "TargetURL"], tuple[str]]:
         # copy and pickle rebuild an instance with the constructor, which
         # would reject a value accepted under older rules. A copy is of a
         # value that already exists, so it uses parse(). See

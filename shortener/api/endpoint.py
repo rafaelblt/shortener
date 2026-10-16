@@ -3,9 +3,18 @@ import re
 
 from dataclasses import KW_ONLY, dataclass, field
 from types import UnionType
-from typing import Annotated, Any, Final, Union, get_args, get_origin, get_type_hints
+from typing import (
+    Annotated,
+    Any,
+    Final,
+    Protocol,
+    Union,
+    get_args,
+    get_origin,
+    get_type_hints,
+)
 
-from fastapi import APIRouter, Body, Depends, Path, Query, params
+from fastapi import APIRouter, Depends, params
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from shortener.api.authentication import AccessTokenCurrentUser, AccessTokenVerifier
@@ -22,7 +31,7 @@ from shortener.api.errors import (
 from shortener.api.openapi import documented_headers
 from shortener.api.responses import JSONContent, SuccessResponse
 from shortener.api.use_case_factory import UseCaseFactory
-from shortener.shared.result import Err, Ok
+from shortener.shared.result import Err, Result
 from shortener.use_cases.current_user import CurrentUser
 from shortener.use_cases.errors import InvalidInputError
 from shortener.use_cases.shorturl_cursor import ShortURLCursor
@@ -47,6 +56,15 @@ _CREDENTIALS: Final = inspect.Parameter(
 )
 
 
+class UseCase(Protocol):
+    """
+    What an endpoint runs. The endpoint reads what it receives from the
+    signature of execute(), and what it answers from the Result it returns.
+    """
+
+    async def execute(self, *args: Any, **kwargs: Any) -> Result[Any, Any]: ...
+
+
 @dataclass(frozen=True)
 class Endpoint:
     """
@@ -57,7 +75,7 @@ class Endpoint:
 
     method: str
     path: str
-    use_case: type
+    use_case: type[UseCase]
     response: SuccessResponse = field(default_factory=JSONContent)
     _: KW_ONLY
     summary: str
@@ -86,12 +104,11 @@ def add_route(
             credentials.credentials if credentials is not None else None,
             access_token_verifier,
         )
-        use_case: Any = use_cases.build(endpoint.use_case, current_user)
-        match await use_case.execute(**arguments):
-            case Ok(value):
-                return endpoint.response.respond(value)
-            case Err(error):
-                return error_response(error)
+        use_case = use_cases.build(endpoint.use_case, current_user)
+        result = await use_case.execute(**arguments)
+        if isinstance(result, Err):
+            return error_response(result.error)
+        return endpoint.response.respond(result.value)
 
     # FastAPI reads what to receive from the signature of the function.
     run.__signature__ = inspect.Signature(  # type: ignore[attr-defined]
@@ -144,10 +161,10 @@ def _parameters_of(endpoint: Endpoint) -> list[inspect.Parameter]:
 
 def _source(method: str, is_in_path: bool) -> params.Param | params.Body:
     if is_in_path:
-        return Path()
+        return params.Path()
     if method in METHODS_WITHOUT_BODY:
-        return Query()
-    return Body(embed=True)
+        return params.Query()
+    return params.Body(embed=True)
 
 
 def _received_type(type_: Any) -> Any:
@@ -157,7 +174,7 @@ def _received_type(type_: Any) -> Any:
     return PARAMETER_TYPES.get(type_, type_)
 
 
-def _result_types_of(use_case: type) -> tuple[Any, tuple[type, ...]]:
+def _result_types_of(use_case: type[UseCase]) -> tuple[Any, tuple[type, ...]]:
     # execute() returns Result[Ok, Error], whose Error is a type alias of a
     # union, such as CreateShortURLError, or a single class.
     ok_type, error = get_args(get_type_hints(use_case.execute)["return"])

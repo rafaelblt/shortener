@@ -2,6 +2,7 @@ import random
 import re
 import string
 
+from collections.abc import Callable
 from typing import Final
 
 from shortener.shared.parsing import require_non_empty_string
@@ -18,8 +19,6 @@ SLUG_PATTERN: Final = re.compile(r"^[a-zA-Z0-9_-]+$")
 
 
 class Slug(str):
-    """A custom string class representing a Slug for ShortURL"""
-
     def __new__(cls, value: str) -> "Slug":
         """
         Prefer create(), which returns the broken rules instead of raising.
@@ -30,10 +29,10 @@ class Slug(str):
         """
         return cls.create(value).unwrap()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Slug({super().__repr__()})>"
 
-    def __reduce__(self):
+    def __reduce__(self) -> tuple[Callable[[object], "Slug"], tuple[str]]:
         # copy and pickle rebuild an instance with the constructor, which
         # would reject a value accepted under older rules. A copy is of a
         # value that already exists, so it uses parse(). See

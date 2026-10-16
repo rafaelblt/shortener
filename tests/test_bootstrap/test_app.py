@@ -171,7 +171,7 @@ async def test_database_engine_sets_the_lock_and_statement_timeouts_of_its_conne
                     " WHERE name IN ('lock_timeout', 'statement_timeout')"
                 )
             )
-            assert dict(settings.all()) == {
+            assert {row.name: row.setting for row in settings} == {
                 "lock_timeout": "1",
                 "statement_timeout": "1500",
             }

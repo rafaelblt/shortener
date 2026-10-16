@@ -257,6 +257,7 @@ def _issue_code(detail: Any) -> str:
     # Pydantic names the issues by their type, such as int_parsing. The API
     # keeps the ones that are an IssueCode and MISSING, and answers
     # INVALID_TYPE to the others.
-    if detail["type"] == MISSING or detail["type"] in _ISSUE_CODES:
-        return detail["type"]
+    code: str = detail["type"]
+    if code == MISSING or code in _ISSUE_CODES:
+        return code
     return IssueCode.INVALID_TYPE.value

@@ -10,7 +10,8 @@ class Transaction(Protocol):
     transaction until this one ends. See docs/use_cases.md#concurrency
     """
 
-    shorturls: ShortURLRepository
+    @property
+    def shorturls(self) -> ShortURLRepository: ...
 
     async def commit(self) -> None: ...
 

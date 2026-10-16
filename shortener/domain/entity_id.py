@@ -6,7 +6,7 @@ from uuid import UUID
 class EntityID:
     value: UUID
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not isinstance(self.value, UUID):
             raise TypeError(
                 f"The {type(self).__name__} value must be an instance of UUID, "

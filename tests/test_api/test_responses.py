@@ -39,7 +39,7 @@ def test_created_answers_created_with_the_value_of_ok_as_json():
     response = created.respond(Value("name"))
 
     assert response.status_code == HTTPStatus.CREATED
-    assert json.loads(response.body) == {"name": "name"}
+    assert json.loads(bytes(response.body)) == {"name": "name"}
     assert created.model(Value) is Value
 
 
