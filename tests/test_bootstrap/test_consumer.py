@@ -1,4 +1,7 @@
 import asyncio
+import os
+import signal
+import sys
 
 from datetime import datetime
 from unittest.mock import AsyncMock, Mock
@@ -44,6 +47,14 @@ def engine_double(monkeypatch: pytest.MonkeyPatch) -> Mock:
         "shortener.bootstrap.app.create_async_engine", Mock(return_value=engine)
     )
     return engine
+
+
+async def wait_for_a_line(stream: asyncio.StreamReader, text: bytes) -> None:
+    """Reads the lines of the stream until one has the text."""
+    while line := await stream.readline():
+        if text in line:
+            return
+    raise AssertionError(f"The stream ended without a line with {text!r}")
 
 
 def shorturl_of(owner_id: UserID, slug: str, now: datetime) -> ShortURL:
@@ -124,3 +135,40 @@ async def test_run_consumer_raises_and_disposes_its_engine_when_rabbitmq_is_unre
     with pytest.raises(AMQPConnectionError):
         await run_consumer(stopped, unreachable)
     engine_double.dispose.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    "signal_number",
+    [
+        pytest.param(signal.SIGINT, id="SIGINT"),
+        pytest.param(signal.SIGTERM, id="SIGTERM"),
+    ],
+)
+async def test_main_consumes_until_the_process_gets_sigint_or_sigterm(
+    settings: ConsumerSettings, signal_number: signal.Signals
+):
+    # The process inherits the environment, which has what measures its
+    # coverage.
+    process = await asyncio.create_subprocess_exec(
+        sys.executable,
+        "-m",
+        "shortener.bootstrap.consumer",
+        env={
+            **os.environ,
+            "DATABASE_URL": settings.database.url,
+            "RABBITMQ_URL": settings.rabbitmq_url,
+        },
+        stderr=asyncio.subprocess.PIPE,
+    )
+    assert process.stderr is not None
+    try:
+        async with asyncio.timeout(30):
+            await wait_for_a_line(process.stderr, b"Consuming the events")
+            process.send_signal(signal_number)
+            await process.communicate()
+    finally:
+        if process.returncode is None:
+            process.kill()
+            await process.wait()
+
+    assert process.returncode == 0
