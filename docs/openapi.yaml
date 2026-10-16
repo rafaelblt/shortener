@@ -18,7 +18,7 @@ paths:
           title: Slug
       responses:
         '200':
-          description: Successful Response
+          description: OK
           content:
             application/json:
               schema:
@@ -64,7 +64,7 @@ paths:
           title: Slug
       responses:
         '307':
-          description: Successful Response
+          description: Temporary Redirect
         '404':
           description: '`shorturl_not_found`: The short URL doesn''t exist. `shorturl_deactivated`:
             The short URL is deactivated.'
@@ -107,7 +107,7 @@ paths:
               $ref: '#/components/schemas/Body_CreateShortURL'
       responses:
         '201':
-          description: Successful Response
+          description: Created
           content:
             application/json:
               schema:
@@ -174,7 +174,7 @@ paths:
           title: Cursor
       responses:
         '200':
-          description: Successful Response
+          description: OK
           content:
             application/json:
               schema:
@@ -222,7 +222,7 @@ paths:
           title: Id
       responses:
         '200':
-          description: Successful Response
+          description: OK
           content:
             application/json:
               schema:
@@ -280,7 +280,7 @@ paths:
               $ref: '#/components/schemas/Body_UpdateShortURL'
       responses:
         '200':
-          description: Successful Response
+          description: OK
           content:
             application/json:
               schema:
@@ -346,7 +346,7 @@ paths:
           title: Id
       responses:
         '204':
-          description: Successful Response
+          description: No Content
         '401':
           description: '`not_authenticated`: The request needs a valid access token.'
           content:
@@ -396,7 +396,7 @@ paths:
           title: Id
       responses:
         '200':
-          description: Successful Response
+          description: OK
           content:
             application/json:
               schema:
@@ -450,7 +450,7 @@ paths:
           title: Id
       responses:
         '200':
-          description: Successful Response
+          description: OK
           content:
             application/json:
               schema:
@@ -494,7 +494,7 @@ paths:
       operationId: CheckHealth
       responses:
         '204':
-          description: Successful Response
+          description: No Content
         '503':
           description: '`unavailable`: The service can''t answer now. Try again later.'
           content:

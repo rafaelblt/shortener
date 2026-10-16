@@ -36,6 +36,7 @@ def add_health_check_route(router: APIRouter, health_check: HealthCheck) -> None
         status_code=response.status_code,
         response_model=None,
         response_class=response.response_class,
+        response_description=response.status_code.phrase,
         responses=documented_responses([]),
         summary="Check the health of the service",
         tags=["Health"],

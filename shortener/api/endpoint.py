@@ -98,6 +98,7 @@ def add_route(
         status_code=endpoint.response.status_code,
         response_model=endpoint.response.model(ok_type),
         response_class=endpoint.response.response_class,
+        response_description=endpoint.response.status_code.phrase,
         responses=documented_responses(
             [
                 *map(response_of, error_types),

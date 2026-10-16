@@ -272,6 +272,12 @@ def test_documents_the_ok_of_the_use_case_and_its_errors_by_status(app: FastAPI)
         assert str(status.value) in responses
 
 
+def test_describes_the_response_of_ok_by_its_status(app: FastAPI):
+    responses = app.openapi()["paths"]["/v1/echoes/{id}"]["put"]["responses"]
+
+    assert responses[str(HTTPStatus.OK.value)]["description"] == HTTPStatus.OK.phrase
+
+
 def test_documents_no_body_errors_for_an_endpoint_without_a_body(app: FastAPI):
     responses = app.openapi()["paths"]["/v1/public"]["get"]["responses"]
 
