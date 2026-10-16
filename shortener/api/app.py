@@ -1,6 +1,5 @@
 from collections.abc import Callable, Sequence
 from contextlib import AbstractAsyncContextManager
-from typing import Final
 
 from fastapi import APIRouter, Depends, FastAPI
 from fastapi.exceptions import RequestValidationError
@@ -16,13 +15,12 @@ from shortener.api.errors import (
     too_many_requests_handler,
     unavailable_handler,
 )
-from shortener.api.rate_limit import RateLimiter, TooManyRequestsError, limit_by_ip
 from shortener.api.health_check import HealthCheck, add_health_check_route
+from shortener.api.prefix import PREFIX
+from shortener.api.rate_limit import RateLimiter, TooManyRequestsError, limit_by_ip
 from shortener.api.use_case_factory import UseCaseFactory
 from shortener.use_cases.unavailable_error import UnavailableError
 
-
-PREFIX: Final = "/v1"
 
 type Lifespan = Callable[[FastAPI], AbstractAsyncContextManager[None]]
 

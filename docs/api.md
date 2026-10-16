@@ -8,10 +8,11 @@ This document describes the API as it is in the code. Verified bugs that aren't 
 
 ```
 shortener/api/
-├── app.py                     create_app() and PREFIX
+├── app.py                     create_app()
+├── prefix.py                  PREFIX
 ├── endpoints.py               ENDPOINTS
 ├── endpoint.py                Endpoint, add_route() and PARAMETER_TYPES
-├── responses.py               SuccessResponse, JSONContent, NoContent and Redirect
+├── responses.py               SuccessResponse, JSONContent, Created, NoContent and Redirect
 ├── errors.py                  ERRORS, ErrorResponse, ErrorContent, error_response() and the
 │                              handlers of exceptions
 ├── authentication.py          AccessTokenVerifier and AccessTokenCurrentUser
@@ -53,7 +54,7 @@ Whoever consumes the API reads the schema where its code is, without running the
 | --------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------- | ---------------------------------------------------------- |
 | `GET /v1/slugs/{slug}`            | [`ResolveSlug`](use_cases.md#resolveslug)                            | `slug`, in the path                                     | `200 OK`, with the `ResolvedSlug`: `{"target_url": "..."}` |
 | `GET /v1/slugs/{slug}/redirect`   | [`ResolveSlug`](use_cases.md#resolveslug), named `RedirectSlug`      | `slug`, in the path                                     | `307 Temporary Redirect` to the target URL                 |
-| `POST /v1/shorturls`              | [`CreateShortURL`](use_cases.md#createshorturl)                      | `target_url` and `slug`, in the body                    | `201 Created`, with the `ShortURLDetails`                  |
+| `POST /v1/shorturls`              | [`CreateShortURL`](use_cases.md#createshorturl)                      | `target_url` and `slug`, in the body                    | `201 Created`, with the `ShortURLDetails` and `Location`   |
 | `GET /v1/shorturls`               | [`ListShortURLs`](use_cases.md#listshorturls)                        | `limit` and `cursor`, in the query                      | `200 OK`, with a [`ShortURLPageContent`](#cursors)         |
 | `GET /v1/shorturls/{id}`          | [`GetShortURL`](use_cases.md#getshorturl)                            | `id`, in the path                                       | `200 OK`, with the `ShortURLDetails`                       |
 | `PATCH /v1/shorturls/{id}`        | [`UpdateShortURL`](use_cases.md#updateshorturl)                      | `id`, in the path, `target_url` and `slug`, in the body | `200 OK`, with the `ShortURLDetails`                       |
@@ -67,6 +68,7 @@ What each one receives and answers follows from its use case, by the rules of [H
 - Every endpoint but the two of a slug reads the [access token](#authentication), since its use case takes a `CurrentUser`.
 - `slug`, and the `target_url` of a `PATCH`, default to `None` in `execute()`, so a `null` is the same as leaving them out: `POST /v1/shorturls` generates the slug, and `PATCH /v1/shorturls/{id}` doesn't change them. A `PATCH` with no value to change gets `nothing_to_update`. The `target_url` of a `POST` has no default, so leaving it out, or sending it as `null`, gets `missing`.
 - `limit` is 20 when the query leaves it out, the default of `ListShortURLs.execute()`.
+- The `Location` of `POST /v1/shorturls` is the path of the new short URL, `/v1/shorturls/{id}`, with the `id` of its `ShortURLDetails`, which `GET /v1/shorturls/{id}` answers.
 - The redirect is temporary, so the clients don't keep it: each visit asks the service again, which counts the resolution, and follows changes of the target URL and deactivations.
 - Every route is under `/v1`, so a slug never shares a path with a route of the API, and no slug has to be reserved. A domain of short links, where `/{slug}` redirects, is a proxy in front of the service, which sends `/{slug}` to `/v1/slugs/{slug}/redirect`. The rules of [`Slug.create()`](domain.md#slug) don't allow dots, so a path such as `/favicon.ico` is never the slug of a new short URL.
 - The JSON of a `ShortURLDetails` has its fields, with the IDs as text, and the datetimes in ISO 8601, with `Z` for UTC.
@@ -112,10 +114,13 @@ A `SuccessResponse` says how an endpoint answers the `Ok` of its use case: its s
 | `SuccessResponse`                           | Status                   | Answers                                                                                                           |
 | ------------------------------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------- |
 | `JSONContent(status_code=200, encode=None)` | `status_code`            | The value of `Ok` as JSON. With `encode`, what `encode(value)` returns, whose type is the return type of `encode` |
+| `Created(location)`                         | `201 Created`            | The value of `Ok` as JSON, with the URL `location(value)` returns in the `Location` header                        |
 | `NoContent()`                               | `204 No Content`         | Nothing, whatever the value of `Ok`                                                                               |
 | `Redirect(location)`                        | `307 Temporary Redirect` | A redirect to the URL `location(value)` returns, in the `Location` header                                         |
 
-FastAPI serializes the dataclasses of the use cases with pydantic: a `UUID` as text, a `datetime` in ISO 8601, and a tuple as a list.
+FastAPI serializes the dataclasses of the use cases with pydantic: a `UUID` as text, a `datetime` in ISO 8601, and a tuple as a list. `Created` returns a `JSONResponse`, which FastAPI doesn't serialize, so it serializes the value itself, with pydantic, in the same way.
+
+The `Location` headers aren't in the [OpenAPI schema](#openapi).
 
 ## Errors
 

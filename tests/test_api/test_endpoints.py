@@ -159,6 +159,18 @@ async def test_post_shorturls_answers_created_with_the_details_of_the_new_shortu
     assert response.json() == as_json(details)
 
 
+async def test_post_shorturls_answers_the_location_of_the_new_shorturl(
+    client: httpx.AsyncClient, use_cases: UseCaseDoubles, details: ShortURLDetails
+):
+    use_cases.double(CreateShortURL).execute.return_value = Ok(details)
+
+    response = await client.post(
+        "/v1/shorturls", json={"target_url": details.target_url}, headers=AUTHORIZATION
+    )
+
+    assert response.headers["Location"] == f"/v1/shorturls/{details.id}"
+
+
 @pytest.mark.parametrize(
     "method, url, body, use_case",
     [

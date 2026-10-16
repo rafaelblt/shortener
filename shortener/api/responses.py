@@ -4,6 +4,7 @@ from http import HTTPStatus
 from typing import Any, ClassVar, Protocol, get_type_hints
 
 from fastapi.responses import JSONResponse, RedirectResponse, Response
+from pydantic import TypeAdapter
 
 
 class SuccessResponse(Protocol):
@@ -34,6 +35,30 @@ class JSONContent:
 
     def respond(self, value: Any) -> object:
         return value if self.encode is None else self.encode(value)
+
+
+@dataclass(frozen=True)
+class Created:
+    """
+    Answers the value of Ok as JSON, with the URL that location returns from
+    it in the Location header.
+    """
+
+    location: Callable[[Any], str]
+    status_code: HTTPStatus = HTTPStatus.CREATED
+    response_class: ClassVar[type[Response]] = JSONResponse
+
+    def model(self, ok_type: Any) -> Any:
+        return ok_type
+
+    def respond(self, value: Any) -> Response:
+        # FastAPI doesn't serialize a Response it is given, so it is
+        # serialized here as FastAPI does, with pydantic.
+        return JSONResponse(
+            TypeAdapter(type(value)).dump_python(value, mode="json"),
+            status_code=self.status_code,
+            headers={"Location": self.location(value)},
+        )
 
 
 @dataclass(frozen=True)
