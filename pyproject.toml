@@ -29,10 +29,17 @@ pytest-cov = "^6.0.0"
 pytest-asyncio = "^0.25.3"
 testcontainers = "^4.15.0"
 pyyaml = "^6.0.2"
+ruff = "^0.17.1"
+mypy = "^2.4.0"
+import-linter = "^2.15"
+types-pyyaml = "^6.0.12"
 
 [tool.taskipy.tasks]
 run = 'uvicorn shortener.bootstrap.app:create_app --factory --reload'
 consume = 'python -m shortener.bootstrap.consumer'
+
+lint = "ruff check && ruff format --check"
+format = "ruff check --fix-only && ruff format"
 
 test = 'pytest --cov=shortener -v'
 test_shared = "pytest -v tests/test_shared/"
@@ -48,6 +55,61 @@ openapi = "python -m tests.utils.openapi_helpers"
 
 alembic_upgrade = "alembic upgrade +1"
 alembic_downgrade = "alembic downgrade -1"
+
+[tool.ruff]
+line-length = 88
+extend-exclude = [".claude", "*.md"]
+
+[tool.ruff.lint]
+select = [
+    "F",      # Pyflakes: unused imports and variables, undefined names
+    "E",      # pycodestyle errors, such as lines longer than line-length
+    "W",      # pycodestyle warnings, such as trailing whitespace
+    "I",      # isort: the order of the imports
+    "UP",     # pyupgrade: the syntax of the Python of requires-python
+    "B",      # flake8-bugbear: likely bugs
+    "SIM",    # flake8-simplify
+    "C4",     # flake8-comprehensions
+    "PIE",    # flake8-pie: unnecessary code
+    "RUF",    # Ruff's own rules
+    "ASYNC",  # flake8-async: blocking calls in async code
+    "PT",     # flake8-pytest-style
+    "N",      # pep8-naming
+    "TID",    # flake8-tidy-imports: absolute imports only
+    "DTZ",    # flake8-datetimez: no naive datetimes
+    "PGH",    # pygrep-hooks: no type: ignore or noqa without a code
+    "G",      # flake8-logging-format
+    "LOG",    # flake8-logging
+    "T20",    # flake8-print: no print()
+    "PLE",    # Pylint errors
+    "PLW",    # Pylint warnings
+    "SLF",    # flake8-self: no private member of another object
+]
+ignore = [
+    # The tests check what the message of an exception names with
+    # assert_mentions, and not with match.
+    "PT011",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# The tests poll what is outside the process, such as a queue, until it
+# changes.
+"tests/**" = ["ASYNC110"]
+# A conftest.py loads the fixtures of a layer with *.
+"tests/**/conftest.py" = ["F401", "F403"]
+"tests/fixtures/*/__init__.py" = ["F401", "F403"]
+
+[tool.ruff.lint.isort]
+# alembic/ holds the migrations, and isn't the package alembic.
+known-third-party = ["alembic"]
+lines-after-imports = 2
+lines-between-types = 1
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.flake8-pytest-style]
+parametrize-names-type = "csv"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
