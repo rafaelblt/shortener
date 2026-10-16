@@ -35,15 +35,15 @@ import-linter = "^2.15"
 types-pyyaml = "^6.0.12"
 
 [tool.taskipy.tasks]
-run = 'uvicorn shortener.bootstrap.app:create_app --factory --reload'
-consume = 'python -m shortener.bootstrap.consumer'
+run = "uvicorn shortener.bootstrap.app:create_app --factory --reload"
+consume = "python -m shortener.bootstrap.consumer"
 
+check = "task lint && task typecheck && task imports && task test"
 lint = "ruff check && ruff format --check"
 format = "ruff check --fix-only && ruff format"
 typecheck = "mypy"
 imports = "lint-imports"
-
-test = 'pytest --cov=shortener -v'
+test = "pytest --cov=shortener"
 test_shared = "pytest -v tests/test_shared/"
 test_domain = "pytest -v tests/test_domain/"
 test_use_cases = "pytest -v tests/test_use_cases/"
@@ -51,7 +51,6 @@ test_api = "pytest -v tests/test_api/"
 test_consumer = "pytest -v tests/test_consumer/"
 test_infra = "pytest -v tests/test_infra/"
 test_bootstrap = "pytest -v tests/test_bootstrap/"
-test_layers = 'task test_shared && task test_domain && task test_use_cases && task test_api && task test_consumer && task test_infra && task test_bootstrap'
 
 openapi = "python -m tests.utils.openapi_helpers"
 
@@ -226,8 +225,30 @@ source_modules = ["tests.test_infra", "tests.fixtures.infra"]
 forbidden_modules = ["shortener.api", "shortener.consumer", "shortener.bootstrap"]
 
 [tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["--strict-markers", "--strict-config"]
+xfail_strict = true
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+filterwarnings = [
+    "error",
+    # The Docker client of testcontainers leaves its sockets to the garbage
+    # collector.
+    "ignore:Exception ignored in. <socket.socket fd=-1, family=1:pytest.PytestUnraisableExceptionWarning",
+]
 
 [tool.coverage.run]
+branch = true
 concurrency = ["greenlet", "thread"]
+
+[tool.coverage.report]
+fail_under = 100
+show_missing = true
+skip_covered = true
+exclude_also = [
+    # The bodies of the methods of a Protocol, which never run.
+    '^\s*\.\.\.$',
+    ': \.\.\.$',
+    "raise NotImplementedError",
+    'if __name__ == "__main__":',
+]
