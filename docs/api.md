@@ -15,23 +15,25 @@ shortener/api/
 ├── errors.py                  ERRORS, ErrorResponse, ErrorContent, error_response() and the
 │                              handlers of exceptions
 ├── authentication.py          AccessTokenVerifier and AccessTokenCurrentUser
+├── rate_limit.py              RateLimiter, TooManyRequestsError and limit_by_ip()
 ├── use_case_factory.py        UseCaseFactory
 ├── cursors.py                 encode_cursor(), decode_cursor() and CursorParameter
 └── shorturl_page_content.py   ShortURLPageContent
 ```
 
-The API defines two abstractions, as `Protocol`s, which it receives in `create_app()`:
+The API defines three abstractions, as `Protocol`s, which it receives in `create_app()`:
 
-| Abstraction                              | What it does                                              | Implementation                                                 |
-| ---------------------------------------- | --------------------------------------------------------- | -------------------------------------------------------------- |
-| [`UseCaseFactory`](#use-cases)           | Builds the use case of a request, with the user making it | [`UseCases`](bootstrap.md#use-cases), in `bootstrap`           |
-| [`AccessTokenVerifier`](#authentication) | Tells whose an access token is                            | [`JWTAccessTokenVerifier`](infra.md#access-tokens), in `infra` |
+| Abstraction                              | What it does                                                                 | Implementation                                                 |
+| ---------------------------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| [`UseCaseFactory`](#use-cases)           | Builds the use case of a request, with the user making it                    | [`UseCases`](bootstrap.md#use-cases), in `bootstrap`           |
+| [`AccessTokenVerifier`](#authentication) | Tells whose an access token is                                               | [`JWTAccessTokenVerifier`](infra.md#access-tokens), in `infra` |
+| [`RateLimiter`](#rate-limit)             | Counts the requests of each IP address, and tells when one is over its limit | [`InMemoryRateLimiter`](infra.md#rate-limit), in `infra`       |
 
 ## The application
 
 `app.py`
 
-`create_app(use_cases, access_token_verifier, endpoints=ENDPOINTS, lifespan=None)` returns the FastAPI application. It adds a route for each [endpoint](#endpoints), under `PREFIX` (`/v1`), and the handlers of the exceptions that become [errors](#errors). `lifespan` is the one of FastAPI, for what has to run when the application starts and stops. It raises `LookupError` when the use case of an endpoint may return an error the API doesn't answer (see [How an endpoint works](#how-an-endpoint-works)), so the application doesn't start.
+`create_app(use_cases, access_token_verifier, rate_limiter, endpoints=ENDPOINTS, lifespan=None)` returns the FastAPI application. It adds a route for each [endpoint](#endpoints), under `PREFIX` (`/v1`), with the [rate limit](#rate-limit) of `rate_limiter`, and the handlers of the exceptions that become [errors](#errors). `lifespan` is the one of FastAPI, for what has to run when the application starts and stops. It raises `LookupError` when the use case of an endpoint may return an error the API doesn't answer (see [How an endpoint works](#how-an-endpoint-works)), so the application doesn't start.
 
 FastAPI also serves the OpenAPI schema at `/openapi.json`, and its documentation at `/docs` and `/redoc`, out of the prefix.
 
@@ -87,9 +89,9 @@ Since the name of a parameter of `execute()` is the name of its value in the req
 3. awaits `execute()`, with the values of the request as keyword arguments;
 4. answers `Ok` with its [`SuccessResponse`](#responses), and `Err` with [`error_response()`](#errors).
 
-FastAPI reads the values of the request before step 1, so a request whose values it can't read gets an [error](#errors) without the use case being built.
+FastAPI reads the values of the request before step 1, so a request whose values it can't read gets an [error](#errors) without the use case being built. It runs the [rate limit](#rate-limit) after parsing the JSON of the body and before reading the values, so a request over the limit gets `too_many_requests` even when its values can't be read.
 
-**OpenAPI.** The name of the endpoint is its name and operation ID, and is the name of its use case when `name` is `None`. Two endpoints of the same use case need different names, since FastAPI warns about a repeated operation ID. The response of success is the type of `Ok`, from the `Result[Ok, Error]` that `execute()` returns, or the type `response.model()` gives for it. The error responses are those of the errors of `Error`, which is a type alias of a union, such as `CreateShortURLError`, or a single class, grouped by status code, with `422` for the values of the request when the endpoint receives any, `400` when it receives a body, and `503`.
+**OpenAPI.** The name of the endpoint is its name and operation ID, and is the name of its use case when `name` is `None`. Two endpoints of the same use case need different names, since FastAPI warns about a repeated operation ID. The response of success is the type of `Ok`, from the `Result[Ok, Error]` that `execute()` returns, or the type `response.model()` gives for it. The error responses are those of the errors of `Error`, which is a type alias of a union, such as `CreateShortURLError`, or a single class, grouped by status code, with `422` for the values of the request when the endpoint receives any, `400` when it receives a body, and `429` and `503`.
 
 `add_route()` raises `LookupError` when `Error` has an error that isn't in [`ERRORS`](#errors), so a new error of a use case can't reach a client as a `500`.
 
@@ -139,11 +141,12 @@ Every error is answered with an `ErrorContent`:
 | A request whose values FastAPI can't read                   | `422 Unprocessable Content`               | `invalid_input`                   |
 | A body that isn't valid JSON                                | `400 Bad Request`                         | `malformed_body`                  |
 | A path, or a method of a path, that no endpoint has         | `404 Not Found`, `405 Method Not Allowed` | `not_found`, `method_not_allowed` |
+| [`TooManyRequestsError`](#rate-limit), raised               | `429 Too Many Requests`                   | `too_many_requests`               |
 | [`UnavailableError`](use_cases.md#unavailableerror), raised | `503 Service Unavailable`                 | `unavailable`                     |
 | Any other exception                                         | `500 Internal Server Error`               | `internal_error`                  |
 
 - The errors a use case returns are answered by `error_response(error)`, from `ERRORS`, which maps each class of error to an `ErrorResponse`: its status code, code, message and headers. `response_of(error_type)` raises `LookupError` for a class that isn't there.
-- `401` has the header `WWW-Authenticate: Bearer`. `405` has the header `Allow` that Starlette gives it, which only has the methods of one of the endpoints of the path, such as `POST` for `PUT /v1/shorturls`.
+- `401` has the header `WWW-Authenticate: Bearer`. `429` has the header `Retry-After`, with the seconds until the client can make requests again, rounded up to a whole number. `405` has the header `Allow` that Starlette gives it, which only has the methods of one of the endpoints of the path, such as `POST` for `PUT /v1/shorturls`.
 - The errors Starlette raises on its own, such as for a path or a method that no endpoint has, are answered by `http_error_handler()`, with their status, and the name of the status as the code.
 - `ShortURLDeactivatedError` is only answered by the two endpoints of a slug, since `ResolveSlug` is the only use case that returns it: `GET /v1/shorturls/{id}` answers the details of a deactivated short URL to its owner, with its `status`. It is `404`, and not `410 Gone`, since `410` is for a condition that is likely to be permanent, and a deactivated short URL can be enabled again. Its code, `shorturl_deactivated`, tells it apart from a short URL that doesn't exist, instead of hiding it as `shorturl_not_found`, so the system that resolves the slug decides what to show, which may be to hide that the short URL exists. Hiding it in the API wouldn't keep the slug secret anyway: creating a short URL with it answers `slug_taken`.
 - A request whose values FastAPI can't read, such as an `id` that isn't a UUID, a `limit` that isn't an integer or a `target_url` that isn't a string, gets `invalid_input`, with the same `fields` as the one of a use case. FastAPI names the issues by the types of pydantic: `missing` is kept, a type that is the value of an `IssueCode` is kept, such as the `invalid_format` of a [cursor](#cursors), and any other becomes `invalid_type`.
@@ -158,6 +161,20 @@ The service doesn't issue access tokens: it receives them, issued by someone els
 `AccessTokenCurrentUser(token, verifier)` implements the [`CurrentUser`](use_cases.md#current-user) of a request. `get_id()` returns `None` when `token` is `None`, without verifying anything, and otherwise what `verify(token)` returns.
 
 The token is verified only when the use case asks for the user, and a token that isn't valid is the same as no token: a use case that requires a user returns `NotAuthenticatedError`, answered with `401`.
+
+## Rate limit
+
+`rate_limit.py`
+
+Every endpoint counts each request under the IP address of its client, and a request over the limit of its IP address gets `too_many_requests`, without its use case being built. The endpoints share the count, so the requests of an IP address to any of them add up. The documentation of FastAPI, `/openapi.json`, `/docs` and `/redoc`, isn't limited, and neither is a path that no endpoint has.
+
+The API counts the requests through the `RateLimiter` abstraction. Its `hit(key)` counts a request of the key, and returns `None` when the key is within its limit, and otherwise how long until the key can make requests again, as a `timedelta`. The limit, and how the requests are counted, are up to the implementation, [`InMemoryRateLimiter`](infra.md#rate-limit), which [`bootstrap`](bootstrap.md#the-application) builds with the limit of the [settings](bootstrap.md#settings).
+
+`limit_by_ip(rate_limiter)` returns the dependency of FastAPI that `create_app()` gives to the router of the endpoints. For each request, it calls `hit()` with the IP address of the client, and raises `TooManyRequestsError`, with the time `hit()` returned, when that isn't `None`. It is a coroutine, so FastAPI runs it in the event loop, and not in a thread, where two requests could count at the same time.
+
+- The IP address is the one the server gives as the client's. Behind a proxy, it is the address of the proxy, unless the server trusts the proxy and takes the address of the client from what the proxy sends (see [Running](bootstrap.md#running)).
+- A request without the address of its client, which the server may give for a connection that isn't TCP, such as one through a Unix socket, isn't limited.
+- The dependency runs before FastAPI reads the values of the request, so a request whose values can't be read is counted too. A request whose body isn't valid JSON is the exception: FastAPI answers it with `malformed_body` before the dependency runs, so it isn't counted.
 
 ## Use cases
 

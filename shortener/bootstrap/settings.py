@@ -21,6 +21,8 @@ DEFAULT_DATABASE_LOCK_TIMEOUT: Final = timedelta(seconds=5)
 DEFAULT_DATABASE_STATEMENT_TIMEOUT: Final = timedelta(seconds=30)
 DEFAULT_JWT_LEEWAY: Final = timedelta(seconds=60)
 DEFAULT_JWT_JWKS_TIMEOUT: Final = timedelta(seconds=5)
+DEFAULT_RATE_LIMIT_REQUESTS: Final = 60
+DEFAULT_RATE_LIMIT_WINDOW: Final = timedelta(seconds=60)
 
 
 class SettingsError(Exception):
@@ -60,9 +62,21 @@ class AccessTokenSettings:
 
 
 @dataclass(frozen=True)
+class RateLimitSettings:
+    """
+    How many requests each IP address can make in each window of time.
+    See docs/bootstrap.md#settings
+    """
+
+    requests: int = DEFAULT_RATE_LIMIT_REQUESTS
+    window: timedelta = DEFAULT_RATE_LIMIT_WINDOW
+
+
+@dataclass(frozen=True)
 class Settings:
     database: DatabaseSettings
     access_tokens: AccessTokenSettings
+    rate_limit: RateLimitSettings = RateLimitSettings()
 
     @classmethod
     def from_environment(
@@ -76,9 +90,12 @@ class Settings:
         variables = _Variables(environment)
         database = _database_settings(variables)
         access_tokens = _access_token_settings(variables)
+        rate_limit = _rate_limit_settings(variables)
         if variables.problems:
             raise SettingsError("; ".join(variables.problems))
-        return cls(database=database, access_tokens=access_tokens)
+        return cls(
+            database=database, access_tokens=access_tokens, rate_limit=rate_limit
+        )
 
 
 def _database_settings(variables: "_Variables") -> DatabaseSettings:
@@ -132,6 +149,17 @@ def _access_token_settings(variables: "_Variables") -> AccessTokenSettings:
         ),
         jwks_timeout=variables.optional_seconds(
             "JWT_JWKS_TIMEOUT", DEFAULT_JWT_JWKS_TIMEOUT
+        ),
+    )
+
+
+def _rate_limit_settings(variables: "_Variables") -> RateLimitSettings:
+    return RateLimitSettings(
+        requests=variables.optional_integer(
+            "RATE_LIMIT_REQUESTS", DEFAULT_RATE_LIMIT_REQUESTS, minimum=1
+        ),
+        window=variables.optional_seconds(
+            "RATE_LIMIT_WINDOW", DEFAULT_RATE_LIMIT_WINDOW
         ),
     )
 

@@ -1,7 +1,9 @@
 import logging
+import math
 
 from collections.abc import Iterable, Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
+from datetime import timedelta
 from http import HTTPStatus
 from typing import Any, Final
 
@@ -11,6 +13,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from starlette.exceptions import HTTPException
 
+from shortener.api.rate_limit import TooManyRequestsError
 from shortener.domain.errors import ShortURLDeactivatedError
 from shortener.shared.validation import IssueCode
 from shortener.use_cases.errors import (
@@ -73,6 +76,11 @@ ERRORS: Final[Mapping[type, ErrorResponse]] = {
 MALFORMED_BODY: Final = ErrorResponse(
     HTTPStatus.BAD_REQUEST, "malformed_body", "The body isn't valid JSON."
 )
+TOO_MANY_REQUESTS: Final = ErrorResponse(
+    HTTPStatus.TOO_MANY_REQUESTS,
+    "too_many_requests",
+    "The client made too many requests. Try again later.",
+)
 UNAVAILABLE: Final = ErrorResponse(
     HTTPStatus.SERVICE_UNAVAILABLE,
     "unavailable",
@@ -127,10 +135,15 @@ def documented_responses(
 ) -> dict[int | str, dict[str, Any]]:
     """
     The error responses of an endpoint, for the OpenAPI schema: those of the
-    errors of its use case, those of request_errors and UNAVAILABLE, grouped
-    by status code.
+    errors of its use case, those of request_errors, TOO_MANY_REQUESTS and
+    UNAVAILABLE, grouped by status code.
     """
-    errors = [*map(response_of, error_types), *request_errors, UNAVAILABLE]
+    errors = [
+        *map(response_of, error_types),
+        *request_errors,
+        TOO_MANY_REQUESTS,
+        UNAVAILABLE,
+    ]
     by_status: dict[int, dict[str, ErrorResponse]] = {}
     for error in errors:
         by_status.setdefault(error.status_code, {})[error.code] = error
@@ -165,6 +178,16 @@ async def http_error_handler(request: Request, error: HTTPException) -> JSONResp
         status, status.name.lower(), f"{status.phrase}.", headers=error.headers or {}
     )
     return _json_response(response)
+
+
+async def too_many_requests_handler(
+    request: Request, error: TooManyRequestsError
+) -> JSONResponse:
+    # Retry-After takes whole seconds, so a fraction of a second rounds up.
+    seconds = math.ceil(error.retry_after / timedelta(seconds=1))
+    return _json_response(
+        replace(TOO_MANY_REQUESTS, headers={"Retry-After": str(seconds)})
+    )
 
 
 async def unavailable_handler(

@@ -12,6 +12,8 @@ from shortener.bootstrap.settings import (
     DEFAULT_DATABASE_STATEMENT_TIMEOUT,
     DEFAULT_JWT_JWKS_TIMEOUT,
     DEFAULT_JWT_LEEWAY,
+    DEFAULT_RATE_LIMIT_REQUESTS,
+    DEFAULT_RATE_LIMIT_WINDOW,
     POSTGRES_MAX_TIMEOUT,
     AccessTokenSettings,
     DatabaseSettings,
@@ -63,8 +65,16 @@ NUMBERS: dict[str, tuple[Callable[[Settings], object], object]] = {
         lambda settings: settings.access_tokens.jwks_timeout,
         DEFAULT_JWT_JWKS_TIMEOUT,
     ),
+    "RATE_LIMIT_REQUESTS": (
+        lambda settings: settings.rate_limit.requests,
+        DEFAULT_RATE_LIMIT_REQUESTS,
+    ),
+    "RATE_LIMIT_WINDOW": (
+        lambda settings: settings.rate_limit.window,
+        DEFAULT_RATE_LIMIT_WINDOW,
+    ),
 }
-WHOLE_NUMBERS = ["DATABASE_POOL_SIZE", "DATABASE_MAX_OVERFLOW"]
+WHOLE_NUMBERS = ["DATABASE_POOL_SIZE", "DATABASE_MAX_OVERFLOW", "RATE_LIMIT_REQUESTS"]
 POSTGRES_TIMEOUTS = ["DATABASE_LOCK_TIMEOUT", "DATABASE_STATEMENT_TIMEOUT"]
 TIMEOUTS = [
     "DATABASE_POOL_TIMEOUT",
@@ -72,7 +82,7 @@ TIMEOUTS = [
     *POSTGRES_TIMEOUTS,
     "JWT_JWKS_TIMEOUT",
 ]
-SECONDS = [*TIMEOUTS, "JWT_LEEWAY"]
+SECONDS = [*TIMEOUTS, "JWT_LEEWAY", "RATE_LIMIT_WINDOW"]
 # The variables that can be 0, and what 0 is read as.
 ZEROS = {"DATABASE_MAX_OVERFLOW": 0, "JWT_LEEWAY": timedelta(0)}
 
@@ -211,7 +221,10 @@ def test_from_environment_reads_0_for_a_variable_that_can_be_0(name: str):
     assert read(Settings.from_environment(environment(**{name: "0"}))) == ZEROS[name]
 
 
-@pytest.mark.parametrize("name", [*TIMEOUTS, "DATABASE_POOL_SIZE"])
+@pytest.mark.parametrize(
+    "name",
+    [*TIMEOUTS, "DATABASE_POOL_SIZE", "RATE_LIMIT_REQUESTS", "RATE_LIMIT_WINDOW"],
+)
 def test_from_environment_raises_naming_a_variable_that_cant_be_0(name: str):
     with pytest.raises(SettingsError) as raised:
         Settings.from_environment(environment(**{name: "0"}))

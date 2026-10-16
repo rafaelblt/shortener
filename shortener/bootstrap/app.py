@@ -18,6 +18,7 @@ from shortener.bootstrap.use_cases import UseCases
 from shortener.infra.clock import UTCClock
 from shortener.infra.db.shorturl_repository import SQLAlchemyShortURLReader
 from shortener.infra.db.unit_of_work import SQLAlchemyUnitOfWork
+from shortener.infra.in_memory_rate_limiter import InMemoryRateLimiter
 from shortener.infra.jwt_access_token_verifier import JWTAccessTokenVerifier
 
 
@@ -41,14 +42,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         yield
         await engine.dispose()
 
+    clock = UTCClock()
     use_cases = UseCases(
         uow=SQLAlchemyUnitOfWork(engine),
         shorturls=SQLAlchemyShortURLReader(engine),
-        clock=UTCClock(),
+        clock=clock,
     )
     return create_api(
         use_cases=use_cases,
         access_token_verifier=access_token_verifier(settings.access_tokens),
+        rate_limiter=InMemoryRateLimiter(
+            settings.rate_limit.requests, settings.rate_limit.window, clock
+        ),
         lifespan=lifespan,
     )
 

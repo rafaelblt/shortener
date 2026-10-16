@@ -39,7 +39,8 @@ shortener/
 ├── domain/      the shortener's rules
 ├── use_cases/   orchestrates the domain for each operation
 ├── api/         the entry point to the service: the HTTP API, with FastAPI
-├── infra/       implements the abstractions of the other layers: database, clock, access tokens
+├── infra/       implements the abstractions of the other layers: database, clock, access tokens,
+│                rate limit
 ├── bootstrap/   the settings, and the assembly of the layers into the application
 └── shared/      code any layer can use
 ```

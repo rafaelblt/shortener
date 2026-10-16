@@ -1,6 +1,6 @@
 # Infrastructure
 
-The infrastructure implements the abstractions the other layers define: those of the [use cases](use_cases.md#abstractions), such as storing short URLs, and those of the [API](api.md), such as verifying access tokens. It lives in `shortener/infra/`, and imports only from the use cases, the [domain](domain.md) and [`shortener/shared/`](shared.md). It doesn't read settings, and its implementations receive what they use, such as the engine of the database: [`bootstrap`](bootstrap.md) builds them, and gives them to the layers that use them.
+The infrastructure implements the abstractions the other layers define: those of the [use cases](use_cases.md#abstractions), such as storing short URLs, and those of the [API](api.md), such as verifying access tokens and limiting the requests. It lives in `shortener/infra/`, and imports only from the use cases, the [domain](domain.md) and [`shortener/shared/`](shared.md). It doesn't read settings, and its implementations receive what they use, such as the engine of the database: [`bootstrap`](bootstrap.md) builds them, and gives them to the layers that use them.
 
 This document describes the infrastructure as it is in the code. Verified bugs that aren't fixed yet are [issues](issues/README.md) labeled `infra`, linked from where this document describes the code they affect. Decisions still to be made are in [Open questions](#open-questions).
 
@@ -9,6 +9,7 @@ This document describes the infrastructure as it is in the code. Verified bugs t
 ```
 shortener/infra/
 ├── clock.py                       UTCClock
+├── in_memory_rate_limiter.py      InMemoryRateLimiter
 ├── jwt_access_token_verifier.py   JWTAccessTokenVerifier
 └── db/
     ├── tables.py                  metadata, the shorturls table and SLUG_UNIQUE_CONSTRAINT
@@ -27,6 +28,7 @@ alembic/                           the migrations of the database
 | [`ShortURLReader`](use_cases.md#reading-and-writing)       | `SQLAlchemyShortURLReader`     |
 | [`Clock`](use_cases.md#clock)                              | `UTCClock`                     |
 | [`AccessTokenVerifier`](api.md#authentication), of the API | `JWTAccessTokenVerifier`       |
+| [`RateLimiter`](api.md#rate-limit), of the API             | `InMemoryRateLimiter`          |
 
 ## Database
 
@@ -153,6 +155,20 @@ Otherwise, it returns `None`, whatever is wrong with the token. Without the leew
 With JWKS, PyJWT fetches the published keys when it needs them, in a thread, since it fetches with urllib, which blocks. It keeps them for 5 minutes, and, for a `kid` it doesn't have, fetches them again at most once every 30 seconds, so a token with an unknown `kid` doesn't make every request fetch them. `verify()` raises `UnavailableError`, from the error of PyJWT or of `json`, when the keys can't be fetched, because the URL can't be reached, takes longer than `timeout` or answers an HTTP error, and when the answer isn't a set of signing keys: it isn't JSON, isn't a JSON object, has no key PyJWT can use, or has no signing key with a `kid`. Neither is a problem of the token, and the service can't tell a wrong setting from a failure of the issuer. A token whose `kid` isn't in a set of signing keys is still not valid, and `verify()` returns `None` for it. PyJWT raises `PyJWKClientError` for both, so the verifier uses a subclass of `PyJWKClient` whose `get_signing_keys()`, which every fetch of the keys goes through, raises `UnavailableError` from its errors.
 
 PyJWT keeps a set of keys without a signing key for 5 minutes, as any other set, so `verify()` raises `UnavailableError` until then, without fetching the keys again. It doesn't keep the other answers, and fetches the keys again at the next `verify()`.
+
+## Rate limit
+
+`in_memory_rate_limiter.py`
+
+`InMemoryRateLimiter(requests, window, clock)` implements the [`RateLimiter`](api.md#rate-limit) of the API: it allows each key up to `requests` requests in each window of time of `window`, a `timedelta`, and counts them in the memory of the process, with the time of `clock`, a [`Clock`](use_cases.md#clock).
+
+`hit(key)` counts a request of the key, and returns `None` while the count of the key in the current window is up to `requests`, and, for each request after that, the time until the window ends.
+
+- There is one window for every key. It starts with the first request after the previous one ended, and lasts `window`. When it ends, the count of every key starts again from 0, so a key can make `requests` requests at the end of a window and `requests` more at the start of the next one: up to twice `requests` in a short time.
+- Only the counts of the current window are kept: those of a window are forgotten when the next one starts.
+- The counts are of the process. Each process of the service, such as each worker of uvicorn or each replica, counts apart, so a key can make up to `requests` requests in each window to each one, and a restart of the process forgets them.
+- `hit()` doesn't await anything, so in the event loop no other request counts while it runs.
+- With the [`UTCClock`](#clock) that [`bootstrap`](bootstrap.md#the-application) gives it, a change of the time of the system changes when the current window ends.
 
 ## Open questions
 

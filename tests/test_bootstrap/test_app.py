@@ -1,9 +1,11 @@
 import asyncio
+import httpx
 import jwt
 import pytest
 
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
+from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock
 
 from fastapi import FastAPI
@@ -14,8 +16,10 @@ from sqlalchemy.exc import TimeoutError as PoolTimeoutError
 from shortener.api.endpoints import ENDPOINTS
 from shortener.bootstrap.app import access_token_verifier, create_app, database_engine
 from shortener.bootstrap.settings import (
+    DEFAULT_RATE_LIMIT_WINDOW,
     AccessTokenSettings,
     DatabaseSettings,
+    RateLimitSettings,
     Settings,
     SettingsError,
 )
@@ -89,6 +93,23 @@ def test_create_app_raises_for_settings_that_cannot_verify_tokens():
 
     with pytest.raises(ValueError):
         create_app(settings)
+
+
+async def test_create_app_limits_the_requests_of_each_ip_address_by_the_settings():
+    settings = replace(
+        SETTINGS, rate_limit=RateLimitSettings(requests=1, window=timedelta(hours=1))
+    )
+    transport = httpx.ASGITransport(app=create_app(settings))
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        # Without an access token, the use case answers without the database.
+        within_the_limit = await client.get("/v1/shorturls")
+        over_the_limit = await client.get("/v1/shorturls")
+
+    assert within_the_limit.status_code == HTTPStatus.UNAUTHORIZED
+    assert over_the_limit.status_code == HTTPStatus.TOO_MANY_REQUESTS
+    # Longer than the default window, so the window is the one of the settings.
+    retry_after = int(over_the_limit.headers["Retry-After"])
+    assert retry_after > DEFAULT_RATE_LIMIT_WINDOW.total_seconds()
 
 
 async def test_the_application_disposes_its_engine_when_it_stops(

@@ -8,7 +8,8 @@ This document describes `bootstrap` as it is in the code. Verified bugs that are
 
 ```
 shortener/bootstrap/
-├── settings.py    Settings, DatabaseSettings, AccessTokenSettings and SettingsError
+├── settings.py    Settings, DatabaseSettings, AccessTokenSettings, RateLimitSettings and
+│                  SettingsError
 ├── use_cases.py   UseCases
 └── app.py         create_app() and access_token_verifier()
 ```
@@ -40,11 +41,13 @@ And these optional ones, of numbers, which have a default:
 | `DATABASE_STATEMENT_TIMEOUT` | 30      | The most a statement runs, in seconds: more than 0, up to 2147483.647                                                                                                                                    |
 | `JWT_LEEWAY`                 | 60      | The difference allowed between the clock of the issuer of the tokens and the one of the service, when checking the times of a token, in seconds: 0 or more (see [Access tokens](infra.md#access-tokens)) |
 | `JWT_JWKS_TIMEOUT`           | 5       | The most the service waits for each step of fetching the keys from `JWT_JWKS_URL`, in seconds: more than 0. Only with `JWT_JWKS_URL` (see [Access tokens](infra.md#access-tokens))                       |
+| `RATE_LIMIT_REQUESTS`        | 60      | The requests each IP address can make in each window of `RATE_LIMIT_WINDOW`: 1 or more (see [Rate limit](api.md#rate-limit))                                                                             |
+| `RATE_LIMIT_WINDOW`          | 60      | The window of time of `RATE_LIMIT_REQUESTS`, in seconds: more than 0 (see [Rate limit](infra.md#rate-limit))                                                                                             |
 
 - A value is stripped of spaces, and an empty one is the same as a variable that isn't set. In `JWT_ALGORITHMS`, an empty item between commas is left out.
 - A number of seconds may have decimals, such as `0.5`, and the other numbers are whole.
 - It raises `SettingsError` when the variables don't make valid settings, with a message that names every problem: a required variable that is missing, a `DATABASE_URL` that isn't a URL of `postgresql+asyncpg`, both or neither of `JWT_KEY` and `JWT_JWKS_URL`, `JWT_JWKS_TIMEOUT` with `JWT_KEY`, and an optional variable that isn't a number, or is out of the range of its table.
-- Otherwise, it returns a `Settings`, with the settings of the database in a `DatabaseSettings`, whose `url` is `DATABASE_URL`, `pool_size` and `max_overflow`, as `int`s, and `pool_timeout`, `connect_timeout`, `lock_timeout` and `statement_timeout`, as `timedelta`s, and the settings of the access tokens in an `AccessTokenSettings`: `algorithms`, as a tuple, `issuer`, `audience`, `key` and `jwks_url`, of which exactly one isn't `None`, and `leeway` and `jwks_timeout`, as `timedelta`s. An optional variable that isn't set gets its default, a `DEFAULT_` constant of `settings.py`, which is also the default of its field, so settings built in code can leave it out.
+- Otherwise, it returns a `Settings`, with the settings of the database in a `DatabaseSettings`, whose `url` is `DATABASE_URL`, `pool_size` and `max_overflow`, as `int`s, and `pool_timeout`, `connect_timeout`, `lock_timeout` and `statement_timeout`, as `timedelta`s, the settings of the access tokens in an `AccessTokenSettings`: `algorithms`, as a tuple, `issuer`, `audience`, `key` and `jwks_url`, of which exactly one isn't `None`, and `leeway` and `jwks_timeout`, as `timedelta`s, and the settings of the rate limit in a `RateLimitSettings`: `requests`, as an `int`, and `window`, as a `timedelta`. An optional variable that isn't set gets its default, a `DEFAULT_` constant of `settings.py`, which is also the default of its field, so settings built in code can leave it out. The `rate_limit` of `Settings` is a `RateLimitSettings` with the defaults, so they can leave it out too.
 - `DATABASE_POOL_SIZE`, `DATABASE_MAX_OVERFLOW` and `DATABASE_POOL_TIMEOUT` have the defaults of SQLAlchemy, and `DATABASE_CONNECT_TIMEOUT` is 10 seconds, instead of the 60 of asyncpg. `DATABASE_LOCK_TIMEOUT` and `DATABASE_STATEMENT_TIMEOUT` have a default because Postgres has none: without them, a statement waits for a lock, and runs, as long as it takes. 2147483.647 seconds is the most Postgres takes for them, which it keeps as a number of milliseconds in an `int`.
 - `JWT_LEEWAY` is a setting because the right value depends on the clock of the issuer of each environment.
 - `JWT_JWKS_TIMEOUT` is 5 seconds by default, instead of the 30 of PyJWT, since each fetch of the keys holds a thread of the default pool of asyncio while it waits. Setting it with `JWT_KEY` is an error, since it is more likely a mistake of whoever set the variables.
@@ -76,7 +79,8 @@ The API builds the use case of each request, with the user of the request. Build
 2. It creates the `AsyncEngine` of SQLAlchemy with `database_engine()`.
 3. It builds `UseCases` with `SQLAlchemyUnitOfWork` and `SQLAlchemyShortURLReader`, on that engine, and `UTCClock`.
 4. It builds the verifier of access tokens with `access_token_verifier()`.
-5. It returns the application of [`create_app()`](api.md#the-application) of the API, with a lifespan that disposes the engine when the application stops.
+5. It builds an `InMemoryRateLimiter` with the `requests` and the `window` of the settings of the rate limit, and the same `UTCClock`.
+6. It returns the application of [`create_app()`](api.md#the-application) of the API, with a lifespan that disposes the engine when the application stops.
 
 It raises `SettingsError` for the environment variables, `ValueError` when the settings of the access tokens can't verify tokens, and `LookupError` from the API.
 
@@ -100,6 +104,8 @@ poetry run uvicorn shortener.bootstrap.app:create_app --factory --host 0.0.0.0 -
 ```
 
 `poetry run task run` runs it with `--reload`, for development. Both need the [environment variables](#settings).
+
+Uvicorn gives the API the address of the client of each request, which the [rate limit](api.md#rate-limit) counts. Behind a proxy, that is the address of the proxy, unless uvicorn trusts it: then it takes the address of the client from the `X-Forwarded-For` header the proxy sends. Uvicorn trusts the addresses of its `--forwarded-allow-ips` option, or of the `FORWARDED_ALLOW_IPS` environment variable, which are only `127.0.0.1` when neither is set. So behind a proxy at another address, set one of them to the address of the proxy, or every request through it counts under that address. Trusting a client that can reach the service without the proxy would let it send any address in `X-Forwarded-For`.
 
 ## Open questions
 

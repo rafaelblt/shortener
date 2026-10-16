@@ -66,11 +66,14 @@ class Unanswered:
 
 @pytest.fixture
 def app(
-    use_cases: UseCaseDoubles, access_token_verifier: NonCallableMagicMock
+    use_cases: UseCaseDoubles,
+    access_token_verifier: NonCallableMagicMock,
+    rate_limiter: NonCallableMagicMock,
 ) -> FastAPI:
     return create_app(
         use_cases=use_cases,
         access_token_verifier=access_token_verifier,
+        rate_limiter=rate_limiter,
         endpoints=[
             Endpoint("PUT", "/echoes/{id}", Echo),
             Endpoint("GET", "/echoes/{id}", Echo, name="EchoFromTheQuery"),
@@ -238,6 +241,7 @@ def test_documents_the_ok_of_the_use_case_and_its_errors_by_status(app: FastAPI)
     for status in [
         HTTPStatus.BAD_REQUEST,
         HTTPStatus.UNPROCESSABLE_ENTITY,
+        HTTPStatus.TOO_MANY_REQUESTS,
         HTTPStatus.SERVICE_UNAVAILABLE,
     ]:
         assert str(status.value) in responses
@@ -251,12 +255,15 @@ def test_documents_no_body_errors_for_an_endpoint_without_a_body(app: FastAPI):
 
 
 def test_creating_the_app_raises_for_an_error_of_a_use_case_the_api_does_not_answer(
-    use_cases: UseCaseDoubles, access_token_verifier: NonCallableMagicMock
+    use_cases: UseCaseDoubles,
+    access_token_verifier: NonCallableMagicMock,
+    rate_limiter: NonCallableMagicMock,
 ):
     with pytest.raises(LookupError) as raised:
         create_app(
             use_cases=use_cases,
             access_token_verifier=access_token_verifier,
+            rate_limiter=rate_limiter,
             endpoints=[Endpoint("GET", "/unanswered", Unanswered)],
         )
     assert_mentions(str(raised.value), UnansweredError.__name__)

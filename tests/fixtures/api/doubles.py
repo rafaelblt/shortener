@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import NonCallableMagicMock, create_autospec
 
 from shortener.api.authentication import AccessTokenVerifier
+from shortener.api.rate_limit import RateLimiter
 from shortener.domain import UserID
 from shortener.use_cases.current_user import CurrentUser
 
@@ -44,3 +45,11 @@ def access_token_verifier(owner_id: UserID) -> NonCallableMagicMock:
     verifier = create_autospec(AccessTokenVerifier, instance=True)
     verifier.verify.return_value = owner_id
     return verifier
+
+
+@pytest.fixture
+def rate_limiter() -> NonCallableMagicMock:
+    """Lets every request through."""
+    rate_limiter = create_autospec(RateLimiter, instance=True)
+    rate_limiter.hit.return_value = None
+    return rate_limiter

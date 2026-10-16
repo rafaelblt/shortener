@@ -12,9 +12,15 @@ from tests.fixtures.api.doubles import UseCaseDoubles
 
 @pytest.fixture
 def app(
-    use_cases: UseCaseDoubles, access_token_verifier: NonCallableMagicMock
+    use_cases: UseCaseDoubles,
+    access_token_verifier: NonCallableMagicMock,
+    rate_limiter: NonCallableMagicMock,
 ) -> FastAPI:
-    return create_app(use_cases=use_cases, access_token_verifier=access_token_verifier)
+    return create_app(
+        use_cases=use_cases,
+        access_token_verifier=access_token_verifier,
+        rate_limiter=rate_limiter,
+    )
 
 
 @pytest.fixture

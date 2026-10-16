@@ -2,7 +2,7 @@ from collections.abc import Callable, Sequence
 from contextlib import AbstractAsyncContextManager
 from typing import Final
 
-from fastapi import APIRouter, FastAPI
+from fastapi import APIRouter, Depends, FastAPI
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException
 
@@ -13,8 +13,10 @@ from shortener.api.errors import (
     http_error_handler,
     internal_error_handler,
     request_error_handler,
+    too_many_requests_handler,
     unavailable_handler,
 )
+from shortener.api.rate_limit import RateLimiter, TooManyRequestsError, limit_by_ip
 from shortener.api.use_case_factory import UseCaseFactory
 from shortener.use_cases.unavailable_error import UnavailableError
 
@@ -27,6 +29,7 @@ type Lifespan = Callable[[FastAPI], AbstractAsyncContextManager[None]]
 def create_app(
     use_cases: UseCaseFactory,
     access_token_verifier: AccessTokenVerifier,
+    rate_limiter: RateLimiter,
     endpoints: Sequence[Endpoint] = ENDPOINTS,
     lifespan: Lifespan | None = None,
 ) -> FastAPI:
@@ -36,7 +39,7 @@ def create_app(
             doesn't answer.
     """
     app = FastAPI(title="Shortener", lifespan=lifespan)
-    router = APIRouter(prefix=PREFIX)
+    router = APIRouter(prefix=PREFIX, dependencies=[Depends(limit_by_ip(rate_limiter))])
     for endpoint in endpoints:
         add_route(router, endpoint, use_cases, access_token_verifier)
     app.include_router(router)
@@ -46,6 +49,9 @@ def create_app(
         RequestValidationError, request_error_handler  # type: ignore
     )
     app.add_exception_handler(HTTPException, http_error_handler)  # type: ignore
+    app.add_exception_handler(
+        TooManyRequestsError, too_many_requests_handler  # type: ignore
+    )
     app.add_exception_handler(UnavailableError, unavailable_handler)  # type: ignore
     app.add_exception_handler(Exception, internal_error_handler)
     return app
