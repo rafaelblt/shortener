@@ -4,7 +4,7 @@ import signal
 
 import aio_pika
 
-from shortener.bootstrap.app import database_engine
+from shortener.bootstrap.database import database_engine
 from shortener.bootstrap.settings import ConsumerSettings
 from shortener.consumer.consumer import consume
 from shortener.consumer.user_deleted_handler import UserDeletedHandler

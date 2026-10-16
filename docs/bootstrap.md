@@ -11,7 +11,8 @@ shortener/bootstrap/
 ├── settings.py    Settings, ConsumerSettings, DatabaseSettings, AccessTokenSettings,
 │                  RateLimitSettings and SettingsError
 ├── use_cases.py   UseCases
-├── app.py         create_app(), database_engine() and access_token_verifier()
+├── database.py    database_engine()
+├── app.py         create_app() and access_token_verifier()
 └── consumer.py    run_consumer() and main()
 ```
 
@@ -87,13 +88,19 @@ The API builds the use case of each request, with the user of the request. Build
 `create_app(settings=None)` returns the application:
 
 1. It reads the settings from the environment variables when `settings` is `None`.
-2. It creates the `AsyncEngine` of SQLAlchemy with `database_engine()`.
+2. It creates the `AsyncEngine` of SQLAlchemy with [`database_engine()`](#the-database).
 3. It builds `UseCases` with `SQLAlchemyUnitOfWork` and `SQLAlchemyShortURLReader`, on that engine, and `UTCClock`.
 4. It builds the verifier of access tokens with `access_token_verifier()`.
 5. It builds an `InMemoryRateLimiter` with the `requests` and the `window` of the settings of the rate limit, and the same `UTCClock`.
 6. It returns the application of [`create_app()`](api.md#the-application) of the API, with `SQLAlchemyHealthCheck`, on that engine, as its [health check](api.md#health-check), and a lifespan that disposes the engine when the application stops.
 
 It raises `SettingsError` for the environment variables, `ValueError` when the settings of the access tokens can't verify tokens, and `LookupError` from the API.
+
+`access_token_verifier(settings)` returns a `JWTAccessTokenVerifier` with the algorithms, the issuer, the audience and the leeway of the settings: `with_jwks()`, with the `jwks_timeout`, when `jwks_url` isn't `None`, and `with_key()` otherwise. It raises `SettingsError` when both are `None`, which only settings built in code, and not by `from_environment()`, can be.
+
+## The database
+
+`database.py`
 
 `database_engine(settings)` returns the `AsyncEngine` of SQLAlchemy for the `url` of the settings, with `pool_pre_ping`: the engine only connects when it is first used, and checks a connection of the pool before using it, so it replaces the ones the server closed, such as after a restart. With the other settings:
 
@@ -103,7 +110,7 @@ It raises `SettingsError` for the environment variables, `ValueError` when the s
 
 The implementations of the database raise `UnavailableError` from these timeouts, which are transient (see [Failures of the database](infra.md#failures-of-the-database)).
 
-`access_token_verifier(settings)` returns a `JWTAccessTokenVerifier` with the algorithms, the issuer, the audience and the leeway of the settings: `with_jwks()`, with the `jwks_timeout`, when `jwks_url` isn't `None`, and `with_key()` otherwise. It raises `SettingsError` when both are `None`, which only settings built in code, and not by `from_environment()`, can be.
+The API and the consumer create their engines with it. It is a module of its own so that the process of the consumer doesn't load the API, which import-linter checks.
 
 ## The consumer
 
@@ -112,7 +119,7 @@ The implementations of the database raise `UnavailableError` from these timeouts
 `run_consumer(stop, settings=None)` runs the [consumer](consumer.md) until `stop`, an `asyncio.Event`, is set:
 
 1. It reads the settings from the environment variables when `settings` is `None`.
-2. It creates the engine of the database with [`database_engine()`](#the-application), and builds a [`UserDeletedHandler`](consumer.md#handling) with `DeleteShortURLsOfUser`, on a `SQLAlchemyUnitOfWork` on that engine.
+2. It creates the engine of the database with [`database_engine()`](#the-database), and builds a [`UserDeletedHandler`](consumer.md#handling) with `DeleteShortURLsOfUser`, on a `SQLAlchemyUnitOfWork` on that engine.
 3. It connects to `RABBITMQ_URL` with `connect_robust()` of aio-pika, and starts consuming with [`consume()`](consumer.md#consuming).
 4. When `stop` is set, it closes the connection, and returns. RabbitMQ puts a message that wasn't acknowledged by then back in the queue, so it is handled again.
 

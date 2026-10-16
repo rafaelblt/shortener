@@ -44,7 +44,7 @@ def stopped() -> asyncio.Event:
 def engine_double(monkeypatch: pytest.MonkeyPatch) -> Mock:
     engine = Mock(dispose=AsyncMock())
     monkeypatch.setattr(
-        "shortener.bootstrap.app.create_async_engine", Mock(return_value=engine)
+        "shortener.bootstrap.database.create_async_engine", Mock(return_value=engine)
     )
     return engine
 

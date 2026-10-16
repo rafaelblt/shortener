@@ -91,7 +91,7 @@ A row becomes a `ShortURL` with `ShortURL.restore()`, and its slug and target UR
 
 The two differ in how they read:
 
-- **The repository of a transaction** reads with `SELECT ... FOR UPDATE`, which keeps the [contract of concurrency](use_cases.md#concurrency): the rows it reads stay locked until the transaction ends, and another transaction that reads them through its own repository waits until then. When the first one commits, Postgres reads the rows again for the one that waited, which gets what the first one wrote: the new values, `None` when it removed the short URL, and, reading by slug, `None` when it changed the slug. When the first one rolls back, the one that waited reads the rows as they were. `list_by_owner()` locks every row it returns. A read waits for the lock up to the `lock_timeout` of the connection, which [`bootstrap`](bootstrap.md#the-application) sets, and then raises `UnavailableError`, since Postgres answers `55P03`, which is [transient](#failures-of-the-database).
+- **The repository of a transaction** reads with `SELECT ... FOR UPDATE`, which keeps the [contract of concurrency](use_cases.md#concurrency): the rows it reads stay locked until the transaction ends, and another transaction that reads them through its own repository waits until then. When the first one commits, Postgres reads the rows again for the one that waited, which gets what the first one wrote: the new values, `None` when it removed the short URL, and, reading by slug, `None` when it changed the slug. When the first one rolls back, the one that waited reads the rows as they were. `list_by_owner()` locks every row it returns. A read waits for the lock up to the `lock_timeout` of the connection, which [`bootstrap`](bootstrap.md#the-database) sets, and then raises `UnavailableError`, since Postgres answers `55P03`, which is [transient](#failures-of-the-database).
 - **The reader** runs each read in a connection of its own, without `FOR UPDATE`: it doesn't wait for locks, and reads only what was committed.
 
 The repository writes with these statements:
@@ -115,7 +115,7 @@ The repository writes with these statements:
 `SQLAlchemyHealthCheck(engine)` implements the [`HealthCheck`](api.md#health-check) of the API. `check()` takes a connection from the pool of the engine, runs `SELECT 1` on it, and returns it to the pool.
 
 - It raises `UnavailableError` when the database can't answer for a [transient](#failures-of-the-database) failure, such as a server that can't be reached, and the other errors as they are, such as the `InvalidCatalogNameError` of asyncpg, when connecting to a database that doesn't exist.
-- It waits as the reads of the short URLs do: up to the `pool_timeout` for a connection, when they are all in use, and up to the `connect_timeout` to connect (see [The application](bootstrap.md#the-application)).
+- It waits as the reads of the short URLs do: up to the `pool_timeout` for a connection, when they are all in use, and up to the `connect_timeout` to connect (see [The database](bootstrap.md#the-database)).
 
 ### Failures of the database
 
@@ -134,7 +134,7 @@ The implementations of the database raise [`UnavailableError`](use_cases.md#unav
 
 Errors that trying again won't fix are raised as they are, such as `42P01` (a table that doesn't exist), `28P01` (a wrong password) or `3D000` (a database that doesn't exist).
 
-asyncpg raises `InternalClientError` for every broken state of its protocol, such as when the server ended the session of a transaction, and asyncpg hasn't noticed yet that the connection was closed. It can't be told apart from the other broken states, by its type or by whether the connection is closed, and its message changes with the versions of asyncpg, so every `InternalClientError` is transient. No code of the project raises it, and the connection can't be used after it either way. The cost is that a bug of asyncpg is answered as unavailable too, still with its cause. SQLAlchemy doesn't invalidate the connection, which goes back to the pool, and the `pool_pre_ping` of the engine replaces it the next time it is taken (see [The application](bootstrap.md#the-application)).
+asyncpg raises `InternalClientError` for every broken state of its protocol, such as when the server ended the session of a transaction, and asyncpg hasn't noticed yet that the connection was closed. It can't be told apart from the other broken states, by its type or by whether the connection is closed, and its message changes with the versions of asyncpg, so every `InternalClientError` is transient. No code of the project raises it, and the connection can't be used after it either way. The cost is that a bug of asyncpg is answered as unavailable too, still with its cause. SQLAlchemy doesn't invalidate the connection, which goes back to the pool, and the `pool_pre_ping` of the engine replaces it the next time it is taken (see [The database](bootstrap.md#the-database)).
 
 A connection lost during `commit()` is transient too, even when Postgres committed the transaction before the connection was lost, so trying again can run a use case twice ([issue 0018](issues/0018-a-commit-whose-result-is-unknown-is-answered-as-unavailable.md)).
 

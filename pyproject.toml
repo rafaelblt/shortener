@@ -171,6 +171,12 @@ source_modules = ["shortener.api", "shortener.consumer"]
 forbidden_modules = ["asyncpg", "jwt", "sqlalchemy"]
 
 [[tool.importlinter.contracts]]
+name = "The process of the consumer doesn't load the API"
+type = "forbidden"
+source_modules = ["shortener.bootstrap.consumer"]
+forbidden_modules = ["shortener.api", "fastapi"]
+
+[[tool.importlinter.contracts]]
 name = "The tests of shared import no layer"
 type = "forbidden"
 source_modules = ["tests.test_shared", "tests.fixtures.shared"]
