@@ -79,7 +79,7 @@ The service doesn't issue access tokens, so the `token` service issues one the A
 
 ```bash
 TOKEN=$(docker compose run --rm -q token)
-curl -H "Authorization: Bearer $TOKEN" http://localhost:8000/v1/shorturls
+curl -H "Authorization: Bearer $TOKEN" http://localhost:8000/api/v1/shorturls
 ```
 
 The issuer of the events doesn't exist yet either, so the `user-deleted` service publishes the [event](docs/service/events.md#the-message) of the deletion of the user of the UUID it receives, or of `00000000-0000-4000-8000-000000000001` without one, and the consumer deletes the short URLs of that user:

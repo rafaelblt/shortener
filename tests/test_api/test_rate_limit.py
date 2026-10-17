@@ -17,7 +17,7 @@ from tests.fixtures.api.doubles import UseCaseDoubles
 
 ADDRESS = ("203.0.113.7", 50000)
 ID = "0199b2c4-7a3e-7c1a-9b5e-3f2d4c6b8a20"
-RESOLVE_URL = "/v1/slugs/my-slug"
+RESOLVE_URL = "/api/v1/slugs/my-slug"
 
 
 def client_from(app: FastAPI, address: tuple[str, int] | None) -> httpx.AsyncClient:
@@ -100,7 +100,7 @@ async def test_answers_when_to_retry_in_whole_seconds_rounded_up(
 async def test_limits_every_endpoint(
     client: httpx.AsyncClient, over_the_limit: NonCallableMagicMock, endpoint: Endpoint
 ):
-    url = "/v1" + endpoint.path.format(slug="my-slug", id=ID)
+    url = "/api/v1" + endpoint.path.format(slug="my-slug", id=ID)
 
     response = await client.request(endpoint.method, url)
 
@@ -110,14 +110,14 @@ async def test_limits_every_endpoint(
 async def test_limits_a_request_whose_values_cannot_be_read(
     client: httpx.AsyncClient, over_the_limit: NonCallableMagicMock
 ):
-    response = await client.get("/v1/shorturls/not-a-uuid")
+    response = await client.get("/api/v1/shorturls/not-a-uuid")
     assert response.status_code == HTTPStatus.TOO_MANY_REQUESTS
 
 
 async def test_does_not_limit_the_health_check(
     client: httpx.AsyncClient, over_the_limit: NonCallableMagicMock
 ):
-    response = await client.get("/v1/health")
+    response = await client.get("/api/v1/health")
 
     assert response.status_code == HTTPStatus.NO_CONTENT
     over_the_limit.hit.assert_not_called()

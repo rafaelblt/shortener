@@ -1,4 +1,4 @@
 from typing import Final
 
 
-PREFIX: Final = "/v1"
+PREFIX: Final = "/api/v1"

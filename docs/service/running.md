@@ -25,7 +25,7 @@ To try the service locally, [Docker Compose](../../README.md#running-with-docker
 
 ## Health checks
 
-[`GET /v1/health`](api.md#health-check) answers `204` when the API can answer, which it checks by asking the database. So, as a liveness probe, one that restarts the service when it fails, a failure of the database restarts the API too. The consumer has no health check.
+[`GET /api/v1/health`](api.md#health-check) answers `204` when the API can answer, which it checks by asking the database. So, as a liveness probe, one that restarts the service when it fails, a failure of the database restarts the API too. The consumer has no health check.
 
 ## Behind a proxy
 
@@ -35,7 +35,7 @@ The [rate limit](api.md#rate-limit) counts the requests of each IP address under
 - Trusting a client that can reach the service without the proxy would let it send any address in `X-Forwarded-For`.
 - A request without the address of its client, which uvicorn may give for a connection that isn't TCP, such as one through a Unix socket, has no rate limit.
 
-A domain of short links, where `/{slug}` redirects, is a proxy in front of the service, which sends `/{slug}` to `/v1/slugs/{slug}/redirect`. Every route of the API is under `/v1`, and slugs can't have dots, so a path such as `/favicon.ico` is never the slug of a new short URL.
+A domain of short links, where `/{slug}` redirects, is a proxy in front of the service, which sends `/{slug}` to `/api/v1/slugs/{slug}/redirect`. Every route of the API is under `/api/v1`, and slugs can't have dots, so a path such as `/favicon.ico` is never the slug of a new short URL.
 
 ## Logs
 

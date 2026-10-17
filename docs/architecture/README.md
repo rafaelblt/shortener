@@ -44,7 +44,7 @@ What a layer needs from outside, it defines as an abstraction, a `Protocol`, whi
 
 ## A request
 
-How the API answers `POST /v1/shorturls`, as every endpoint does:
+How the API answers `POST /api/v1/shorturls`, as every endpoint does:
 
 1. FastAPI parses the JSON of the body, counts the request in the [rate limit](api.md#rate-limit), and reads the values of the request into the parameters of the endpoint, which [`add_route()`](api.md#how-an-endpoint-works) built from the signature of `CreateShortURL.execute()`.
 2. The endpoint builds the [current user](api.md#authentication) of the request from its access token, and asks the [factory of use cases](api.md#use-cases), which `bootstrap` implements, for `CreateShortURL`, built with it.

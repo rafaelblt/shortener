@@ -4,24 +4,24 @@ What the HTTP API offers and how it behaves, seen by whoever calls it. The exact
 
 ## Overview
 
-Every route is under `/v1`, and the bodies of its requests and responses are JSON.
+Every route is under `/api/v1`, and the bodies of its requests and responses are JSON.
 
-| Method and path                   | What it does                                                                   | Access token |
-| --------------------------------- | ------------------------------------------------------------------------------ | ------------ |
-| `GET /v1/slugs/{slug}`            | [Answers the target URL of a slug](#resolve-a-slug)                            | No           |
-| `GET /v1/slugs/{slug}/redirect`   | [Redirects to the target URL of a slug](#redirect-to-the-target-url-of-a-slug) | No           |
-| `POST /v1/shorturls`              | [Creates a short URL](#create-a-short-url)                                     | Yes          |
-| `GET /v1/shorturls`               | [Lists the short URLs of the user](#list-the-short-urls-of-the-user)           | Yes          |
-| `GET /v1/shorturls/{id}`          | [Answers a short URL](#get-a-short-url)                                        | Yes          |
-| `PATCH /v1/shorturls/{id}`        | [Changes the target URL or the slug](#update-a-short-url)                      | Yes          |
-| `POST /v1/shorturls/{id}/enable`  | [Activates a short URL](#enable-and-disable-a-short-url)                       | Yes          |
-| `POST /v1/shorturls/{id}/disable` | [Deactivates a short URL](#enable-and-disable-a-short-url)                     | Yes          |
-| `DELETE /v1/shorturls/{id}`       | [Deletes a short URL](#delete-a-short-url)                                     | Yes          |
-| `GET /v1/health`                  | [Tells whether the service can answer](#health-check)                          | No           |
+| Method and path                       | What it does                                                                   | Access token |
+| ------------------------------------- | ------------------------------------------------------------------------------ | ------------ |
+| `GET /api/v1/slugs/{slug}`            | [Answers the target URL of a slug](#resolve-a-slug)                            | No           |
+| `GET /api/v1/slugs/{slug}/redirect`   | [Redirects to the target URL of a slug](#redirect-to-the-target-url-of-a-slug) | No           |
+| `POST /api/v1/shorturls`              | [Creates a short URL](#create-a-short-url)                                     | Yes          |
+| `GET /api/v1/shorturls`               | [Lists the short URLs of the user](#list-the-short-urls-of-the-user)           | Yes          |
+| `GET /api/v1/shorturls/{id}`          | [Answers a short URL](#get-a-short-url)                                        | Yes          |
+| `PATCH /api/v1/shorturls/{id}`        | [Changes the target URL or the slug](#update-a-short-url)                      | Yes          |
+| `POST /api/v1/shorturls/{id}/enable`  | [Activates a short URL](#enable-and-disable-a-short-url)                       | Yes          |
+| `POST /api/v1/shorturls/{id}/disable` | [Deactivates a short URL](#enable-and-disable-a-short-url)                     | Yes          |
+| `DELETE /api/v1/shorturls/{id}`       | [Deletes a short URL](#delete-a-short-url)                                     | Yes          |
+| `GET /api/v1/health`                  | [Tells whether the service can answer](#health-check)                          | No           |
 
 The routes of a slug need no access token, since anyone can resolve a slug, and the routes of the short URLs are for their owners. The shortener serves other systems, which decide how to resolve a slug: one that wants to decide what to do with the target URL, such as showing a page before it redirects, asks for it, and one that wants the redirect done asks for the redirect.
 
-Since every route is under `/v1`, a slug never shares a path with a route, and no slug has to be reserved. A domain of short links, where `/{slug}` redirects, is a proxy in front of the service (see [Running](running.md#behind-a-proxy)).
+Since every route is under `/api/v1`, a slug never shares a path with a route, and no slug has to be reserved. A domain of short links, where `/{slug}` redirects, is a proxy in front of the service (see [Running](running.md#behind-a-proxy)).
 
 ## Access tokens
 
@@ -100,7 +100,7 @@ The checks of a request run in this order, and the first one that fails answers:
 
 ### Resolve a slug
 
-`GET /v1/slugs/{slug}` answers `200` with the target URL, and [counts the resolution](#status-and-resolutions):
+`GET /api/v1/slugs/{slug}` answers `200` with the target URL, and [counts the resolution](#status-and-resolutions):
 
 ```json
 {"target_url": "https://example.com/a/long/path"}
@@ -115,19 +115,19 @@ Any slug is looked up, even one that breaks the current rules, so a slug created
 
 ### Redirect to the target URL of a slug
 
-`GET /v1/slugs/{slug}/redirect` answers `307 Temporary Redirect` to the target URL, in the `Location` header, and counts the resolution. It answers the same errors as [Resolve a slug](#resolve-a-slug), as JSON.
+`GET /api/v1/slugs/{slug}/redirect` answers `307 Temporary Redirect` to the target URL, in the `Location` header, and counts the resolution. It answers the same errors as [Resolve a slug](#resolve-a-slug), as JSON.
 
 The redirect is temporary, so the clients don't keep it: each visit asks the service again, which counts the resolution, and follows the changes of the target URL and the deactivations.
 
 ### Create a short URL
 
-`POST /v1/shorturls` creates a short URL owned by the user of the access token:
+`POST /api/v1/shorturls` creates a short URL owned by the user of the access token:
 
 ```json
 {"target_url": "https://example.com/a/long/path", "slug": "my-slug"}
 ```
 
-`slug` is optional: without it, or with `null`, the service [generates one](#slugs). It answers `201`, with the [short URL](#short-urls), and its path, `/v1/shorturls/{id}`, in the `Location` header.
+`slug` is optional: without it, or with `null`, the service [generates one](#slugs). It answers `201`, with the [short URL](#short-urls), and its path, `/api/v1/shorturls/{id}`, in the `Location` header.
 
 | Status | `code`              | When                                                                                                                           |
 | ------ | ------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
@@ -137,7 +137,7 @@ The redirect is temporary, so the clients don't keep it: each visit asks the ser
 
 ### List the short URLs of the user
 
-`GET /v1/shorturls` answers `200` with a page of the short URLs of the user, newest first:
+`GET /api/v1/shorturls` answers `200` with a page of the short URLs of the user, newest first:
 
 ```
 {"items": [<short URL>, ...], "next_cursor": "MjAyNi0wMS0wMVQwMDowMDowMCswMDowMCwwMTk5YjJjNC03YTNlLTdjMWEtOWI1ZS0zZjJkNGM2YjhhMjA"}
@@ -159,7 +159,7 @@ The redirect is temporary, so the clients don't keep it: each visit asks the ser
 
 ### Get a short URL
 
-`GET /v1/shorturls/{id}` answers `200` with the [short URL](#short-urls), also when it is deactivated.
+`GET /api/v1/shorturls/{id}` answers `200` with the [short URL](#short-urls), also when it is deactivated.
 
 | Status | `code`               | When                                                    |
 | ------ | -------------------- | ------------------------------------------------------- |
@@ -168,7 +168,7 @@ The redirect is temporary, so the clients don't keep it: each visit asks the ser
 
 ### Update a short URL
 
-`PATCH /v1/shorturls/{id}` changes the target URL, the slug, or both, and answers `200` with the [short URL](#short-urls):
+`PATCH /api/v1/shorturls/{id}` changes the target URL, the slug, or both, and answers `200` with the [short URL](#short-urls):
 
 ```json
 {"target_url": "https://example.com/another/path", "slug": "another-slug"}
@@ -188,7 +188,7 @@ The status doesn't change here, but with [enable and disable](#enable-and-disabl
 
 ### Enable and disable a short URL
 
-`POST /v1/shorturls/{id}/enable` makes the short URL active, and `POST /v1/shorturls/{id}/disable` deactivates it. Both answer `200` with the [short URL](#short-urls), also when it already had that status. They receive no body.
+`POST /api/v1/shorturls/{id}/enable` makes the short URL active, and `POST /api/v1/shorturls/{id}/disable` deactivates it. Both answer `200` with the [short URL](#short-urls), also when it already had that status. They receive no body.
 
 | Status | `code`               | When                                                    |
 | ------ | -------------------- | ------------------------------------------------------- |
@@ -197,7 +197,7 @@ The status doesn't change here, but with [enable and disable](#enable-and-disabl
 
 ### Delete a short URL
 
-`DELETE /v1/shorturls/{id}` deletes the short URL, and answers `204` with no content. Its slug is free from then on.
+`DELETE /api/v1/shorturls/{id}` deletes the short URL, and answers `204` with no content. Its slug is free from then on.
 
 | Status | `code`               | When                                                    |
 | ------ | -------------------- | ------------------------------------------------------- |
@@ -206,7 +206,7 @@ The status doesn't change here, but with [enable and disable](#enable-and-disabl
 
 ### Health check
 
-`GET /v1/health` tells an orchestrator or a load balancer whether the service can answer, by checking that the database answers:
+`GET /api/v1/health` tells an orchestrator or a load balancer whether the service can answer, by checking that the database answers:
 
 | Status | `code`           | When                                                                                    |
 | ------ | ---------------- | --------------------------------------------------------------------------------------- |
@@ -263,7 +263,7 @@ Some errors have headers:
 
 - `401` has `WWW-Authenticate: Bearer`.
 - `429` has `Retry-After`, with the seconds until the client can make requests again.
-- `405` has `Allow`, which has the methods of only one of the endpoints of the path, such as `POST` for `PUT /v1/shorturls`.
+- `405` has `Allow`, which has the methods of only one of the endpoints of the path, such as `POST` for `PUT /api/v1/shorturls`.
 
 ## Rate limit
 

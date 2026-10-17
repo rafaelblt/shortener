@@ -46,7 +46,7 @@ def as_json(value: object) -> Any:
     [
         pytest.param(
             "GET",
-            "/v1/slugs/my-slug",
+            "/api/v1/slugs/my-slug",
             None,
             ResolveSlug,
             {"slug": "my-slug"},
@@ -54,7 +54,7 @@ def as_json(value: object) -> Any:
         ),
         pytest.param(
             "GET",
-            "/v1/slugs/my-slug/redirect",
+            "/api/v1/slugs/my-slug/redirect",
             None,
             ResolveSlug,
             {"slug": "my-slug"},
@@ -62,7 +62,7 @@ def as_json(value: object) -> Any:
         ),
         pytest.param(
             "POST",
-            "/v1/shorturls",
+            "/api/v1/shorturls",
             {"target_url": "https://example.com"},
             CreateShortURL,
             {"target_url": "https://example.com", "slug": None},
@@ -70,7 +70,7 @@ def as_json(value: object) -> Any:
         ),
         pytest.param(
             "POST",
-            "/v1/shorturls",
+            "/api/v1/shorturls",
             {"target_url": "https://example.com", "slug": "my-slug"},
             CreateShortURL,
             {"target_url": "https://example.com", "slug": "my-slug"},
@@ -78,7 +78,7 @@ def as_json(value: object) -> Any:
         ),
         pytest.param(
             "GET",
-            "/v1/shorturls",
+            "/api/v1/shorturls",
             None,
             ListShortURLs,
             {"limit": DEFAULT_PAGE_SIZE, "cursor": None},
@@ -86,18 +86,18 @@ def as_json(value: object) -> Any:
         ),
         pytest.param(
             "GET",
-            f"/v1/shorturls?limit=5&cursor={encode_cursor(CURSOR)}",
+            f"/api/v1/shorturls?limit=5&cursor={encode_cursor(CURSOR)}",
             None,
             ListShortURLs,
             {"limit": 5, "cursor": CURSOR},
             id="list after a cursor",
         ),
         pytest.param(
-            "GET", f"/v1/shorturls/{ID}", None, GetShortURL, {"id": ID}, id="get"
+            "GET", f"/api/v1/shorturls/{ID}", None, GetShortURL, {"id": ID}, id="get"
         ),
         pytest.param(
             "PATCH",
-            f"/v1/shorturls/{ID}",
+            f"/api/v1/shorturls/{ID}",
             {"slug": "my-slug"},
             UpdateShortURL,
             {"id": ID, "target_url": None, "slug": "my-slug"},
@@ -105,7 +105,7 @@ def as_json(value: object) -> Any:
         ),
         pytest.param(
             "POST",
-            f"/v1/shorturls/{ID}/enable",
+            f"/api/v1/shorturls/{ID}/enable",
             None,
             EnableShortURL,
             {"id": ID},
@@ -113,7 +113,7 @@ def as_json(value: object) -> Any:
         ),
         pytest.param(
             "POST",
-            f"/v1/shorturls/{ID}/disable",
+            f"/api/v1/shorturls/{ID}/disable",
             None,
             DisableShortURL,
             {"id": ID},
@@ -121,7 +121,7 @@ def as_json(value: object) -> Any:
         ),
         pytest.param(
             "DELETE",
-            f"/v1/shorturls/{ID}",
+            f"/api/v1/shorturls/{ID}",
             None,
             DeleteShortURL,
             {"id": ID},
@@ -152,7 +152,9 @@ async def test_post_shorturls_answers_created_with_the_details_of_the_new_shortu
     use_cases.double(CreateShortURL).execute.return_value = Ok(details)
 
     response = await client.post(
-        "/v1/shorturls", json={"target_url": details.target_url}, headers=AUTHORIZATION
+        "/api/v1/shorturls",
+        json={"target_url": details.target_url},
+        headers=AUTHORIZATION,
     )
 
     assert response.status_code == HTTPStatus.CREATED
@@ -165,24 +167,34 @@ async def test_post_shorturls_answers_the_location_of_the_new_shorturl(
     use_cases.double(CreateShortURL).execute.return_value = Ok(details)
 
     response = await client.post(
-        "/v1/shorturls", json={"target_url": details.target_url}, headers=AUTHORIZATION
+        "/api/v1/shorturls",
+        json={"target_url": details.target_url},
+        headers=AUTHORIZATION,
     )
 
-    assert response.headers["Location"] == f"/v1/shorturls/{details.id}"
+    assert response.headers["Location"] == f"/api/v1/shorturls/{details.id}"
 
 
 @pytest.mark.parametrize(
     "method, url, body, use_case",
     [
-        pytest.param("GET", f"/v1/shorturls/{ID}", None, GetShortURL, id="get"),
+        pytest.param("GET", f"/api/v1/shorturls/{ID}", None, GetShortURL, id="get"),
         pytest.param(
-            "PATCH", f"/v1/shorturls/{ID}", {"slug": "new"}, UpdateShortURL, id="update"
+            "PATCH",
+            f"/api/v1/shorturls/{ID}",
+            {"slug": "new"},
+            UpdateShortURL,
+            id="update",
         ),
         pytest.param(
-            "POST", f"/v1/shorturls/{ID}/enable", None, EnableShortURL, id="enable"
+            "POST", f"/api/v1/shorturls/{ID}/enable", None, EnableShortURL, id="enable"
         ),
         pytest.param(
-            "POST", f"/v1/shorturls/{ID}/disable", None, DisableShortURL, id="disable"
+            "POST",
+            f"/api/v1/shorturls/{ID}/disable",
+            None,
+            DisableShortURL,
+            id="disable",
         ),
     ],
 )
@@ -210,7 +222,7 @@ async def test_get_shorturls_answers_the_page_with_a_cursor_that_a_request_takes
         ShortURLPage(items=(details,), next_cursor=CURSOR)
     )
 
-    response = await client.get("/v1/shorturls", headers=AUTHORIZATION)
+    response = await client.get("/api/v1/shorturls", headers=AUTHORIZATION)
 
     assert response.status_code == HTTPStatus.OK
     content = response.json()
@@ -225,7 +237,7 @@ async def test_get_shorturls_answers_no_cursor_after_the_last_page(
         ShortURLPage(items=(), next_cursor=None)
     )
 
-    response = await client.get("/v1/shorturls", headers=AUTHORIZATION)
+    response = await client.get("/api/v1/shorturls", headers=AUTHORIZATION)
 
     assert response.json() == {"items": [], "next_cursor": None}
 
@@ -237,7 +249,7 @@ async def test_get_slug_answers_its_target_url(
         ResolvedSlug(target_url="https://example.com/page")
     )
 
-    response = await client.get("/v1/slugs/my-slug")
+    response = await client.get("/api/v1/slugs/my-slug")
 
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {"target_url": "https://example.com/page"}
@@ -250,7 +262,7 @@ async def test_get_slug_redirect_redirects_to_its_target_url(
         ResolvedSlug(target_url="https://example.com/page")
     )
 
-    response = await client.get("/v1/slugs/my-slug/redirect")
+    response = await client.get("/api/v1/slugs/my-slug/redirect")
 
     assert response.status_code == HTTPStatus.TEMPORARY_REDIRECT
     assert response.headers["Location"] == "https://example.com/page"
@@ -259,8 +271,8 @@ async def test_get_slug_redirect_redirects_to_its_target_url(
 @pytest.mark.parametrize(
     "url",
     [
-        pytest.param("/v1/slugs/my-slug", id="resolve"),
-        pytest.param("/v1/slugs/my-slug/redirect", id="resolve and redirect"),
+        pytest.param("/api/v1/slugs/my-slug", id="resolve"),
+        pytest.param("/api/v1/slugs/my-slug/redirect", id="resolve and redirect"),
     ],
 )
 async def test_the_endpoints_of_a_slug_tell_a_deactivated_shorturl_apart(
@@ -279,7 +291,7 @@ async def test_delete_shorturl_answers_no_content(
 ):
     use_cases.double(DeleteShortURL).execute.return_value = Ok(None)
 
-    response = await client.delete(f"/v1/shorturls/{ID}", headers=AUTHORIZATION)
+    response = await client.delete(f"/api/v1/shorturls/{ID}", headers=AUTHORIZATION)
 
     assert response.status_code == HTTPStatus.NO_CONTENT
     assert response.content == b""

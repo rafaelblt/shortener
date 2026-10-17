@@ -12,7 +12,9 @@ from tests.utils.openapi_helpers import OPENAPI_FILE, openapi_yaml
 
 def test_every_endpoint_is_under_v1(app: FastAPI):
     paths = {route.path for route in app.routes if isinstance(route, APIRoute)}
-    assert paths == {f"/v1{endpoint.path}" for endpoint in ENDPOINTS} | {"/v1/health"}
+    assert paths == {f"/api/v1{endpoint.path}" for endpoint in ENDPOINTS} | {
+        "/api/v1/health"
+    }
 
 
 @pytest.mark.parametrize("url", ["/openapi.json", "/docs", "/redoc"])

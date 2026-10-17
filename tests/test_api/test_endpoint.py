@@ -85,7 +85,7 @@ def app(
                 "POST",
                 "/echoes",
                 Echo,
-                Created(lambda echoed: f"/v1/echoes/{echoed.name}"),
+                Created(lambda echoed: f"/api/v1/echoes/{echoed.name}"),
                 summary="Create an echo",
                 tag=TAG,
                 name="CreateEcho",
@@ -123,7 +123,7 @@ async def test_receives_the_parameters_of_the_path_from_it_and_the_others_from_t
     client: httpx.AsyncClient, echo: NonCallableMagicMock
 ):
     await client.put(
-        f"/v1/echoes/{ID}",
+        f"/api/v1/echoes/{ID}",
         json={"name": "my-name", "count": 2, "cursor": encode_cursor(CURSOR)},
         headers=AUTHORIZATION,
     )
@@ -135,7 +135,7 @@ async def test_receives_the_parameters_out_of_the_path_from_the_query_for_a_get(
     client: httpx.AsyncClient, echo: NonCallableMagicMock
 ):
     await client.get(
-        f"/v1/echoes/{ID}",
+        f"/api/v1/echoes/{ID}",
         params={"name": "my-name", "count": "2", "cursor": encode_cursor(CURSOR)},
         headers=AUTHORIZATION,
     )
@@ -147,7 +147,7 @@ async def test_gives_the_defaults_of_execute_for_the_values_the_request_lacks(
     client: httpx.AsyncClient, echo: NonCallableMagicMock
 ):
     await client.put(
-        f"/v1/echoes/{ID}", json={"name": "my-name"}, headers=AUTHORIZATION
+        f"/api/v1/echoes/{ID}", json={"name": "my-name"}, headers=AUTHORIZATION
     )
 
     echo.execute.assert_awaited_once_with(id=ID, name="my-name", count=1, cursor=None)
@@ -156,7 +156,7 @@ async def test_gives_the_defaults_of_execute_for_the_values_the_request_lacks(
 async def test_answers_missing_for_a_value_without_a_default_that_the_request_lacks(
     client: httpx.AsyncClient, echo: NonCallableMagicMock
 ):
-    response = await client.put(f"/v1/echoes/{ID}", json={}, headers=AUTHORIZATION)
+    response = await client.put(f"/api/v1/echoes/{ID}", json={}, headers=AUTHORIZATION)
 
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
     assert response.json()["fields"] == [
@@ -169,7 +169,7 @@ async def test_answers_the_value_of_ok_as_json(
     client: httpx.AsyncClient, echo: NonCallableMagicMock
 ):
     response = await client.put(
-        f"/v1/echoes/{ID}", json={"name": "my-name"}, headers=AUTHORIZATION
+        f"/api/v1/echoes/{ID}", json={"name": "my-name"}, headers=AUTHORIZATION
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -182,7 +182,7 @@ async def test_answers_the_error_its_use_case_returns(
     echo.execute.return_value = Err(ShortURLNotFoundError())
 
     response = await client.put(
-        f"/v1/echoes/{ID}", json={"name": "my-name"}, headers=AUTHORIZATION
+        f"/api/v1/echoes/{ID}", json={"name": "my-name"}, headers=AUTHORIZATION
     )
 
     assert response.status_code == HTTPStatus.NOT_FOUND
@@ -197,7 +197,7 @@ async def test_builds_the_use_case_with_the_user_of_the_access_token(
     owner_id: UserID,
 ):
     await client.put(
-        f"/v1/echoes/{ID}", json={"name": "my-name"}, headers=AUTHORIZATION
+        f"/api/v1/echoes/{ID}", json={"name": "my-name"}, headers=AUTHORIZATION
     )
 
     assert await use_cases.current_users[0].get_id() == owner_id
@@ -218,7 +218,7 @@ async def test_builds_the_use_case_with_no_user_when_the_request_has_no_access_t
     echo: NonCallableMagicMock,
     headers: dict[str, str],
 ):
-    await client.put(f"/v1/echoes/{ID}", json={"name": "my-name"}, headers=headers)
+    await client.put(f"/api/v1/echoes/{ID}", json={"name": "my-name"}, headers=headers)
 
     assert await use_cases.current_users[0].get_id() is None
     access_token_verifier.verify.assert_not_awaited()
@@ -230,7 +230,7 @@ async def test_ignores_the_access_token_when_the_use_case_takes_no_current_user(
     access_token_verifier: NonCallableMagicMock,
     public: NonCallableMagicMock,
 ):
-    await client.get("/v1/public", headers=AUTHORIZATION)
+    await client.get("/api/v1/public", headers=AUTHORIZATION)
 
     assert await use_cases.current_users[0].get_id() is None
     access_token_verifier.verify.assert_not_awaited()
@@ -239,18 +239,18 @@ async def test_ignores_the_access_token_when_the_use_case_takes_no_current_user(
 def test_names_the_endpoint_after_its_use_case_unless_it_has_a_name(app: FastAPI):
     paths = app.openapi()["paths"]
 
-    assert paths["/v1/echoes/{id}"]["put"]["operationId"] == Echo.__name__
-    assert paths["/v1/echoes/{id}"]["get"]["operationId"] == "EchoFromTheQuery"
+    assert paths["/api/v1/echoes/{id}"]["put"]["operationId"] == Echo.__name__
+    assert paths["/api/v1/echoes/{id}"]["get"]["operationId"] == "EchoFromTheQuery"
 
 
 def test_documents_the_summary_of_the_endpoint(app: FastAPI):
-    operation = app.openapi()["paths"]["/v1/echoes/{id}"]["put"]
+    operation = app.openapi()["paths"]["/api/v1/echoes/{id}"]["put"]
 
     assert operation["summary"] == SUMMARY
 
 
 def test_documents_the_tag_of_the_endpoint(app: FastAPI):
-    operation = app.openapi()["paths"]["/v1/echoes/{id}"]["put"]
+    operation = app.openapi()["paths"]["/api/v1/echoes/{id}"]["put"]
 
     assert operation["tags"] == [TAG]
 
@@ -260,13 +260,13 @@ def test_documents_the_access_token_only_where_the_use_case_takes_a_current_user
 ):
     paths = app.openapi()["paths"]
 
-    assert "security" in paths["/v1/echoes/{id}"]["put"]
-    assert "security" not in paths["/v1/public"]["get"]
+    assert "security" in paths["/api/v1/echoes/{id}"]["put"]
+    assert "security" not in paths["/api/v1/public"]["get"]
 
 
 def test_documents_the_ok_of_the_use_case_and_its_errors_by_status(app: FastAPI):
     schema = app.openapi()
-    responses = schema["paths"]["/v1/echoes/{id}"]["put"]["responses"]
+    responses = schema["paths"]["/api/v1/echoes/{id}"]["put"]["responses"]
 
     ok_schema = responses[str(HTTPStatus.OK.value)]["content"]["application/json"]
     assert ok_schema["schema"]["$ref"].endswith("/Echoed")
@@ -283,20 +283,20 @@ def test_documents_the_ok_of_the_use_case_and_its_errors_by_status(app: FastAPI)
 
 
 def test_describes_the_response_of_ok_by_its_status(app: FastAPI):
-    responses = app.openapi()["paths"]["/v1/echoes/{id}"]["put"]["responses"]
+    responses = app.openapi()["paths"]["/api/v1/echoes/{id}"]["put"]["responses"]
 
     assert responses[str(HTTPStatus.OK.value)]["description"] == HTTPStatus.OK.phrase
 
 
 def test_documents_the_headers_of_its_response_of_ok(app: FastAPI):
-    responses = app.openapi()["paths"]["/v1/echoes"]["post"]["responses"]
+    responses = app.openapi()["paths"]["/api/v1/echoes"]["post"]["responses"]
 
     headers = responses[str(HTTPStatus.CREATED.value)]["headers"]
     assert set(headers) == set(Created.header_descriptions)
 
 
 def test_documents_no_body_errors_for_an_endpoint_without_a_body(app: FastAPI):
-    responses = app.openapi()["paths"]["/v1/public"]["get"]["responses"]
+    responses = app.openapi()["paths"]["/api/v1/public"]["get"]["responses"]
 
     assert str(HTTPStatus.BAD_REQUEST.value) not in responses
     assert str(HTTPStatus.UNPROCESSABLE_ENTITY.value) not in responses

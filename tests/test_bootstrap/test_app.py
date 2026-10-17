@@ -55,7 +55,7 @@ async def check_health(settings: Settings) -> httpx.Response:
         async with httpx.AsyncClient(
             transport=transport, base_url="http://test"
         ) as client:
-            return await client.get("/v1/health")
+            return await client.get("/api/v1/health")
 
 
 def hs256_token(user_id: UserID, expires_at: datetime) -> str:
@@ -73,8 +73,8 @@ def hs256_token(user_id: UserID, expires_at: datetime) -> str:
 
 def test_create_app_returns_the_api_with_every_endpoint_and_the_health_check():
     assert paths_of(create_app(SETTINGS)) == {
-        f"/v1{endpoint.path}" for endpoint in ENDPOINTS
-    } | {"/v1/health"}
+        f"/api/v1{endpoint.path}" for endpoint in ENDPOINTS
+    } | {"/api/v1/health"}
 
 
 def test_create_app_without_settings_reads_them_from_the_environment(
@@ -113,8 +113,8 @@ async def test_create_app_limits_the_requests_of_each_ip_address_by_the_settings
     transport = httpx.ASGITransport(app=create_app(settings))
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
         # Without an access token, the use case answers without the database.
-        within_the_limit = await client.get("/v1/shorturls")
-        over_the_limit = await client.get("/v1/shorturls")
+        within_the_limit = await client.get("/api/v1/shorturls")
+        over_the_limit = await client.get("/api/v1/shorturls")
 
     assert within_the_limit.status_code == HTTPStatus.UNAUTHORIZED
     assert over_the_limit.status_code == HTTPStatus.TOO_MANY_REQUESTS

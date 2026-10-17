@@ -150,25 +150,30 @@ def test_documented_responses_documents_the_headers_of_every_error_of_a_status()
     "method, url, body, field, code",
     [
         pytest.param(
-            "GET", "/v1/shorturls/not-a-uuid", None, "id", "invalid_type", id="id"
-        ),
-        pytest.param(
-            "GET", "/v1/shorturls?limit=ten", None, "limit", "invalid_type", id="limit"
+            "GET", "/api/v1/shorturls/not-a-uuid", None, "id", "invalid_type", id="id"
         ),
         pytest.param(
             "GET",
-            "/v1/shorturls?cursor=not-a-cursor",
+            "/api/v1/shorturls?limit=ten",
+            None,
+            "limit",
+            "invalid_type",
+            id="limit",
+        ),
+        pytest.param(
+            "GET",
+            "/api/v1/shorturls?cursor=not-a-cursor",
             None,
             "cursor",
             "invalid_format",
             id="cursor",
         ),
         pytest.param(
-            "POST", "/v1/shorturls", {}, "target_url", "missing", id="missing value"
+            "POST", "/api/v1/shorturls", {}, "target_url", "missing", id="missing value"
         ),
         pytest.param(
             "POST",
-            "/v1/shorturls",
+            "/api/v1/shorturls",
             {"target_url": 10},
             "target_url",
             "invalid_type",
@@ -197,7 +202,7 @@ async def test_answers_malformed_body_for_a_body_that_is_not_json(
     client: httpx.AsyncClient, use_cases: UseCaseDoubles
 ):
     response = await client.post(
-        "/v1/shorturls",
+        "/api/v1/shorturls",
         content=b"{not json",
         headers={**AUTHORIZATION, "Content-Type": "application/json"},
     )
@@ -211,11 +216,15 @@ async def test_answers_malformed_body_for_a_body_that_is_not_json(
     "method, url, status, code",
     [
         pytest.param(
-            "GET", "/v1/unknown", HTTPStatus.NOT_FOUND, "not_found", id="unknown path"
+            "GET",
+            "/api/v1/unknown",
+            HTTPStatus.NOT_FOUND,
+            "not_found",
+            id="unknown path",
         ),
         pytest.param(
             "PUT",
-            "/v1/shorturls",
+            "/api/v1/shorturls",
             HTTPStatus.METHOD_NOT_ALLOWED,
             "method_not_allowed",
             id="unknown method",
@@ -234,7 +243,7 @@ async def test_answers_a_request_that_no_endpoint_takes_with_the_name_of_its_sta
 async def test_keeps_the_headers_starlette_gives_to_its_errors(
     client: httpx.AsyncClient,
 ):
-    response = await client.put("/v1/shorturls")
+    response = await client.put("/api/v1/shorturls")
     assert "Allow" in response.headers
 
 
@@ -243,7 +252,7 @@ async def test_answers_unavailable_when_the_use_case_raises_unavailable_error(
 ):
     use_cases.double(GetShortURL).execute.side_effect = UnavailableError()
 
-    response = await client.get(f"/v1/shorturls/{ID}", headers=AUTHORIZATION)
+    response = await client.get(f"/api/v1/shorturls/{ID}", headers=AUTHORIZATION)
 
     assert response.status_code == HTTPStatus.SERVICE_UNAVAILABLE
     assert response.json()["code"] == "unavailable"
@@ -260,7 +269,7 @@ async def test_logs_the_unavailable_error_with_what_failed(
     use_cases.double(GetShortURL).execute.side_effect = error
 
     with caplog.at_level(logging.WARNING, logger="shortener.api.errors"):
-        await client.get(f"/v1/shorturls/{ID}", headers=AUTHORIZATION)
+        await client.get(f"/api/v1/shorturls/{ID}", headers=AUTHORIZATION)
 
     [record] = caplog.records
     assert record.exc_info is not None
@@ -274,7 +283,7 @@ async def test_answers_internal_error_when_the_use_case_raises_any_other_excepti
     use_cases.double(CreateShortURL).execute.side_effect = RuntimeError()
 
     response = await client.post(
-        "/v1/shorturls",
+        "/api/v1/shorturls",
         json={"target_url": "https://example.com"},
         headers=AUTHORIZATION,
     )

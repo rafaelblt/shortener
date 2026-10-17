@@ -37,7 +37,7 @@ The API defines four abstractions, as `Protocol`s, which it receives in `create_
 
 `app.py`
 
-`create_app(use_cases, access_token_verifier, rate_limiter, health_check, endpoints=ENDPOINTS, lifespan=None)` returns the FastAPI application. It adds a route for each [endpoint](#endpoints), and the one of the [health check](#health-check), under `PREFIX` (`/v1`), with the [rate limit](#rate-limit) of `rate_limiter` on the endpoints, and the handlers of the exceptions that become [errors](#errors). `lifespan` is the one of FastAPI, for what has to run when the application starts and stops. It raises `LookupError` when the use case of an endpoint may return an error the API doesn't answer (see [How an endpoint works](#how-an-endpoint-works)), so the application doesn't start.
+`create_app(use_cases, access_token_verifier, rate_limiter, health_check, endpoints=ENDPOINTS, lifespan=None)` returns the FastAPI application. It adds a route for each [endpoint](#endpoints), and the one of the [health check](#health-check), under `PREFIX` (`/api/v1`), with the [rate limit](#rate-limit) of `rate_limiter` on the endpoints, and the handlers of the exceptions that become [errors](#errors). `lifespan` is the one of FastAPI, for what has to run when the application starts and stops. It raises `LookupError` when the use case of an endpoint may return an error the API doesn't answer (see [How an endpoint works](#how-an-endpoint-works)), so the application doesn't start.
 
 ## OpenAPI
 
@@ -53,25 +53,25 @@ Whoever consumes the API reads the schema where its code is, without running the
 
 `ENDPOINTS` declares each endpoint of the API, with the use case it runs and how it answers its `Ok`:
 
-| Method and path                   | Use case                                                             | Response                                                |
-| --------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------- |
-| `GET /v1/slugs/{slug}`            | [`ResolveSlug`](use_cases.md#resolveslug)                            | `JSONContent()`, with the `ResolvedSlug`                |
-| `GET /v1/slugs/{slug}/redirect`   | [`ResolveSlug`](use_cases.md#resolveslug), named `RedirectSlug`      | `Redirect`, to its `target_url`                         |
-| `POST /v1/shorturls`              | [`CreateShortURL`](use_cases.md#createshorturl)                      | `Created`, with the path of the short URL               |
-| `GET /v1/shorturls`               | [`ListShortURLs`](use_cases.md#listshorturls)                        | `JSONContent`, with a [`ShortURLPageContent`](#cursors) |
-| `GET /v1/shorturls/{id}`          | [`GetShortURL`](use_cases.md#getshorturl)                            | `JSONContent()`                                         |
-| `PATCH /v1/shorturls/{id}`        | [`UpdateShortURL`](use_cases.md#updateshorturl)                      | `JSONContent()`                                         |
-| `POST /v1/shorturls/{id}/enable`  | [`EnableShortURL`](use_cases.md#enableshorturl-and-disableshorturl)  | `JSONContent()`                                         |
-| `POST /v1/shorturls/{id}/disable` | [`DisableShortURL`](use_cases.md#enableshorturl-and-disableshorturl) | `JSONContent()`                                         |
-| `DELETE /v1/shorturls/{id}`       | [`DeleteShortURL`](use_cases.md#deleteshorturl)                      | `NoContent()`                                           |
+| Method and path                       | Use case                                                             | Response                                                |
+| ------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------- |
+| `GET /api/v1/slugs/{slug}`            | [`ResolveSlug`](use_cases.md#resolveslug)                            | `JSONContent()`, with the `ResolvedSlug`                |
+| `GET /api/v1/slugs/{slug}/redirect`   | [`ResolveSlug`](use_cases.md#resolveslug), named `RedirectSlug`      | `Redirect`, to its `target_url`                         |
+| `POST /api/v1/shorturls`              | [`CreateShortURL`](use_cases.md#createshorturl)                      | `Created`, with the path of the short URL               |
+| `GET /api/v1/shorturls`               | [`ListShortURLs`](use_cases.md#listshorturls)                        | `JSONContent`, with a [`ShortURLPageContent`](#cursors) |
+| `GET /api/v1/shorturls/{id}`          | [`GetShortURL`](use_cases.md#getshorturl)                            | `JSONContent()`                                         |
+| `PATCH /api/v1/shorturls/{id}`        | [`UpdateShortURL`](use_cases.md#updateshorturl)                      | `JSONContent()`                                         |
+| `POST /api/v1/shorturls/{id}/enable`  | [`EnableShortURL`](use_cases.md#enableshorturl-and-disableshorturl)  | `JSONContent()`                                         |
+| `POST /api/v1/shorturls/{id}/disable` | [`DisableShortURL`](use_cases.md#enableshorturl-and-disableshorturl) | `JSONContent()`                                         |
+| `DELETE /api/v1/shorturls/{id}`       | [`DeleteShortURL`](use_cases.md#deleteshorturl)                      | `NoContent()`                                           |
 
 What each one receives and answers follows from its use case, by the rules of [How an endpoint works](#how-an-endpoint-works):
 
 - The two endpoints of a slug run `ResolveSlug`, so both count the resolution. Why there are two is in [Overview](../service/api.md#overview).
 - Every endpoint but the two of a slug reads the [access token](#authentication), since its use case takes a `CurrentUser`.
-- `slug`, and the `target_url` of a `PATCH`, default to `None` in `execute()`, so a `null` is the same as leaving them out: `POST /v1/shorturls` generates the slug, and `PATCH /v1/shorturls/{id}` doesn't change them. A `PATCH` with no value to change gets `nothing_to_update`. The `target_url` of a `POST` has no default, so leaving it out, or sending it as `null`, gets `missing`.
+- `slug`, and the `target_url` of a `PATCH`, default to `None` in `execute()`, so a `null` is the same as leaving them out: `POST /api/v1/shorturls` generates the slug, and `PATCH /api/v1/shorturls/{id}` doesn't change them. A `PATCH` with no value to change gets `nothing_to_update`. The `target_url` of a `POST` has no default, so leaving it out, or sending it as `null`, gets `missing`.
 - `limit` is 20 when the query leaves it out, the default of `ListShortURLs.execute()`.
-- The `Location` of `POST /v1/shorturls` is the path of the new short URL, `/v1/shorturls/{id}`, with the `id` of its `ShortURLDetails`, which `GET /v1/shorturls/{id}` answers. The path of a short URL is written once, in `endpoints.py`.
+- The `Location` of `POST /api/v1/shorturls` is the path of the new short URL, `/api/v1/shorturls/{id}`, with the `id` of its `ShortURLDetails`, which `GET /api/v1/shorturls/{id}` answers. The path of a short URL is written once, in `endpoints.py`.
 - The OpenAPI schema groups the two endpoints of a slug in the tag `Slugs`, and the others in `Short URLs`.
 
 ## How an endpoint works
@@ -156,7 +156,7 @@ The other errors are answered by the handlers of exceptions that `create_app()` 
 - `too_many_requests_handler()` answers `Retry-After` with the time of the error rounded up to whole seconds. The OpenAPI schema documents it from the `header_descriptions` of `TOO_MANY_REQUESTS`, as it does `WWW-Authenticate` from the ones of `ERRORS`.
 - `http_error_handler()` keeps the headers Starlette gives the error, such as the `Allow` of a `405`.
 - `unavailable_handler()` logs the error as a warning, with the exception and its cause, which say what failed. Starlette raises any other exception again after its response, so the server logs it.
-- `ShortURLDeactivatedError` is only answered by the two endpoints of a slug, since `ResolveSlug` is the only use case that returns it: `GET /v1/shorturls/{id}` answers the details of a deactivated short URL to its owner, with its `status`.
+- `ShortURLDeactivatedError` is only answered by the two endpoints of a slug, since `ResolveSlug` is the only use case that returns it: `GET /api/v1/shorturls/{id}` answers the details of a deactivated short URL to its owner, with its `status`.
 
 ## Authentication
 
@@ -191,7 +191,7 @@ The use cases that receive a `CurrentUser` are built for each request, since the
 
 `health_check.py`
 
-`GET /v1/health` isn't one of `ENDPOINTS`, since it runs no use case: `add_health_check_route(router, health_check)` adds it, on a router without the rate limit, and it awaits `check()` of the `HealthCheck` that `create_app()` receives. `check()` returns when the service is able to answer, and raises `UnavailableError` when something it needs to answer is unavailable.
+`GET /api/v1/health` isn't one of `ENDPOINTS`, since it runs no use case: `add_health_check_route(router, health_check)` adds it, on a router without the rate limit, and it awaits `check()` of the `HealthCheck` that `create_app()` receives. `check()` returns when the service is able to answer, and raises `UnavailableError` when something it needs to answer is unavailable.
 
 | `check()`                  | Answers                                            |
 | -------------------------- | -------------------------------------------------- |
@@ -210,4 +210,4 @@ A [`ShortURLCursor`](use_cases.md#shorturlcursor) travels as an opaque text. `en
 
 `CursorParameter` is how a request carries a `ShortURLCursor`, in `PARAMETER_TYPES`: a text, which FastAPI turns into the cursor with `decode_cursor()`, and answers with an `invalid_format` issue when it returns `None`.
 
-`ShortURLPageContent.from_page(page)` is what `GET /v1/shorturls` answers for a [`ShortURLPage`](use_cases.md#shorturlpage): its `items`, and its `next_cursor` encoded, or `None` when there is no next page.
+`ShortURLPageContent.from_page(page)` is what `GET /api/v1/shorturls` answers for a [`ShortURLPage`](use_cases.md#shorturlpage): its `items`, and its `next_cursor` encoded, or `None` when there is no next page.

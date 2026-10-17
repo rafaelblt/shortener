@@ -3,7 +3,7 @@ info:
   title: Shortener
   version: 0.1.0
 paths:
-  /v1/slugs/{slug}:
+  /api/v1/slugs/{slug}:
     get:
       tags:
       - Slugs
@@ -54,7 +54,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorContent'
-  /v1/slugs/{slug}/redirect:
+  /api/v1/slugs/{slug}/redirect:
     get:
       tags:
       - Slugs
@@ -106,7 +106,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorContent'
-  /v1/shorturls:
+  /api/v1/shorturls:
     post:
       tags:
       - Short URLs
@@ -244,7 +244,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorContent'
-  /v1/shorturls/{id}:
+  /api/v1/shorturls/{id}:
     get:
       tags:
       - Short URLs
@@ -448,7 +448,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorContent'
-  /v1/shorturls/{id}/enable:
+  /api/v1/shorturls/{id}/enable:
     post:
       tags:
       - Short URLs
@@ -512,7 +512,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorContent'
-  /v1/shorturls/{id}/disable:
+  /api/v1/shorturls/{id}/disable:
     post:
       tags:
       - Short URLs
@@ -576,7 +576,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorContent'
-  /v1/health:
+  /api/v1/health:
     get:
       tags:
       - Health
