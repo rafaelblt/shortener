@@ -576,7 +576,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorContent'
-  /api/v1/health:
+  /health:
     get:
       tags:
       - Health
@@ -586,11 +586,7 @@ paths:
         '204':
           description: No Content
         '503':
-          description: '`unavailable`: The service can''t answer now. Try again later.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorContent'
+          description: Service Unavailable
 components:
   schemas:
     Body_CreateShortURL:

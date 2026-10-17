@@ -206,10 +206,14 @@ async def too_many_requests_handler(
 async def unavailable_handler(
     request: Request, error: UnavailableError
 ) -> JSONResponse:
+    log_unavailable(request, error)
+    return _json_response(UNAVAILABLE)
+
+
+def log_unavailable(request: Request, error: UnavailableError) -> None:
     logger.warning(
         "Answered 503 to %s %s", request.method, request.url.path, exc_info=error
     )
-    return _json_response(UNAVAILABLE)
 
 
 async def internal_error_handler(request: Request, error: Exception) -> JSONResponse:

@@ -51,11 +51,10 @@ def create_app(
     for endpoint in endpoints:
         add_route(router, endpoint, use_cases, access_token_verifier)
     app.include_router(router)
-    # Out of the rate limit, so an orchestrator or a load balancer that checks
-    # the health often doesn't get too_many_requests.
-    health_router = APIRouter(prefix=PREFIX)
-    add_health_check_route(health_router, health_check)
-    app.include_router(health_router)
+    # Out of PREFIX, since it isn't part of the versioned API, and out of the
+    # rate limit, so an orchestrator or a load balancer that checks the health
+    # often doesn't get too_many_requests.
+    add_health_check_route(app.router, health_check)
     # The handlers take the class of exception they handle, which FastAPI
     # doesn't type.
     app.add_exception_handler(

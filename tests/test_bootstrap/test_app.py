@@ -55,7 +55,7 @@ async def check_health(settings: Settings) -> httpx.Response:
         async with httpx.AsyncClient(
             transport=transport, base_url="http://test"
         ) as client:
-            return await client.get("/api/v1/health")
+            return await client.get("/health")
 
 
 def hs256_token(user_id: UserID, expires_at: datetime) -> str:
@@ -74,7 +74,7 @@ def hs256_token(user_id: UserID, expires_at: datetime) -> str:
 def test_create_app_returns_the_api_with_every_endpoint_and_the_health_check():
     assert paths_of(create_app(SETTINGS)) == {
         f"/api/v1{endpoint.path}" for endpoint in ENDPOINTS
-    } | {"/api/v1/health"}
+    } | {"/health"}
 
 
 def test_create_app_without_settings_reads_them_from_the_environment(

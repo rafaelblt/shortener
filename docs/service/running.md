@@ -25,7 +25,7 @@ To try the service locally, [Docker Compose](../../README.md#running-with-docker
 
 ## Health checks
 
-[`GET /api/v1/health`](api.md#health-check) answers `204` when the API can answer, which it checks by asking the database. So, as a liveness probe, one that restarts the service when it fails, a failure of the database restarts the API too. The consumer has no health check.
+[`GET /health`](api.md#health-check) answers `204` when the API can answer, which it checks by asking the database. So, as a liveness probe, one that restarts the service when it fails, a failure of the database restarts the API too. The consumer has no health check.
 
 ## Behind a proxy
 
@@ -35,11 +35,11 @@ The [rate limit](api.md#rate-limit) counts the requests of each IP address under
 - Trusting a client that can reach the service without the proxy would let it send any address in `X-Forwarded-For`.
 - A request without the address of its client, which uvicorn may give for a connection that isn't TCP, such as one through a Unix socket, has no rate limit.
 
-A domain of short links, where `/{slug}` redirects, is a proxy in front of the service, which sends `/{slug}` to `/api/v1/slugs/{slug}/redirect`. Every route of the API is under `/api/v1`, and slugs can't have dots, so a path such as `/favicon.ico` is never the slug of a new short URL.
+A domain of short links, where `/{slug}` redirects, is a proxy in front of the service, which sends `/{slug}` to `/api/v1/slugs/{slug}/redirect`. Slugs can't have dots, so a path such as `/favicon.ico` is never the slug of a new short URL. The [health check](#health-checks), `/health`, is the only route of the API out of `/api/v1`, and `health` is a slug like any other, so that proxy sends `/health` to the redirect of the slug: an orchestrator asks the health check at the address of the API, and not through the domain of short links.
 
 ## Logs
 
 The processes log to the standard error:
 
-- The API logs a warning for each `503`, with the error and its cause, which say what was unavailable. uvicorn logs the error of each `500`.
+- The API logs a warning for each `503`, with the error and its cause, which say what was unavailable. uvicorn logs the error of each `500`, but the one of the [health check](api.md#health-check), which the API logs, with its traceback.
 - The consumer logs, at the level `INFO`, when it starts consuming, a warning for each message it rejects because its body isn't the event, or puts back in the queue, and an error, with its traceback, for each message a failure sends to the dead-letter queue.

@@ -4,7 +4,7 @@ What the HTTP API offers and how it behaves, seen by whoever calls it. The exact
 
 ## Overview
 
-Every route is under `/api/v1`, and the bodies of its requests and responses are JSON.
+Every route but the [health check](#health-check) is under `/api/v1`, and the bodies of its requests and responses are JSON.
 
 | Method and path                       | What it does                                                                   | Access token |
 | ------------------------------------- | ------------------------------------------------------------------------------ | ------------ |
@@ -17,11 +17,11 @@ Every route is under `/api/v1`, and the bodies of its requests and responses are
 | `POST /api/v1/shorturls/{id}/enable`  | [Activates a short URL](#enable-and-disable-a-short-url)                       | Yes          |
 | `POST /api/v1/shorturls/{id}/disable` | [Deactivates a short URL](#enable-and-disable-a-short-url)                     | Yes          |
 | `DELETE /api/v1/shorturls/{id}`       | [Deletes a short URL](#delete-a-short-url)                                     | Yes          |
-| `GET /api/v1/health`                  | [Tells whether the service can answer](#health-check)                          | No           |
+| `GET /health`                         | [Tells whether the service can answer](#health-check)                          | No           |
 
 The routes of a slug need no access token, since anyone can resolve a slug, and the routes of the short URLs are for their owners. The shortener serves other systems, which decide how to resolve a slug: one that wants to decide what to do with the target URL, such as showing a page before it redirects, asks for it, and one that wants the redirect done asks for the redirect.
 
-Since every route is under `/api/v1`, a slug never shares a path with a route, and no slug has to be reserved. A domain of short links, where `/{slug}` redirects, is a proxy in front of the service (see [Running](running.md#behind-a-proxy)).
+A slug is only resolved under `/api/v1/slugs`, so it never shares a path with a route, not even the slug `health` with the health check, and no slug has to be reserved. A domain of short links, where `/{slug}` redirects, is a proxy in front of the service (see [Running](running.md#behind-a-proxy)).
 
 ## Access tokens
 
@@ -204,21 +204,21 @@ The status doesn't change here, but with [enable and disable](#enable-and-disabl
 | `401`  | `not_authenticated`  | There is no valid access token                          |
 | `404`  | `shorturl_not_found` | The short URL doesn't exist, or belongs to another user |
 
-### Health check
+## Health check
 
-`GET /api/v1/health` tells an orchestrator or a load balancer whether the service can answer, by checking that the database answers:
+`GET /health` tells an orchestrator or a load balancer whether the service can answer, by checking that the database answers. It answers only a status code, with no content:
 
-| Status | `code`           | When                                                                                    |
-| ------ | ---------------- | --------------------------------------------------------------------------------------- |
-| `204`  |                  | The database answers                                                                    |
-| `503`  | `unavailable`    | The database can't answer now, such as when it can't be reached                         |
-| `500`  | `internal_error` | The database fails in a way that trying again won't fix, such as one that doesn't exist |
+| Status | When                                                                                    |
+| ------ | --------------------------------------------------------------------------------------- |
+| `204`  | The database answers                                                                    |
+| `503`  | The database can't answer now, such as when it can't be reached                         |
+| `500`  | The database fails in a way that trying again won't fix, such as one that doesn't exist |
 
-It reads no access token and has no [rate limit](#rate-limit), so a client that checks it often doesn't get `429`. How to use it in an orchestrator is in [Running](running.md#health-checks).
+It isn't part of the versioned contract of the API, so it is at the root, out of `/api/v1`, and doesn't answer the JSON of the [errors](#errors), which is. Each status has a single meaning, so it needs no `code`. It reads no access token and has no [rate limit](#rate-limit), so a client that checks it often doesn't get `429`. How to use it in an orchestrator is in [Running](running.md#health-checks).
 
 ## Errors
 
-Every error is answered with the same JSON:
+Every error, but the `503` and the `500` of the [health check](#health-check), is answered with the same JSON:
 
 ```json
 {

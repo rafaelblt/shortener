@@ -37,7 +37,7 @@ The API defines four abstractions, as `Protocol`s, which it receives in `create_
 
 `app.py`
 
-`create_app(use_cases, access_token_verifier, rate_limiter, health_check, endpoints=ENDPOINTS, lifespan=None)` returns the FastAPI application. It adds a route for each [endpoint](#endpoints), and the one of the [health check](#health-check), under `PREFIX` (`/api/v1`), with the [rate limit](#rate-limit) of `rate_limiter` on the endpoints, and the handlers of the exceptions that become [errors](#errors). `lifespan` is the one of FastAPI, for what has to run when the application starts and stops. It raises `LookupError` when the use case of an endpoint may return an error the API doesn't answer (see [How an endpoint works](#how-an-endpoint-works)), so the application doesn't start.
+`create_app(use_cases, access_token_verifier, rate_limiter, health_check, endpoints=ENDPOINTS, lifespan=None)` returns the FastAPI application. It adds a route for each [endpoint](#endpoints), under `PREFIX` (`/api/v1`) and with the [rate limit](#rate-limit) of `rate_limiter`, the one of the [health check](#health-check), at the root and without the rate limit, and the handlers of the exceptions that become [errors](#errors). `lifespan` is the one of FastAPI, for what has to run when the application starts and stops. It raises `LookupError` when the use case of an endpoint may return an error the API doesn't answer (see [How an endpoint works](#how-an-endpoint-works)), so the application doesn't start.
 
 ## OpenAPI
 
@@ -129,7 +129,7 @@ FastAPI serializes the dataclasses of the use cases with pydantic: a `UUID` as t
 
 `errors.py`
 
-Every error is answered with an `ErrorContent`, a model of pydantic with `code`, `message` and, only for `invalid_input`, `fields`, whose format and codes are in [Errors](../service/api.md#errors).
+Every error but those of the [health check](#health-check) is answered with an `ErrorContent`, a model of pydantic with `code`, `message` and, only for `invalid_input`, `fields`, whose format and codes are in [Errors](../service/api.md#errors).
 
 The errors a use case returns are answered by `error_response(error)`, from `ERRORS`, which maps each class of error to an `ErrorResponse`: its status code, code, message and headers, and, in `header_descriptions`, the description of each header it answers, for the OpenAPI schema. `response_of(error_type)` raises `LookupError` for a class that isn't there. These are the classes, and their codes:
 
@@ -155,7 +155,7 @@ The other errors are answered by the handlers of exceptions that `create_app()` 
 - `request_error_handler()` answers `malformed_body` when the body isn't valid JSON, and otherwise `invalid_input`, with the same `fields` as the one of a use case. FastAPI names the issues by the types of pydantic: `missing` is kept, a type that is the value of an [`IssueCode`](shared.md#validation) is kept, such as the `invalid_format` of a [cursor](#cursors), and any other becomes `invalid_type`.
 - `too_many_requests_handler()` answers `Retry-After` with the time of the error rounded up to whole seconds. The OpenAPI schema documents it from the `header_descriptions` of `TOO_MANY_REQUESTS`, as it does `WWW-Authenticate` from the ones of `ERRORS`.
 - `http_error_handler()` keeps the headers Starlette gives the error, such as the `Allow` of a `405`.
-- `unavailable_handler()` logs the error as a warning, with the exception and its cause, which say what failed. Starlette raises any other exception again after its response, so the server logs it.
+- `unavailable_handler()` logs the error with `log_unavailable(request, error)`, as a warning, with the method and the path of the request, and the exception and its cause, which say what failed. Starlette raises any other exception again after its response, so the server logs it.
 - `ShortURLDeactivatedError` is only answered by the two endpoints of a slug, since `ResolveSlug` is the only use case that returns it: `GET /api/v1/shorturls/{id}` answers the details of a deactivated short URL to its owner, with its `status`.
 
 ## Authentication
@@ -176,7 +176,7 @@ Every endpoint counts each request under the IP address of its client, and a req
 
 The API counts the requests through the `RateLimiter` abstraction. Its `hit(key)` counts a request of the key, and returns `None` when the key is within its limit, and otherwise how long until the key can make requests again, as a `timedelta`. The limit, and how the requests are counted, are up to the implementation, [`InMemoryRateLimiter`](infra.md#rate-limit), which [`bootstrap`](bootstrap.md#the-application) builds with the limit of the [settings](bootstrap.md#settings).
 
-`limit_by_ip(rate_limiter)` returns the dependency of FastAPI that `create_app()` gives to the router of the endpoints, so it doesn't run for the [health check](#health-check), which has a router of its own, nor for a path that no route has. For each request, it calls `hit()` with the IP address the server gives as the client's, `request.client.host`, and raises `TooManyRequestsError`, with the time `hit()` returned, when that isn't `None`. It is a coroutine, so FastAPI runs it in the event loop, and not in a thread, where two requests could count at the same time.
+`limit_by_ip(rate_limiter)` returns the dependency of FastAPI that `create_app()` gives to the router of the endpoints, so it doesn't run for the [health check](#health-check), which isn't on that router, nor for a path that no route has. For each request, it calls `hit()` with the IP address the server gives as the client's, `request.client.host`, and raises `TooManyRequestsError`, with the time `hit()` returned, when that isn't `None`. It is a coroutine, so FastAPI runs it in the event loop, and not in a thread, where two requests could count at the same time.
 
 - A request without the address of its client, whose `request.client` is `None`, isn't counted.
 - The dependency runs before FastAPI reads the values of the request, so a request whose values can't be read is counted too. A request whose body isn't valid JSON is the exception: FastAPI answers it with `malformed_body` before the dependency runs, so it isn't counted.
@@ -191,15 +191,18 @@ The use cases that receive a `CurrentUser` are built for each request, since the
 
 `health_check.py`
 
-`GET /api/v1/health` isn't one of `ENDPOINTS`, since it runs no use case: `add_health_check_route(router, health_check)` adds it, on a router without the rate limit, and it awaits `check()` of the `HealthCheck` that `create_app()` receives. `check()` returns when the service is able to answer, and raises `UnavailableError` when something it needs to answer is unavailable.
+`GET /health` isn't one of `ENDPOINTS`, since it runs no use case, nor under `PREFIX`, since it isn't part of the versioned API (see [Health check](../service/api.md#health-check)): `add_health_check_route(router, health_check)` adds it, and `create_app()` gives it the router of the application, which has no rate limit. It awaits `check()` of the `HealthCheck` that `create_app()` receives. `check()` returns when the service is able to answer, and raises `UnavailableError` when something it needs to answer is unavailable.
 
-| `check()`                  | Answers                                            |
-| -------------------------- | -------------------------------------------------- |
-| Returns                    | `204 No Content`                                   |
-| Raises `UnavailableError`  | `503 Service Unavailable`, with `unavailable`      |
-| Raises any other exception | `500 Internal Server Error`, with `internal_error` |
+The route answers by what `check()` does, with only a status code and no content: it catches what `check()` raises, so no handler of the [errors](#errors) answers it.
 
-- It doesn't read the access token. The OpenAPI schema documents it as `CheckHealth`, in the tag `Health`, with a summary, `204` and `503`.
+| `check()`                  | Answers                     | Logs                                                                 |
+| -------------------------- | --------------------------- | -------------------------------------------------------------------- |
+| Returns                    | `204 No Content`            | Nothing                                                              |
+| Raises `UnavailableError`  | `503 Service Unavailable`   | A warning, with `log_unavailable()`, as `unavailable_handler()` does |
+| Raises any other exception | `500 Internal Server Error` | An error, with the exception and its traceback                       |
+
+- Since the route answers any exception of `check()` itself, the exception doesn't reach the server, which logs the one of every other `500`, so the route logs it.
+- It doesn't read the access token. The OpenAPI schema documents it as `CheckHealth`, in the tag `Health`, with a summary, `204` and `503`, both with no content.
 - [`SQLAlchemyHealthCheck`](infra.md#health-check), the implementation `bootstrap` gives it, checks that the database answers.
 
 ## Cursors

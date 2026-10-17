@@ -117,7 +117,7 @@ async def test_limits_a_request_whose_values_cannot_be_read(
 async def test_does_not_limit_the_health_check(
     client: httpx.AsyncClient, over_the_limit: NonCallableMagicMock
 ):
-    response = await client.get("/api/v1/health")
+    response = await client.get("/health")
 
     assert response.status_code == HTTPStatus.NO_CONTENT
     over_the_limit.hit.assert_not_called()

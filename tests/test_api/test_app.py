@@ -10,11 +10,9 @@ from shortener.api.endpoints import ENDPOINTS
 from tests.utils.openapi_helpers import OPENAPI_FILE, openapi_yaml
 
 
-def test_every_endpoint_is_under_v1(app: FastAPI):
+def test_every_endpoint_is_under_v1_and_the_health_check_at_the_root(app: FastAPI):
     paths = {route.path for route in app.routes if isinstance(route, APIRoute)}
-    assert paths == {f"/api/v1{endpoint.path}" for endpoint in ENDPOINTS} | {
-        "/api/v1/health"
-    }
+    assert paths == {f"/api/v1{endpoint.path}" for endpoint in ENDPOINTS} | {"/health"}
 
 
 @pytest.mark.parametrize("url", ["/openapi.json", "/docs", "/redoc"])
