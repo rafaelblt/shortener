@@ -5,6 +5,7 @@ from datetime import timedelta
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
 from shortener.bootstrap.settings import DatabaseSettings
+from shortener.infra.db.migrations import apply_migrations, check_migrations
 
 
 def database_engine(settings: DatabaseSettings) -> AsyncEngine:
@@ -28,6 +29,20 @@ def database_engine(settings: DatabaseSettings) -> AsyncEngine:
             },
         },
     )
+
+
+async def prepare_database(settings: DatabaseSettings, engine: AsyncEngine) -> None:
+    """
+    Applies the migrations when the settings say so, and checks that the
+    database has those of the code. See docs/architecture/bootstrap.md#the-database
+
+    Raises:
+        UnexpectedMigrationsError: The database doesn't have exactly the
+            migrations of the code.
+    """
+    if settings.migrate_on_start:
+        await apply_migrations(settings.url)
+    await check_migrations(engine)
 
 
 def _milliseconds(time: timedelta) -> str:

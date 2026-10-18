@@ -17,6 +17,7 @@ from shortener.bootstrap.consumer import run_consumer
 from shortener.bootstrap.settings import ConsumerSettings, DatabaseSettings
 from shortener.consumer.topology import declare_queue
 from shortener.domain import ShortURL, Slug, TargetURL, UserID
+from shortener.infra.db.migrations import UnexpectedMigrationsError
 from shortener.infra.db.shorturl_repository import SQLAlchemyShortURLReader
 from shortener.infra.db.unit_of_work import SQLAlchemyUnitOfWork
 from tests.fixtures.consumer.rabbitmq import publish
@@ -43,10 +44,12 @@ def stopped() -> asyncio.Event:
 
 @pytest.fixture
 def engine_double(monkeypatch: pytest.MonkeyPatch) -> Mock:
+    """An engine, without a database to check when the consumer starts."""
     engine = Mock(dispose=AsyncMock())
     monkeypatch.setattr(
         "shortener.bootstrap.database.create_async_engine", Mock(return_value=engine)
     )
+    monkeypatch.setattr("shortener.bootstrap.consumer.prepare_database", AsyncMock())
     return engine
 
 
@@ -105,26 +108,24 @@ async def test_run_consumer_returns_when_stop_is_set(
         await run_consumer(stopped, settings)
 
 
-@pytest.mark.parametrize(
-    "migrate_on_start, migrated",
-    [
-        pytest.param(True, True, id="migrate on start"),
-        pytest.param(False, False, id="don't migrate on start"),
-    ],
-)
 async def test_run_consumer_migrates_its_database_when_it_starts_if_set(
-    settings: ConsumerSettings,
-    stopped: asyncio.Event,
-    empty_database_url: str,
-    migrate_on_start: bool,
-    migrated: bool,
+    settings: ConsumerSettings, stopped: asyncio.Event, empty_database_url: str
 ):
-    database = DatabaseSettings(empty_database_url, migrate_on_start=migrate_on_start)
+    database = DatabaseSettings(empty_database_url, migrate_on_start=True)
 
     await run_consumer(stopped, replace(settings, database=database))
 
-    differences = await differences_from_the_tables(empty_database_url)
-    assert (differences == []) is migrated
+    assert await differences_from_the_tables(empty_database_url) == []
+
+
+async def test_run_consumer_raises_when_its_database_isnt_migrated(
+    settings: ConsumerSettings, stopped: asyncio.Event, empty_database_url: str
+):
+    database = DatabaseSettings(empty_database_url)
+
+    with pytest.raises(UnexpectedMigrationsError):
+        await run_consumer(stopped, replace(settings, database=database))
+    assert await differences_from_the_tables(empty_database_url) != []
 
 
 async def test_run_consumer_without_settings_reads_them_from_the_environment(

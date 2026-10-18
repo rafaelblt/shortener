@@ -69,9 +69,11 @@ The API also doesn't start when the settings of the access tokens can't verify t
 - a key that doesn't suit one of the algorithms, such as a public key as the secret of an HMAC algorithm, or a secret shorter than the hash of its algorithm;
 - a `JWT_JWKS_URL` that isn't `http` or `https`.
 
+And neither process starts when its database can't be reached, such as for a wrong password, or doesn't have exactly the migrations of the code (see [Checking the migrations](running.md#checking-the-migrations)).
+
 The rest is found later, when it is used:
 
-- The database is first reached by the first request, or the first message. When it can't be reached, they answer `503`, and when it fails in a way that trying again won't fix, such as a wrong password or a database that doesn't exist, the request answers `500`, and the message goes to the dead-letter queue.
+- When the database can't be reached after the process started, the requests answer `503`, and when it fails in a way that trying again won't fix, the request answers `500`, and the message goes to the dead-letter queue.
 - The keys of `JWT_JWKS_URL` are first fetched by the first request with an access token.
 - The consumer doesn't start when RabbitMQ can't be reached. After it starts, it connects again by itself, every 5 seconds, when the connection is lost.
 

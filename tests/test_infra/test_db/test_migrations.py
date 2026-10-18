@@ -1,11 +1,21 @@
 import asyncio
 import sys
 
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
+from collections.abc import AsyncIterator
 
-from shortener.infra.db.migrations import MIGRATIONS_LOCK_KEY, apply_migrations
+import pytest
+
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
+
+from shortener.infra.db.migrations import (
+    MIGRATIONS_LOCK_KEY,
+    UnexpectedMigrationsError,
+    apply_migrations,
+    check_migrations,
+)
 from tests.fixtures.infra.database import differences_from_the_tables
+from tests.utils.text_helpers import assert_mentions
 
 
 # Applies the migrations to the database of the URL it receives, as the
@@ -15,6 +25,13 @@ import asyncio, sys
 from shortener.infra.db.migrations import apply_migrations
 asyncio.run(apply_migrations(sys.argv[1]))
 """
+
+
+@pytest.fixture
+async def empty_engine(empty_database_url: str) -> AsyncIterator[AsyncEngine]:
+    engine = create_async_engine(empty_database_url)
+    yield engine
+    await engine.dispose()
 
 
 async def waiting_for_the_lock(connection: AsyncConnection) -> int:
@@ -84,3 +101,33 @@ async def test_processes_that_migrate_at_once_wait_for_each_other_and_all_succee
 
     assert return_codes == [0] * len(processes)
     assert await differences_from_the_tables(empty_database_url) == []
+
+
+async def test_check_migrations_passes_for_a_migrated_database(engine: AsyncEngine):
+    await check_migrations(engine)
+
+
+async def test_check_migrations_raises_for_a_database_without_migrations(
+    empty_engine: AsyncEngine,
+):
+    with pytest.raises(UnexpectedMigrationsError) as raised:
+        await check_migrations(empty_engine)
+    assert raised.value.applied == ()
+    assert_mentions(str(raised.value), *raised.value.expected)
+
+
+async def test_check_migrations_raises_for_a_migration_the_code_doesnt_know(
+    empty_engine: AsyncEngine,
+):
+    async with empty_engine.begin() as connection:
+        await connection.execute(
+            text("CREATE TABLE alembic_version (version_num varchar(32) PRIMARY KEY)")
+        )
+        await connection.execute(
+            text("INSERT INTO alembic_version VALUES ('a-later-migration')")
+        )
+
+    with pytest.raises(UnexpectedMigrationsError) as raised:
+        await check_migrations(empty_engine)
+    assert raised.value.applied == ("a-later-migration",)
+    assert_mentions(str(raised.value), "a-later-migration", *raised.value.expected)

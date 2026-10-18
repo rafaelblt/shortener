@@ -14,7 +14,7 @@ The service is two processes, from the same image, which share the Postgres data
 - The command of the API is the one of the image, in the [Dockerfile](../../Dockerfile), which listens on the port of the `PORT` environment variable, as platforms such as Cloud Run, Heroku and Render set it, or on 8000 when it isn't set. `poetry run task run` runs it with `--reload`, for development, and `poetry run task consume` runs the consumer.
 - They run apart, so a failure of one doesn't stop the other, and each one runs as many processes as it needs.
 - The consumer runs until it gets `SIGINT` or `SIGTERM`. A message it hasn't acknowledged by then goes back to the queue, and is handled again.
-- The schema of the database is created and changed by the migrations, which `alembic upgrade head` applies, with the `DATABASE_URL` of the environment, or the processes themselves when they start, with [`DATABASE_MIGRATE_ON_START`](#migrating-on-start). A new version of the service may need its migrations applied before it starts.
+- The schema of the database is created and changed by the migrations, which `alembic upgrade head` applies, with the `DATABASE_URL` of the environment, or the processes themselves when they start, with [`DATABASE_MIGRATE_ON_START`](#migrating-on-start). A version of the service only starts on a database with exactly its migrations (see [Checking the migrations](#checking-the-migrations)).
 
 To try the service locally, [Docker Compose](../../README.md#running-with-docker-compose) runs all of it.
 
@@ -23,9 +23,17 @@ To try the service locally, [Docker Compose](../../README.md#running-with-docker
 - **The API:** each process, such as each worker of uvicorn or each replica, counts its own [rate limit](api.md#rate-limit), so an address can make up to the limit in each one, and keeps its own pool of connections to the database, of up to `DATABASE_POOL_SIZE` plus `DATABASE_MAX_OVERFLOW` connections, which Postgres has to allow for every process together.
 - **The consumer:** the processes share the queue, and RabbitMQ delivers each message to only one of them, which handles one message at a time.
 
+## Checking the migrations
+
+When it starts, each process connects to the database, and checks that the last migration the database has is the last one of the code: the API before it answers any request, the health check included, and the consumer before it connects to RabbitMQ. When it isn't, the process doesn't start, with an error that names the migrations of each. So a process doesn't start:
+
+- when the database can't be reached, or refuses the connection, such as for a wrong password;
+- when the database is missing migrations, such as when it was never migrated;
+- when the database has a migration the code doesn't know, such as one of a newer version of the service. During a deploy that migrates the database, a process of the old version that restarts, such as one the orchestrator replaces, doesn't start again.
+
 ## Migrating on start
 
-With `DATABASE_MIGRATE_ON_START` set to `true`, the API and the consumer apply the migrations the database doesn't have yet when they start: the API before it answers any request, the health check included, and the consumer before it connects to RabbitMQ. A process whose migrations fail doesn't start.
+With `DATABASE_MIGRATE_ON_START` set to `true`, the API and the consumer apply the migrations the database doesn't have yet when they start, before they [check them](#checking-the-migrations). A process whose migrations fail doesn't start.
 
 - Every process that migrates, when it starts or with `alembic upgrade head`, first takes the same lock of Postgres. So when several start at once, such as the replicas of the API and of the consumer, one of them applies the migrations, and the others wait for it, and then find nothing left to apply.
 - A process waits for the lock, and for the migrations, as long as they take, without the timeouts of `DATABASE_LOCK_TIMEOUT` and `DATABASE_STATEMENT_TIMEOUT`. An orchestrator that restarts the API when it doesn't answer within some time after it starts may restart it while it migrates.

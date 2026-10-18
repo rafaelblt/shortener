@@ -23,6 +23,7 @@ from shortener.bootstrap.settings import (
     SettingsError,
 )
 from shortener.domain import UserID
+from shortener.infra.db.migrations import UnexpectedMigrationsError
 from shortener.use_cases.unavailable_error import UnavailableError
 from tests.fixtures.infra.database import differences_from_the_tables
 
@@ -42,6 +43,23 @@ SETTINGS = Settings(
     access_tokens=KEY_SETTINGS,
 )
 UNREACHABLE_DATABASE_URL = "postgresql+asyncpg://user:password@127.0.0.1:1/database"
+
+
+@pytest.fixture
+def prepare_database_double(monkeypatch: pytest.MonkeyPatch) -> AsyncMock:
+    """Lets the application start without a database to check."""
+    prepare_database = AsyncMock()
+    monkeypatch.setattr("shortener.bootstrap.app.prepare_database", prepare_database)
+    return prepare_database
+
+
+@pytest.fixture
+def engine_double(monkeypatch: pytest.MonkeyPatch) -> Mock:
+    engine = Mock(dispose=AsyncMock())
+    monkeypatch.setattr(
+        "shortener.bootstrap.database.create_async_engine", Mock(return_value=engine)
+    )
+    return engine
 
 
 def paths_of(app: FastAPI) -> set[str]:
@@ -125,37 +143,57 @@ async def test_create_app_limits_the_requests_of_each_ip_address_by_the_settings
 
 
 async def test_the_application_disposes_its_engine_when_it_stops(
-    monkeypatch: pytest.MonkeyPatch,
+    engine_double: Mock, prepare_database_double: AsyncMock
 ):
-    engine = Mock(dispose=AsyncMock())
-    monkeypatch.setattr(
-        "shortener.bootstrap.database.create_async_engine", Mock(return_value=engine)
-    )
     app = create_app(SETTINGS)
 
     async with app.router.lifespan_context(app):
-        engine.dispose.assert_not_awaited()
+        engine_double.dispose.assert_not_awaited()
 
-    engine.dispose.assert_awaited_once()
+    engine_double.dispose.assert_awaited_once()
 
 
-@pytest.mark.parametrize(
-    "migrate_on_start, migrated",
-    [
-        pytest.param(True, True, id="migrate on start"),
-        pytest.param(False, False, id="don't migrate on start"),
-    ],
-)
-async def test_the_application_migrates_its_database_when_it_starts_if_set(
-    empty_database_url: str, migrate_on_start: bool, migrated: bool
+async def test_the_application_disposes_its_engine_when_it_cant_start(
+    engine_double: Mock, prepare_database_double: AsyncMock
 ):
-    database = DatabaseSettings(empty_database_url, migrate_on_start=migrate_on_start)
+    prepare_database_double.side_effect = UnexpectedMigrationsError((), ("head",))
+    app = create_app(SETTINGS)
+
+    with pytest.raises(UnexpectedMigrationsError):
+        async with app.router.lifespan_context(app):
+            pass
+
+    engine_double.dispose.assert_awaited_once()
+
+
+async def test_the_application_migrates_its_database_when_it_starts_if_set(
+    empty_database_url: str,
+):
+    database = DatabaseSettings(empty_database_url, migrate_on_start=True)
     app = create_app(replace(SETTINGS, database=database))
 
     async with app.router.lifespan_context(app):
-        differences = await differences_from_the_tables(empty_database_url)
+        assert await differences_from_the_tables(empty_database_url) == []
 
-    assert (differences == []) is migrated
+
+async def test_the_application_doesnt_start_when_its_database_isnt_migrated(
+    empty_database_url: str,
+):
+    app = create_app(replace(SETTINGS, database=DatabaseSettings(empty_database_url)))
+
+    with pytest.raises(UnexpectedMigrationsError):
+        async with app.router.lifespan_context(app):
+            pass
+    assert await differences_from_the_tables(empty_database_url) != []
+
+
+async def test_the_application_doesnt_start_when_its_database_is_unreachable():
+    database = DatabaseSettings(UNREACHABLE_DATABASE_URL)
+    app = create_app(replace(SETTINGS, database=database))
+
+    with pytest.raises(OSError):
+        async with app.router.lifespan_context(app):
+            pass
 
 
 async def test_the_health_check_passes_when_its_database_answers(database_url: str):
@@ -164,7 +202,9 @@ async def test_the_health_check_passes_when_its_database_answers(database_url: s
     assert (await check_health(settings)).status_code == HTTPStatus.NO_CONTENT
 
 
-async def test_the_health_check_fails_when_its_database_is_unreachable():
+async def test_the_health_check_fails_when_its_database_is_unreachable(
+    prepare_database_double: AsyncMock,
+):
     settings = replace(SETTINGS, database=DatabaseSettings(UNREACHABLE_DATABASE_URL))
 
     assert (await check_health(settings)).status_code == HTTPStatus.SERVICE_UNAVAILABLE

@@ -4,11 +4,10 @@ import signal
 
 import aio_pika
 
-from shortener.bootstrap.database import database_engine
+from shortener.bootstrap.database import database_engine, prepare_database
 from shortener.bootstrap.settings import ConsumerSettings
 from shortener.consumer.consumer import consume
 from shortener.consumer.user_deleted_handler import UserDeletedHandler
-from shortener.infra.db.migrations import apply_migrations
 from shortener.infra.db.unit_of_work import SQLAlchemyUnitOfWork
 from shortener.use_cases.delete_shorturls_of_user import DeleteShortURLsOfUser
 
@@ -26,6 +25,8 @@ async def run_consumer(
 
     Raises:
         SettingsError: The environment variables don't make valid settings.
+        UnexpectedMigrationsError: The database doesn't have exactly the
+            migrations of the code.
         aio_pika.exceptions.AMQPConnectionError: RabbitMQ can't be reached
             when the consumer starts.
     """
@@ -35,8 +36,7 @@ async def run_consumer(
     engine = database_engine(settings.database)
     handler = UserDeletedHandler(DeleteShortURLsOfUser(SQLAlchemyUnitOfWork(engine)))
     try:
-        if settings.database.migrate_on_start:
-            await apply_migrations(settings.database.url)
+        await prepare_database(settings.database, engine)
         connection = await aio_pika.connect_robust(settings.rabbitmq_url)
         async with connection:
             await consume(connection, handler)

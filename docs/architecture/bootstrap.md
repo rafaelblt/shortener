@@ -11,7 +11,7 @@ shortener/bootstrap/
 ├── settings.py    Settings, ConsumerSettings, DatabaseSettings, AccessTokenSettings,
 │                  RateLimitSettings and SettingsError
 ├── use_cases.py   UseCases
-├── database.py    database_engine()
+├── database.py    database_engine() and prepare_database()
 ├── app.py         create_app() and access_token_verifier()
 └── consumer.py    run_consumer() and main()
 ```
@@ -62,9 +62,9 @@ The API builds the use case of each request, with the user of the request. Build
 3. It builds `UseCases` with `SQLAlchemyUnitOfWork` and `SQLAlchemyShortURLReader`, on that engine, and `UTCClock`.
 4. It builds the verifier of access tokens with `access_token_verifier()`.
 5. It builds an `InMemoryRateLimiter` with the `requests` and the `window` of the settings of the rate limit, and the same `UTCClock`.
-6. It returns the application of [`create_app()`](api.md#the-application) of the API, with `SQLAlchemyHealthCheck`, on that engine, as its [health check](api.md#health-check), and a lifespan that, when the application starts, applies the migrations with [`apply_migrations()`](infra.md#migrations) if `migrate_on_start` of the settings of the database is true, and disposes the engine when the application stops.
+6. It returns the application of [`create_app()`](api.md#the-application) of the API, with `SQLAlchemyHealthCheck`, on that engine, as its [health check](api.md#health-check), and a lifespan that, when the application starts, prepares the database with [`prepare_database()`](#the-database), and disposes the engine when the application stops, or when preparing the database raises.
 
-It raises `SettingsError` for the environment variables, `ValueError` when the settings of the access tokens can't verify tokens, and `LookupError` from the API.
+It raises `SettingsError` for the environment variables, `ValueError` when the settings of the access tokens can't verify tokens, and `LookupError` from the API. The lifespan raises the errors of `prepare_database()`, and the application doesn't start.
 
 `access_token_verifier(settings)` returns a `JWTAccessTokenVerifier` with the algorithms, the issuer, the audience and the leeway of the settings: `with_jwks()`, with the `jwks_timeout`, when `jwks_url` isn't `None`, and `with_key()` otherwise. It raises `SettingsError` when both are `None`, which only settings built in code, and not by `from_environment()`, can be.
 
@@ -80,7 +80,9 @@ It raises `SettingsError` for the environment variables, `ValueError` when the s
 
 The implementations of the database raise `UnavailableError` from these timeouts, which are transient (see [Failures of the database](infra.md#failures-of-the-database)).
 
-The API and the consumer create their engines with it. It is a module of its own so that the process of the consumer doesn't load the API, which import-linter checks.
+`prepare_database(settings, engine)` applies the migrations with [`apply_migrations()`](infra.md#migrations), on the `url` of the settings, when their `migrate_on_start` is true, and then checks them with [`check_migrations()`](infra.md#migrations), on the engine. It raises their errors as they are, such as `UnexpectedMigrationsError`.
+
+The API and the consumer create their engines with `database_engine()`, and prepare them with `prepare_database()` when they start. It is a module of its own so that the process of the consumer doesn't load the API, which import-linter checks.
 
 ## The consumer
 
@@ -90,10 +92,10 @@ The API and the consumer create their engines with it. It is a module of its own
 
 1. It reads the settings from the environment variables when `settings` is `None`.
 2. It creates the engine of the database with [`database_engine()`](#the-database), and builds a [`UserDeletedHandler`](consumer.md#handling) with `DeleteShortURLsOfUser`, on a `SQLAlchemyUnitOfWork` on that engine.
-3. It applies the migrations with [`apply_migrations()`](infra.md#migrations) if `migrate_on_start` of the settings of the database is true.
+3. It prepares the database with [`prepare_database()`](#the-database).
 4. It connects to `RABBITMQ_URL` with `connect_robust()` of aio-pika, and starts consuming with [`consume()`](consumer.md#consuming).
 5. When `stop` is set, it closes the connection, and returns. RabbitMQ puts a message that wasn't acknowledged by then back in the queue, so it is handled again.
 
-It disposes the engine when it returns or raises. It raises `SettingsError` for the environment variables, the errors of the migrations as they are, and the `AMQPConnectionError` of aio-pika when RabbitMQ can't be reached when it starts. After that, a lost connection doesn't raise: aio-pika connects again, every 5 seconds, until it succeeds, and the consumer goes on.
+It disposes the engine when it returns or raises. It raises `SettingsError` for the environment variables, the errors of `prepare_database()`, such as `UnexpectedMigrationsError`, and the `AMQPConnectionError` of aio-pika when RabbitMQ can't be reached when it starts. After that, a lost connection doesn't raise: aio-pika connects again, every 5 seconds, until it succeeds, and the consumer goes on.
 
 `main()` runs `run_consumer()` until the process gets `SIGINT` or `SIGTERM`, which set `stop`, and logs at the level `INFO`, to the standard error, with the default format of `logging`.
