@@ -17,4 +17,6 @@ COPY shortener shortener
 
 EXPOSE 8000
 
-CMD ["uvicorn", "shortener.bootstrap.app:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000"]
+# In the form of a shell, so that it reads PORT, and with exec, so that uvicorn,
+# and not the shell, gets the signals. See docs/service/running.md#the-processes
+CMD exec uvicorn shortener.bootstrap.app:create_app --factory --host 0.0.0.0 --port "${PORT:-8000}"

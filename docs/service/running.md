@@ -11,7 +11,7 @@ The service is two processes, from the same image, which share the Postgres data
 | The API      | `uvicorn shortener.bootstrap.app:create_app --factory --host 0.0.0.0 --port 8000` | Postgres, and the issuer of the tokens |
 | The consumer | `python -m shortener.bootstrap.consumer`                                          | Postgres and RabbitMQ                  |
 
-- The command of the API is the one of the image, in the [Dockerfile](../../Dockerfile). `poetry run task run` runs it with `--reload`, for development, and `poetry run task consume` runs the consumer.
+- The command of the API is the one of the image, in the [Dockerfile](../../Dockerfile), which listens on the port of the `PORT` environment variable, as platforms such as Cloud Run, Heroku and Render set it, or on 8000 when it isn't set. `poetry run task run` runs it with `--reload`, for development, and `poetry run task consume` runs the consumer.
 - They run apart, so a failure of one doesn't stop the other, and each one runs as many processes as it needs.
 - The consumer runs until it gets `SIGINT` or `SIGTERM`. A message it hasn't acknowledged by then goes back to the queue, and is handled again.
 - The schema of the database is created and changed by the migrations, which `alembic upgrade head` applies, with the `DATABASE_URL` of the environment. A new version of the service may need its migrations applied before it starts.
