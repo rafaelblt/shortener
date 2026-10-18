@@ -28,6 +28,12 @@ And these optional ones, whose values are numbers:
 | `RATE_LIMIT_REQUESTS`        | 60      | The requests each IP address can make in each window of `RATE_LIMIT_WINDOW`: 1 or more (see [Rate limit](api.md#rate-limit))                  |
 | `RATE_LIMIT_WINDOW`          | 60      | The window of time of `RATE_LIMIT_REQUESTS`, in seconds: more than 0                                                                          |
 
+And this one, whose value is `true` or `false`:
+
+| Variable                    | Default | Value                                                                                                                               |
+| --------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_MIGRATE_ON_START` | `false` | Whether the process applies the migrations of the database when it starts (see [Migrating on start](running.md#migrating-on-start)) |
+
 When one of the timeouts of the database runs out, the request that waited answers `503` with `unavailable`, and the consumer tries its message again (see [Handling](events.md#handling)).
 
 ## The consumer
@@ -39,13 +45,14 @@ The consumer of the events has no access tokens or rate limit, so it doesn't rea
 | `DATABASE_URL` | Yes      | The same as in the API                                                                                                |
 | `RABBITMQ_URL` | Yes      | The URL of RabbitMQ, `amqp` or `amqps`, such as `amqp://user:password@localhost:5672/`, where `/` is the virtual host |
 
-It reads the optional variables of the database, from `DATABASE_POOL_SIZE` to `DATABASE_STATEMENT_TIMEOUT`, as the API does, with the same defaults and rules.
+It reads the optional variables of the database, from `DATABASE_POOL_SIZE` to `DATABASE_MIGRATE_ON_START`, as the API does, with the same defaults and rules.
 
 ## How the values are read
 
 - Spaces at the ends of a value are removed, and an empty value is the same as a variable that isn't set.
 - In `JWT_ALGORITHMS`, an empty item between commas is left out.
 - A number of seconds may have decimals, such as `0.5`, and the other numbers are whole.
+- `true` and `false` may be in any case, such as `True`.
 
 ## Errors when starting
 
@@ -54,7 +61,7 @@ A process doesn't start when its variables don't make valid settings. It stops w
 - a required variable that is missing;
 - a `DATABASE_URL` that isn't a URL of `postgresql+asyncpg`, or a `RABBITMQ_URL` that isn't `amqp` or `amqps`;
 - both or neither of `JWT_KEY` and `JWT_JWKS_URL`, or `JWT_JWKS_TIMEOUT` with `JWT_KEY`;
-- an optional variable that isn't a number, or is out of the range of its table.
+- an optional variable that isn't a number, or is out of the range of its table, or a `DATABASE_MIGRATE_ON_START` that isn't `true` or `false`.
 
 The API also doesn't start when the settings of the access tokens can't verify tokens:
 
@@ -71,6 +78,7 @@ The rest is found later, when it is used:
 ## The defaults
 
 - `DATABASE_POOL_SIZE`, `DATABASE_MAX_OVERFLOW` and `DATABASE_POOL_TIMEOUT` have the defaults of SQLAlchemy, and `DATABASE_CONNECT_TIMEOUT` is 10 seconds, instead of the 60 of asyncpg.
+- `DATABASE_MIGRATE_ON_START` is `false` by default, so that whoever runs the service decides how its database is migrated, and turns it on where it helps, such as for the first deploy.
 - `DATABASE_LOCK_TIMEOUT` and `DATABASE_STATEMENT_TIMEOUT` have a default because Postgres has none: without them, a statement waits for a lock, and runs, as long as it takes. 2147483.647 seconds is the most Postgres takes for them, which it keeps as a number of milliseconds in an `int`, and it takes them in whole milliseconds, so a fraction of a millisecond rounds up.
 - `JWT_LEEWAY` is a setting because the right value depends on the clock of the issuer of each environment.
 - `JWT_JWKS_TIMEOUT` is 5 seconds by default, instead of the 30 of PyJWT, since each fetch of the keys holds a thread of the service while it waits. Setting it with `JWT_KEY` is an error, since it is more likely a mistake of whoever set the variables.

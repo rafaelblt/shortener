@@ -248,6 +248,33 @@ def test_from_environment_raises_naming_a_timeout_longer_than_postgres_takes(
     assert_mentions(str(raised.value), name)
 
 
+@pytest.mark.parametrize(
+    "value, migrate_on_start",
+    [
+        pytest.param(None, False, id="unset"),
+        pytest.param(" ", False, id="empty"),
+        pytest.param("true", True, id="true"),
+        pytest.param(" True ", True, id="true in another case"),
+        pytest.param("false", False, id="false"),
+        pytest.param("FALSE", False, id="false in another case"),
+    ],
+)
+def test_from_environment_reads_whether_to_migrate_on_start(
+    value: str | None, migrate_on_start: bool
+):
+    settings = Settings.from_environment(environment(DATABASE_MIGRATE_ON_START=value))
+    assert settings.database.migrate_on_start is migrate_on_start
+
+
+@pytest.mark.parametrize("value", ["yes", "1", "truee"])
+def test_from_environment_raises_for_a_migrate_on_start_that_isnt_true_or_false(
+    value: str,
+):
+    with pytest.raises(SettingsError) as raised:
+        Settings.from_environment(environment(DATABASE_MIGRATE_ON_START=value))
+    assert_mentions(str(raised.value), "DATABASE_MIGRATE_ON_START")
+
+
 def test_from_environment_raises_for_a_jwks_timeout_with_a_key():
     with pytest.raises(SettingsError) as raised:
         Settings.from_environment(
@@ -286,11 +313,12 @@ def test_consumer_settings_from_environment_reads_the_settings_from_the_variable
     )
 
 
-def test_consumer_settings_from_environment_reads_the_optional_numbers():
+def test_consumer_settings_from_environment_reads_the_optional_variables():
     settings = ConsumerSettings.from_environment(
-        consumer_environment(DATABASE_POOL_SIZE="2")
+        consumer_environment(DATABASE_POOL_SIZE="2", DATABASE_MIGRATE_ON_START="true")
     )
     assert settings.database.pool_size == 2
+    assert settings.database.migrate_on_start is True
 
 
 @pytest.mark.parametrize("name", ["DATABASE_URL", "RABBITMQ_URL"])

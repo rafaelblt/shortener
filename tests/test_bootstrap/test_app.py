@@ -24,6 +24,7 @@ from shortener.bootstrap.settings import (
 )
 from shortener.domain import UserID
 from shortener.use_cases.unavailable_error import UnavailableError
+from tests.fixtures.infra.database import differences_from_the_tables
 
 
 SECRET = "a-secret-long-enough-for-hs256-signatures"
@@ -136,6 +137,25 @@ async def test_the_application_disposes_its_engine_when_it_stops(
         engine.dispose.assert_not_awaited()
 
     engine.dispose.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    "migrate_on_start, migrated",
+    [
+        pytest.param(True, True, id="migrate on start"),
+        pytest.param(False, False, id="don't migrate on start"),
+    ],
+)
+async def test_the_application_migrates_its_database_when_it_starts_if_set(
+    empty_database_url: str, migrate_on_start: bool, migrated: bool
+):
+    database = DatabaseSettings(empty_database_url, migrate_on_start=migrate_on_start)
+    app = create_app(replace(SETTINGS, database=database))
+
+    async with app.router.lifespan_context(app):
+        differences = await differences_from_the_tables(empty_database_url)
+
+    assert (differences == []) is migrated
 
 
 async def test_the_health_check_passes_when_its_database_answers(database_url: str):

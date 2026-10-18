@@ -9,6 +9,7 @@ from shortener.bootstrap.settings import AccessTokenSettings, Settings, Settings
 from shortener.bootstrap.use_cases import UseCases
 from shortener.infra.clock import UTCClock
 from shortener.infra.db.health_check import SQLAlchemyHealthCheck
+from shortener.infra.db.migrations import apply_migrations
 from shortener.infra.db.shorturl_repository import SQLAlchemyShortURLReader
 from shortener.infra.db.unit_of_work import SQLAlchemyUnitOfWork
 from shortener.infra.in_memory_rate_limiter import InMemoryRateLimiter
@@ -32,6 +33,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        if settings.database.migrate_on_start:
+            await apply_migrations(settings.database.url)
         yield
         await engine.dispose()
 

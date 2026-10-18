@@ -21,6 +21,7 @@ DEFAULT_DATABASE_POOL_TIMEOUT: Final = timedelta(seconds=30)
 DEFAULT_DATABASE_CONNECT_TIMEOUT: Final = timedelta(seconds=10)
 DEFAULT_DATABASE_LOCK_TIMEOUT: Final = timedelta(seconds=5)
 DEFAULT_DATABASE_STATEMENT_TIMEOUT: Final = timedelta(seconds=30)
+DEFAULT_DATABASE_MIGRATE_ON_START: Final = False
 DEFAULT_JWT_LEEWAY: Final = timedelta(seconds=60)
 DEFAULT_JWT_JWKS_TIMEOUT: Final = timedelta(seconds=5)
 DEFAULT_RATE_LIMIT_REQUESTS: Final = 60
@@ -45,6 +46,7 @@ class DatabaseSettings:
     connect_timeout: timedelta = DEFAULT_DATABASE_CONNECT_TIMEOUT
     lock_timeout: timedelta = DEFAULT_DATABASE_LOCK_TIMEOUT
     statement_timeout: timedelta = DEFAULT_DATABASE_STATEMENT_TIMEOUT
+    migrate_on_start: bool = DEFAULT_DATABASE_MIGRATE_ON_START
 
 
 @dataclass(frozen=True)
@@ -155,6 +157,9 @@ def _database_settings(variables: "_Variables") -> DatabaseSettings:
             DEFAULT_DATABASE_STATEMENT_TIMEOUT,
             maximum=POSTGRES_MAX_TIMEOUT,
         ),
+        migrate_on_start=variables.optional_boolean(
+            "DATABASE_MIGRATE_ON_START", DEFAULT_DATABASE_MIGRATE_ON_START
+        ),
     )
 
 
@@ -240,6 +245,16 @@ class _Variables:
             self.problems.append(f"{name} must be a whole number, {minimum} or more")
             return default
         return number
+
+    def optional_boolean(self, name: str, default: bool) -> bool:
+        """An optional variable with true or false, in any case."""
+        value = self.optional(name)
+        if value is None:
+            return default
+        if value.lower() not in ("true", "false"):
+            self.problems.append(f"{name} must be true or false")
+            return default
+        return value.lower() == "true"
 
     def optional_seconds(
         self,

@@ -3,6 +3,7 @@ import os
 import signal
 import sys
 
+from dataclasses import replace
 from datetime import datetime
 from unittest.mock import AsyncMock, Mock
 
@@ -19,7 +20,7 @@ from shortener.domain import ShortURL, Slug, TargetURL, UserID
 from shortener.infra.db.shorturl_repository import SQLAlchemyShortURLReader
 from shortener.infra.db.unit_of_work import SQLAlchemyUnitOfWork
 from tests.fixtures.consumer.rabbitmq import publish
-from tests.fixtures.infra.database import store
+from tests.fixtures.infra.database import differences_from_the_tables, store
 
 
 UNREACHABLE_RABBITMQ_URL = "amqp://user:password@127.0.0.1:1/"
@@ -102,6 +103,28 @@ async def test_run_consumer_returns_when_stop_is_set(
 ):
     async with asyncio.timeout(10):
         await run_consumer(stopped, settings)
+
+
+@pytest.mark.parametrize(
+    "migrate_on_start, migrated",
+    [
+        pytest.param(True, True, id="migrate on start"),
+        pytest.param(False, False, id="don't migrate on start"),
+    ],
+)
+async def test_run_consumer_migrates_its_database_when_it_starts_if_set(
+    settings: ConsumerSettings,
+    stopped: asyncio.Event,
+    empty_database_url: str,
+    migrate_on_start: bool,
+    migrated: bool,
+):
+    database = DatabaseSettings(empty_database_url, migrate_on_start=migrate_on_start)
+
+    await run_consumer(stopped, replace(settings, database=database))
+
+    differences = await differences_from_the_tables(empty_database_url)
+    assert (differences == []) is migrated
 
 
 async def test_run_consumer_without_settings_reads_them_from_the_environment(

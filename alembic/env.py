@@ -4,10 +4,11 @@ import os
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy import pool
+from sqlalchemy import pool, text
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
 
+from shortener.infra.db.migrations import MIGRATIONS_LOCK_KEY
 from shortener.infra.db.tables import metadata
 
 
@@ -18,10 +19,12 @@ if config.config_file_name is not None:
 
 
 def database_url() -> str:
-    # Whoever runs the migrations from code, such as the tests, sets
-    # sqlalchemy.url. The command line takes it from the environment, like
-    # the application. See docs/architecture/infra.md#migrations
-    return config.get_main_option("sqlalchemy.url") or os.environ["DATABASE_URL"]
+    # Whoever runs the migrations from code, such as apply_migrations(), gives
+    # the URL in the attributes of the config, which, unlike its options, take
+    # a % as it is. The command line takes it from the environment, like the
+    # application. See docs/architecture/infra.md#migrations
+    url: str | None = config.attributes.get("database_url")
+    return url or os.environ["DATABASE_URL"]
 
 
 def run_migrations_offline() -> None:
@@ -38,6 +41,11 @@ def run_migrations_offline() -> None:
 def do_run_migrations(connection: Connection) -> None:
     context.configure(connection=connection, target_metadata=metadata)
     with context.begin_transaction():
+        # Held until the transaction ends, so a process that waited for it
+        # finds the migrations of the one that held it committed.
+        connection.execute(
+            text("SELECT pg_advisory_xact_lock(:key)"), {"key": MIGRATIONS_LOCK_KEY}
+        )
         context.run_migrations()
 
 

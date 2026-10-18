@@ -24,13 +24,13 @@ shortener/bootstrap/
 
 Both read every variable before deciding, through `_Variables`, which keeps each problem it finds, so when the variables don't make valid settings they raise a single `SettingsError`, whose message names every problem. Otherwise, they return frozen dataclasses:
 
-| Dataclass             | Fields                                                                                                                                                                 |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Settings`            | `database`, a `DatabaseSettings`, `access_tokens`, an `AccessTokenSettings`, and `rate_limit`, a `RateLimitSettings`                                                   |
-| `ConsumerSettings`    | `database`, a `DatabaseSettings`, and `rabbitmq_url`, as it is                                                                                                         |
-| `DatabaseSettings`    | `url`, the `DATABASE_URL`, `pool_size` and `max_overflow`, as `int`s, and `pool_timeout`, `connect_timeout`, `lock_timeout` and `statement_timeout`, as `timedelta`s   |
-| `AccessTokenSettings` | `algorithms`, as a tuple, `issuer`, `audience`, `key` and `jwks_url`, of which `from_environment()` sets exactly one, and `leeway` and `jwks_timeout`, as `timedelta`s |
-| `RateLimitSettings`   | `requests`, as an `int`, and `window`, as a `timedelta`                                                                                                                |
+| Dataclass             | Fields                                                                                                                                                                                                |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Settings`            | `database`, a `DatabaseSettings`, `access_tokens`, an `AccessTokenSettings`, and `rate_limit`, a `RateLimitSettings`                                                                                  |
+| `ConsumerSettings`    | `database`, a `DatabaseSettings`, and `rabbitmq_url`, as it is                                                                                                                                        |
+| `DatabaseSettings`    | `url`, the `DATABASE_URL`, `pool_size` and `max_overflow`, as `int`s, `pool_timeout`, `connect_timeout`, `lock_timeout` and `statement_timeout`, as `timedelta`s, and `migrate_on_start`, as a `bool` |
+| `AccessTokenSettings` | `algorithms`, as a tuple, `issuer`, `audience`, `key` and `jwks_url`, of which `from_environment()` sets exactly one, and `leeway` and `jwks_timeout`, as `timedelta`s                                |
+| `RateLimitSettings`   | `requests`, as an `int`, and `window`, as a `timedelta`                                                                                                                                               |
 
 - An optional variable that isn't set gets its default, a `DEFAULT_` constant of `settings.py`, which is also the default of its field, so settings built in code, such as the ones of the tests, can leave it out. The `rate_limit` of `Settings` is a `RateLimitSettings` with the defaults, so they can leave it out too.
 - `ConsumerSettings` reads the variables of the database as `Settings` does, with the same function.
@@ -62,7 +62,7 @@ The API builds the use case of each request, with the user of the request. Build
 3. It builds `UseCases` with `SQLAlchemyUnitOfWork` and `SQLAlchemyShortURLReader`, on that engine, and `UTCClock`.
 4. It builds the verifier of access tokens with `access_token_verifier()`.
 5. It builds an `InMemoryRateLimiter` with the `requests` and the `window` of the settings of the rate limit, and the same `UTCClock`.
-6. It returns the application of [`create_app()`](api.md#the-application) of the API, with `SQLAlchemyHealthCheck`, on that engine, as its [health check](api.md#health-check), and a lifespan that disposes the engine when the application stops.
+6. It returns the application of [`create_app()`](api.md#the-application) of the API, with `SQLAlchemyHealthCheck`, on that engine, as its [health check](api.md#health-check), and a lifespan that, when the application starts, applies the migrations with [`apply_migrations()`](infra.md#migrations) if `migrate_on_start` of the settings of the database is true, and disposes the engine when the application stops.
 
 It raises `SettingsError` for the environment variables, `ValueError` when the settings of the access tokens can't verify tokens, and `LookupError` from the API.
 
@@ -90,9 +90,10 @@ The API and the consumer create their engines with it. It is a module of its own
 
 1. It reads the settings from the environment variables when `settings` is `None`.
 2. It creates the engine of the database with [`database_engine()`](#the-database), and builds a [`UserDeletedHandler`](consumer.md#handling) with `DeleteShortURLsOfUser`, on a `SQLAlchemyUnitOfWork` on that engine.
-3. It connects to `RABBITMQ_URL` with `connect_robust()` of aio-pika, and starts consuming with [`consume()`](consumer.md#consuming).
-4. When `stop` is set, it closes the connection, and returns. RabbitMQ puts a message that wasn't acknowledged by then back in the queue, so it is handled again.
+3. It applies the migrations with [`apply_migrations()`](infra.md#migrations) if `migrate_on_start` of the settings of the database is true.
+4. It connects to `RABBITMQ_URL` with `connect_robust()` of aio-pika, and starts consuming with [`consume()`](consumer.md#consuming).
+5. When `stop` is set, it closes the connection, and returns. RabbitMQ puts a message that wasn't acknowledged by then back in the queue, so it is handled again.
 
-It disposes the engine when it returns or raises. It raises `SettingsError` for the environment variables, and the `AMQPConnectionError` of aio-pika when RabbitMQ can't be reached when it starts. After that, a lost connection doesn't raise: aio-pika connects again, every 5 seconds, until it succeeds, and the consumer goes on.
+It disposes the engine when it returns or raises. It raises `SettingsError` for the environment variables, the errors of the migrations as they are, and the `AMQPConnectionError` of aio-pika when RabbitMQ can't be reached when it starts. After that, a lost connection doesn't raise: aio-pika connects again, every 5 seconds, until it succeeds, and the consumer goes on.
 
 `main()` runs `run_consumer()` until the process gets `SIGINT` or `SIGTERM`, which set `stop`, and logs at the level `INFO`, to the standard error, with the default format of `logging`.
