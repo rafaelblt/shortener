@@ -1,6 +1,6 @@
 # Configuration
 
-The service is configured by environment variables, and only by them: it doesn't read a `.env` file, which uvicorn can load with `--env-file`. The API and the consumer of the events read different variables. How the code reads them is in [the architecture of bootstrap](../architecture/bootstrap.md#settings), and how to run each process, in [Running](running.md).
+The service is configured by environment variables, and only by them: it doesn't read a `.env` file, which uvicorn can load with `--env-file`. The API and the consumer of the events read different variables, which [.env.example](../../.env.example) lists, for the platforms that show its variables when deploying the service, so a variable added, removed or renamed here is in it too. How the code reads them is in [the architecture of bootstrap](../architecture/bootstrap.md#settings), and how to run each process, in [Running](running.md).
 
 ## The API
 

@@ -25,6 +25,7 @@ CODE: Final = sorted(
         *ROOT.glob("tests/**/*.py"),
         *ROOT.glob("alembic/**/*.py"),
         ROOT / "compose.yaml",
+        ROOT / ".env.example",
     ]
 )
 
