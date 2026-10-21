@@ -168,7 +168,9 @@ A connection lost during `commit()` is transient too, even when Postgres committ
 `verify(token)` returns the `UserID` of the UUID in the `sub` claim, when the token:
 
 - is a JWT signed with one of `algorithms`: by the key, or by the published key whose `kid` is the one in the header of the token, and whose algorithm is the one of the token;
-- has `exp`, `iss`, equal to `issuer`, `aud`, equal to `audience` or a list that has it, and `sub`, a string with a UUID;
+- has `exp`, and `sub`, a string with a UUID;
+- has `iss`, equal to `issuer`, when `issuer` isn't `None`, and any `iss`, or none, when it is;
+- has `aud`, equal to `audience` or a list that has it, when `audience` isn't `None`, and no `aud` when it is, as PyJWT checks by default (see [Access tokens](../service/api.md#access-tokens));
 - has an `exp` later than the current time minus `leeway`, and `nbf` and `iat`, when it has them, no later than the current time plus `leeway`.
 
 Otherwise, it returns `None`, whatever is wrong with the token. Without the leeway, a clock of the issuer ahead of the one of the service would make a new token not valid yet, for as long as the difference. With it, a token is also accepted for up to `leeway` after its `exp`.

@@ -34,7 +34,9 @@ Authorization: Bearer <access token>
 The access token is a JWT, which is valid when:
 
 - it is signed with one of the algorithms of the [configuration](configuration.md#the-api), by its key, or by one of the keys the issuer publishes at a JWKS URL;
-- it has `exp`, `iss`, `aud` and `sub`: `iss` is the issuer of the configuration, `aud` is its audience, or a list that has it, and `sub` is the UUID of the user;
+- it has `exp`, and `sub`, the UUID of the user;
+- when the configuration has an issuer, it has `iss`, equal to it, and otherwise its `iss`, if it has one, isn't checked;
+- when the configuration has an audience, it has `aud`, equal to it or a list that has it, and otherwise it has no `aud`, as RFC 7519 requires, so that a token issued for another service isn't accepted;
 - it hasn't expired, and, when it has `nbf` or `iat`, they aren't in the future, both with a tolerance of `JWT_LEEWAY`, 60 seconds by default, for the difference between the clocks of the issuer and of the service.
 
 A missing token, one of another scheme, such as `Basic`, and one that isn't valid are all the same as no token: an endpoint that needs a user answers `401` with `not_authenticated`. When the keys of the issuer can't be fetched from its JWKS URL, or what it answers isn't a set of keys, the endpoint answers `503` with `unavailable`. The routes of a slug and the health check don't read the header.

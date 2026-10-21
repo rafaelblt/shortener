@@ -8,8 +8,8 @@ The service is configured by environment variables, and only by them: it doesn't
 | ---------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `DATABASE_URL`   | Yes            | The URL of the Postgres database, with the driver asyncpg, such as `postgresql+asyncpg://user:password@localhost:5432/shortener`. The [migrations](running.md#the-processes) read it too. |
 | `JWT_ALGORITHMS` | Yes            | The algorithms an access token may be signed with, separated by commas, such as `RS256` or `HS256`                                                                                        |
-| `JWT_ISSUER`     | Yes            | The issuer of the tokens, which their `iss` has to be                                                                                                                                     |
-| `JWT_AUDIENCE`   | Yes            | The audience of the tokens, which their `aud` has to be or have                                                                                                                           |
+| `JWT_ISSUER`     | No             | The issuer of the tokens, which their `iss` has to be. Without it, the `iss` of a token isn't checked                                                                                     |
+| `JWT_AUDIENCE`   | No             | The audience of the tokens, which their `aud` has to be or have. Without it, a token with an `aud` isn't valid (see [Access tokens](api.md#access-tokens))                                |
 | `JWT_KEY`        | One of the two | The key that verifies the tokens: the secret of the HMAC algorithms, or the public key of the others, in PEM                                                                              |
 | `JWT_JWKS_URL`   | One of the two | The URL where the issuer publishes the keys that verify the tokens, as a JWKS                                                                                                             |
 
@@ -82,5 +82,6 @@ The rest is found later, when it is used:
 - `DATABASE_POOL_SIZE`, `DATABASE_MAX_OVERFLOW` and `DATABASE_POOL_TIMEOUT` have the defaults of SQLAlchemy, and `DATABASE_CONNECT_TIMEOUT` is 10 seconds, instead of the 60 of asyncpg.
 - `DATABASE_MIGRATE_ON_START` is `false` by default, so that whoever runs the service decides how its database is migrated, and turns it on where it helps, such as for the first deploy.
 - `DATABASE_LOCK_TIMEOUT` and `DATABASE_STATEMENT_TIMEOUT` have a default because Postgres has none: without them, a statement waits for a lock, and runs, as long as it takes. 2147483.647 seconds is the most Postgres takes for them, which it keeps as a number of milliseconds in an `int`, and it takes them in whole milliseconds, so a fraction of a millisecond rounds up.
+- `JWT_ISSUER` and `JWT_AUDIENCE` are optional so that the service can verify the tokens of a system that doesn't put `iss` or `aud` in them.
 - `JWT_LEEWAY` is a setting because the right value depends on the clock of the issuer of each environment.
 - `JWT_JWKS_TIMEOUT` is 5 seconds by default, instead of the 30 of PyJWT, since each fetch of the keys holds a thread of the service while it waits. Setting it with `JWT_KEY` is an error, since it is more likely a mistake of whoever set the variables.

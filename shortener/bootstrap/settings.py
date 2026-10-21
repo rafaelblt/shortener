@@ -57,8 +57,8 @@ class AccessTokenSettings:
     """
 
     algorithms: tuple[str, ...]
-    issuer: str
-    audience: str
+    issuer: str | None
+    audience: str | None
     key: str | None
     jwks_url: str | None
     leeway: timedelta = DEFAULT_JWT_LEEWAY
@@ -174,8 +174,8 @@ def _access_token_settings(variables: "_Variables") -> AccessTokenSettings:
         )
     return AccessTokenSettings(
         algorithms=variables.required_list("JWT_ALGORITHMS"),
-        issuer=variables.required("JWT_ISSUER"),
-        audience=variables.required("JWT_AUDIENCE"),
+        issuer=variables.optional("JWT_ISSUER"),
+        audience=variables.optional("JWT_AUDIENCE"),
         key=key,
         jwks_url=jwks_url,
         leeway=variables.optional_seconds(

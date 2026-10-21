@@ -29,10 +29,12 @@ from tests.fixtures.infra.database import differences_from_the_tables
 
 
 SECRET = "a-secret-long-enough-for-hs256-signatures"
+ISSUER = "https://issuer.example.com"
+AUDIENCE = "shortener"
 KEY_SETTINGS = AccessTokenSettings(
     algorithms=("HS256",),
-    issuer="https://issuer.example.com",
-    audience="shortener",
+    issuer=ISSUER,
+    audience=AUDIENCE,
     key=SECRET,
     jwks_url=None,
 )
@@ -101,8 +103,8 @@ def test_create_app_without_settings_reads_them_from_the_environment(
 ):
     monkeypatch.setenv("DATABASE_URL", SETTINGS.database.url)
     monkeypatch.setenv("JWT_ALGORITHMS", "HS256")
-    monkeypatch.setenv("JWT_ISSUER", KEY_SETTINGS.issuer)
-    monkeypatch.setenv("JWT_AUDIENCE", KEY_SETTINGS.audience)
+    monkeypatch.setenv("JWT_ISSUER", ISSUER)
+    monkeypatch.setenv("JWT_AUDIENCE", AUDIENCE)
     monkeypatch.setenv("JWT_KEY", SECRET)
     monkeypatch.delenv("JWT_JWKS_URL", raising=False)
 
@@ -226,6 +228,19 @@ async def test_access_token_verifier_allows_the_leeway_of_the_settings(
 
     assert await access_token_verifier(lenient).verify(token) == owner_id
     assert await access_token_verifier(strict).verify(token) is None
+
+
+async def test_access_token_verifier_without_an_issuer_or_an_audience_skips_them(
+    owner_id: UserID,
+):
+    settings = replace(KEY_SETTINGS, issuer=None, audience=None)
+    token = jwt.encode(
+        {"sub": str(owner_id), "exp": datetime.now(UTC) + timedelta(hours=1)},
+        SECRET,
+        algorithm="HS256",
+    )
+
+    assert await access_token_verifier(settings).verify(token) == owner_id
 
 
 async def test_access_token_verifier_with_a_jwks_url_fetches_the_keys_from_it():

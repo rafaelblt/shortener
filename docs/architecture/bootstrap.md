@@ -24,13 +24,13 @@ shortener/bootstrap/
 
 Both read every variable before deciding, through `_Variables`, which keeps each problem it finds, so when the variables don't make valid settings they raise a single `SettingsError`, whose message names every problem. Otherwise, they return frozen dataclasses:
 
-| Dataclass             | Fields                                                                                                                                                                                                |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Settings`            | `database`, a `DatabaseSettings`, `access_tokens`, an `AccessTokenSettings`, and `rate_limit`, a `RateLimitSettings`                                                                                  |
-| `ConsumerSettings`    | `database`, a `DatabaseSettings`, and `rabbitmq_url`, as it is                                                                                                                                        |
-| `DatabaseSettings`    | `url`, the `DATABASE_URL`, `pool_size` and `max_overflow`, as `int`s, `pool_timeout`, `connect_timeout`, `lock_timeout` and `statement_timeout`, as `timedelta`s, and `migrate_on_start`, as a `bool` |
-| `AccessTokenSettings` | `algorithms`, as a tuple, `issuer`, `audience`, `key` and `jwks_url`, of which `from_environment()` sets exactly one, and `leeway` and `jwks_timeout`, as `timedelta`s                                |
-| `RateLimitSettings`   | `requests`, as an `int`, and `window`, as a `timedelta`                                                                                                                                               |
+| Dataclass             | Fields                                                                                                                                                                                                            |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Settings`            | `database`, a `DatabaseSettings`, `access_tokens`, an `AccessTokenSettings`, and `rate_limit`, a `RateLimitSettings`                                                                                              |
+| `ConsumerSettings`    | `database`, a `DatabaseSettings`, and `rabbitmq_url`, as it is                                                                                                                                                    |
+| `DatabaseSettings`    | `url`, the `DATABASE_URL`, `pool_size` and `max_overflow`, as `int`s, `pool_timeout`, `connect_timeout`, `lock_timeout` and `statement_timeout`, as `timedelta`s, and `migrate_on_start`, as a `bool`             |
+| `AccessTokenSettings` | `algorithms`, as a tuple, `issuer` and `audience`, `None` when their variables aren't set, `key` and `jwks_url`, of which `from_environment()` sets exactly one, and `leeway` and `jwks_timeout`, as `timedelta`s |
+| `RateLimitSettings`   | `requests`, as an `int`, and `window`, as a `timedelta`                                                                                                                                                           |
 
 - An optional variable that isn't set gets its default, a `DEFAULT_` constant of `settings.py`, which is also the default of its field, so settings built in code, such as the ones of the tests, can leave it out. The `rate_limit` of `Settings` is a `RateLimitSettings` with the defaults, so they can leave it out too.
 - `ConsumerSettings` reads the variables of the database as `Settings` does, with the same function.

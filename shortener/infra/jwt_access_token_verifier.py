@@ -24,8 +24,8 @@ class JWTAccessTokenVerifier:
         self,
         keys: "_SigningKeys",
         algorithms: Sequence[str],
-        issuer: str,
-        audience: str,
+        issuer: str | None,
+        audience: str | None,
         leeway: timedelta,
     ):
         self._keys = keys
@@ -39,15 +39,16 @@ class JWTAccessTokenVerifier:
         cls,
         key: str,
         algorithms: Sequence[str],
-        issuer: str,
-        audience: str,
+        issuer: str | None,
+        audience: str | None,
         leeway: timedelta,
     ) -> "JWTAccessTokenVerifier":
         """
         Verifies the tokens with a single key: the secret of the HMAC
-        algorithms, or the public key of the others, in PEM. The leeway is
-        the difference allowed between the clock of the issuer and the one of
-        the service.
+        algorithms, or the public key of the others, in PEM. Without an
+        issuer, the iss of a token isn't checked, and without an audience, a
+        token with an aud isn't valid. The leeway is the difference allowed
+        between the clock of the issuer and the one of the service.
 
         Raises:
             ValueError: An algorithm isn't supported, or the key doesn't suit
@@ -62,15 +63,16 @@ class JWTAccessTokenVerifier:
         cls,
         url: str,
         algorithms: Sequence[str],
-        issuer: str,
-        audience: str,
+        issuer: str | None,
+        audience: str | None,
         leeway: timedelta,
         timeout: timedelta,
     ) -> "JWTAccessTokenVerifier":
         """
         Verifies the tokens with the keys the issuer publishes at a JWKS URL.
-        The leeway is the same as in with_key(), and the timeout is the most
-        it waits for an answer of the URL.
+        The issuer, the audience and the leeway are the same as in
+        with_key(), and the timeout is the most it waits for an answer of the
+        URL.
 
         Raises:
             ValueError: An algorithm isn't supported, or the URL isn't http

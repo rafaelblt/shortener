@@ -31,7 +31,7 @@ ENVIRONMENT = {
     "JWT_AUDIENCE": "shortener",
     "JWT_JWKS_URL": "https://issuer.example.com/jwks.json",
 }
-REQUIRED = ["DATABASE_URL", "JWT_ALGORITHMS", "JWT_ISSUER", "JWT_AUDIENCE"]
+REQUIRED = ["DATABASE_URL", "JWT_ALGORITHMS"]
 MISSING = [pytest.param(None, id="unset"), pytest.param(" ", id="empty")]
 
 # How to read the value of each optional variable with a number from the
@@ -134,6 +134,18 @@ def test_from_environment_raises_naming_a_required_variable_that_is_missing(
     with pytest.raises(SettingsError) as raised:
         Settings.from_environment(environment(**{name: value}))
     assert_mentions(str(raised.value), name)
+
+
+@pytest.mark.parametrize("value", MISSING)
+def test_from_environment_reads_no_issuer_or_audience_when_they_are_missing(
+    value: str | None,
+):
+    settings = Settings.from_environment(
+        environment(JWT_ISSUER=value, JWT_AUDIENCE=value)
+    )
+
+    assert settings.access_tokens.issuer is None
+    assert settings.access_tokens.audience is None
 
 
 def test_from_environment_raises_for_algorithms_that_are_only_commas():

@@ -119,11 +119,17 @@ def jwks_verifier(
     )
 
 
+def key_verifier(
+    issuer: str | None = ISSUER, audience: str | None = AUDIENCE
+) -> JWTAccessTokenVerifier:
+    return JWTAccessTokenVerifier.with_key(
+        SECRET, algorithms=["HS256"], issuer=issuer, audience=audience, leeway=LEEWAY
+    )
+
+
 @pytest.fixture
 def hs256_verifier() -> JWTAccessTokenVerifier:
-    return JWTAccessTokenVerifier.with_key(
-        SECRET, algorithms=["HS256"], issuer=ISSUER, audience=AUDIENCE, leeway=LEEWAY
-    )
+    return key_verifier()
 
 
 async def test_verify_returns_the_user_id_of_the_subject_of_a_valid_token(
@@ -158,6 +164,32 @@ async def test_verify_returns_none_for_a_token_that_is_not_valid(
     hs256_verifier: JWTAccessTokenVerifier, token: str
 ):
     assert await hs256_verifier.verify(token) is None
+
+
+@pytest.mark.parametrize(
+    "token",
+    [
+        pytest.param(hs256_token(iss="https://other.example.com"), id="other issuer"),
+        pytest.param(hs256_token(iss=None), id="without iss"),
+    ],
+)
+async def test_verify_without_an_issuer_returns_the_user_id_whatever_the_iss(
+    token: str,
+):
+    assert await key_verifier(issuer=None).verify(token) == UserID(USER_UUID)
+
+
+@pytest.mark.parametrize(
+    "token, user_id",
+    [
+        pytest.param(hs256_token(aud=None), UserID(USER_UUID), id="without aud"),
+        pytest.param(hs256_token(), None, id="with aud"),
+    ],
+)
+async def test_verify_without_an_audience_accepts_only_a_token_without_aud(
+    token: str, user_id: UserID | None
+):
+    assert await key_verifier(audience=None).verify(token) == user_id
 
 
 @pytest.mark.parametrize("claim, direction", TIME_CLAIMS)
