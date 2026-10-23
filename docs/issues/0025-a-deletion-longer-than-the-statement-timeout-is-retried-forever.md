@@ -1,7 +1,7 @@
 ---
 status: open
 resolution:
-labels: [question, consumer, infra]
+labels: [todo, consumer, infra]
 ---
 
 # 0025: A deletion longer than the statement timeout is retried forever
@@ -28,3 +28,11 @@ Reproduced with `run_consumer()`, the process of the consumer, on Postgres 17 an
 | 2         | The same                                                                                                                               | Deleted after 0.5 seconds, by the other consumer |
 
 RabbitMQ puts a message rejected with `requeue` back in its original position in a classic queue, which is the head here, so it is delivered again at once, and a consumer, which [handles one message at a time](../architecture/consumer.md#consuming), handles nothing else. So each such message holds back a consumer for good, and with as many of them as there are consumers, no event of a deleted user is handled anymore, until the messages are removed from the queue by hand.
+
+## 2026-10-23: Accepted: deleting in batches
+
+Of the ways above, the maintainer accepted the first one: the short URLs of the user are deleted in batches, each in a transaction of its own, until none is left. Each statement deletes few enough rows to stay under the statement timeout, and an attempt that fails keeps what the batches before it deleted, so the next attempt of the message goes on from there, instead of starting over.
+
+It isn't implemented yet.
+
+How long the deletion takes still grows with the short URLs of the user, which nothing limits: that is [issue 0028](0028-a-user-can-have-any-number-of-short-urls.md).
