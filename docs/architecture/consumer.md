@@ -58,7 +58,7 @@ It returns `QUEUE`.
 | `execute()` raises any other exception                                 | Logs it as an error, and rejects the message without requeuing it                                                           |
 
 - `execute()` returns once every batch of the deletion is committed, so the message is acknowledged only after every short URL of the user is deleted. What that guarantees, and the rest of what the handling means for the messages, is in [Handling](../service/events.md#handling).
-- A requeued message goes back to its place in the queue, and is delivered again, to this consumer or another one. Without the wait, it would be tried as fast as it fails while the database is unavailable.
+- A requeued message goes back to its place in the queue, ahead of the ones behind it, and is delivered again before them, to this consumer or another one, so it holds them back while its deletion keeps failing (see [Known limitations](../service/events.md#known-limitations)). Without the wait, it would be tried as fast as it fails while the database is unavailable.
 - Any other exception is a bug, or a failure that trying again won't fix, so the message goes to the dead-letter queue. It is caught, and not raised, since, raised, the message would stay unacknowledged, and the consumer would get no other message until the channel closed.
 
 ## Consuming
@@ -67,6 +67,6 @@ It returns `QUEUE`.
 
 `consume(connection, handler)` opens a channel on the connection, limits it to `PREFETCH_COUNT` (1) unacknowledged messages, declares the queues with `declare_queue()`, and starts consuming `QUEUE` with `handler.handle()`. It returns once consuming has started: the messages are handled in the tasks of the connection, one at a time, until the connection is closed.
 
-With one unacknowledged message at a time, the consumer holds only the message it is handling, also while it waits to requeue one, and the others stay in the queue, free for another consumer.
+With one unacknowledged message at a time, the consumer holds only the message it is handling, also while it waits to requeue one, and the others stay in the queue, free for another consumer, if there is one. A message it requeues is delivered again before them (see [Handling](#handling)).
 
 With the robust connection that [`bootstrap`](bootstrap.md#the-consumer) gives it, aio-pika connects again when the connection is lost, and opens the channel, declares the queues and consumes again.

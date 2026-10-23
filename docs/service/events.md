@@ -46,12 +46,13 @@ The service declares, when it starts, the exchange `users` and two queues of its
 
 - The short URLs of the user are deleted in batches of up to 1000, each committed on its own, until none is left, so that each statement of the database deletes few of them, and stays short, whatever the number of short URLs of the user. When the deletion fails, the batches before the failure stay deleted, and the next attempt of the message goes on from there.
 - The message is acknowledged only after every short URL of the user is deleted. A message whose handling stops before that, such as when the process stops or the connection is lost, goes back to the queue and is delivered again. Deleting the short URLs of a user twice does the same as once, so a message delivered more than once does no harm.
-- A message put back in the queue is tried again with no limit, until the deletion succeeds or fails in another way.
-- Each process of the consumer handles one message at a time, also while it waits to put one back, and leaves the others in the queue, free for another process. RabbitMQ delivers each message to only one process.
+- A message put back in the queue is tried again with no limit, until the deletion succeeds or fails in another way. It goes back to its place in the queue, ahead of the messages that arrived after it, so it is delivered again before them, often to the same process.
+- Each process of the consumer handles one message at a time, also while it waits to put one back, and leaves the others in the queue, free for another process, if there is one. RabbitMQ delivers each message to only one process.
 - The logs name the user, but not the body of a message that isn't the event.
 
 ### Known limitations
 
 - Until the message is handled, the short URLs of the user that aren't deleted yet keep resolving. That is accepted, since it doesn't harm the shortener (see [Owner](../architecture/domain.md#owner)).
 - A short URL that the user creates after the message is handled, with an access token issued before the deletion, is never deleted ([issue 0024](../issues/0024-a-deleted-user-can-create-short-urls-until-their-token-expires.md)).
+- A message put back in the queue holds back the process that gets it again for as long as its deletion keeps failing, and the messages behind it wait for another process. With as many such messages as processes, no message is handled until their deletions succeed, or they are removed from the queue by hand.
 - The deletion of a user takes longer the more short URLs they have, and nothing limits how many a user can have. While a process of the consumer deletes them, it handles no other message ([issue 0028](../issues/0028-a-user-can-have-any-number-of-short-urls.md)).
