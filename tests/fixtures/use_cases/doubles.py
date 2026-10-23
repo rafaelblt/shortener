@@ -44,7 +44,7 @@ def transaction() -> NonCallableMagicMock:
     shorturls.add.return_value = Ok(None)
     shorturls.save.return_value = Ok(None)
     shorturls.remove.return_value = None
-    shorturls.remove_by_owner.return_value = None
+    shorturls.remove_by_owner.return_value = 0
 
     transaction = create_autospec(Transaction, instance=True)
     # create_autospec makes shorturls, a property, a MagicMock without the

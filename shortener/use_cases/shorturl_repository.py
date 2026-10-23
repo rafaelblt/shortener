@@ -49,9 +49,9 @@ class ShortURLRepository(ShortURLReader, Protocol):
 
     async def remove(self, shorturl: ShortURL) -> None: ...
 
-    async def remove_by_owner(self, owner_id: UserID) -> None:
+    async def remove_by_owner(self, owner_id: UserID, limit: int) -> int:
         """
-        Deletes every short URL of the owner. An owner with none isn't an
-        error, so deleting them twice does the same as once.
+        Deletes up to limit short URLs of the owner, and returns how many it
+        deleted, which is 0 only when the owner has none.
         """
         ...

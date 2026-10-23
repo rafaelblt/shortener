@@ -52,12 +52,12 @@ The abstractions are `Protocol`s, so the other layers implement them without inh
 
 `ShortURLRepository` is a `ShortURLReader` that also writes:
 
-| Method                      | Effect                                                                                                                                                         |
-| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `add(shorturl)`             | Stores a new short URL. Returns `Ok(None)`, or `Err(SlugTakenError(slug))` when another short URL has its slug.                                                |
-| `save(shorturl)`            | Stores every field of a short URL that is already stored, replacing what was there. Returns the same as `add()`.                                               |
-| `remove(shorturl)`          | Deletes a stored short URL. Returns `None`.                                                                                                                    |
-| `remove_by_owner(owner_id)` | Deletes every stored short URL whose `owner_id` is the given `UserID`. Returns `None`, also when there are none, so removing them twice does the same as once. |
+| Method                             | Effect                                                                                                                                                                 |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `add(shorturl)`                    | Stores a new short URL. Returns `Ok(None)`, or `Err(SlugTakenError(slug))` when another short URL has its slug.                                                        |
+| `save(shorturl)`                   | Stores every field of a short URL that is already stored, replacing what was there. Returns the same as `add()`.                                                       |
+| `remove(shorturl)`                 | Deletes a stored short URL. Returns `None`.                                                                                                                            |
+| `remove_by_owner(owner_id, limit)` | Deletes up to `limit` stored short URLs whose `owner_id` is the given `UserID`, and returns how many it deleted, as an `int`. It returns `0` only when there are none. |
 
 - `SlugTakenError` is a frozen dataclass with the `slug` that is taken.
 - The uniqueness of the slug is checked when `add()` or `save()` writes, and not by a read before it. The conflict is detected by `add()` or `save()` itself, never by `commit()`, and doesn't make the transaction unusable: after it, the same transaction can try another slug.
@@ -191,7 +191,7 @@ Each use case is a class whose constructor receives the abstractions it uses, an
 
 The target URL and the slug are received as `str`, and the use case turns them into their value objects, since the domain has rules about them that the client can break, returned as an `InvalidInputError` (see [`CreateShortURL`](#createshorturl)). The ID of a short URL is received as a `UUID`, and the caller converts it from whatever its transport carries, such as a string in the path of a request. The domain has no rule about IDs besides being a `UUID`, so a string that isn't one is a parsing failure of the transport, like malformed JSON, and not an input error of the use case. That is why an `id` that isn't a `UUID` raises `TypeError`, as a programming error, and `ShortURLDetails` returns the IDs as `UUID` too.
 
-A use case that writes commits only when it succeeds. When it returns `Err`, it leaves the transaction without calling `commit()`, which rolls it back.
+A use case that writes commits only when it succeeds. When it returns `Err`, it leaves the transaction without calling `commit()`, which rolls it back. [`DeleteShortURLsOfUser`](#deleteshorturlsofuser), which deletes in batches, commits each batch that succeeds.
 
 A use case that receives the ID of a short URL only acts on the short URLs of the user making the request: one that belongs to another user gets the same `ShortURLNotFoundError` as one that doesn't exist.
 
@@ -304,11 +304,16 @@ The status isn't changed by `UpdateShortURL`: [`ShortURLStatus`](domain.md#statu
 
 `delete_shorturls_of_user.py`
 
-`DeleteShortURLsOfUser(uow)` deletes every short URL of a user, when the user is deleted (see [Owner](domain.md#owner)). The service runs it when it receives the event of the deletion, from the [consumer](consumer.md#handling), and not a user, so it doesn't receive a `CurrentUser`.
+`DeleteShortURLsOfUser(uow, batch_size=BATCH_SIZE)` deletes every short URL of a user, when the user is deleted (see [Owner](domain.md#owner)). The service runs it when it receives the event of the deletion, from the [consumer](consumer.md#handling), and not a user, so it doesn't receive a `CurrentUser`. `BATCH_SIZE` is 1000.
 
 `execute(user_id)` returns `None`:
 
 1. It turns `user_id` into a `UserID`. A `user_id` that isn't a `UUID` raises `TypeError`, from `UserID`, before any transaction begins.
-2. It begins a transaction, removes the short URLs of the user with `remove_by_owner()`, and commits.
+2. It begins a transaction, removes up to `batch_size` short URLs of the user with `remove_by_owner()`, and commits.
+3. It repeats step 2, each time in a new transaction, until `remove_by_owner()` returns `0`.
 
-A user with no short URLs isn't an error, so running it again for the same user, such as for an event that is received twice, does the same as running it once.
+- Each batch is a transaction of its own, so an exception, such as `UnavailableError`, rolls back only the batch where it is raised: the batches before it stay deleted, and running it again goes on from there.
+- It stops at a batch that removes none, and not at one that removes fewer than `batch_size`, since `0` is what tells that the user has no short URL left (see [Reading and writing](#reading-and-writing)). So the last transaction removes nothing.
+- A user with no short URLs isn't an error, so running it again for the same user, such as for an event that is received twice, does the same as running it once.
+
+The short URLs are deleted in batches so that each statement of the storage deletes few of them, and stays under the timeout of a statement, whatever the number of short URLs of the user.

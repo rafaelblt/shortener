@@ -9,11 +9,12 @@ from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
-from shortener.domain import ShortURL, ShortURLID, Slug
+from shortener.domain import ShortURL, ShortURLID, Slug, UserID
 from shortener.infra.db.shorturl_repository import SQLAlchemyShortURLReader
 from shortener.infra.db.unit_of_work import SQLAlchemyUnitOfWork
 from shortener.use_cases.shorturl_repository import ShortURLRepository
 from shortener.use_cases.unavailable_error import UnavailableError
+from tests.fixtures.infra.database import store
 
 
 UNREACHABLE_DATABASE_URL = "postgresql+asyncpg://user:password@127.0.0.1:1/database"
@@ -66,6 +67,15 @@ async def resolve(uow: SQLAlchemyUnitOfWork, id: ShortURLID, now: datetime) -> N
         shorturl.resolve(now).unwrap()
         (await transaction.shorturls.save(shorturl)).unwrap()
         await transaction.commit()
+
+
+async def remove_by_owner(
+    uow: SQLAlchemyUnitOfWork, owner_id: UserID, limit: int
+) -> int:
+    async with uow.begin() as transaction:
+        removed = await transaction.shorturls.remove_by_owner(owner_id, limit)
+        await transaction.commit()
+    return removed
 
 
 async def test_commit_makes_the_writes_of_the_transaction_permanent(
@@ -158,6 +168,30 @@ async def test_a_read_that_waited_returns_none_when_the_other_transaction_remove
         await transaction.commit()
 
     assert await waiting_read is None
+
+
+async def test_remove_by_owner_that_waited_takes_others_for_the_ones_removed_meanwhile(
+    uow: SQLAlchemyUnitOfWork,
+    engine: AsyncEngine,
+    reader: SQLAlchemyShortURLReader,
+    normal_shorturl: ShortURL,
+    other_shorturl: ShortURL,
+    biggest_shorturl: ShortURL,
+    owner_id: UserID,
+):
+    await store(uow, normal_shorturl, other_shorturl, biggest_shorturl)
+
+    async with uow.begin() as transaction:
+        await transaction.shorturls.remove(normal_shorturl)
+        await transaction.shorturls.remove(other_shorturl)
+        # Only one short URL of the owner is free, so a batch of two waits
+        # for the ones this transaction removes.
+        waiting_removal = asyncio.create_task(remove_by_owner(uow, owner_id, 2))
+        await wait_for_a_lock(engine, waiting_removal)
+        await transaction.commit()
+
+    assert await waiting_removal == 1
+    assert await reader.list_by_owner(owner_id, 10, None) == []
 
 
 async def test_a_read_by_slug_that_waited_returns_none_when_the_slug_changed(

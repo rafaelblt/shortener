@@ -69,11 +69,21 @@ class SQLAlchemyShortURLRepository:
                 delete(shorturls).where(shorturls.c.id == shorturl.id.value)
             )
 
-    async def remove_by_owner(self, owner_id: UserID) -> None:
+    async def remove_by_owner(self, owner_id: UserID, limit: int) -> int:
+        # The batch is locked as a read is, so a row that another transaction
+        # removes while this one waits for it is skipped, and another row of
+        # the owner takes its place. See docs/architecture/infra.md#short-urls
+        batch = (
+            select(shorturls.c.id)
+            .where(shorturls.c.owner_id == owner_id.value)
+            .limit(limit)
+            .with_for_update()
+        )
         with unavailable_when_transient():
-            await self._connection.execute(
-                delete(shorturls).where(shorturls.c.owner_id == owner_id.value)
+            result = await self._connection.execute(
+                delete(shorturls).where(shorturls.c.id.in_(batch))
             )
+        return result.rowcount
 
     async def _read(self, statement: Select[Any]) -> list[ShortURL]:
         with unavailable_when_transient():

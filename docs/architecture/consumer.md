@@ -57,7 +57,7 @@ It returns `QUEUE`.
 | `execute()` raises [`UnavailableError`](use_cases.md#unavailableerror) | Logs a warning, with the exception, waits `retry_delay`, and then requeues the message                                      |
 | `execute()` raises any other exception                                 | Logs it as an error, and rejects the message without requeuing it                                                           |
 
-- `execute()` commits the deletion before it returns, so the message is acknowledged only after the deletion is committed. What that guarantees, and the rest of what the handling means for the messages, is in [Handling](../service/events.md#handling).
+- `execute()` returns once every batch of the deletion is committed, so the message is acknowledged only after every short URL of the user is deleted. What that guarantees, and the rest of what the handling means for the messages, is in [Handling](../service/events.md#handling).
 - A requeued message goes back to its place in the queue, and is delivered again, to this consumer or another one. Without the wait, it would be tried as fast as it fails while the database is unavailable.
 - Any other exception is a bug, or a failure that trying again won't fix, so the message goes to the dead-letter queue. It is caught, and not raised, since, raised, the message would stay unacknowledged, and the consumer would get no other message until the channel closed.
 

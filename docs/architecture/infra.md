@@ -52,7 +52,7 @@ The short URLs are stored in Postgres, through the core of SQLAlchemy (tables an
 | `last_resolved_at` | `timestamptz`, nullable | `shorturl.last_resolved_at`                 |
 
 - The unique constraint of `slug` is named `SLUG_UNIQUE_CONSTRAINT` (`uq_shorturls_slug`), which the repository uses to tell a [taken slug](#short-urls) apart from other conflicts. Postgres compares `text` case-sensitively, so `abc` and `ABC` are different slugs, as they are in the domain.
-- The index `ix_shorturls_owner_id_created_at_id`, on `owner_id`, `created_at` and `id`, serves `list_by_owner()`, which filters by owner in that order.
+- The index `ix_shorturls_owner_id_created_at_id`, on `owner_id`, `created_at` and `id`, serves `list_by_owner()`, which filters by owner in that order, and `remove_by_owner()`, which filters by owner.
 - No column limits the length of the slug or of the target URL, and no constraint checks `status` or `resolution_count`. The lengths are rules of `create()`, which can change, and a stored value has to keep loading (see [Value objects](domain.md#value-objects)).
 - `owner_id` has no foreign key: the users live outside the service (see [Owner](domain.md#owner)).
 - `timestamptz` stores the moment, and asyncpg returns it in UTC. A datetime stored in another timezone comes back equal to it, since aware datetimes are compared by the moment (see [Time](domain.md#time)).
@@ -104,17 +104,18 @@ The two differ in how they read:
 
 The repository writes with these statements:
 
-| Method                      | Statement                                                                              |
-| --------------------------- | -------------------------------------------------------------------------------------- |
-| `add(shorturl)`             | `INSERT`, with every field                                                             |
-| `save(shorturl)`            | `UPDATE`, with every field but `id`, of the row whose `id` is the one of the short URL |
-| `remove(shorturl)`          | `DELETE` of the row whose `id` is the one of the short URL                             |
-| `remove_by_owner(owner_id)` | `DELETE` of the rows whose `owner_id` is `owner_id.value`                              |
+| Method                             | Statement                                                                                                                 |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `add(shorturl)`                    | `INSERT`, with every field                                                                                                |
+| `save(shorturl)`                   | `UPDATE`, with every field but `id`, of the row whose `id` is the one of the short URL                                    |
+| `remove(shorturl)`                 | `DELETE` of the row whose `id` is the one of the short URL                                                                |
+| `remove_by_owner(owner_id, limit)` | `DELETE` of up to `limit` rows whose `owner_id` is `owner_id.value`, which a subquery with `LIMIT` and `FOR UPDATE` picks |
 
 - `add()` and `save()` run their statement in a savepoint. When it breaks `SLUG_UNIQUE_CONSTRAINT`, the savepoint is rolled back, and they return `Err(SlugTakenError(shorturl.slug))`: only that statement is undone, and the transaction goes on. Any other `IntegrityError`, such as an `id` that is already stored, is raised.
 - Postgres checks the slug when the statement runs. When another transaction wrote the same slug and hasn't ended, the statement waits for it, up to the `lock_timeout`, and only conflicts if that transaction commits.
-- `save()` and `remove()` of a short URL that isn't stored change nothing, and raise nothing, nor does `remove_by_owner()` of an owner without short URLs.
-- `remove_by_owner()` deletes the rows in a single statement, which waits for the ones another transaction read through its repository, up to the `lock_timeout`, like a read, and then raises `UnavailableError`.
+- `save()` and `remove()` of a short URL that isn't stored change nothing, and raise nothing, nor does `remove_by_owner()` of an owner without short URLs, which returns `0`.
+- `remove_by_owner()` returns the number of rows the `DELETE` deleted. Which rows of the owner it picks isn't specified.
+- The subquery of `remove_by_owner()` locks the rows it picks as a read does, so it waits for the ones another transaction read through its repository, or wrote, up to the `lock_timeout`, and then raises `UnavailableError`. When that transaction removed a row, the subquery skips it once the transaction ends, and picks another row of the owner in its place, if there is one, so `remove_by_owner()` returns `0` only when the owner has no short URL left. Without `FOR UPDATE`, the `DELETE` would skip that row with no other in its place, and could return `0` while the owner still has short URLs.
 
 ### Health check
 

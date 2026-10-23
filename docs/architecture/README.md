@@ -56,8 +56,8 @@ How the API answers `POST /api/v1/shorturls`, as every endpoint does:
 How the consumer handles the deletion of a user:
 
 1. RabbitMQ delivers a message of the queue of the service, which [`consume()`](consumer.md#consuming) consumes with the handler.
-2. [`UserDeletedHandler`](consumer.md#handling) takes the user from the body, and runs [`DeleteShortURLsOfUser`](use_cases.md#deleteshorturlsofuser), which removes the short URLs of the user through a transaction.
-3. It acknowledges the message after the deletion is committed, or rejects it, or puts it back in the queue, by what failed.
+2. [`UserDeletedHandler`](consumer.md#handling) takes the user from the body, and runs [`DeleteShortURLsOfUser`](use_cases.md#deleteshorturlsofuser), which removes the short URLs of the user in batches, each through a transaction of its own.
+3. It acknowledges the message after the last batch is committed, or rejects it, or puts it back in the queue, by what failed.
 
 ## Across the layers
 

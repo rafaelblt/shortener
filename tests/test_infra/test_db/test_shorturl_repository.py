@@ -412,29 +412,40 @@ async def test_remove_deletes_only_the_shorturl(
     assert await reader.get_by_id(other_shorturl.id) is not None
 
 
-async def test_remove_by_owner_deletes_every_shorturl_of_the_owner_and_only_them(
+@pytest.mark.parametrize(
+    "limit, removed",
+    [
+        pytest.param(2, 2, id="fewer than the shorturls of the owner"),
+        pytest.param(3, 3, id="as many as the shorturls of the owner"),
+        pytest.param(4, 3, id="more than the shorturls of the owner"),
+    ],
+)
+async def test_remove_by_owner_deletes_up_to_limit_shorturls_of_the_owner_and_only_them(
     uow: SQLAlchemyUnitOfWork,
     reader: SQLAlchemyShortURLReader,
     owner_id: UserID,
     other_user_id: UserID,
+    limit: int,
+    removed: int,
 ):
-    shorturls_of_the_owner = [shorturl_of(owner_id, JANUARY_1, id) for id in (1, 2)]
-    shorturl_of_another_user = shorturl_of(other_user_id, JANUARY_1, 3)
+    shorturls_of_the_owner = [shorturl_of(owner_id, JANUARY_1, id) for id in (1, 2, 3)]
+    shorturl_of_another_user = shorturl_of(other_user_id, JANUARY_1, 4)
     await store(uow, *shorturls_of_the_owner, shorturl_of_another_user)
 
     async with uow.begin() as transaction:
-        await transaction.shorturls.remove_by_owner(owner_id)
+        assert await transaction.shorturls.remove_by_owner(owner_id, limit) == removed
         await transaction.commit()
 
-    assert await reader.list_by_owner(owner_id, 10, None) == []
+    left = await reader.list_by_owner(owner_id, 10, None)
+    assert len(left) == len(shorturls_of_the_owner) - removed
     assert await reader.get_by_id(shorturl_of_another_user.id) is not None
 
 
-async def test_remove_by_owner_raises_nothing_for_an_owner_without_shorturls(
+async def test_remove_by_owner_returns_0_for_an_owner_without_shorturls(
     uow: SQLAlchemyUnitOfWork, owner_id: UserID
 ):
     async with uow.begin() as transaction:
-        await transaction.shorturls.remove_by_owner(owner_id)
+        assert await transaction.shorturls.remove_by_owner(owner_id, 10) == 0
         await transaction.commit()
 
 
