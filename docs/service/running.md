@@ -14,7 +14,7 @@ The service is two processes, from the same image, which share the Postgres data
 - The command of the API is the one of the image, in the [Dockerfile](../../Dockerfile), which listens on the port of the `PORT` environment variable, as platforms such as Cloud Run, Heroku and Render set it, or on 8000 when it isn't set. `poetry run task run` runs it with `--reload`, for development, and `poetry run task consume` runs the consumer.
 - They run apart, so a failure of one doesn't stop the other, and each one runs as many processes as it needs.
 - The consumer runs until it gets `SIGINT` or `SIGTERM`. A message it hasn't acknowledged by then goes back to the queue, and is handled again.
-- The schema of the database is created and changed by the migrations, which `alembic upgrade head` applies, with the `DATABASE_URL` of the environment, or the processes themselves when they start, with [`DATABASE_MIGRATE_ON_START`](#migrating-on-start). A version of the service only starts on a database with exactly its migrations (see [Checking the migrations](#checking-the-migrations)).
+- The schema of the database is created and changed by the migrations, which `alembic upgrade head` applies, with the `DATABASE_URL` of the environment, or the processes themselves when they start, with [`DATABASE_MIGRATE_ON_START`](#migrating-on-start), and which `alembic downgrade` undoes, to [roll back a version](#rolling-back-a-version). A version of the service only starts on a database with exactly its migrations (see [Checking the migrations](#checking-the-migrations)).
 
 To try the service locally, [Docker Compose](../../README.md#running-with-docker-compose) runs all of it.
 
@@ -29,7 +29,7 @@ When it starts, each process connects to the database, and checks that the last 
 
 - when the database can't be reached, or refuses the connection, such as for a wrong password;
 - when the database is missing migrations, such as when it was never migrated;
-- when the database has a migration the code doesn't know, such as one of a newer version of the service. During a deploy that migrates the database, a process of the old version that restarts, such as one the orchestrator replaces, doesn't start again.
+- when the database has a migration the code doesn't know, such as one of a newer version of the service. During a deploy that migrates the database, a process of the old version that restarts, such as one the orchestrator replaces, doesn't start again, and neither does the old version when it is deployed again to roll back the newer one, until the database is downgraded (see [Rolling back a version](#rolling-back-a-version)).
 
 ## Migrating on start
 
@@ -37,6 +37,18 @@ With `DATABASE_MIGRATE_ON_START` set to `true`, the API and the consumer apply t
 
 - Every process that migrates, when it starts or with `alembic upgrade head`, first takes the same lock of Postgres. So when several start at once, such as the replicas of the API and of the consumer, one of them applies the migrations, and the others wait for it, and then find nothing left to apply.
 - A process waits for the lock, and for the migrations, as long as they take, without the timeouts of `DATABASE_LOCK_TIMEOUT` and `DATABASE_STATEMENT_TIMEOUT`. An orchestrator that restarts the API when it doesn't answer within some time after it starts may restart it while it migrates.
+
+## Rolling back a version
+
+Going back to the previous version of the service, such as after a deploy that went wrong, is a deploy of its image. When the newer version added no migrations, that is all. When it did, the processes of the previous version [don't start](#checking-the-migrations) on the database the newer one migrated, which has to be downgraded first, to the last migration of the previous version:
+
+1. Find the last migration of the previous version: `alembic heads`, run with its image, prints it, followed by `(head)`, without connecting to the database. A process of the previous version that doesn't start names it too, in its error, as the migration its code expects.
+2. Stop the processes of the newer version. One that kept running would find the tables changed under it, and could fail, and one that restarted with `DATABASE_MIGRATE_ON_START` would migrate the database up again.
+3. Downgrade the database with `alembic downgrade <migration>`, run with the image of the newer version and the `DATABASE_URL` of the environment. Only the newer version has the migrations to undo: run with the image of the previous one, `alembic downgrade` fails, since it doesn't know them.
+4. Start the processes of the previous version.
+
+- A downgrade undoes the migrations with their data: a table or a column it drops takes with it what the newer version stored there, which doesn't come back when the newer version is deployed again. The short URLs the newer version created or changed stay, with what the previous version stores of a short URL.
+- The downgrade runs in a single transaction, so one that fails changes nothing, and the database keeps the migrations of the newer version.
 
 ## Health checks
 
