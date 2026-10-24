@@ -1,13 +1,13 @@
 import asyncio
 
-from collections.abc import AsyncIterator, Iterator
+from collections.abc import AsyncIterator, Callable, Iterator
 from typing import Any
 
 import pytest
 
 from alembic.autogenerate import compare_metadata
 from alembic.migration import MigrationContext
-from sqlalchemy import Connection, delete, make_url, text
+from sqlalchemy import Connection, MetaData, delete, make_url, text
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from testcontainers.community.postgres import PostgresContainer
 
@@ -85,18 +85,36 @@ async def store(uow: SQLAlchemyUnitOfWork, *shorturls: ShortURL) -> None:
         await transaction.commit()
 
 
-async def differences_from_the_tables(database_url: str) -> list[Any]:
+async def differences_from_the_tables(
+    database_url: str, tables: MetaData = metadata
+) -> list[Any]:
     """
-    How the database differs from the tables tables.py describes, which is
-    nothing once it is migrated.
+    How the database differs from the tables, by default the ones tables.py
+    describes, which is nothing once it is migrated.
     """
+    return await _run_on(
+        database_url,
+        lambda connection: compare_metadata(
+            MigrationContext.configure(connection), tables
+        ),
+    )
+
+
+async def reflect_tables(database_url: str) -> MetaData:
+    """The tables the database has now, to compare it with them later."""
+    return await _run_on(database_url, _reflect_tables)
+
+
+async def _run_on[T](database_url: str, function: Callable[[Connection], T]) -> T:
     engine = create_async_engine(database_url)
     try:
         async with engine.connect() as connection:
-            return await connection.run_sync(_differences_from_the_tables)
+            return await connection.run_sync(function)
     finally:
         await engine.dispose()
 
 
-def _differences_from_the_tables(connection: Connection) -> list[Any]:
-    return compare_metadata(MigrationContext.configure(connection), metadata)
+def _reflect_tables(connection: Connection) -> MetaData:
+    tables = MetaData()
+    tables.reflect(connection)
+    return tables

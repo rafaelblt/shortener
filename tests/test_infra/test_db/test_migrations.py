@@ -2,19 +2,24 @@ import asyncio
 import sys
 
 from collections.abc import AsyncIterator
+from itertools import pairwise
 
 import pytest
 
+from alembic import command
+from alembic.config import Config
+from alembic.script import ScriptDirectory
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
 
 from shortener.infra.db.migrations import (
+    MIGRATIONS,
     MIGRATIONS_LOCK_KEY,
     UnexpectedMigrationsError,
     apply_migrations,
     check_migrations,
 )
-from tests.fixtures.infra.database import differences_from_the_tables
+from tests.fixtures.infra.database import differences_from_the_tables, reflect_tables
 from tests.utils.text_helpers import assert_mentions
 
 
@@ -25,6 +30,18 @@ import asyncio, sys
 from shortener.infra.db.migrations import apply_migrations
 asyncio.run(apply_migrations(sys.argv[1]))
 """
+
+# The migrations of alembic/, from the first one to the last.
+MIGRATIONS_IN_ORDER = [
+    script.revision
+    for script in reversed(list(ScriptDirectory(str(MIGRATIONS)).walk_revisions()))
+]
+# Each migration, with the one before it, or base, which is no migration, for
+# the first one.
+MIGRATION_STEPS = [
+    pytest.param(previous, migration, id=migration)
+    for previous, migration in pairwise(["base", *MIGRATIONS_IN_ORDER])
+]
 
 
 @pytest.fixture
@@ -45,6 +62,24 @@ async def waiting_for_the_lock(connection: AsyncConnection) -> int:
         )
     )
     return result.scalar_one()
+
+
+async def upgrade(database_url: str, migration: str) -> None:
+    """Runs alembic upgrade up to the migration, as apply_migrations() does."""
+    await asyncio.to_thread(command.upgrade, alembic_config(database_url), migration)
+
+
+async def downgrade(database_url: str, migration: str) -> None:
+    """Runs alembic downgrade down to the migration."""
+    await asyncio.to_thread(command.downgrade, alembic_config(database_url), migration)
+
+
+def alembic_config(database_url: str) -> Config:
+    """The configuration of Alembic that apply_migrations() runs with."""
+    config = Config()
+    config.set_main_option("script_location", str(MIGRATIONS))
+    config.attributes["database_url"] = database_url
+    return config
 
 
 async def test_the_migrations_create_the_tables_as_tables_describes_them(
@@ -101,6 +136,32 @@ async def test_processes_that_migrate_at_once_wait_for_each_other_and_all_succee
 
     assert return_codes == [0] * len(processes)
     assert await differences_from_the_tables(empty_database_url) == []
+
+
+@pytest.mark.parametrize("previous, migration", MIGRATION_STEPS)
+async def test_the_downgrade_of_a_migration_leaves_the_tables_as_they_were_before_it(
+    empty_database_url: str, previous: str, migration: str
+):
+    await upgrade(empty_database_url, previous)
+    tables_before = await reflect_tables(empty_database_url)
+    await upgrade(empty_database_url, migration)
+
+    await downgrade(empty_database_url, previous)
+
+    assert await differences_from_the_tables(empty_database_url, tables_before) == []
+
+
+@pytest.mark.parametrize("previous, migration", MIGRATION_STEPS)
+async def test_a_migration_downgraded_applies_again_with_the_same_tables(
+    empty_database_url: str, previous: str, migration: str
+):
+    await upgrade(empty_database_url, migration)
+    tables_after = await reflect_tables(empty_database_url)
+    await downgrade(empty_database_url, previous)
+
+    await upgrade(empty_database_url, migration)
+
+    assert await differences_from_the_tables(empty_database_url, tables_after) == []
 
 
 async def test_check_migrations_passes_for_a_migrated_database(engine: AsyncEngine):
