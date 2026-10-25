@@ -105,3 +105,7 @@ To run the service in another way, its settings are in [Configuration](docs/serv
 - [docs/service/](docs/service/api.md): what the service does, seen from outside: its [API](docs/service/api.md), with its [OpenAPI schema](docs/service/openapi.yaml), its [events](docs/service/events.md), its [configuration](docs/service/configuration.md) and [how it runs](docs/service/running.md).
 - [docs/architecture/](docs/architecture/README.md): how the code does it: the layers, and one document per layer.
 - [Issues](https://github.com/rafaelblt/shortener/issues): the known problems and the open questions.
+
+## License
+
+[MIT](LICENSE).
