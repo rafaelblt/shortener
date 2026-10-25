@@ -6,7 +6,7 @@ Back end of a URL shortener, exposed through an HTTP API.
 
 The project started as a URL shortener and, over time, piled up responsibilities: user sign-up and login, refresh tokens, plans, emails, templates and translations. That pulled it away from its goal and eventually stalled its development.
 
-It was then rebuilt, layer by layer, from the inside out, around the original idea: **a URL shortener, and nothing else**. Every layer has been rebuilt. What is known to be wrong or missing is in the [open issues](docs/issues/README.md#listing).
+It was then rebuilt, layer by layer, from the inside out, around the original idea: **a URL shortener, and nothing else**. Every layer has been rebuilt. What is known to be wrong or missing is in the [open issues](https://github.com/rafaelblt/shortener/issues).
 
 ## Scope
 
@@ -96,4 +96,4 @@ To run the service in another way, its settings are in [Configuration](docs/serv
 - [AGENTS.md](AGENTS.md): what is specific to agents.
 - [docs/service/](docs/service/api.md): what the service does, seen from outside: its [API](docs/service/api.md), with its [OpenAPI schema](docs/service/openapi.yaml), its [events](docs/service/events.md), its [configuration](docs/service/configuration.md) and [how it runs](docs/service/running.md).
 - [docs/architecture/](docs/architecture/README.md): how the code does it: the layers, and one document per layer.
-- [docs/issues/](docs/issues/README.md): the issues, until the repository is on GitHub.
+- [Issues](https://github.com/rafaelblt/shortener/issues): the known problems and the open questions.

@@ -12,7 +12,7 @@ The project is developed mostly by agents. Its maintainer decides what the servi
 
 ## Making a change
 
-1. Read the [README](README.md), this document, and the documents of what the change touches: those of `docs/service/` for what the service does, and those of [docs/architecture/](docs/architecture/README.md) for the code. Then read the open issues of the area.
+1. Read the [README](README.md), this document, and the documents of what the change touches: those of `docs/service/` for what the service does, and those of [docs/architecture/](docs/architecture/README.md) for the code. Then read the [open issues](#issues) of the area.
 2. Change the code, its tests and its documents together.
 3. Run `poetry run task check` until it passes.
 4. Commit, following [Commits](#commits).
@@ -126,7 +126,6 @@ The documents are a reflection of the project: what they say is what the code do
 - [docs/service/](docs/service/api.md): what the service does, seen from outside, by whoever calls it, runs it or decides what it does: its [API](docs/service/api.md), its [events](docs/service/events.md), its [configuration](docs/service/configuration.md) and [how it runs](docs/service/running.md), with their rules, guarantees and known limitations. They name no module, class or function.
 - [docs/service/openapi.yaml](docs/service/openapi.yaml): the exact schema of the API, which `poetry run task openapi` writes from the code, and a test checks.
 - [docs/architecture/](docs/architecture/README.md): how the code does it: the layers, and one document per layer, with what each module, class and function does.
-- [docs/issues/](docs/issues/README.md): the known problems and the open questions.
 
 ### No repetition
 
@@ -155,7 +154,18 @@ Every task that changes code (a feature, a fix, a refactor, a removal) also cove
 
 ## Issues
 
-Until the repository is on GitHub, issues live in [docs/issues/](docs/issues/README.md), one file per issue. When to open one, the format, the states and the workflow are described there.
+The known problems and the open questions are the [issues of GitHub](https://github.com/rafaelblt/shortener/issues). Open one for:
+
+- A problem found during a change, but outside it, to be analyzed and fixed apart.
+- A problem complex enough to need investigating before it is fixed.
+- A problem or a question that can wait, because it has little impact for now.
+
+An issue describes what was observed: what happens, how to reproduce it, and where in the code. It states the expected behavior only when something already defines it, such as the documentation, and otherwise says that it is still to be decided. What comes later, such as a decision or a part of the fix, is a comment.
+
+- **Labels:** one type, `bug`, `enhancement`, `refactor`, `documentation` or `question`, and the layers involved, such as `domain` or `api`. The open issues of a layer are `gh issue list --label domain`.
+- **Closing:** the commit that fixes an issue closes it, with `Closes #17.` in its body. An issue closed without a fix, such as one whose code was rewritten for another reason, says why in its last comment, and is closed as not planned.
+
+Issues #1 to #32 were kept as files in `docs/issues/` until the repository was on GitHub, and were moved with their numbers, so an older commit that names issue 0017 refers to #17.
 
 ## Commits
 
@@ -193,7 +203,6 @@ Until the repository is on GitHub, issues live in [docs/issues/](docs/issues/REA
 | `infra`, `infra:db`             | Infrastructure, and its database           |
 | `bootstrap`                     | Settings and the assembly of the processes |
 | `fixtures`, `utils`, `conftest` | Test infrastructure (with `test`)          |
-| `issues`                        | Issue files (with `docs`)                  |
 
 Examples from the history:
 
@@ -202,6 +211,6 @@ feat(api): answer the Location of the new short URL when creating one
 fix(domain): reject target URLs with characters that aren't printable or spaces
 refactor(bootstrap): keep the settings of the database in a DatabaseSettings
 test(infra:db): check that add raises for an id that is already stored
-docs(issues): open issue 0024 on deleted users creating short URLs until their token expires
+docs: say how to roll back a version
 chore: run the tests, check the lock file and build the image in a CI
 ```

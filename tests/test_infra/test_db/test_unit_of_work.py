@@ -140,7 +140,7 @@ async def test_a_read_that_waited_reads_what_the_other_transaction_wrote(
     stored_shorturl: ShortURL,
     now: datetime,
 ):
-    # Two concurrent resolutions of the same short URL, as in issue 0007.
+    # Two concurrent resolutions of the same short URL, as in issue #7.
     async with uow.begin() as transaction:
         shorturl = await transaction.shorturls.get_by_id(stored_shorturl.id)
         assert shorturl is not None

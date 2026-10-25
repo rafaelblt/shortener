@@ -53,6 +53,6 @@ The service declares, when it starts, the exchange `users` and two queues of its
 ### Known limitations
 
 - Until the message is handled, the short URLs of the user that aren't deleted yet keep resolving. That is accepted, since it doesn't harm the shortener (see [Owner](../architecture/domain.md#owner)).
-- A short URL that the user creates after the message is handled, with an access token issued before the deletion, is never deleted ([issue 0024](../issues/0024-a-deleted-user-can-create-short-urls-until-their-token-expires.md)).
+- A short URL that the user creates after the message is handled, with an access token issued before the deletion, is never deleted ([issue #24](https://github.com/rafaelblt/shortener/issues/24)).
 - A message put back in the queue holds back the process that gets it again for as long as its deletion keeps failing, and the messages behind it wait for another process. With as many such messages as processes, no message is handled until their deletions succeed, or they are removed from the queue by hand.
-- The deletion of a user takes longer the more short URLs they have, and nothing limits how many a user can have. While a process of the consumer deletes them, it handles no other message ([issue 0028](../issues/0028-a-user-can-have-any-number-of-short-urls.md)).
+- The deletion of a user takes longer the more short URLs they have, and nothing limits how many a user can have. While a process of the consumer deletes them, it handles no other message ([issue #28](https://github.com/rafaelblt/shortener/issues/28)).

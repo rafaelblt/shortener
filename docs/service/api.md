@@ -283,6 +283,6 @@ Each IP address can make up to 60 requests in each window of 60 seconds, by defa
 
 ## Known limitations
 
-- A user who was deleted can still create short URLs with an access token issued before the deletion, until it expires, and those short URLs are never deleted ([issue 0024](../issues/0024-a-deleted-user-can-create-short-urls-until-their-token-expires.md)).
+- A user who was deleted can still create short URLs with an access token issued before the deletion, until it expires, and those short URLs are never deleted ([issue #24](https://github.com/rafaelblt/shortener/issues/24)).
 - The short URLs of a deleted user keep resolving until the service processes the [event](events.md) of the deletion. That is accepted, since it doesn't harm the shortener (see [Owner](../architecture/domain.md#owner)).
-- When the connection to the database is lost during the commit of a change, the service can't know whether the change was made, and answers `503`. Trying again may make it twice, such as creating two short URLs, or counting a resolution twice ([issue 0018](../issues/0018-a-commit-whose-result-is-unknown-is-answered-as-unavailable.md)).
+- When the connection to the database is lost during the commit of a change, the service can't know whether the change was made, and answers `503`. Trying again may make it twice, such as creating two short URLs, or counting a resolution twice ([issue #18](https://github.com/rafaelblt/shortener/issues/18)).

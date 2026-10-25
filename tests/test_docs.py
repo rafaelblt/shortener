@@ -12,13 +12,7 @@ import pytest
 
 
 ROOT: Final = Path(__file__).parents[1]
-# The content of an issue is append-only, so its links stay as they were
-# written, even after what they lead to moves. See docs/issues/README.md#format
-DOCUMENTS: Final = sorted(
-    path
-    for path in [*ROOT.glob("*.md"), *ROOT.glob("docs/**/*.md")]
-    if ROOT / "docs" / "issues" not in path.parents
-)
+DOCUMENTS: Final = sorted([*ROOT.glob("*.md"), *ROOT.glob("docs/**/*.md")])
 CODE: Final = sorted(
     [
         *ROOT.glob("shortener/**/*.py"),

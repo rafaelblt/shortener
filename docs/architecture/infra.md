@@ -145,7 +145,7 @@ Errors that trying again won't fix are raised as they are, such as `42P01` (a ta
 
 asyncpg raises `InternalClientError` for every broken state of its protocol, such as when the server ended the session of a transaction, and asyncpg hasn't noticed yet that the connection was closed. It can't be told apart from the other broken states, by its type or by whether the connection is closed, and its message changes with the versions of asyncpg, so every `InternalClientError` is transient. No code of the project raises it, and the connection can't be used after it either way. The cost is that a bug of asyncpg is answered as unavailable too, still with its cause. SQLAlchemy doesn't invalidate the connection, which goes back to the pool, and the `pool_pre_ping` of the engine replaces it the next time it is taken (see [The database](bootstrap.md#the-database)).
 
-A connection lost during `commit()` is transient too, even when Postgres committed the transaction before the connection was lost, so trying again can run a use case twice ([issue 0018](../issues/0018-a-commit-whose-result-is-unknown-is-answered-as-unavailable.md)).
+A connection lost during `commit()` is transient too, even when Postgres committed the transaction before the connection was lost, so trying again can run a use case twice ([issue #18](https://github.com/rafaelblt/shortener/issues/18)).
 
 ## Clock
 

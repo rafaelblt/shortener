@@ -4,14 +4,14 @@ What is specific to agents working in this repository. The project's rules aren'
 
 ## Map
 
-| Where                                             | What                                                                                      |
-| ------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| [README.md](README.md)                            | What the service is, its scope, its architecture in short, and how to start               |
-| [CONTRIBUTING.md](CONTRIBUTING.md)                | How to work: the principles, the checks, the tests, the documents, the issues and commits |
-| [docs/service/](docs/service/api.md)              | What the service does, seen from outside: its API, events, configuration and how it runs  |
-| [docs/architecture/](docs/architecture/README.md) | How the code does it: the layers, and one document per layer                              |
-| [docs/issues/](docs/issues/README.md)             | The known problems and the open questions                                                 |
-| `pyproject.toml`                                  | The dependencies, the tasks, and the settings of the checks                               |
+| Where                                                   | What                                                                                      |
+| ------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| [README.md](README.md)                                  | What the service is, its scope, its architecture in short, and how to start               |
+| [CONTRIBUTING.md](CONTRIBUTING.md)                      | How to work: the principles, the checks, the tests, the documents, the issues and commits |
+| [docs/service/](docs/service/api.md)                    | What the service does, seen from outside: its API, events, configuration and how it runs  |
+| [docs/architecture/](docs/architecture/README.md)       | How the code does it: the layers, and one document per layer                              |
+| [Issues](https://github.com/rafaelblt/shortener/issues) | The known problems and the open questions                                                 |
+| `pyproject.toml`                                        | The dependencies, the tasks, and the settings of the checks                               |
 
 ## Before a task
 
@@ -30,7 +30,7 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md), all of it, and [docs/architecture/READM
 | touches `shortener/infra/`, `alembic/` or `tests/test_infra/`   | [docs/architecture/infra.md](docs/architecture/infra.md)         |
 | touches `shortener/bootstrap/` or `tests/test_bootstrap/`       | [docs/architecture/bootstrap.md](docs/architecture/bootstrap.md) |
 | touches `shortener/shared/` or `tests/test_shared/`             | [docs/architecture/shared.md](docs/architecture/shared.md)       |
-| opens, closes or adds to an issue                               | [docs/issues/README.md](docs/issues/README.md)                   |
+| opens, closes or adds to an issue                               | [Issues](CONTRIBUTING.md#issues) in CONTRIBUTING.md              |
 | makes a commit                                                  | [Commits](CONTRIBUTING.md#commits) in CONTRIBUTING.md            |
 
 ## During a task
