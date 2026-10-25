@@ -120,7 +120,7 @@ The code should say what it does on its own. Comments are for what it can't say:
 
 The documents are a reflection of the project: what they say is what the code does now, not what it should do. Each one has a subject, and says only what is about it:
 
-- [README](README.md): what the service is, its scope, its architecture in short, and how to start.
+- [README](README.md): what the service is, its status, its scope, its architecture in short, and how to start.
 - This document: how to work in the project.
 - [AGENTS.md](AGENTS.md): what is specific to agents.
 - [docs/service/](docs/service/api.md): what the service does, seen from outside, by whoever calls it, runs it or decides what it does: its [API](docs/service/api.md), its [events](docs/service/events.md), its [configuration](docs/service/configuration.md) and [how it runs](docs/service/running.md), with their rules, guarantees and known limitations. They name no module, class or function.

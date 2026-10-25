@@ -23,6 +23,8 @@ The routes of a slug need no access token, since anyone can resolve a slug, and 
 
 A slug is only resolved under `/api/v1/slugs`, so it never shares a path with a route, not even the slug `health` with the health check, and no slug has to be reserved. A domain of short links, where `/{slug}` redirects, is a proxy in front of the service (see [Running](running.md#behind-a-proxy)).
 
+The `v1` is the version of the API, but not a stable one: while the service [has no stable version](../../README.md#status), a change that breaks the clients of the API can be made under `/api/v1`, and a new version of the service doesn't necessarily move the routes to `/api/v2`.
+
 ## Access tokens
 
 The service doesn't issue access tokens, nor manage users: a system responsible for the identities of the users issues them, and the service only verifies them. An endpoint that needs a user reads the access token from the `Authorization` header, with the `Bearer` scheme:

@@ -4,9 +4,17 @@ Back end of a URL shortener, exposed through an HTTP API.
 
 ## Background
 
-The project started as a URL shortener and, over time, piled up responsibilities: user sign-up and login, refresh tokens, plans, emails, templates and translations. That pulled it away from its goal and eventually stalled its development.
+The project started as a URL shortener and, over time, piled up responsibilities: user sign-up and login, refresh tokens, plans, emails, templates and translations. A scope that wide made every decision harder, pulled the project away from its goal, and eventually stalled its development.
 
-It was then rebuilt, layer by layer, from the inside out, around the original idea: **a URL shortener, and nothing else**. Every layer has been rebuilt. What is known to be wrong or missing is in the [open issues](https://github.com/rafaelblt/shortener/issues).
+It was then rebuilt, layer by layer, from the inside out, around the original idea: **a URL shortener, and nothing else**. What isn't about short URLs was removed, or left to the systems it belongs to. That is why the service doesn't issue the access tokens it verifies, and keeps nothing about a user but a reference (see [Owner](#owner)).
+
+The rebuild is finished, and every layer was rewritten. Most of the history comes from before it, and is of the earlier project, with its wider scope and other ideas: the first 986 commits, from February 2025 to April 2026. The rebuild starts at [`563626b`](https://github.com/rafaelblt/shortener/commit/563626b1b5dfc179a2715aa7beb134bdb747581d), on 2026-10-05.
+
+## Status
+
+The service works, and can be deployed (see [Running](docs/service/running.md)), but it is still in development, and has no stable version yet. Until it has one, a new version may not be compatible with the previous one: its [API](docs/service/api.md), its [events](docs/service/events.md) and its [settings](docs/service/configuration.md) can change in ways that break the systems that use them, even under `/api/v1` (see [Overview](docs/service/api.md#overview)).
+
+What is known to be wrong or missing is in the [open issues](https://github.com/rafaelblt/shortener/issues).
 
 ## Scope
 

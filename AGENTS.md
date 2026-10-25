@@ -6,7 +6,7 @@ What is specific to agents working in this repository. The project's rules aren'
 
 | Where                                                   | What                                                                                      |
 | ------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| [README.md](README.md)                                  | What the service is, its scope, its architecture in short, and how to start               |
+| [README.md](README.md)                                  | What the service is, its status, its scope, its architecture in short, and how to start   |
 | [CONTRIBUTING.md](CONTRIBUTING.md)                      | How to work: the principles, the checks, the tests, the documents, the issues and commits |
 | [docs/service/](docs/service/api.md)                    | What the service does, seen from outside: its API, events, configuration and how it runs  |
 | [docs/architecture/](docs/architecture/README.md)       | How the code does it: the layers, and one document per layer                              |
